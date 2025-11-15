@@ -12,14 +12,14 @@ import crypto from "crypto";
 
 // Utility function to compute redirect URI consistently across all OAuth flows
 function getOAuthRedirectUri(req: any, path: string): string {
-  // On Replit, use HTTPS with the dev domain; locally use request protocol/host
-  const domain = process.env.REPLIT_DEV_DOMAIN;
-  if (domain) {
-    return `https://${domain}${path}`;
+  // On Replit, use HTTPS with the dev domain
+  const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+  if (replitDomain) {
+    return `https://${replitDomain}${path}`;
   }
   
-  // Fallback for local development
-  const protocol = req.protocol;
+  // In production (Render, etc.), use the request's protocol and host
+  const protocol = req.protocol || 'https';
   const host = req.get('host') || 'localhost:5000';
   return `${protocol}://${host}${path}`;
 }

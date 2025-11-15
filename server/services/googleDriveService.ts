@@ -44,10 +44,16 @@ export class GoogleDriveService {
 
   constructor(userId: string) {
     this.userId = userId;
+    // Redirect URI is not critical for token refresh operations
+    // It's set properly in routes.ts for initial OAuth flow
+    const redirectUri = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/google/callback`
+      : 'https://localhost:5000/api/auth/google/callback';
+    
     this.auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
-      `https://${process.env.REPLIT_DEV_DOMAIN}/api/auth/google/callback`
+      redirectUri
     );
   }
 
