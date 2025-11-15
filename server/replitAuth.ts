@@ -28,9 +28,13 @@ function createSupabaseClient() {
 
 const getOidcConfig = memoize(
   async () => {
+    const replId = process.env.REPL_ID;
+    if (!replId) {
+      throw new Error('REPL_ID is required for Replit Auth');
+    }
     return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      replId
     );
   },
   { maxAge: 3600 * 1000 }
@@ -101,7 +105,7 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   // Only setup Replit Auth if REPLIT_DOMAINS is available (development/Replit environment)
-  if (process.env.REPLIT_DOMAINS) {
+  if (process.env.REPLIT_DOMAINS && process.env.REPL_ID) {
     const config = await getOidcConfig();
 
     const verify: VerifyFunction = async (
