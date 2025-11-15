@@ -49,9 +49,14 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Setup Vite for React development
+  // Setup Vite for React development or serve static files in production
   const httpServer = createServer(app);
-  await setupVite(app, httpServer);
+  
+  if (process.env.NODE_ENV === 'production') {
+    serveStatic(app);
+  } else {
+    await setupVite(app, httpServer);
+  }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
@@ -63,8 +68,8 @@ app.use((req, res, next) => {
     
     
     // Display OAuth redirect URIs for easy configuration
-    const domain = process.env.REPLIT_DEV_DOMAIN || `localhost:${port}`;
-    const protocol = process.env.REPLIT_DEV_DOMAIN ? 'https' : 'http';
+    const domain = process.env.REPLIT_DEV_DOMAIN || process.env.RENDER_EXTERNAL_HOSTNAME || `localhost:${port}`;
+    const protocol = process.env.NODE_ENV === 'production' || process.env.REPLIT_DEV_DOMAIN ? 'https' : 'http';
     
     console.log('🔗 OAUTH REDIRECT URIs - Add these to your OAuth applications:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
