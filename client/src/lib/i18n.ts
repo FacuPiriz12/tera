@@ -286,6 +286,21 @@ const resources = {
         hasAccount: "¿Ya tienes una cuenta?",
         signIn: "Inicia sesión"
       },
+      emailConfirmation: {
+        verifying: "Verificando tu email",
+        confirmed: "¡Email confirmado!",
+        failed: "Error en la verificación",
+        verifyingDescription: "Estamos verificando tu dirección de correo electrónico...",
+        confirmedDescription: "Tu cuenta ha sido verificada exitosamente",
+        failedDescription: "No pudimos verificar tu dirección de correo",
+        success: "Tu cuenta ha sido verificada correctamente",
+        error: "Hubo un problema al verificar tu cuenta",
+        invalidLink: "El enlace de verificación no es válido o ha expirado",
+        redirecting: "Serás redirigido automáticamente en unos segundos...",
+        continueToApp: "Ir a la aplicación",
+        signupAgain: "Registrarse nuevamente",
+        tryLogin: "Intentar iniciar sesión"
+      },
       validation: {
         invalidEmail: "Por favor ingresa un email válido",
         passwordTooShort: "La contraseña debe tener al menos 6 caracteres",
@@ -577,6 +592,21 @@ const resources = {
         hasAccount: "Already have an account?",
         signIn: "Sign in"
       },
+      emailConfirmation: {
+        verifying: "Verifying your email",
+        confirmed: "Email confirmed!",
+        failed: "Verification failed",
+        verifyingDescription: "We're verifying your email address...",
+        confirmedDescription: "Your account has been successfully verified",
+        failedDescription: "We couldn't verify your email address",
+        success: "Your account has been verified successfully",
+        error: "There was a problem verifying your account",
+        invalidLink: "The verification link is invalid or has expired",
+        redirecting: "You'll be automatically redirected in a few seconds...",
+        continueToApp: "Go to app",
+        signupAgain: "Sign up again",
+        tryLogin: "Try logging in"
+      },
       validation: {
         invalidEmail: "Please enter a valid email",
         passwordTooShort: "Password must be at least 6 characters",
@@ -609,7 +639,7 @@ if (!i18n.isInitialized) {
       supportedLngs: ['es', 'en'],
       
       // Espacios de nombres
-      ns: ['common', 'copy', 'errors', 'landing', 'pages'],
+      ns: ['common', 'copy', 'errors', 'landing', 'pages', 'auth'],
       defaultNS: 'common',
       
       interpolation: {

@@ -4,7 +4,7 @@ import { supabasePromise } from "@/lib/supabase";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, AlertCircle, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import CloneDriveLogo from "@/components/CloneDriveLogo";
 
 export default function EmailConfirmation() {
@@ -16,8 +16,30 @@ export default function EmailConfirmation() {
   useEffect(() => {
     const confirmEmail = async () => {
       try {
-        // Get the hash from URL (contains the confirmation token)
+        // Get the hash from URL (contains the confirmation token or error)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        // Check for errors first (like otp_expired, access_denied, etc.)
+        const error = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+        
+        if (error) {
+          console.error('Email confirmation error from URL:', { error, errorCode, errorDescription });
+          setStatus('error');
+          
+          // Show user-friendly message based on error code
+          if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
+            setMessage(t('emailConfirmation.invalidLink'));
+          } else if (error === 'access_denied') {
+            setMessage(t('emailConfirmation.invalidLink'));
+          } else {
+            setMessage(errorDescription || t('emailConfirmation.error'));
+          }
+          return;
+        }
+        
+        // If no error, try to get tokens
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const type = hashParams.get('type');
@@ -25,15 +47,22 @@ export default function EmailConfirmation() {
         if (type === 'signup' && accessToken && refreshToken) {
           const supabase = await supabasePromise;
           
+          if (!supabase) {
+            setStatus('error');
+            setMessage(t('emailConfirmation.error'));
+            return;
+          }
+          
           // Set the session with the tokens from the URL
-          const { error } = await supabase.auth.setSession({
+          const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
 
-          if (error) {
+          if (sessionError) {
+            console.error('Session error:', sessionError);
             setStatus('error');
-            setMessage(error.message);
+            setMessage(sessionError.message);
             return;
           }
 
