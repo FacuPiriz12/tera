@@ -16,7 +16,7 @@ export default function EmailVerification() {
     
     // Try to get tokens from query string first (default Supabase behavior)
     const searchParams = new URLSearchParams(window.location.search);
-    const token = searchParams.get('token');
+    const tokenHash = searchParams.get('token_hash'); // Correct parameter for magic links
     const type = searchParams.get('type');
     
     // Also check hash for backward compatibility
@@ -27,12 +27,12 @@ export default function EmailVerification() {
     const hashType = hashParams.get('type');
     
     // Build confirmation URL with all available params
-    if (token || accessToken) {
+    if (tokenHash || accessToken) {
       // Preserve all params for confirmation page
       const confirmParams = new URLSearchParams();
       
       // Add query string params
-      if (token) confirmParams.set('token', token);
+      if (tokenHash) confirmParams.set('token_hash', tokenHash);
       if (type) confirmParams.set('type', type);
       
       // Add hash params if present

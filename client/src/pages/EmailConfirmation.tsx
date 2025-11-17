@@ -28,7 +28,7 @@ export default function EmailConfirmation() {
 
         // Try to get params from query string first (default Supabase behavior)
         const searchParams = new URLSearchParams(window.location.search);
-        const token = searchParams.get('token');
+        const tokenHash = searchParams.get('token_hash'); // Correct parameter for magic links
         const type = searchParams.get('type');
         const error = searchParams.get('error');
         const errorDescription = searchParams.get('error_description');
@@ -65,11 +65,11 @@ export default function EmailConfirmation() {
           return;
         }
         
-        // Method 1: If we have a token (most common with default Supabase email template)
-        if (token && type) {
-          console.log('Verifying with token method');
+        // Method 1: If we have a token_hash (most common with default Supabase email template)
+        if (tokenHash && type) {
+          console.log('Verifying with token_hash method');
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
-            token_hash: token,
+            token_hash: tokenHash,
             type: type as any
           });
 
