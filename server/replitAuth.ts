@@ -24,7 +24,25 @@ function createSupabaseClient() {
     return null;
   }
   
-  return createClient(supabaseUrl, supabaseAnonKey);
+  console.log('✅ Supabase Auth configured');
+  
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 0
+      }
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'supabase-js-server'
+      }
+    }
+  });
 }
 
 const getOidcConfig = memoize(
