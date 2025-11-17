@@ -46,11 +46,13 @@ export function useAuth() {
         // Listen for auth changes (cache is updated at module level, we just update UI)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
+            console.log('Auth state changed:', event);
             if (mounted) {
               setSupabaseUser(session?.user || null);
-              // Invalidate query to refetch with new session
-              // Session cache is already updated at module level in supabase.ts
-              queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+              // Only invalidate on sign in/out, not on token refresh
+              if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+              }
             }
           }
         );
@@ -80,10 +82,9 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
-    refetchOnWindowFocus: true,
-    refetchOnMount: 'always',
-    staleTime: 0,
-    gcTime: 0,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !isSupabaseLoading,
   });
 
