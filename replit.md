@@ -27,6 +27,7 @@ Secondary authentication method for email/password signup and login. Features in
 - Session management with JWT tokens
 - OAuth integration capabilities
 - Email scanner protection through intermediate confirmation pages
+- Module-level session caching to prevent race conditions
 
 **Configuration Requirements:**
 - SUPABASE_URL: Your Supabase project URL
@@ -38,6 +39,36 @@ Secondary authentication method for email/password signup and login. Features in
 
 **Email Confirmation Flow:**
 The application uses an intermediate confirmation page to prevent email scanners from consuming verification tokens prematurely. When users click the email confirmation link, they are redirected to a page with a manual confirmation button, ensuring the token is only consumed when the user explicitly confirms.
+
+**Session Cache Architecture:**
+To prevent race conditions where API requests execute before the Supabase session token is available, the application implements a module-level session cache:
+
+1. **Module-Level Initialization** (`client/src/lib/supabase.ts`):
+   - The Supabase client initialization fetches the current session immediately
+   - Updates a module-level cache with `setCachedSession(session)`
+   - Establishes an `onAuthStateChange` listener that updates the cache on every auth state change
+   - This happens at module load, BEFORE any React components mount or React Query executes
+
+2. **Cache Module** (`client/src/lib/supabaseSession.ts`):
+   - Simple module that maintains the current session in memory
+   - Provides `getCachedSession()` and `setCachedSession()` functions
+   - Cache is always up-to-date because it's updated by the module-level listener
+
+3. **Request Headers** (`client/src/lib/queryClient.ts`):
+   - `getAuthHeaders()` uses `getCachedSession()` instead of calling `supabase.auth.getSession()`
+   - This ensures the token is ALWAYS available, even immediately after login
+   - Eliminates race conditions where queries execute before session is persisted
+
+4. **Backend Middleware** (`server/replitAuth.ts`):
+   - The `isAuthenticated` middleware verifies Supabase JWT tokens via the Authorization header
+   - In production deployments without Replit Auth (no REPLIT_DOMAINS), returns 401 cleanly instead of 500
+   - Supports both Replit Auth (cookies) and Supabase (Bearer tokens)
+
+**Benefits:**
+- No race conditions during login or page refresh
+- Deterministic authentication flow that doesn't depend on timing
+- Works reliably in production with Supabase-only authentication
+- Supports dual authentication (Replit Auth for development, Supabase for production)
 
 ## Database Layer
 PostgreSQL database with Drizzle ORM for type-safe database operations. The schema includes user management tables (required for Replit Auth), drive file tracking, copy operations with progress tracking, and session storage. Database migrations are managed through Drizzle Kit with schema versioning.
