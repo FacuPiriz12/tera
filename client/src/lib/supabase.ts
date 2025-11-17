@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { setCachedSession } from './supabaseSession';
 
 // Get Supabase credentials from server endpoint
 async function getSupabaseConfig() {
@@ -24,13 +25,26 @@ export async function createSupabaseClient() {
       return null;
     }
 
-    return createClient(config.url, config.anonKey, {
+    const client = createClient(config.url, config.anonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true
       }
     });
+
+    // Initialize cached session with current session
+    // This happens at module level BEFORE any React Query requests
+    const { data: { session } } = await client.auth.getSession();
+    setCachedSession(session);
+
+    // Set up module-level auth state listener to keep cache updated
+    // This ensures the cache is always up-to-date before any React Query requests
+    client.auth.onAuthStateChange((_event, session) => {
+      setCachedSession(session);
+    });
+
+    return client;
   } catch (error) {
     console.log('Supabase initialization failed, using Replit Auth only');
     return null;

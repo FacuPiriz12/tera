@@ -9,8 +9,9 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { createClient } from '@supabase/supabase-js';
 
+// Note: REPLIT_DOMAINS is optional - app can work with Supabase auth only
 if (!process.env.REPLIT_DOMAINS && process.env.NODE_ENV !== 'production') {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.log('⚠️  REPLIT_DOMAINS not provided - Replit Auth disabled. Using Supabase auth only.');
 }
 
 // Create Supabase client for server-side auth
@@ -300,6 +301,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return next();
   }
 
+  // In production without Replit Auth (e.g., Render), return 401 if not authenticated via Supabase
+  if (!process.env.REPLIT_DOMAINS) {
+    return res.status(401).json({ message: "Not authenticated. Please use Supabase authentication." });
+  }
+
+  // Replit Auth flow (only when REPLIT_DOMAINS is available)
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {

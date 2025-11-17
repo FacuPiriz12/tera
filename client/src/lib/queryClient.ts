@@ -1,5 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { supabasePromise } from "./supabase";
+import { getCachedSession } from "./supabaseSession";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -13,15 +13,12 @@ async function getAuthHeaders(): Promise<HeadersInit> {
   const headers: HeadersInit = {};
   
   try {
-    const supabase = await supabasePromise;
+    // Use cached session from onAuthStateChange instead of calling getSession()
+    // This avoids race conditions where the session hasn't been persisted yet
+    const session = getCachedSession();
     
-    // Only proceed if Supabase client was successfully created
-    if (supabase) {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
     }
   } catch (error) {
     // Supabase auth not available or failed, will rely on cookies

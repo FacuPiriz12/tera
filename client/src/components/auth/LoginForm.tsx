@@ -63,6 +63,9 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         title: t('login.success'),
         description: t('login.welcomeBack')
       });
+      
+      // Auth state will update automatically via onAuthStateChange listener in useAuth
+      // which will invalidate queries and redirect to home
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -87,31 +90,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Replit Auth Button - Secondary Option */}
-          <Button 
-            onClick={onReplitLogin}
-            variant="outline"
-            className="w-full font-medium py-3 shadow-sm hover:shadow-md transition-all duration-300"
-            data-testid="button-replit-login"
-          >
-            <div className="w-5 h-5 bg-blue-600 rounded mr-2 flex items-center justify-center">
-              <span className="text-white text-xs font-bold">R</span>
-            </div>
-            {t('login.continueWithReplit')}
-          </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                {t('login.orContinueWith')}
-              </span>
-            </div>
-          </div>
-
-          {/* Traditional Login Form */}
+          {/* Login Form - Using Supabase authentication */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField

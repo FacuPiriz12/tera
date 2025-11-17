@@ -36,19 +36,20 @@ export function useAuth() {
           return;
         }
         
-        // Get initial session
+        // Get initial session (cache is already set at module level in supabase.ts)
         const { data: { session } } = await supabase.auth.getSession();
         if (mounted) {
           setSupabaseUser(session?.user || null);
           setIsSupabaseLoading(false);
         }
         
-        // Listen for auth changes
+        // Listen for auth changes (cache is updated at module level, we just update UI)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (mounted) {
               setSupabaseUser(session?.user || null);
-              // Invalidate and refetch user data when auth state changes
+              // Invalidate query to refetch with new session
+              // Session cache is already updated at module level in supabase.ts
               queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             }
           }
@@ -73,44 +74,17 @@ export function useAuth() {
     };
   }, [queryClient]);
 
-  // Query for backend user data
+  // Query backend for user data
+  // This works for both Supabase and Replit auth since getAuthHeaders() uses cached session
   const { data: backendUser, isLoading: isBackendLoading, error, isError } = useQuery({
     queryKey: ["/api/auth/user"],
-    queryFn: async ({ queryKey }) => {
-      // If we have a Supabase user, include the auth token
-      if (supabaseUser) {
-        const supabase = await supabasePromise;
-        
-        // Only proceed if Supabase client exists
-        if (supabase) {
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (session?.access_token) {
-            const response = await fetch("/api/auth/user", {
-              headers: {
-                'Authorization': `Bearer ${session.access_token}`
-              }
-            });
-            
-            if (!response.ok) {
-              if (response.status === 401) return null;
-              throw new Error('Failed to fetch user');
-            }
-            
-            return response.json();
-          }
-        }
-      }
-      
-      // Fallback to regular query function (for Replit auth or dev mode)
-      return getQueryFn({ on401: "returnNull" })({ queryKey });
-    },
+    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     refetchOnWindowFocus: true,
-    refetchOnMount: 'always', // Always refetch on mount to catch new auth sessions
-    staleTime: 0, // Don't use stale data
-    gcTime: 0, // Don't keep data in cache
-    enabled: !isSupabaseLoading, // Only run when Supabase auth is initialized
+    refetchOnMount: 'always',
+    staleTime: 0,
+    gcTime: 0,
+    enabled: !isSupabaseLoading,
   });
 
   // Sign out mutation
@@ -136,7 +110,7 @@ export function useAuth() {
 
   const isLoading = isSupabaseLoading || isBackendLoading;
   const user = backendUser;
-  const isAuthenticated = !!(supabaseUser || (user && !isError));
+  const isAuthenticated = !!(user && !isError);
   
   return {
     user,
