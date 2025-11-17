@@ -15,7 +15,29 @@ The client is built with React 18 using TypeScript and Vite as the build tool. T
 The server uses Express.js with TypeScript in ES module format. It implements a RESTful API architecture with route handlers organized in a centralized routes file. The application uses Passport.js with OpenID Connect strategy for Replit-based authentication, including session management with PostgreSQL session storage.
 
 ## Authentication System
-Authentication is implemented using Replit's OIDC provider with Passport.js. User sessions are stored in PostgreSQL using connect-pg-simple middleware. The system includes protected routes that verify authentication status and user context propagation throughout the application.
+The application supports two authentication methods:
+
+### Replit OIDC Authentication
+Primary authentication method using Replit's OIDC provider with Passport.js. User sessions are stored in PostgreSQL using connect-pg-simple middleware. The system includes protected routes that verify authentication status and user context propagation throughout the application.
+
+### Supabase Authentication
+Secondary authentication method for email/password signup and login. Features include:
+- Email verification with confirmation links
+- Password-based authentication
+- Session management with JWT tokens
+- OAuth integration capabilities
+- Email scanner protection through intermediate confirmation pages
+
+**Configuration Requirements:**
+- SUPABASE_URL: Your Supabase project URL
+- SUPABASE_ANON_KEY: Supabase anonymous/public key
+- Redirect URLs must be configured in Supabase Dashboard:
+  - Production: https://your-app.onrender.com/auth/confirm
+  - Development: http://localhost:5000/auth/confirm
+  - Wildcard: https://your-app.onrender.com/**
+
+**Email Confirmation Flow:**
+The application uses an intermediate confirmation page to prevent email scanners from consuming verification tokens prematurely. When users click the email confirmation link, they are redirected to a page with a manual confirmation button, ensuring the token is only consumed when the user explicitly confirms.
 
 ## Database Layer
 PostgreSQL database with Drizzle ORM for type-safe database operations. The schema includes user management tables (required for Replit Auth), drive file tracking, copy operations with progress tracking, and session storage. Database migrations are managed through Drizzle Kit with schema versioning.
