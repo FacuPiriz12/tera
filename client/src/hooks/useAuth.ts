@@ -2,18 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { supabasePromise } from "@/lib/supabase";
 import { useEffect, useState } from "react";
-import { getCachedSession } from "@/lib/supabaseSession";
-
-type SupabaseUser = {
-  id: string;
-  email?: string;
-  user_metadata?: {
-    first_name?: string;
-    last_name?: string;
-    name?: string;
-    avatar_url?: string;
-  };
-};
+import { getCachedSession, setCachedSession } from "@/lib/supabaseSession";
 
 export function useAuth() {
   const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
@@ -35,9 +24,9 @@ export function useAuth() {
           return;
         }
         
-        // Just wait for initial session check
-        // The session cache is managed at module level in supabase.ts
-        await supabase.auth.getSession();
+        // Get initial session and update cache
+        const { data: { session } } = await supabase.auth.getSession();
+        setCachedSession(session);
         
         if (mounted) {
           setIsSupabaseLoading(false);
@@ -79,6 +68,7 @@ export function useAuth() {
         const supabase = await supabasePromise;
         if (supabase) {
           await supabase.auth.signOut();
+          setCachedSession(null);
         }
       } else {
         // Sign out from Replit/dev auth

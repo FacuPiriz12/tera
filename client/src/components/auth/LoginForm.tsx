@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { supabasePromise } from "@/lib/supabase";
+import { setCachedSession } from "@/lib/supabaseSession";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,7 +46,17 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
     setIsLoading(true);
     try {
       const supabase = await supabasePromise;
-      const { error } = await supabase.auth.signInWithPassword({
+      
+      if (!supabase) {
+        toast({
+          title: t('errors.loginFailed'),
+          description: "Authentication service not configured",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password
       });
@@ -60,15 +70,20 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         return;
       }
 
+      // Manually update the session cache
+      setCachedSession(authData.session);
+
       toast({
         title: t('login.success'),
         description: t('login.welcomeBack')
       });
       
-      // Invalidate auth queries to trigger refetch with new session
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Clear and refetch auth queries
+      queryClient.clear();
+      await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
       
-      // Redirect will happen automatically when useAuth detects authenticated user
+      // Redirect to home
+      window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);
       toast({

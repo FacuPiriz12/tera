@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { supabasePromise } from "@/lib/supabase";
+import { setCachedSession } from "@/lib/supabaseSession";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import CloneDriveLogo from "@/components/CloneDriveLogo";
+import { queryClient } from "@/lib/queryClient";
 
 export default function EmailConfirmation() {
   const { t } = useTranslation(['auth', 'common']);
@@ -56,7 +58,7 @@ export default function EmailConfirmation() {
           }
           
           // Set the session with the tokens from the URL
-          const { error: sessionError } = await supabase.auth.setSession({
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
           });
@@ -68,13 +70,20 @@ export default function EmailConfirmation() {
             return;
           }
 
+          // Update the session cache manually
+          setCachedSession(sessionData.session);
+          
+          // Clear and refetch auth queries
+          queryClient.clear();
+          await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+
           setStatus('success');
           setMessage(t('emailConfirmation.success'));
           
-          // Redirect to home after 3 seconds
+          // Redirect to home after 2 seconds
           setTimeout(() => {
-            setLocation('/');
-          }, 3000);
+            window.location.href = '/';
+          }, 2000);
         } else {
           setStatus('error');
           setMessage(t('emailConfirmation.invalidLink'));
@@ -133,7 +142,7 @@ export default function EmailConfirmation() {
                 {t('emailConfirmation.redirecting')}
               </p>
               <Button 
-                onClick={() => setLocation('/')}
+                onClick={() => window.location.href = '/'}
                 className="w-full"
                 data-testid="button-continue"
               >

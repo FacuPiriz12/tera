@@ -29,20 +29,21 @@ export async function createSupabaseClient() {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        // Disable realtime to prevent WebSocket connection issues
+        storageKey: 'supabase.auth.token'
+      },
+      // Disable realtime completely
+      realtime: {
+        params: {
+          eventsPerSecond: 0
+        }
       }
     });
 
     // Initialize cached session with current session
-    // This happens at module level BEFORE any React Query requests
     const { data: { session } } = await client.auth.getSession();
     setCachedSession(session);
-
-    // Set up module-level auth state listener to keep cache updated
-    // This ensures the cache is always up-to-date before any React Query requests
-    client.auth.onAuthStateChange((_event, session) => {
-      setCachedSession(session);
-    });
 
     return client;
   } catch (error) {
