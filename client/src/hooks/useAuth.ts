@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import { supabasePromise } from "@/lib/supabase";
 import { useEffect, useState } from "react";
+import { getCachedSession } from "@/lib/supabaseSession";
 
 type SupabaseUser = {
   id: string;
@@ -15,14 +16,12 @@ type SupabaseUser = {
 };
 
 export function useAuth() {
-  const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
   const queryClient = useQueryClient();
 
-  // Initialize Supabase auth listener
+  // Initialize Supabase and check initial session once
   useEffect(() => {
     let mounted = true;
-    let cleanup: (() => void) | undefined;
     
     const initSupabaseAuth = async () => {
       try {
@@ -36,30 +35,13 @@ export function useAuth() {
           return;
         }
         
-        // Get initial session (cache is already set at module level in supabase.ts)
-        const { data: { session } } = await supabase.auth.getSession();
+        // Just wait for initial session check
+        // The session cache is managed at module level in supabase.ts
+        await supabase.auth.getSession();
+        
         if (mounted) {
-          setSupabaseUser(session?.user || null);
           setIsSupabaseLoading(false);
         }
-        
-        // Listen for auth changes (cache is updated at module level, we just update UI)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state changed:', event);
-            if (mounted) {
-              setSupabaseUser(session?.user || null);
-              // Only invalidate on sign in/out, not on token refresh
-              if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-              }
-            }
-          }
-        );
-
-        cleanup = () => {
-          subscription.unsubscribe();
-        };
       } catch (error) {
         console.error('Error initializing Supabase auth:', error);
         if (mounted) {
@@ -72,9 +54,8 @@ export function useAuth() {
     
     return () => {
       mounted = false;
-      cleanup?.();
     };
-  }, [queryClient]);
+  }, []);
 
   // Query backend for user data
   // This works for both Supabase and Replit auth since getAuthHeaders() uses cached session
@@ -91,10 +72,14 @@ export function useAuth() {
   // Sign out mutation
   const signOutMutation = useMutation({
     mutationFn: async () => {
-      // Sign out from Supabase if user is using Supabase auth
-      if (supabaseUser) {
+      // Check if using Supabase auth by looking at cached session
+      const session = getCachedSession();
+      
+      if (session) {
         const supabase = await supabasePromise;
-        await supabase.auth.signOut();
+        if (supabase) {
+          await supabase.auth.signOut();
+        }
       } else {
         // Sign out from Replit/dev auth
         const response = await fetch('/api/logout', { method: 'POST' });
@@ -105,7 +90,7 @@ export function useAuth() {
     },
     onSuccess: () => {
       queryClient.clear();
-      setSupabaseUser(null);
+      window.location.href = '/login';
     },
   });
 

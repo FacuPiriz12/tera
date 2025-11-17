@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Link } from "wouter";
 import CloneDriveLogo from "@/components/CloneDriveLogo";
+import { queryClient } from "@/lib/queryClient";
 
 interface LoginFormProps {
   onReplitLogin: () => void;
@@ -64,8 +65,10 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         description: t('login.welcomeBack')
       });
       
-      // Auth state will update automatically via onAuthStateChange listener in useAuth
-      // which will invalidate queries and redirect to home
+      // Invalidate auth queries to trigger refetch with new session
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
+      // Redirect will happen automatically when useAuth detects authenticated user
     } catch (error) {
       console.error('Login error:', error);
       toast({
