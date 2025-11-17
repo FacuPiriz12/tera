@@ -30,11 +30,13 @@ export default function EmailConfirmation() {
           
           // Show user-friendly message based on error code
           if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
-            setMessage(t('emailConfirmation.invalidLink'));
-          } else if (error === 'access_denied') {
-            setMessage(t('emailConfirmation.invalidLink'));
+            setMessage(t('emailConfirmation.linkExpired', 'El enlace de verificación ha expirado. Por favor, solicita un nuevo correo de verificación.'));
+          } else if (errorCode === '403' || error === 'access_denied') {
+            setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o ya fue usado.'));
+          } else if (errorDescription?.includes('already been verified')) {
+            setMessage(t('emailConfirmation.alreadyVerified', 'Este correo ya ha sido verificado. Intenta iniciar sesión.'));
           } else {
-            setMessage(errorDescription || t('emailConfirmation.error'));
+            setMessage(errorDescription || t('emailConfirmation.error', 'Ocurrió un error al verificar tu correo.'));
           }
           return;
         }
@@ -142,12 +144,17 @@ export default function EmailConfirmation() {
 
           {status === 'error' && (
             <div className="space-y-3">
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
+                <p className="text-sm text-amber-900 dark:text-amber-100">
+                  {t('emailConfirmation.troubleshooting', 'Consejo: Si el enlace sigue sin funcionar, asegúrate de hacer clic directamente desde tu correo en lugar de copiar y pegar la URL.')}
+                </p>
+              </div>
               <Button 
                 onClick={() => setLocation('/signup')}
                 className="w-full"
                 data-testid="button-signup-again"
               >
-                {t('emailConfirmation.signupAgain')}
+                {t('emailConfirmation.signupAgain', 'Registrarse nuevamente')}
               </Button>
               <Button 
                 onClick={() => setLocation('/login')}
@@ -155,7 +162,7 @@ export default function EmailConfirmation() {
                 className="w-full"
                 data-testid="button-login"
               >
-                {t('emailConfirmation.tryLogin')}
+                {t('emailConfirmation.tryLogin', 'Intentar iniciar sesión')}
               </Button>
             </div>
           )}
