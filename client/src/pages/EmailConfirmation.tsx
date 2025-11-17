@@ -18,46 +18,93 @@ export default function EmailConfirmation() {
   useEffect(() => {
     const confirmEmail = async () => {
       try {
-        // Get the hash from URL (contains the confirmation token or error)
+        const supabase = await supabasePromise;
+        
+        if (!supabase) {
+          setStatus('error');
+          setMessage(t('emailConfirmation.error'));
+          return;
+        }
+
+        // Try to get params from query string first (default Supabase behavior)
+        const searchParams = new URLSearchParams(window.location.search);
+        const token = searchParams.get('token');
+        const type = searchParams.get('type');
+        const error = searchParams.get('error');
+        const errorDescription = searchParams.get('error_description');
+        
+        // Also check hash for backward compatibility
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
+        const hashType = hashParams.get('type');
+        const hashError = hashParams.get('error');
+        const hashErrorDescription = hashParams.get('error_description');
         
-        // Check for errors first (like otp_expired, access_denied, etc.)
-        const error = hashParams.get('error');
-        const errorCode = hashParams.get('error_code');
-        const errorDescription = hashParams.get('error_description');
+        // Handle errors from either source
+        const finalError = error || hashError;
+        const finalErrorDescription = errorDescription || hashErrorDescription;
         
-        if (error) {
-          console.error('Email confirmation error from URL:', { error, errorCode, errorDescription });
+        if (finalError) {
+          console.error('Email confirmation error from URL:', { 
+            error: finalError, 
+            errorDescription: finalErrorDescription 
+          });
           setStatus('error');
           
-          // Show user-friendly message based on error code
-          if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
+          // Show user-friendly message based on error
+          if (finalErrorDescription?.includes('expired')) {
             setMessage(t('emailConfirmation.linkExpired', 'El enlace de verificación ha expirado. Por favor, solicita un nuevo correo de verificación.'));
-          } else if (errorCode === '403' || error === 'access_denied') {
+          } else if (finalError === 'access_denied') {
             setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o ya fue usado.'));
-          } else if (errorDescription?.includes('already been verified')) {
+          } else if (finalErrorDescription?.includes('already been verified')) {
             setMessage(t('emailConfirmation.alreadyVerified', 'Este correo ya ha sido verificado. Intenta iniciar sesión.'));
           } else {
-            setMessage(errorDescription || t('emailConfirmation.error', 'Ocurrió un error al verificar tu correo.'));
+            setMessage(finalErrorDescription || t('emailConfirmation.error', 'Ocurrió un error al verificar tu correo.'));
           }
           return;
         }
         
-        // If no error, try to get tokens
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        // Method 1: If we have a token (most common with default Supabase email template)
+        if (token && type) {
+          console.log('Verifying with token method');
+          const { data, error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: type as any
+          });
 
-        if (type === 'signup' && accessToken && refreshToken) {
-          const supabase = await supabasePromise;
-          
-          if (!supabase) {
+          if (verifyError) {
+            console.error('Token verification error:', verifyError);
             setStatus('error');
-            setMessage(t('emailConfirmation.error'));
+            setMessage(verifyError.message);
             return;
           }
-          
-          // Set the session with the tokens from the URL
+
+          if (data.session) {
+            // Update the session cache manually
+            setCachedSession(data.session);
+            
+            // Clear and refetch auth queries
+            queryClient.clear();
+            await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+
+            setStatus('success');
+            setMessage(t('emailConfirmation.success'));
+            
+            // Redirect to home after 2 seconds
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          } else {
+            setStatus('error');
+            setMessage(t('emailConfirmation.error'));
+          }
+          return;
+        }
+        
+        // Method 2: If we have access_token and refresh_token (hash-based method)
+        if (accessToken && refreshToken) {
+          console.log('Verifying with session method');
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
@@ -84,10 +131,13 @@ export default function EmailConfirmation() {
           setTimeout(() => {
             window.location.href = '/';
           }, 2000);
-        } else {
-          setStatus('error');
-          setMessage(t('emailConfirmation.invalidLink'));
+          return;
         }
+        
+        // No valid tokens found
+        setStatus('error');
+        setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o está incompleto.'));
+        
       } catch (error) {
         console.error('Email confirmation error:', error);
         setStatus('error');
@@ -96,7 +146,7 @@ export default function EmailConfirmation() {
     };
 
     confirmEmail();
-  }, [t, setLocation]);
+  }, [t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">

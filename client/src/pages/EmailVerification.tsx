@@ -14,29 +14,38 @@ export default function EmailVerification() {
   const handleConfirm = () => {
     setIsConfirming(true);
     
+    // Try to get tokens from query string first (default Supabase behavior)
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get('token');
+    const type = searchParams.get('type');
+    
+    // Also check hash for backward compatibility
     const hash = window.location.hash;
     const hashParams = new URLSearchParams(hash.substring(1));
-    
-    // Check for custom confirmation URL (if email template was modified)
-    const confirmationUrl = hashParams.get('confirmation_url');
-    if (confirmationUrl) {
-      window.location.href = decodeURIComponent(confirmationUrl);
-      return;
-    }
-    
-    // Check for default Supabase tokens (standard flow)
     const accessToken = hashParams.get('access_token');
     const refreshToken = hashParams.get('refresh_token');
-    const type = hashParams.get('type');
+    const hashType = hashParams.get('type');
     
-    // Use window.location to preserve hash params (wouter's setLocation doesn't preserve hash)
-    if (accessToken || refreshToken || type) {
-      window.location.href = '/auth/confirm' + hash;
+    // Build confirmation URL with all available params
+    if (token || accessToken) {
+      // Preserve all params for confirmation page
+      const confirmParams = new URLSearchParams();
+      
+      // Add query string params
+      if (token) confirmParams.set('token', token);
+      if (type) confirmParams.set('type', type);
+      
+      // Add hash params if present
+      if (accessToken) confirmParams.set('access_token', accessToken);
+      if (refreshToken) confirmParams.set('refresh_token', refreshToken);
+      if (hashType) confirmParams.set('type', hashType);
+      
+      window.location.href = '/auth/confirm?' + confirmParams.toString();
       return;
     }
     
     // Fallback: redirect to confirmation anyway (will handle errors there)
-    window.location.href = '/auth/confirm' + hash;
+    window.location.href = '/auth/confirm' + window.location.search + hash;
   };
 
   return (
