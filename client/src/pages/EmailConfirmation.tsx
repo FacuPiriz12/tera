@@ -84,15 +84,15 @@ export default function EmailConfirmation() {
             // Update the session cache manually
             setCachedSession(data.session);
             
-            // Wait a bit for session to persist to localStorage
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // Invalidate auth query to force refetch with new session
+            await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             
             setStatus('success');
             setMessage(t('emailConfirmation.success'));
             
-            // Redirect to home after 2 seconds
+            // Redirect to home after 2 seconds using navigation (not full reload)
             setTimeout(() => {
-              window.location.href = '/';
+              setLocation('/');
             }, 2000);
           } else {
             setStatus('error');
@@ -119,15 +119,15 @@ export default function EmailConfirmation() {
           // Update the session cache manually
           setCachedSession(sessionData.session);
           
-          // Wait a bit for session to persist to localStorage
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Invalidate auth query to force refetch with new session
+          await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
 
           setStatus('success');
           setMessage(t('emailConfirmation.success'));
           
-          // Redirect to home after 2 seconds
+          // Redirect to home after 2 seconds using navigation (not full reload)
           setTimeout(() => {
-            window.location.href = '/';
+            setLocation('/');
           }, 2000);
           return;
         }
@@ -190,7 +190,7 @@ export default function EmailConfirmation() {
                 {t('emailConfirmation.redirecting')}
               </p>
               <Button 
-                onClick={() => window.location.href = '/'}
+                onClick={() => setLocation('/')}
                 className="w-full"
                 data-testid="button-continue"
               >

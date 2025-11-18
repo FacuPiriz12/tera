@@ -72,7 +72,7 @@ export function useAuth() {
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    refetchOnMount: true, // Always check on mount to ensure fresh auth state
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !isSupabaseLoading,
   });
