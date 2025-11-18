@@ -78,11 +78,8 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         description: t('login.welcomeBack')
       });
       
-      // Clear and refetch auth queries
-      queryClient.clear();
-      await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
-      
-      // Redirect to home
+      // The onAuthStateChange listener will handle invalidating queries
+      // Just redirect - this prevents race conditions and infinite loops
       window.location.href = '/';
     } catch (error) {
       console.error('Login error:', error);

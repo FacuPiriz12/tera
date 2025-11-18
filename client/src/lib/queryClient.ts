@@ -63,17 +63,29 @@ export const getQueryFn: <T>(options: {
     const url = queryKey[0] as string;
     const authHeaders = await getAuthHeaders();
     
-    const res = await fetch(url, {
-      headers: authHeaders,
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(url, {
+        headers: authHeaders,
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      // Handle 500 errors gracefully - log but don't throw to prevent infinite loops
+      if (res.status >= 500) {
+        console.error(`Server error (${res.status}) fetching ${url}`);
+        const text = await res.text().catch(() => res.statusText);
+        throw new Error(`Server error (${res.status}): ${text}`);
+      }
+
+      await throwIfResNotOk(res);
+      return await res.json();
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({
@@ -84,9 +96,12 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       staleTime: 5000, // 5 seconds stale time to allow auth state updates
       retry: false,
+      networkMode: 'online', // Only run queries when online
+      gcTime: 1000 * 60 * 5, // 5 minutes garbage collection time
     },
     mutations: {
       retry: false,
+      networkMode: 'online', // Only run mutations when online
     },
   },
 });
