@@ -1,0 +1,97 @@
+function ule() {
+    const {t: e} = Kt(["auth", "common"])
+      , [,t] = Ci()
+      , [r,n] = w.useState("loading")
+      , [i,s] = w.useState("");
+    return w.useEffect( () => {
+        (async () => {
+            try {
+                const o = await vh;
+                if (!o) {
+                    n("error"),
+                    s(e("emailConfirmation.error"));
+                    return
+                }
+                const l = new URLSearchParams(window.location.search)
+                  , c = l.get("token_hash")
+                  , d = l.get("type")
+                  , f = l.get("error")
+                  , h = l.get("error_description")
+                  , p = new URLSearchParams(window.location.hash.substring(1))
+                  , g = p.get("access_token") || l.get("access_token")
+                  , m = p.get("refresh_token") || l.get("refresh_token")
+                  , y = p.get("type")
+                  , x = p.get("error")
+                  , v = p.get("error_description")
+                  , b = f || x
+                  , _ = h || v;
+                if (b) {
+                    console.error("Email confirmation error from URL:", {
+                        error: b,
+                        errorDescription: _
+                    }),
+                    n("error"),
+                    _ != null && _.includes("expired") ? s(e("emailConfirmation.linkExpired", "El enlace de verificación ha expirado. Por favor, solicita un nuevo correo de verificación.")) : b === "access_denied" ? s(e("emailConfirmation.invalidLink", "El enlace de verificación no es válido o ya fue usado.")) : _ != null && _.includes("already been verified") ? s(e("emailConfirmation.alreadyVerified", "Este correo ya ha sido verificado. Intenta iniciar sesión.")) : s(_ || e("emailConfirmation.error", "Ocurrió un error al verificar tu correo."));
+                    return
+                }
+                if (c && d) {
+                    console.log("Verifying with token_hash method");
+                    const {data: S, error: j} = await o.auth.verifyOtp({
+                        token_hash: c,
+                        type: d
+                    });
+                    if (j) {
+                        console.error("Token verification error:", j),
+                        n("error"),
+                        s(j.message);
+                        return
+                    }
+                    S.session ? (vu(S.session),
+                    yn.clear(),
+                    await yn.refetchQueries({
+                        queryKey: ["/api/auth/user"]
+                    }),
+                    n("success"),
+                    s(e("emailConfirmation.success")),
+                    setTimeout( () => {
+                        window.location.href = "/"
+                    }
+                    , 2e3)) : (n("error"),
+                    s(e("emailConfirmation.error")));
+                    return
+                }
+                if (g && m) {
+                    console.log("Verifying with session method");
+                    const {data: S, error: j} = await o.auth.setSession({
+                        access_token: g,
+                        refresh_token: m
+                    });
+                    if (j) {
+                        console.error("Session error:", j),
+                        n("error"),
+                        s(j.message);
+                        return
+                    }
+                    vu(S.session),
+                    yn.clear(),
+                    await yn.refetchQueries({
+                        queryKey: ["/api/auth/user"]
+                    }),
+                    n("success"),
+                    s(e("emailConfirmation.success")),
+                    setTimeout( () => {
+                        window.location.href = "/"
+                    }
+                    , 2e3);
+                    return
+                }
+                n("error"),
+                s(e("emailConfirmation.invalidLink", "El enlace de verificación no es válido o está incompleto."))
+            } catch (o) {
+                console.error("Email confirmation error:", o),
+                n("error"),
+                s(e("emailConfirmation.error"))
+            }
+        }
+        )()
+    }
