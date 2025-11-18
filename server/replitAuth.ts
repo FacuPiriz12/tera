@@ -26,16 +26,11 @@ function createSupabaseClient() {
   
   console.log('✅ Supabase Auth configured');
   
-  return createClient(supabaseUrl, supabaseAnonKey, {
+  const client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
       detectSessionInUrl: false
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 0
-      }
     },
     global: {
       headers: {
@@ -43,6 +38,13 @@ function createSupabaseClient() {
       }
     }
   });
+  
+  // Disconnect realtime to prevent WebSocket connection attempts
+  if (client.realtime) {
+    client.realtime.disconnect();
+  }
+  
+  return client;
 }
 
 const getOidcConfig = memoize(

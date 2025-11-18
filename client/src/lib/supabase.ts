@@ -30,16 +30,14 @@ export async function createSupabaseClient() {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        // Disable realtime to prevent WebSocket connection issues
         storageKey: 'supabase.auth.token'
-      },
-      // Disable realtime completely
-      realtime: {
-        params: {
-          eventsPerSecond: 0
-        }
       }
     });
+    
+    // Remove realtime connection to prevent WebSocket errors
+    if (client.realtime) {
+      client.realtime.disconnect();
+    }
 
     // Initialize cached session with current session
     const { data: { session } } = await client.auth.getSession();
