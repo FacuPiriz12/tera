@@ -84,10 +84,9 @@ export default function EmailConfirmation() {
             // Update the session cache manually
             setCachedSession(data.session);
             
-            // Clear and refetch auth queries
-            queryClient.clear();
-            await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
-
+            // Wait a bit for session to persist to localStorage
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
             setStatus('success');
             setMessage(t('emailConfirmation.success'));
             
@@ -120,9 +119,8 @@ export default function EmailConfirmation() {
           // Update the session cache manually
           setCachedSession(sessionData.session);
           
-          // Clear and refetch auth queries
-          queryClient.clear();
-          await queryClient.refetchQueries({ queryKey: ["/api/auth/user"] });
+          // Wait a bit for session to persist to localStorage
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           setStatus('success');
           setMessage(t('emailConfirmation.success'));

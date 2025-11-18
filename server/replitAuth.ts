@@ -260,6 +260,13 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   // Check for Supabase auth first
   const authHeader = req.headers.authorization;
+  console.log('🔐 isAuthenticated check:', {
+    hasAuthHeader: !!authHeader,
+    authHeaderValue: authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none',
+    path: req.path,
+    nodeEnv: process.env.NODE_ENV
+  });
+  
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     const supabase = createSupabaseClient();
@@ -269,6 +276,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         
         if (user && !error) {
+          console.log('✅ Supabase auth successful for user:', user.email);
           // Create user object compatible with existing code
           req.user = {
             claims: {
@@ -292,6 +300,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           });
           
           return next();
+        } else {
+          console.log('❌ Supabase auth failed:', error?.message);
         }
       } catch (error) {
         console.error('Supabase auth error:', error);
@@ -303,6 +313,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (process.env.NODE_ENV === "development") {
     // Check if user is logged in (default is logged out)
     const isLoggedIn = req.session?.devLoggedIn;
+    console.log('🔍 Dev mode check:', { devLoggedIn: isLoggedIn, sessionID: req.sessionID });
     if (!isLoggedIn) {
       return res.status(401).json({ message: "Not authenticated in development" });
     }

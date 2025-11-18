@@ -11,6 +11,7 @@ export function useAuth() {
   // Initialize Supabase and check initial session once
   useEffect(() => {
     let mounted = true;
+    let unsubscribe: (() => void) | undefined;
     
     const initSupabaseAuth = async () => {
       try {
@@ -28,6 +29,21 @@ export function useAuth() {
         const { data: { session } } = await supabase.auth.getSession();
         setCachedSession(session);
         
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Supabase auth state changed:', event, session ? 'Session present' : 'No session');
+          setCachedSession(session);
+          
+          // Refetch user data when auth state changes
+          if (session) {
+            await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+          } else {
+            queryClient.setQueryData(["/api/auth/user"], null);
+          }
+        });
+        
+        unsubscribe = () => subscription.unsubscribe();
+        
         if (mounted) {
           setIsSupabaseLoading(false);
         }
@@ -43,8 +59,11 @@ export function useAuth() {
     
     return () => {
       mounted = false;
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
-  }, []);
+  }, [queryClient]);
 
   // Query backend for user data
   // This works for both Supabase and Replit auth since getAuthHeaders() uses cached session

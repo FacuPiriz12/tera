@@ -19,6 +19,12 @@ async function getAuthHeaders(): Promise<HeadersInit> {
     
     if (session?.access_token) {
       headers['Authorization'] = `Bearer ${session.access_token}`;
+      console.log('🔑 Auth headers added:', {
+        hasToken: true,
+        tokenPrefix: session.access_token.substring(0, 20) + '...'
+      });
+    } else {
+      console.log('🔑 No session found, using cookie auth');
     }
   } catch (error) {
     // Supabase auth not available or failed, will rely on cookies
