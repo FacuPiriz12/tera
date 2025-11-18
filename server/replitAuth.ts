@@ -17,16 +17,22 @@ if (!process.env.REPLIT_DOMAINS && process.env.NODE_ENV !== 'production') {
 // Create Supabase client for server-side auth
 function createSupabaseClient() {
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+  // Use service role key for server-side auth validation (required for getUser)
+  // Falls back to anon key if service role key is not available
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
   
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseKey) {
     console.log('Supabase credentials not found, using Replit Auth only');
     return null;
   }
   
-  console.log('✅ Supabase Auth configured');
+  if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.log('✅ Supabase Auth configured with service role key');
+  } else {
+    console.log('⚠️  Supabase Auth configured with anon key (service role key recommended for production)');
+  }
   
-  const client = createClient(supabaseUrl, supabaseAnonKey, {
+  const client = createClient(supabaseUrl, supabaseKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
