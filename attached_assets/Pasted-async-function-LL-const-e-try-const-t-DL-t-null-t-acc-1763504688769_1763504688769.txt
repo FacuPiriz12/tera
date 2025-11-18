@@ -1,0 +1,117 @@
+async function LL() {
+    const e = {};
+    try {
+        const t = DL();
+        t != null && t.access_token ? (e.Authorization = `Bearer ${t.access_token}`,
+        console.log("🔑 Auth headers added:", {
+            hasToken: !0,
+            tokenPrefix: t.access_token.substring(0, 20) + "..."
+        })) : console.log("🔑 No session found, using cookie auth")
+    } catch {
+        console.debug("Supabase auth not available, using cookie auth")
+    }
+    return e
+}
+async function Or(e, t, r) {
+    const n = await LL()
+      , s = await fetch(t, {
+        method: e,
+        headers: {
+            ...r ? {
+                "Content-Type": "application/json"
+            } : {},
+            ...n
+        },
+        body: r ? JSON.stringify(r) : void 0,
+        credentials: "include"
+    });
+    return await IL(s),
+    s
+}
+const lh = ({on401: e}) => async ({queryKey: t}) => {
+    const r = t[0]
+      , n = await LL()
+      , i = await fetch(r, {
+        headers: n,
+        credentials: "include"
+    });
+    return e === "returnNull" && i.status === 401 ? null : (await IL(i),
+    await i.json())
+}
+  , fi = new EK({
+    defaultOptions: {
+        queries: {
+            queryFn: lh({
+                on401: "returnNull"
+            }),
+            refetchInterval: !1,
+            refetchOnWindowFocus: !1,
+            staleTime: 5e3,
+            retry: !1
+        },
+        mutations: {
+            retry: !1
+        }
+    }
+})
+  , HK = 1
+  , qK = 1e6;
+let db = 0;
+function KK() {
+    return db = (db + 1) % Number.MAX_SAFE_INTEGER,
+    db.toString()
+}
+const fb = new Map
+  , HC = e => {
+    if (fb.has(e))
+        return;
+    const t = setTimeout( () => {
+        fb.delete(e),
+        Tf({
+            type: "REMOVE_TOAST",
+            toastId: e
+        })
+    }
+    , qK);
+    fb.set(e, t)
+}
+  , GK = (e, t) => {
+    switch (t.type) {
+    case "ADD_TOAST":
+        return {
+            ...e,
+            toasts: [t.toast, ...e.toasts].slice(0, HK)
+        };
+    case "UPDATE_TOAST":
+        return {
+            ...e,
+            toasts: e.toasts.map(r => r.id === t.toast.id ? {
+                ...r,
+                ...t.toast
+            } : r)
+        };
+    case "DISMISS_TOAST":
+        {
+            const {toastId: r} = t;
+            return r ? HC(r) : e.toasts.forEach(n => {
+                HC(n.id)
+            }
+            ),
+            {
+                ...e,
+                toasts: e.toasts.map(n => n.id === r || r === void 0 ? {
+                    ...n,
+                    open: !1
+                } : n)
+            }
+        }
+    case "REMOVE_TOAST":
+        return t.toastId === void 0 ? {
+            ...e,
+            toasts: []
+        } : {
+            ...e,
+            toasts: e.toasts.filter(r => r.id !== t.toastId)
+        }
+    }
+}
