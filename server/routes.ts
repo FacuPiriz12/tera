@@ -79,9 +79,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      let user = await storage.getUser(userId);
       
-      // If user doesn't exist in database, create it (especially for development mode)
+      // Try to get user from database first
+      let user;
+      try {
+        user = await storage.getUser(userId);
+      } catch (dbError) {
+        console.log('Database not available, using claims data directly');
+        user = null;
+      }
+      
+      // If user doesn't exist in database or database is unavailable, 
+      // return user data from claims (Supabase auth)
       if (!user) {
         const userData: any = {
           id: userId,
@@ -89,6 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           firstName: req.user.claims.first_name,
           lastName: req.user.claims.last_name,
           profileImageUrl: req.user.claims.profile_image_url,
+          role: 'user', // default role
         };
         
         // In development, dev-user-123 is always admin
@@ -96,7 +106,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userData.role = 'admin';
         }
         
-        user = await storage.upsertUser(userData);
+        // Try to save to database, but don't fail if it doesn't work
+        try {
+          user = await storage.upsertUser(userData);
+        } catch (dbError) {
+          console.log('Database upsert failed, returning claims data directly');
+          user = userData;
+        }
       }
       
       res.json(user);
