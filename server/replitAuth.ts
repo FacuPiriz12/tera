@@ -299,14 +299,22 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           
           // Upsert user in database with Supabase auth provider
           try {
+            // Check if this is the admin user
+            const isAdminEmail = user.email === 'facupiriz87@gmail.com';
+            
             await storage.upsertUser({
               id: user.id,
               email: user.email || '',
               firstName: user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || '',
               lastName: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
               profileImageUrl: user.user_metadata?.avatar_url || '',
-              authProvider: 'supabase'
+              authProvider: 'supabase',
+              role: isAdminEmail ? 'admin' : 'user'
             });
+            
+            if (isAdminEmail) {
+              console.log('🔑 Admin user logged in:', user.email);
+            }
           } catch (dbError) {
             console.error('Database upsert error (non-fatal):', dbError);
             // Continue even if database upsert fails - user is still authenticated via Supabase
