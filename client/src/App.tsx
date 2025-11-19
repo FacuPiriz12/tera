@@ -21,6 +21,8 @@ import Profile from "@/pages/Profile";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminUsers from "@/pages/admin/Users";
 import AdminOperations from "@/pages/admin/Operations";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -40,12 +42,14 @@ function Router() {
 
   return (
     <Switch>
-      {/* Auth routes - available to all users */}
+      {/* Public routes - available to all users */}
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/signup/success" component={SignupSuccess} />
       <Route path="/auth/verify" component={EmailVerification} />
       <Route path="/auth/confirm" component={EmailConfirmation} />
+      <Route path="/terms" component={TermsOfService} />
+      <Route path="/privacy" component={PrivacyPolicy} />
       
       {!isAuthenticated || error ? (
         <Route path="/" component={Landing} />
