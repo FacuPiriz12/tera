@@ -9,6 +9,19 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const invalidatingRef = useRef(false);
   const lastEventRef = useRef<string>('');
+  
+  // Logout coordination ref - tracks promise for signOut/listener sync
+  const logoutSyncRef = useRef<{
+    promise: Promise<void> | null;
+    resolve: (() => void) | null;
+    reject: ((reason?: unknown) => void) | null;
+    timer: ReturnType<typeof setTimeout> | null;
+  }>({
+    promise: null,
+    resolve: null,
+    reject: null,
+    timer: null,
+  });
 
   // Initialize Supabase and check initial session once
   useEffect(() => {
@@ -34,6 +47,46 @@ export function useAuth() {
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
           console.log('Supabase auth state changed:', event, session ? 'Session present' : 'No session');
+          
+          // Handle SIGNED_OUT event for logout coordination
+          if (event === 'SIGNED_OUT') {
+            setCachedSession(null);
+            
+            try {
+              // Invalidate auth query and wait for it to complete
+              await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+              
+              // Resolve the logout promise if one is pending
+              if (logoutSyncRef.current.resolve) {
+                if (logoutSyncRef.current.timer) {
+                  clearTimeout(logoutSyncRef.current.timer);
+                }
+                logoutSyncRef.current.resolve();
+                logoutSyncRef.current = {
+                  promise: null,
+                  resolve: null,
+                  reject: null,
+                  timer: null,
+                };
+              }
+            } catch (error) {
+              console.error('Error during SIGNED_OUT handling:', error);
+              // Reject the logout promise on error
+              if (logoutSyncRef.current.reject) {
+                if (logoutSyncRef.current.timer) {
+                  clearTimeout(logoutSyncRef.current.timer);
+                }
+                logoutSyncRef.current.reject(error);
+                logoutSyncRef.current = {
+                  promise: null,
+                  resolve: null,
+                  reject: null,
+                  timer: null,
+                };
+              }
+            }
+            return;
+          }
           
           // Prevent processing duplicate events
           if (lastEventRef.current === event && invalidatingRef.current) {
@@ -82,6 +135,16 @@ export function useAuth() {
       if (unsubscribe) {
         unsubscribe();
       }
+      // Cleanup logout sync on unmount
+      if (logoutSyncRef.current.timer) {
+        clearTimeout(logoutSyncRef.current.timer);
+      }
+      logoutSyncRef.current = {
+        promise: null,
+        resolve: null,
+        reject: null,
+        timer: null,
+      };
     };
   }, [queryClient]);
 
@@ -106,8 +169,61 @@ export function useAuth() {
       if (session) {
         const supabase = await supabasePromise;
         if (supabase) {
-          await supabase.auth.signOut();
-          setCachedSession(null);
+          // Clear any pending logout promise
+          if (logoutSyncRef.current.timer) {
+            clearTimeout(logoutSyncRef.current.timer);
+          }
+          if (logoutSyncRef.current.reject) {
+            logoutSyncRef.current.reject(new Error('Previous logout cancelled'));
+          }
+          
+          // Create new promise for this logout
+          const logoutPromise = new Promise<void>((resolve, reject) => {
+            logoutSyncRef.current = {
+              promise: null, // Will be set below
+              resolve,
+              reject,
+              timer: setTimeout(() => {
+                reject(new Error('Logout timeout - onAuthStateChange listener did not fire'));
+              }, 4000),
+            };
+          });
+          logoutSyncRef.current.promise = logoutPromise;
+          
+          try {
+            // Sign out from Supabase - this will trigger onAuthStateChange SIGNED_OUT
+            const { error } = await supabase.auth.signOut();
+            
+            if (error) {
+              // Clean up promise on error
+              if (logoutSyncRef.current.timer) {
+                clearTimeout(logoutSyncRef.current.timer);
+              }
+              logoutSyncRef.current = {
+                promise: null,
+                resolve: null,
+                reject: null,
+                timer: null,
+              };
+              throw new Error(`Failed to sign out: ${error.message}`);
+            }
+            
+            // Wait for the onAuthStateChange listener to process SIGNED_OUT
+            // and resolve the promise after clearing session and invalidating queries
+            await logoutPromise;
+          } catch (error) {
+            // Clean up on any error
+            if (logoutSyncRef.current.timer) {
+              clearTimeout(logoutSyncRef.current.timer);
+            }
+            logoutSyncRef.current = {
+              promise: null,
+              resolve: null,
+              reject: null,
+              timer: null,
+            };
+            throw error;
+          }
         }
       } else {
         // Sign out from Replit/dev auth
@@ -118,8 +234,17 @@ export function useAuth() {
       }
     },
     onSuccess: () => {
+      // Clear query cache and redirect to login
+      // The listener has already updated the cached session and invalidated queries
       queryClient.clear();
       window.location.href = '/login';
+    },
+    onError: (error) => {
+      console.error('Logout failed:', error);
+      // Do NOT redirect or clear cache on error
+      // The user should remain on the current page with their session intact
+      // Surface the error to the UI so user can retry
+      // TODO: Show toast/error message to user
     },
   });
 

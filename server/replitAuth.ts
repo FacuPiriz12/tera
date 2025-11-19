@@ -213,12 +213,12 @@ export async function setupAuth(app: Express) {
   });
 
   // Logout route - POST method for better session handling
-  app.post("/api/logout", (req, res) => {
+  app.post("/api/logout", async (req, res) => {
     console.log('Solicitud de logout recibida');
     console.log('Session ID:', req.sessionID);
     
-    // Handle development logout
-    if (process.env.NODE_ENV === "development") {
+    // Handle development logout or production without Replit Auth
+    if (process.env.NODE_ENV === "development" || !process.env.REPLIT_DOMAINS) {
       req.session!.destroy((err) => {
         if (err) {
           console.error('Error al destruir sesión:', err);
@@ -232,6 +232,8 @@ export async function setupAuth(app: Express) {
       return;
     }
     
+    // Handle Replit Auth logout (only when REPLIT_DOMAINS is configured)
+    const config = await getOidcConfig();
     req.logout(() => {
       req.session!.destroy((err) => {
         if (err) {

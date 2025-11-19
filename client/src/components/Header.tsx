@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useQueryClient } from "@tanstack/react-query";
 import CloneDriveLogo from "./CloneDriveLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Search, LogOut, Settings, User } from "lucide-react";
@@ -18,35 +17,12 @@ import {
 import { useLocation } from "wouter";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, signOut, isSigningOut } = useAuth();
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  const handleLogout = async () => {
-    try {
-      // Clear all queries from cache
-      queryClient.clear();
-      
-      // Use POST method for logout
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        // Use client-side navigation instead of full page reload
-        setLocation('/');
-      } else {
-        console.error('Error al cerrar sesión');
-        // Fallback: use client-side navigation
-        setLocation('/');
-      }
-    } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      // Fallback: use client-side navigation  
-      setLocation('/');
-    }
+  const handleLogout = () => {
+    signOut();
   };
 
   const goToDashboard = () => {
