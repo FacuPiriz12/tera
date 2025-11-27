@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
 import { startQueueWorker } from "./queueWorker";
+import { ensureTablesExist } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -39,6 +40,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize database tables on startup
+  try {
+    await ensureTablesExist();
+  } catch (error) {
+    console.error('Warning: Could not initialize database tables:', error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

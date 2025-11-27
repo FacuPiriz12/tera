@@ -1,5 +1,6 @@
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
+import { sql } from 'drizzle-orm';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
@@ -7,6 +8,7 @@ neonConfig.webSocketConstructor = ws;
 
 let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
+let tablesInitialized = false;
 
 function getDatabaseUrl(): string {
   let databaseUrl = process.env.DATABASE_URL;
@@ -36,5 +38,114 @@ function initializeDatabase() {
   return db!;
 }
 
-export { initializeDatabase };
+async function ensureTablesExist() {
+  if (tablesInitialized) return;
+  
+  const database = initializeDatabase();
+  
+  try {
+    // Create sessions table for session storage
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS sessions (
+        sid VARCHAR PRIMARY KEY,
+        sess JSONB NOT NULL,
+        expire TIMESTAMP NOT NULL
+      )
+    `);
+    
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON sessions (expire)
+    `);
+    
+    // Create users table
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        email VARCHAR UNIQUE,
+        first_name VARCHAR,
+        last_name VARCHAR,
+        profile_image_url VARCHAR,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW(),
+        auth_provider VARCHAR NOT NULL DEFAULT 'replit',
+        role VARCHAR NOT NULL DEFAULT 'user',
+        max_storage_bytes INTEGER DEFAULT 16106127360,
+        max_concurrent_operations INTEGER DEFAULT 5,
+        max_daily_operations INTEGER DEFAULT 100,
+        is_active BOOLEAN DEFAULT true,
+        google_access_token TEXT,
+        google_refresh_token TEXT,
+        google_token_expiry TIMESTAMP,
+        google_connected BOOLEAN DEFAULT false,
+        dropbox_access_token TEXT,
+        dropbox_refresh_token TEXT,
+        dropbox_token_expiry TIMESTAMP,
+        dropbox_connected BOOLEAN DEFAULT false,
+        membership_plan VARCHAR NOT NULL DEFAULT 'free',
+        membership_expiry TIMESTAMP,
+        membership_trial_used BOOLEAN DEFAULT false,
+        stripe_customer_id VARCHAR,
+        stripe_subscription_id VARCHAR
+      )
+    `);
+    
+    // Create cloud_files table
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS cloud_files (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        provider VARCHAR NOT NULL,
+        original_file_id VARCHAR NOT NULL,
+        copied_file_id VARCHAR NOT NULL,
+        file_name TEXT NOT NULL,
+        mime_type VARCHAR,
+        file_size INTEGER,
+        source_url TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
+    // Create copy_operations table
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS copy_operations (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        source_url TEXT NOT NULL,
+        destination_folder_id TEXT NOT NULL DEFAULT 'root',
+        status VARCHAR NOT NULL,
+        total_files INTEGER DEFAULT 0,
+        completed_files INTEGER DEFAULT 0,
+        error_message TEXT,
+        source_provider VARCHAR,
+        dest_provider VARCHAR,
+        source_file_id VARCHAR,
+        source_file_path TEXT,
+        file_name TEXT,
+        item_type VARCHAR DEFAULT 'file',
+        priority INTEGER DEFAULT 0,
+        attempts INTEGER DEFAULT 0,
+        max_retries INTEGER DEFAULT 5,
+        next_run_at TIMESTAMP,
+        locked_by VARCHAR,
+        locked_at TIMESTAMP,
+        cancel_requested BOOLEAN DEFAULT false,
+        progress_pct INTEGER DEFAULT 0,
+        copied_file_id VARCHAR,
+        copied_file_name TEXT,
+        copied_file_url TEXT,
+        duration INTEGER,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
+    tablesInitialized = true;
+    console.log('✅ Database tables initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing database tables:', error);
+    // Don't throw - allow app to continue even if table creation fails
+  }
+}
+
+export { initializeDatabase, ensureTablesExist };
 export const getDb = () => initializeDatabase();
