@@ -61,6 +61,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Debug endpoint to check environment variables and database status
+  app.get('/api/debug/env', async (req, res) => {
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_ANON_KEY;
+      const dbUrl = process.env.DATABASE_URL;
+      
+      const envStatus = {
+        SUPABASE_URL: supabaseUrl ? `set (${supabaseUrl.length} chars, starts: ${supabaseUrl.substring(0, 20)}...)` : 'not set',
+        SUPABASE_ANON_KEY: supabaseKey ? `set (${supabaseKey.length} chars)` : 'not set',
+        DATABASE_URL: dbUrl ? `set (${dbUrl.length} chars)` : 'not set',
+        PGHOST: process.env.PGHOST || 'not set',
+        PGUSER: process.env.PGUSER || 'not set',
+        PGDATABASE: process.env.PGDATABASE || 'not set',
+        NODE_ENV: process.env.NODE_ENV,
+        allEnvKeys: Object.keys(process.env).filter(k => 
+          k.includes('SUPABASE') || k.includes('PG') || k.includes('DATABASE') || k.includes('REPLIT')
+        ),
+      };
+      
+      // Try to connect to database
+      let dbStatus = 'unknown';
+      try {
+        const users = await storage.getAllUsers(1, 1);
+        dbStatus = `connected (${users.total} users)`;
+      } catch (dbError: any) {
+        dbStatus = `error: ${dbError.message}`;
+      }
+      
+      res.json({
+        envStatus,
+        dbStatus,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   
   // Auth middleware
   await setupAuth(app);
