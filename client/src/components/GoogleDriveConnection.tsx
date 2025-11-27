@@ -42,6 +42,7 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
     isConnecting, 
     isDisconnecting,
     isLoadingStatus,
+    connectError,
     checkOAuthCallback 
   } = useGoogleAuth();
   const { toast } = useToast();
@@ -62,6 +63,17 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
       });
     }
   }, [checkOAuthCallback, toast]);
+
+  // Show error toast when connection fails
+  useEffect(() => {
+    if (connectError) {
+      toast({
+        title: "Error de conexión",
+        description: connectError instanceof Error ? connectError.message : "No se pudo iniciar la conexión. Por favor, inicia sesión primero.",
+        variant: "destructive",
+      });
+    }
+  }, [connectError, toast]);
 
   const handleConnect = () => {
     connect();

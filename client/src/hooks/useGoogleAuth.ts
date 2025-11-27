@@ -34,8 +34,33 @@ export function useGoogleAuth() {
         authUrl += `?token=${encodeURIComponent(session.access_token)}`;
       }
       
-      // This will redirect to Google OAuth
+      // First, fetch the auth URL to check if we get a redirect or an error
+      const response = await fetch(authUrl, {
+        method: 'GET',
+        credentials: 'include',
+        redirect: 'manual', // Don't follow redirects automatically
+      });
+      
+      // If we get a redirect (302/303), the URL is in the Location header
+      // But since we use redirect: 'manual', we get an opaque-redirect response
+      // In this case, status is 0 and type is 'opaqueredirect'
+      if (response.type === 'opaqueredirect' || response.status === 0 || response.redirected) {
+        // The server wants to redirect us, so navigate to the auth URL
+        window.location.href = authUrl;
+        // Return a pending promise to keep the loading state while navigating
+        return new Promise(() => {});
+      }
+      
+      // If we got a non-redirect response, check for errors
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error de autenticación' }));
+        throw new Error(errorData.message || 'No autorizado. Por favor, inicia sesión primero.');
+      }
+      
+      // If OK but not a redirect, something unexpected happened
+      // Still try to navigate
       window.location.href = authUrl;
+      return new Promise(() => {});
     },
     onError: (error) => {
       console.error("Failed to start Google OAuth:", error);
@@ -100,6 +125,7 @@ export function useGoogleAuth() {
     disconnect: disconnectMutation.mutate,
     isConnecting: connectMutation.isPending,
     isDisconnecting: disconnectMutation.isPending,
+    connectError: connectMutation.error,
     checkOAuthCallback,
   };
 }
