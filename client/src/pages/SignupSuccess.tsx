@@ -18,10 +18,10 @@ export default function SignupSuccess() {
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <CardTitle className="text-2xl font-bold text-green-600">
-            {t('signupSuccess.title')}
+            {t('auth.signupSuccess.title')}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {t('signupSuccess.subtitle')}
+            {t('auth.signupSuccess.subtitle')}
           </CardDescription>
         </CardHeader>
 
@@ -31,10 +31,10 @@ export default function SignupSuccess() {
               <Mail className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
-                  {t('signupSuccess.checkEmailTitle')}
+                  {t('auth.signupSuccess.checkEmailTitle')}
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-300">
-                  {t('signupSuccess.checkEmailDescription')}
+                  {t('auth.signupSuccess.checkEmailDescription')}
                 </p>
               </div>
             </div>
@@ -42,26 +42,26 @@ export default function SignupSuccess() {
 
           <div className="space-y-3">
             <h4 className="font-medium text-sm text-muted-foreground">
-              {t('signupSuccess.nextStepsTitle')}
+              {t('auth.signupSuccess.nextStepsTitle')}
             </h4>
             <div className="space-y-2">
               <div className="flex items-center space-x-3 text-sm">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary-foreground">1</span>
                 </div>
-                <span>{t('signupSuccess.step1')}</span>
+                <span>{t('auth.signupSuccess.step1')}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary-foreground">2</span>
                 </div>
-                <span>{t('signupSuccess.step2')}</span>
+                <span>{t('auth.signupSuccess.step2')}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-bold text-primary-foreground">3</span>
                 </div>
-                <span>{t('signupSuccess.step3')}</span>
+                <span>{t('auth.signupSuccess.step3')}</span>
               </div>
             </div>
           </div>
@@ -72,7 +72,7 @@ export default function SignupSuccess() {
               className="w-full"
               data-testid="button-continue-login"
             >
-              {t('signupSuccess.continueToLogin')}
+              {t('auth.signupSuccess.continueToLogin')}
             </Button>
             
             <Button 
@@ -82,20 +82,20 @@ export default function SignupSuccess() {
               data-testid="button-back-home"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              {t('signupSuccess.backToHome')}
+              {t('auth.signupSuccess.backToHome')}
             </Button>
           </div>
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground">
-              {t('signupSuccess.noEmail')}{' '}
+              {t('auth.signupSuccess.noEmail')}{' '}
               <Button 
                 variant="link" 
                 className="p-0 h-auto text-xs"
                 onClick={() => setLocation('/signup')}
                 data-testid="button-signup-again"
               >
-                {t('signupSuccess.tryAgain')}
+                {t('auth.signupSuccess.tryAgain')}
               </Button>
             </p>
           </div>
