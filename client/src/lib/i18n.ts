@@ -307,6 +307,20 @@ const resources = {
         nameRequired: "El nombre es requerido",
         acceptTermsRequired: "Debes aceptar los términos y condiciones",
         passwordsDoNotMatch: "Las contraseñas no coinciden"
+      },
+      signupSuccess: {
+        title: "¡Registro Exitoso!",
+        subtitle: "Tu cuenta ha sido creada correctamente",
+        checkEmailTitle: "Revisa tu correo electrónico",
+        checkEmailDescription: "Te hemos enviado un email de verificación. Haz clic en el enlace para activar tu cuenta.",
+        nextStepsTitle: "Próximos pasos:",
+        step1: "Abre tu bandeja de entrada de correo",
+        step2: "Busca el email de verificación de TERA",
+        step3: "Haz clic en el enlace de verificación",
+        continueToLogin: "Ir a Iniciar Sesión",
+        backToHome: "Volver al Inicio",
+        noEmail: "¿No recibiste el correo?",
+        tryAgain: "Intenta registrarte de nuevo"
       }
     }
   },
@@ -613,6 +627,20 @@ const resources = {
         nameRequired: "Name is required",
         acceptTermsRequired: "You must accept the terms and conditions",
         passwordsDoNotMatch: "Passwords do not match"
+      },
+      signupSuccess: {
+        title: "Registration Successful!",
+        subtitle: "Your account has been created successfully",
+        checkEmailTitle: "Check your email",
+        checkEmailDescription: "We've sent you a verification email. Click the link to activate your account.",
+        nextStepsTitle: "Next steps:",
+        step1: "Open your email inbox",
+        step2: "Look for the verification email from TERA",
+        step3: "Click the verification link",
+        continueToLogin: "Go to Login",
+        backToHome: "Back to Home",
+        noEmail: "Didn't receive the email?",
+        tryAgain: "Try signing up again"
       }
     }
   }
