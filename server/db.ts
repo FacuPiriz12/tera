@@ -9,7 +9,17 @@ let pool: Pool | null = null;
 let db: ReturnType<typeof drizzle> | null = null;
 
 function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL;
+  let databaseUrl = process.env.DATABASE_URL;
+  
+  // Try to construct from PG* variables if DATABASE_URL is not available
+  if (!databaseUrl || databaseUrl.trim() === '') {
+    const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT } = process.env;
+    if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
+      databaseUrl = `postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT || '5432'}/${PGDATABASE}?sslmode=require`;
+      console.log('Constructed DATABASE_URL from PG* variables');
+    }
+  }
+  
   if (!databaseUrl) {
     throw new Error(
       "DATABASE_URL must be set. Did you forget to provision a database?",
