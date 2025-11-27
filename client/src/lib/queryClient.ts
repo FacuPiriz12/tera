@@ -9,7 +9,7 @@ async function throwIfResNotOk(res: Response) {
 }
 
 // Helper function to get auth headers for both Supabase and Replit auth
-async function getAuthHeaders(): Promise<HeadersInit> {
+export async function getAuthHeaders(): Promise<HeadersInit> {
   const headers: HeadersInit = {};
   
   try {

@@ -591,15 +591,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
   };
 
-  // Google OAuth routes
-  app.get('/api/auth/google', isAuthenticated, (req: any, res) => {
+  // Helper function to validate Supabase token and get user
+  async function validateSupabaseToken(token: string) {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return null;
+    }
+    
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
+    
     try {
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+      if (user && !error) {
+        return user;
+      }
+    } catch (error) {
+      console.error('Token validation error:', error);
+    }
+    return null;
+  }
+
+  // Google OAuth routes - supports both session auth and token-based auth
+  app.get('/api/auth/google', async (req: any, res) => {
+    try {
+      let userId: string | null = null;
+      
+      // Check for token in query parameter (for Supabase auth redirect)
+      const token = req.query.token as string;
+      if (token) {
+        const user = await validateSupabaseToken(token);
+        if (user) {
+          userId = user.id;
+          // Store user info in session for the callback
+          req.session.supabaseUserId = user.id;
+          req.session.supabaseUserEmail = user.email;
+        }
+      }
+      
+      // If no token, check if already authenticated via session
+      if (!userId && req.user?.claims?.sub) {
+        userId = req.user.claims.sub;
+      }
+      
+      // Check session for previously stored user
+      if (!userId && req.session?.supabaseUserId) {
+        userId = req.session.supabaseUserId;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized. Please login first." });
+      }
+      
       const oauth2Client = getGoogleOAuth2Client(req);
       
       // Generate random state for CSRF protection (like Dropbox)
       const state = crypto.randomBytes(16).toString('hex');
       req.session.googleOAuthState = state;
-      req.session.googleUserId = req.user.claims.sub;
+      req.session.googleUserId = userId;
+      
+      // Save session before redirecting
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
       
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
@@ -619,7 +680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/auth/google/callback', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/google/callback', async (req: any, res) => {
     try {
       const { code, state } = req.query;
       
@@ -627,35 +688,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clean up session on error
         delete req.session.googleOAuthState;
         delete req.session.googleUserId;
-        return res.redirect('/?google_auth=error&reason=no_code');
+        return res.redirect('/integrations?google_auth=error&reason=no_code');
       }
 
-      // Validate state parameter for CSRF protection (improved)
+      // Validate state parameter for CSRF protection
       const expectedState = req.session.googleOAuthState;
       const sessionUserId = req.session.googleUserId;
       
-      if (state !== expectedState || sessionUserId !== req.user.claims.sub) {
+      // Get current user ID from session or authenticated user
+      const currentUserId = req.user?.claims?.sub || req.session?.supabaseUserId;
+      
+      if (state !== expectedState) {
         console.error("Invalid state parameter in Google OAuth callback", {
           expectedState,
-          receivedState: state,
-          expectedUserId: sessionUserId,
-          receivedUserId: req.user.claims.sub
+          receivedState: state
         });
         // Clean up session on error
         delete req.session.googleOAuthState;
         delete req.session.googleUserId;
-        return res.redirect('/?google_auth=error&reason=invalid_state');
+        return res.redirect('/integrations?google_auth=error&reason=invalid_state');
+      }
+      
+      if (!sessionUserId) {
+        console.error("No user ID in session for Google OAuth callback");
+        return res.redirect('/integrations?google_auth=error&reason=no_session');
       }
 
-      // Clean up session
+      // Clean up OAuth state from session
       delete req.session.googleOAuthState;
-      delete req.session.googleUserId;
 
       const oauth2Client = getGoogleOAuth2Client(req);
       const { tokens } = await oauth2Client.getToken(code as string);
 
-      // Use user ID from authenticated session, not from state parameter
-      const userId = req.user.claims.sub;
+      // Use user ID from session (stored during OAuth initiation)
+      const userId = sessionUserId;
+      
+      // Clean up user ID from session
+      delete req.session.googleUserId;
 
       // Save tokens to database
       await storage.updateUserGoogleTokens(userId, {
@@ -664,10 +733,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiry: tokens.expiry_date ? new Date(tokens.expiry_date) : undefined
       });
 
-      // Redirect back to frontend with success
-      res.redirect('/?google_auth=success');
+      // Redirect back to integrations page with success
+      res.redirect('/integrations?google_auth=success');
     } catch (error) {
       console.error("Error in Google OAuth callback:", error);
+      
+      // Clean up session on error
+      delete req.session.googleUserId;
       
       // Check for specific OAuth errors and provide helpful instructions
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -677,15 +749,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const protocol = req.protocol;
         const redirectUri = `${protocol}://${domain}/api/auth/google/callback`;
         console.error(`Google OAuth redirect_uri_mismatch. Add this URL to Google Cloud Console: ${redirectUri}`);
-        return res.redirect(`/?google_auth=error&reason=redirect_mismatch&domain=${encodeURIComponent(domain)}`);
+        return res.redirect(`/integrations?google_auth=error&reason=redirect_mismatch&domain=${encodeURIComponent(domain)}`);
       }
       
       if (errorMessage.includes('invalid_client') || errorMessage.includes('unauthorized_client')) {
         console.error('Google OAuth client configuration error. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.');
-        return res.redirect('/?google_auth=error&reason=invalid_client');
+        return res.redirect('/integrations?google_auth=error&reason=invalid_client');
       }
       
-      res.redirect('/?google_auth=error');
+      res.redirect('/integrations?google_auth=error');
     }
   });
 
@@ -723,10 +795,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dropbox OAuth routes
-  app.get('/api/auth/dropbox', isAuthenticated, async (req: any, res) => {
+  // Dropbox OAuth routes - supports both session auth and token-based auth
+  app.get('/api/auth/dropbox', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      let userId: string | null = null;
+      
+      // Check for token in query parameter (for Supabase auth redirect)
+      const token = req.query.token as string;
+      if (token) {
+        const user = await validateSupabaseToken(token);
+        if (user) {
+          userId = user.id;
+          req.session.supabaseUserId = user.id;
+          req.session.supabaseUserEmail = user.email;
+        }
+      }
+      
+      // If no token, check if already authenticated via session
+      if (!userId && req.user?.claims?.sub) {
+        userId = req.user.claims.sub;
+      }
+      
+      // Check session for previously stored user
+      if (!userId && req.session?.supabaseUserId) {
+        userId = req.session.supabaseUserId;
+      }
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Unauthorized. Please login first." });
+      }
+      
       const protocol = req.protocol;
       const host = req.get('host');
       const redirectUri = `${protocol}://${host}/api/auth/dropbox/callback`;
@@ -735,6 +833,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const state = crypto.randomBytes(16).toString('hex');
       req.session.dropboxOAuthState = state;
       req.session.dropboxUserId = userId;
+      
+      // Save session before redirecting
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err: any) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
 
       const dropboxService = new DropboxService(userId);
       const authUrl = await dropboxService.getAuthUrl(redirectUri, state);
@@ -746,7 +852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/auth/dropbox/callback', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/dropbox/callback', async (req: any, res) => {
     try {
       const { code, state, error: oauthError, error_description } = req.query;
       
@@ -765,31 +871,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clean up session on error
         delete req.session.dropboxOAuthState;
         delete req.session.dropboxUserId;
-        return res.redirect('/?dropbox_auth=error&reason=no_code');
+        return res.redirect('/integrations?dropbox_auth=error&reason=no_code');
       }
 
       // Validate state parameter for CSRF protection
       const expectedState = req.session.dropboxOAuthState;
       const sessionUserId = req.session.dropboxUserId;
       
-      if (state !== expectedState || sessionUserId !== req.user.claims.sub) {
+      if (state !== expectedState) {
         console.error("Invalid state parameter in Dropbox OAuth callback", { 
           expectedState, 
-          receivedState: state, 
-          expectedUserId: sessionUserId, 
-          receivedUserId: req.user.claims.sub 
+          receivedState: state
         });
         // Clean up session on error
         delete req.session.dropboxOAuthState;
         delete req.session.dropboxUserId;
-        return res.redirect('/?dropbox_auth=error&reason=invalid_state');
+        return res.redirect('/integrations?dropbox_auth=error&reason=invalid_state');
+      }
+      
+      if (!sessionUserId) {
+        console.error("No user ID in session for Dropbox OAuth callback");
+        return res.redirect('/integrations?dropbox_auth=error&reason=no_session');
       }
 
-      // Clean up session
+      // Clean up OAuth state from session
       delete req.session.dropboxOAuthState;
+      
+      const userId = sessionUserId;
+      
+      // Clean up user ID from session
       delete req.session.dropboxUserId;
       
-      const userId = req.user.claims.sub;
       const protocol = req.protocol;
       const host = req.get('host');
       const redirectUri = `${protocol}://${host}/api/auth/dropbox/callback`;
@@ -805,8 +917,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       console.log("Dropbox OAuth completed successfully for user:", userId);
-      // Redirect back to frontend with success
-      res.redirect('/?dropbox_auth=success');
+      // Redirect back to integrations page with success
+      res.redirect('/integrations?dropbox_auth=success');
     } catch (error) {
       console.error("Error in Dropbox OAuth callback:", error);
       
@@ -822,19 +934,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const protocol = req.protocol;
         const redirectUri = `${protocol}://${domain}/api/auth/dropbox/callback`;
         console.error(`Dropbox OAuth redirect URI error. Add this URL to Dropbox App Console: ${redirectUri}`);
-        return res.redirect(`/?dropbox_auth=error&reason=redirect_mismatch&domain=${encodeURIComponent(domain)}`);
+        return res.redirect(`/integrations?dropbox_auth=error&reason=redirect_mismatch&domain=${encodeURIComponent(domain)}`);
       }
       
       if (errorMessage.includes('invalid_grant')) {
-        return res.redirect('/?dropbox_auth=error&reason=expired_code');
+        return res.redirect('/integrations?dropbox_auth=error&reason=expired_code');
       }
       
       if (errorMessage.includes('invalid_client') || errorMessage.includes('unauthorized_client')) {
         console.error('Dropbox OAuth client configuration error. Check DROPBOX_APP_KEY and DROPBOX_APP_SECRET.');
-        return res.redirect('/?dropbox_auth=error&reason=invalid_client');
+        return res.redirect('/integrations?dropbox_auth=error&reason=invalid_client');
       }
       
-      res.redirect('/?dropbox_auth=error&reason=unknown');
+      res.redirect('/integrations?dropbox_auth=error&reason=unknown');
     }
   });
 

@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getCachedSession } from "@/lib/supabaseSession";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 export interface DropboxAuthStatus {
   connected: boolean;
@@ -16,8 +18,10 @@ export function useDropboxAuth() {
   } = useQuery<DropboxAuthStatus>({
     queryKey: ["/api/auth/dropbox/status"],
     queryFn: async () => {
+      const headers = await getAuthHeaders();
       const response = await fetch("/api/auth/dropbox/status", {
         credentials: "include",
+        headers,
       });
       if (!response.ok) {
         if (response.status === 401) {
@@ -34,8 +38,17 @@ export function useDropboxAuth() {
   // Connect Dropbox mutation
   const connectMutation = useMutation({
     mutationFn: async () => {
+      // Get Supabase token if available
+      const session = getCachedSession();
+      let authUrl = "/api/auth/dropbox";
+      
+      // Include token in URL for Supabase auth users
+      if (session?.access_token) {
+        authUrl += `?token=${encodeURIComponent(session.access_token)}`;
+      }
+      
       // This will redirect to Dropbox OAuth
-      window.location.href = "/api/auth/dropbox";
+      window.location.href = authUrl;
     },
     onError: (error) => {
       console.error("Failed to start Dropbox OAuth:", error);

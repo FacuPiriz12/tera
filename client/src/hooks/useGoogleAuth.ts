@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getQueryFn } from "@/lib/queryClient";
+import { getCachedSession } from "@/lib/supabaseSession";
 
 export interface GoogleAuthStatus {
   connected: boolean;
@@ -24,8 +25,17 @@ export function useGoogleAuth() {
   // Connect Google Drive mutation
   const connectMutation = useMutation({
     mutationFn: async () => {
+      // Get Supabase token if available
+      const session = getCachedSession();
+      let authUrl = "/api/auth/google";
+      
+      // Include token in URL for Supabase auth users
+      if (session?.access_token) {
+        authUrl += `?token=${encodeURIComponent(session.access_token)}`;
+      }
+      
       // This will redirect to Google OAuth
-      window.location.href = "/api/auth/google";
+      window.location.href = authUrl;
     },
     onError: (error) => {
       console.error("Failed to start Google OAuth:", error);
