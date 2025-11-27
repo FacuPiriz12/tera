@@ -30,9 +30,9 @@ export default function Integrations() {
           </div>
 
           {/* Integration Cards */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 items-stretch">
             {/* Google Drive Integration */}
-            <Card className="hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+            <Card className="hover:shadow-lg transition-shadow duration-200 flex flex-col">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -45,42 +45,40 @@ export default function Integrations() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 flex-1 flex flex-col">
-                <div className="space-y-4 flex-1">
-                  <p className="text-gray-600 text-sm">
-                    Conecta tu cuenta de Google Drive para acceder y sincronizar archivos directamente desde nuestra plataforma.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">Características:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Sincronización automática
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Acceso a carpetas compartidas
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Gestión de permisos
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <strong>Soporte máximo:</strong> 5TB por archivo individual
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <GoogleDriveConnection variant="card" />
-                  </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Conecta tu cuenta de Google Drive para acceder y sincronizar archivos directamente desde nuestra plataforma.
+                </p>
+                
+                <div className="space-y-2 mb-4">
+                  <h4 className="font-medium text-gray-900">Características:</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Sincronización automática
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Acceso a carpetas compartidas
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Gestión de permisos
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <strong>Soporte máximo:</strong> 5TB por archivo individual
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="pt-4 border-t mt-auto">
+                  <GoogleDriveConnection variant="card" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Dropbox Integration */}
-            <Card className="hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+            <Card className="hover:shadow-lg transition-shadow duration-200 flex flex-col">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -93,42 +91,40 @@ export default function Integrations() {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 flex-1 flex flex-col">
-                <div className="space-y-4 flex-1">
-                  <p className="text-gray-600 text-sm">
-                    Integra tu cuenta de Dropbox para gestionar archivos y colaborar en documentos de forma eficiente.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-gray-900">Características:</h4>
-                    <ul className="text-sm text-gray-600 space-y-1">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Colaboración en tiempo real
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Historial de versiones
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        Compartir enlaces seguros
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                        <strong>Soporte máximo:</strong> 350GB por archivo individual
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <DropboxConnection variant="card" />
-                  </div>
+                <p className="text-gray-600 text-sm mb-4">
+                  Integra tu cuenta de Dropbox para gestionar archivos y colaborar en documentos de forma eficiente.
+                </p>
+                
+                <div className="space-y-2 mb-4">
+                  <h4 className="font-medium text-gray-900">Características:</h4>
+                  <ul className="text-sm text-gray-600 space-y-1">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Colaboración en tiempo real
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Historial de versiones
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      Compartir enlaces seguros
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                      <strong>Soporte máximo:</strong> 350GB por archivo individual
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="pt-4 border-t mt-auto">
+                  <DropboxConnection variant="card" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Coming Soon - More Integrations */}
-            <Card className="border-dashed border-2 border-gray-300 bg-gray-50/50">
+            <Card className="border-dashed border-2 border-gray-300 bg-gray-50/50 flex flex-col">
               <CardHeader className="pb-4">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -140,29 +136,27 @@ export default function Integrations() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-4">
-                  <p className="text-gray-500 text-sm">
-                    Estamos trabajando en nuevas integraciones para expandir tus opciones de almacenamiento y colaboración.
-                  </p>
-                  
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-gray-500">Próximamente:</h4>
-                    <ul className="text-sm text-gray-400 space-y-1">
-                      <li className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-gray-400" />
-                        OneDrive
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-gray-400" />
-                        iCloud
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <AlertCircle className="w-4 h-4 text-gray-400" />
-                        Amazon S3
-                      </li>
-                    </ul>
-                  </div>
+              <CardContent className="pt-0 flex-1 flex flex-col">
+                <p className="text-gray-500 text-sm mb-4">
+                  Estamos trabajando en nuevas integraciones para expandir tus opciones de almacenamiento y colaboración.
+                </p>
+                
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-500">Próximamente:</h4>
+                  <ul className="text-sm text-gray-400 space-y-1">
+                    <li className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      OneDrive
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      iCloud
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      Amazon S3
+                    </li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
