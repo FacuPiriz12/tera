@@ -111,6 +111,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // First, check if user exists by email (more reliable than ID for auth providers)
+    if (userData.email) {
+      const existingUser = await getDb()
+        .select()
+        .from(users)
+        .where(eq(users.email, userData.email))
+        .limit(1);
+      
+      if (existingUser.length > 0) {
+        // Update existing user, preserving the role if already admin
+        const currentRole = existingUser[0].role;
+        const newRole = userData.role === 'admin' ? 'admin' : currentRole;
+        
+        const [user] = await getDb()
+          .update(users)
+          .set({
+            ...userData,
+            id: existingUser[0].id, // Keep original ID
+            role: newRole, // Preserve admin role, or upgrade to admin
+            updatedAt: new Date(),
+          })
+          .where(eq(users.email, userData.email))
+          .returning();
+        return user;
+      }
+    }
+    
+    // If no existing user by email, try upsert by ID
     const [user] = await getDb()
       .insert(users)
       .values(userData)

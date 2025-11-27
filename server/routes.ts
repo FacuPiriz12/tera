@@ -61,151 +61,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Database initialization endpoint (temporary - for setup)
-  app.post('/api/init-db', async (req, res) => {
-    const { Pool, neonConfig } = await import('@neondatabase/serverless');
-    const ws = await import('ws');
-    neonConfig.webSocketConstructor = ws.default;
-    
-    // Debug: log all database-related env vars
-    const dbVars = {
-      DATABASE_URL: process.env.DATABASE_URL ? `[SET: ${process.env.DATABASE_URL.substring(0, 20)}...]` : '[NOT SET]',
-      PGHOST: process.env.PGHOST || '[NOT SET]',
-      PGUSER: process.env.PGUSER || '[NOT SET]',
-      PGDATABASE: process.env.PGDATABASE || '[NOT SET]',
-      PGPORT: process.env.PGPORT || '[NOT SET]',
-      PGPASSWORD: process.env.PGPASSWORD ? '[SET]' : '[NOT SET]'
-    };
-    console.log('Database env vars:', dbVars);
-    
-    // Try DATABASE_URL first, then construct from PG* vars
-    let databaseUrl = process.env.DATABASE_URL;
-    
-    if (!databaseUrl || databaseUrl.trim() === '') {
-      const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE, PGPORT } = process.env;
-      if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
-        databaseUrl = `postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${PGPORT || '5432'}/${PGDATABASE}?sslmode=require`;
-        console.log('Constructed DATABASE_URL from PG* variables');
-      }
-    }
-    
-    console.log('DATABASE_URL available:', !!databaseUrl);
-    
-    if (!databaseUrl) {
-      return res.status(500).json({ 
-        error: 'DATABASE_URL not configured',
-        dbVars
-      });
-    }
-    
-    const pool = new Pool({ connectionString: databaseUrl });
-    
-    try {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS sessions (
-          sid VARCHAR PRIMARY KEY,
-          sess JSONB NOT NULL,
-          expire TIMESTAMP NOT NULL
-        );
-        CREATE INDEX IF NOT EXISTS idx_session_expire ON sessions (expire);
-      `);
-      
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS users (
-          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-          email VARCHAR UNIQUE,
-          first_name VARCHAR,
-          last_name VARCHAR,
-          profile_image_url VARCHAR,
-          created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW(),
-          auth_provider VARCHAR NOT NULL DEFAULT 'replit',
-          role VARCHAR NOT NULL DEFAULT 'user',
-          max_storage_bytes INTEGER DEFAULT 16106127360,
-          max_concurrent_operations INTEGER DEFAULT 5,
-          max_daily_operations INTEGER DEFAULT 100,
-          is_active BOOLEAN DEFAULT true,
-          google_access_token TEXT,
-          google_refresh_token TEXT,
-          google_token_expiry TIMESTAMP,
-          google_connected BOOLEAN DEFAULT false,
-          dropbox_access_token TEXT,
-          dropbox_refresh_token TEXT,
-          dropbox_token_expiry TIMESTAMP,
-          dropbox_connected BOOLEAN DEFAULT false,
-          membership_plan VARCHAR NOT NULL DEFAULT 'free',
-          membership_expiry TIMESTAMP,
-          membership_trial_used BOOLEAN DEFAULT false,
-          stripe_customer_id VARCHAR,
-          stripe_subscription_id VARCHAR
-        );
-      `);
-      
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS cloud_files (
-          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id VARCHAR NOT NULL REFERENCES users(id),
-          provider VARCHAR NOT NULL,
-          original_file_id VARCHAR NOT NULL,
-          copied_file_id VARCHAR NOT NULL,
-          file_name TEXT NOT NULL,
-          mime_type VARCHAR,
-          file_size INTEGER,
-          source_url TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS copy_operations (
-          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id VARCHAR NOT NULL REFERENCES users(id),
-          source_url TEXT NOT NULL,
-          destination_folder_id TEXT NOT NULL DEFAULT 'root',
-          status VARCHAR NOT NULL,
-          total_files INTEGER DEFAULT 0,
-          completed_files INTEGER DEFAULT 0,
-          error_message TEXT,
-          source_provider VARCHAR,
-          dest_provider VARCHAR,
-          source_file_id VARCHAR,
-          source_file_path TEXT,
-          file_name TEXT,
-          item_type VARCHAR DEFAULT 'file',
-          priority INTEGER DEFAULT 0,
-          attempts INTEGER DEFAULT 0,
-          max_retries INTEGER DEFAULT 5,
-          next_run_at TIMESTAMP,
-          locked_by VARCHAR,
-          locked_at TIMESTAMP,
-          cancel_requested BOOLEAN DEFAULT false,
-          progress_pct INTEGER DEFAULT 0,
-          copied_file_id VARCHAR,
-          copied_file_name TEXT,
-          copied_file_url TEXT,
-          duration INTEGER,
-          created_at TIMESTAMP DEFAULT NOW(),
-          updated_at TIMESTAMP DEFAULT NOW()
-        );
-      `);
-      
-      // Create or update admin user
-      await pool.query(`
-        INSERT INTO users (id, email, first_name, last_name, role, auth_provider)
-        VALUES (gen_random_uuid(), 'facupiriz87@gmail.com', 'Facundo', 'Piriz', 'admin', 'supabase')
-        ON CONFLICT (email) DO UPDATE SET role = 'admin'
-      `);
-      
-      const result = await pool.query(`SELECT id, email, role FROM users WHERE email = 'facupiriz87@gmail.com'`);
-      
-      await pool.end();
-      res.json({ success: true, admin: result.rows[0] });
-    } catch (error: any) {
-      await pool.end();
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   
   // Auth middleware
   await setupAuth(app);
@@ -224,6 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userEmail = req.user.claims.email;
+      
+      // Check if this is the admin user
+      const isAdminEmail = userEmail === 'facupiriz87@gmail.com';
       
       // Try to get user from database first
       let user;
@@ -239,11 +98,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         const userData: any = {
           id: userId,
-          email: req.user.claims.email,
+          email: userEmail,
           firstName: req.user.claims.first_name,
           lastName: req.user.claims.last_name,
           profileImageUrl: req.user.claims.profile_image_url,
-          role: 'user', // default role
+          role: isAdminEmail ? 'admin' : 'user',
         };
         
         // In development, dev-user-123 is always admin
@@ -257,6 +116,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (dbError) {
           console.log('Database upsert failed, returning claims data directly');
           user = userData;
+        }
+      } else {
+        // User exists - ensure admin email always has admin role
+        if (isAdminEmail && user.role !== 'admin') {
+          try {
+            user = await storage.updateUserRole(user.id, 'admin');
+            console.log('🔑 Updated user to admin role:', userEmail);
+          } catch (dbError) {
+            console.log('Failed to update admin role:', dbError);
+          }
         }
       }
       
