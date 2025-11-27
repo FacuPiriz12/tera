@@ -644,7 +644,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!userId) {
-        return res.status(401).json({ message: "Unauthorized. Please login first." });
+        // Redirect to login page instead of returning JSON error
+        return res.redirect('/login?redirect=/integrations&error=auth_required');
       }
       
       const oauth2Client = getGoogleOAuth2Client(req);
@@ -822,7 +823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (!userId) {
-        return res.status(401).json({ message: "Unauthorized. Please login first." });
+        // Redirect to login page instead of returning JSON error
+        return res.redirect('/login?redirect=/integrations&error=auth_required');
       }
       
       const protocol = req.protocol;

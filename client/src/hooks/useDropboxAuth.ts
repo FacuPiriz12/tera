@@ -35,50 +35,20 @@ export function useDropboxAuth() {
     enabled: true, // Always enabled to check Dropbox auth status
   });
 
-  // Connect Dropbox mutation
-  const connectMutation = useMutation({
-    mutationFn: async () => {
-      // Get Supabase token if available
-      const session = getCachedSession();
-      let authUrl = "/api/auth/dropbox";
-      
-      // Include token in URL for Supabase auth users
-      if (session?.access_token) {
-        authUrl += `?token=${encodeURIComponent(session.access_token)}`;
-      }
-      
-      // First, fetch the auth URL to check if we get a redirect or an error
-      const response = await fetch(authUrl, {
-        method: 'GET',
-        credentials: 'include',
-        redirect: 'manual', // Don't follow redirects automatically
-      });
-      
-      // If we get a redirect (302/303), the URL is in the Location header
-      // But since we use redirect: 'manual', we get an opaque-redirect response
-      // In this case, status is 0 and type is 'opaqueredirect'
-      if (response.type === 'opaqueredirect' || response.status === 0 || response.redirected) {
-        // The server wants to redirect us, so navigate to the auth URL
-        window.location.href = authUrl;
-        // Return a pending promise to keep the loading state while navigating
-        return new Promise(() => {});
-      }
-      
-      // If we got a non-redirect response, check for errors
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error de autenticación' }));
-        throw new Error(errorData.message || 'No autorizado. Por favor, inicia sesión primero.');
-      }
-      
-      // If OK but not a redirect, something unexpected happened
-      // Still try to navigate
-      window.location.href = authUrl;
-      return new Promise(() => {});
-    },
-    onError: (error) => {
-      console.error("Failed to start Dropbox OAuth:", error);
-    },
-  });
+  // Connect Dropbox - direct navigation (no mutation needed)
+  const connect = () => {
+    // Get Supabase token if available
+    const session = getCachedSession();
+    let authUrl = "/api/auth/dropbox";
+    
+    // Include token in URL for Supabase auth users
+    if (session?.access_token) {
+      authUrl += `?token=${encodeURIComponent(session.access_token)}`;
+    }
+    
+    // Direct navigation - server will redirect to Dropbox OAuth or login page
+    window.location.href = authUrl;
+  };
 
   // Disconnect Dropbox mutation
   const disconnectMutation = useMutation({
@@ -134,11 +104,10 @@ export function useDropboxAuth() {
     statusError,
     isConnected: status?.connected || false,
     hasValidToken: status?.hasValidToken || false,
-    connect: connectMutation.mutate,
+    connect,
     disconnect: disconnectMutation.mutate,
-    isConnecting: connectMutation.isPending,
+    isConnecting: false, // No longer using mutation, navigation is instant
     isDisconnecting: disconnectMutation.isPending,
-    connectError: connectMutation.error,
     checkOAuthCallback,
   };
 }
