@@ -591,63 +591,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return new google.auth.OAuth2(clientId, clientSecret, redirectUri);
   };
 
-  // Helper function to validate Supabase token and get user
-  async function validateSupabaseToken(token: string) {
+  // Helper function to validate Supabase token and get user with timeout
+  async function validateSupabaseToken(token: string): Promise<any> {
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
+      console.log('Supabase not configured, skipping token validation');
       return null;
     }
     
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    // Add timeout to prevent hanging
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => {
+        console.log('Supabase token validation timed out');
+        resolve(null);
+      }, 5000); // 5 second timeout
     });
     
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser(token);
-      if (user && !error) {
-        return user;
+    const validationPromise = (async () => {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(supabaseUrl, supabaseKey, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        });
+        
+        const { data: { user }, error } = await supabase.auth.getUser(token);
+        if (user && !error) {
+          console.log('Supabase token validated for user:', user.id);
+          return user;
+        }
+        if (error) {
+          console.log('Supabase token validation error:', error.message);
+        }
+        return null;
+      } catch (error) {
+        console.error('Token validation exception:', error);
+        return null;
       }
-    } catch (error) {
-      console.error('Token validation error:', error);
-    }
-    return null;
+    })();
+    
+    return Promise.race([validationPromise, timeoutPromise]);
   }
 
   // Google OAuth routes - supports both session auth and token-based auth
   app.get('/api/auth/google', async (req: any, res) => {
+    console.log('=== Google OAuth Start ===');
+    console.log('Query params:', { token: req.query.token ? 'present' : 'none' });
+    
     try {
       let userId: string | null = null;
       
       // Check for token in query parameter (for Supabase auth redirect)
       const token = req.query.token as string;
       if (token) {
+        console.log('Validating Supabase token...');
         const user = await validateSupabaseToken(token);
         if (user) {
           userId = user.id;
           // Store user info in session for the callback
           req.session.supabaseUserId = user.id;
           req.session.supabaseUserEmail = user.email;
+          console.log('Supabase user authenticated:', userId);
+        } else {
+          console.log('Supabase token validation failed');
         }
       }
       
       // If no token, check if already authenticated via session
       if (!userId && req.user?.claims?.sub) {
         userId = req.user.claims.sub;
+        console.log('User authenticated via session:', userId);
       }
       
       // Check session for previously stored user
       if (!userId && req.session?.supabaseUserId) {
         userId = req.session.supabaseUserId;
+        console.log('User found in session:', userId);
       }
       
       if (!userId) {
-        // Redirect to login page instead of returning JSON error
+        console.log('No user found, redirecting to login');
         return res.redirect('/login?redirect=/integrations&error=auth_required');
       }
       
+      // Check if Google OAuth is configured
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      
+      if (!clientId || !clientSecret) {
+        console.error('Google OAuth not configured - missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET');
+        return res.redirect('/integrations?google_auth=error&reason=not_configured');
+      }
+      
+      console.log('Creating OAuth client...');
       const oauth2Client = getGoogleOAuth2Client(req);
       
       // Generate random state for CSRF protection (like Dropbox)
@@ -655,14 +692,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.googleOAuthState = state;
       req.session.googleUserId = userId;
       
-      // Save session before redirecting
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err: any) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
+      // Save session before redirecting with timeout
+      console.log('Saving session...');
+      try {
+        await Promise.race([
+          new Promise<void>((resolve, reject) => {
+            req.session.save((err: any) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          }),
+          new Promise<void>((_, reject) => 
+            setTimeout(() => reject(new Error('Session save timeout')), 5000)
+          )
+        ]);
+        console.log('Session saved successfully');
+      } catch (sessionError) {
+        console.error('Session save error:', sessionError);
+        // Continue anyway - we can try without session
+      }
       
+      console.log('Generating auth URL...');
       const authUrl = oauth2Client.generateAuthUrl({
         access_type: 'offline',
         prompt: 'consent',
@@ -674,10 +724,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         state: state
       });
 
+      console.log('Redirecting to Google OAuth:', authUrl.substring(0, 100) + '...');
       res.redirect(authUrl);
     } catch (error) {
       console.error("Error starting Google OAuth:", error);
-      res.status(500).json({ message: "Failed to start Google OAuth" });
+      // Always redirect instead of returning JSON to avoid hanging
+      res.redirect('/integrations?google_auth=error&reason=server_error');
     }
   });
 
@@ -798,59 +850,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dropbox OAuth routes - supports both session auth and token-based auth
   app.get('/api/auth/dropbox', async (req: any, res) => {
+    console.log('=== Dropbox OAuth Start ===');
+    console.log('Query params:', { token: req.query.token ? 'present' : 'none' });
+    
     try {
       let userId: string | null = null;
       
       // Check for token in query parameter (for Supabase auth redirect)
       const token = req.query.token as string;
       if (token) {
+        console.log('Validating Supabase token...');
         const user = await validateSupabaseToken(token);
         if (user) {
           userId = user.id;
           req.session.supabaseUserId = user.id;
           req.session.supabaseUserEmail = user.email;
+          console.log('Supabase user authenticated:', userId);
+        } else {
+          console.log('Supabase token validation failed');
         }
       }
       
       // If no token, check if already authenticated via session
       if (!userId && req.user?.claims?.sub) {
         userId = req.user.claims.sub;
+        console.log('User authenticated via session:', userId);
       }
       
       // Check session for previously stored user
       if (!userId && req.session?.supabaseUserId) {
         userId = req.session.supabaseUserId;
+        console.log('User found in session:', userId);
       }
       
       if (!userId) {
-        // Redirect to login page instead of returning JSON error
+        console.log('No user found, redirecting to login');
         return res.redirect('/login?redirect=/integrations&error=auth_required');
       }
       
-      const protocol = req.protocol;
-      const host = req.get('host');
-      const redirectUri = `${protocol}://${host}/api/auth/dropbox/callback`;
+      // Check if Dropbox OAuth is configured
+      const appKey = process.env.DROPBOX_APP_KEY;
+      const appSecret = process.env.DROPBOX_APP_SECRET;
+      
+      if (!appKey || !appSecret) {
+        console.error('Dropbox OAuth not configured - missing DROPBOX_APP_KEY or DROPBOX_APP_SECRET');
+        return res.redirect('/integrations?dropbox_auth=error&reason=not_configured');
+      }
+      
+      const redirectUri = getOAuthRedirectUri(req, '/api/auth/dropbox/callback');
+      console.log('Dropbox redirect URI:', redirectUri);
       
       // Generate random state and store in session
       const state = crypto.randomBytes(16).toString('hex');
       req.session.dropboxOAuthState = state;
       req.session.dropboxUserId = userId;
       
-      // Save session before redirecting
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err: any) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      });
+      // Save session before redirecting with timeout
+      console.log('Saving session...');
+      try {
+        await Promise.race([
+          new Promise<void>((resolve, reject) => {
+            req.session.save((err: any) => {
+              if (err) reject(err);
+              else resolve();
+            });
+          }),
+          new Promise<void>((_, reject) => 
+            setTimeout(() => reject(new Error('Session save timeout')), 5000)
+          )
+        ]);
+        console.log('Session saved successfully');
+      } catch (sessionError) {
+        console.error('Session save error:', sessionError);
+        // Continue anyway - we can try without session
+      }
 
+      console.log('Creating Dropbox service...');
       const dropboxService = new DropboxService(userId);
       const authUrl = await dropboxService.getAuthUrl(redirectUri, state);
 
+      console.log('Redirecting to Dropbox OAuth:', authUrl.substring(0, 100) + '...');
       res.redirect(authUrl);
     } catch (error) {
       console.error("Error starting Dropbox OAuth:", error);
-      res.status(500).json({ message: "Failed to start Dropbox OAuth" });
+      // Always redirect instead of returning JSON to avoid hanging
+      res.redirect('/integrations?dropbox_auth=error&reason=server_error');
     }
   });
 
