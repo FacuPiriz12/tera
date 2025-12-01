@@ -7,7 +7,8 @@ import {
   varchar,
   text,
   boolean,
-  integer
+  integer,
+  bigint
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -37,7 +38,7 @@ export const users = pgTable("users", {
   // User role - 'admin' or 'user'
   role: varchar("role").notNull().default('user'),
   // User limits
-  maxStorageBytes: integer("max_storage_bytes").default(16106127360), // 15 GB default
+  maxStorageBytes: bigint("max_storage_bytes", { mode: "number" }).default(16106127360), // 15 GB default
   maxConcurrentOperations: integer("max_concurrent_operations").default(5),
   maxDailyOperations: integer("max_daily_operations").default(100),
   isActive: boolean("is_active").default(true),
