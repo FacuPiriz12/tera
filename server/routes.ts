@@ -61,6 +61,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Debug endpoint to list all registered routes
+  app.get('/api/debug/routes', (req, res) => {
+    const routes: string[] = [];
+    app._router.stack.forEach((middleware: any) => {
+      if (middleware.route) {
+        const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
+        routes.push(`${methods} ${middleware.route.path}`);
+      } else if (middleware.name === 'router') {
+        middleware.handle.stack.forEach((handler: any) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
+            routes.push(`${methods} ${handler.route.path}`);
+          }
+        });
+      }
+    });
+    
+    const dropboxRoutes = routes.filter(r => r.toLowerCase().includes('dropbox'));
+    
+    res.json({
+      totalRoutes: routes.length,
+      dropboxRoutes,
+      allRoutes: routes.slice(0, 50), // First 50 routes
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Debug endpoint to check environment variables and database status
   app.get('/api/debug/env', async (req, res) => {
     try {
