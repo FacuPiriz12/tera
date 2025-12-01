@@ -103,6 +103,23 @@ export function getSession() {
   });
 }
 
+// Middleware to handle invalid/corrupted sessions gracefully
+export function sessionRecoveryMiddleware(): RequestHandler {
+  return (req, res, next) => {
+    // If there's a session cookie but session data is missing or corrupted,
+    // clear the cookie and continue (user will just not be authenticated)
+    if (req.cookies && req.cookies['connect.sid'] && (!req.session || !req.sessionID)) {
+      console.log('🔄 Detected invalid session cookie, clearing it...');
+      res.clearCookie('connect.sid', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      });
+    }
+    next();
+  };
+}
+
 function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers

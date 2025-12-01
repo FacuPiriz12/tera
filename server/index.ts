@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
@@ -6,6 +7,7 @@ import { startQueueWorker } from "./queueWorker";
 import { ensureTablesExist } from "./db";
 
 const app = express();
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -49,12 +51,45 @@ app.use((req, res, next) => {
   
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    // Handle session-related errors gracefully
+    if (err.message && (
+      err.message.includes('session') || 
+      err.message.includes('Session') ||
+      err.message.includes('cookie') ||
+      err.code === 'EBADCSRFTOKEN'
+    )) {
+      console.log('🔄 Session error detected, clearing cookie and redirecting...');
+      res.clearCookie('connect.sid', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      });
+      
+      // For API requests, return JSON error
+      if (req.path.startsWith('/api')) {
+        return res.status(401).json({ 
+          message: "Session expired. Please refresh the page.",
+          action: "refresh_required"
+        });
+      }
+      
+      // For page requests, redirect to home
+      return res.redirect('/');
+    }
+    
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
-    res.status(status).json({ message });
-    throw err;
+    // Don't expose internal error details in production
+    const safeMessage = process.env.NODE_ENV === 'production' && status === 500
+      ? "Something went wrong. Please try again."
+      : message;
+
+    res.status(status).json({ message: safeMessage });
+    
+    // Log error but don't throw (prevents server crash)
+    console.error('Error:', err);
   });
 
   // Setup Vite for React development or serve static files in production
