@@ -89,7 +89,17 @@ export class DropboxService {
 
   async getAuthUrl(redirectUrl: string, state: string): Promise<string> {
     // Request offline access to get refresh tokens
-    return this.dbx.getAuthenticationUrl(redirectUrl, state, 'code', 'offline');
+    // SDK v6+ uses dbx.auth for authentication, v9+ returns a promise
+    const authUrl = await this.dbx.auth.getAuthenticationUrl(
+      redirectUrl, 
+      state, 
+      'code',      // authType - use 'code' for server-side OAuth
+      'offline',   // tokenAccessType - 'offline' to get refresh tokens
+      null,        // scope - null for default scopes
+      'none',      // includeGrantedScopes
+      false        // usePKCE - false for server-side flow with client secret
+    );
+    return authUrl as string;
   }
 
   async exchangeCodeForToken(redirectUrl: string, code: string): Promise<{ accessToken: string; refreshToken?: string; expiresAt?: Date }> {
