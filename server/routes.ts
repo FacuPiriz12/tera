@@ -358,6 +358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/copy-operations/preview', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log('📋 Preview request - userId:', userId, 'body:', req.body);
       
       // Validate request body with Zod
       const previewSchema = z.object({
@@ -376,12 +377,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Detect provider and get preview from appropriate service
       const provider = detectProviderFromUrl(sourceUrl);
+      console.log('📋 Detected provider:', provider, 'for URL:', sourceUrl.substring(0, 50) + '...');
       
       let preview;
       if (provider === 'google') {
+        // Verify user has Google connected before proceeding
+        const user = await storage.getUser(userId);
+        console.log('📋 User lookup result:', { 
+          found: !!user, 
+          hasGoogleToken: !!user?.googleAccessToken,
+          tokenExpiry: user?.googleTokenExpiry 
+        });
+        
+        if (!user) {
+          return res.status(401).json({ message: "User not found. Please login again." });
+        }
+        if (!user.googleAccessToken) {
+          return res.status(401).json({ message: "Google Drive not connected. Please connect your Google account first." });
+        }
+        
         const driveService = new GoogleDriveService(userId);
         preview = await driveService.getOperationPreview(sourceUrl);
       } else if (provider === 'dropbox') {
+        // Verify user has Dropbox connected before proceeding
+        const user = await storage.getUser(userId);
+        console.log('📋 User lookup result:', { 
+          found: !!user, 
+          hasDropboxToken: !!user?.dropboxAccessToken,
+          tokenExpiry: user?.dropboxTokenExpiry 
+        });
+        
+        if (!user) {
+          return res.status(401).json({ message: "User not found. Please login again." });
+        }
+        if (!user.dropboxAccessToken) {
+          return res.status(401).json({ message: "Dropbox not connected. Please connect your Dropbox account first." });
+        }
+        
         const dropboxService = new DropboxService(userId);
         preview = await dropboxService.getOperationPreview(sourceUrl);
       } else {
@@ -390,38 +422,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      console.log('📋 Preview successful:', preview?.name);
       res.json(preview);
     } catch (error) {
       console.error("Error getting copy operation preview:", error);
       
       // Provide more specific error messages based on the actual errors thrown
       if (error instanceof Error) {
+        const errorMessage = error.message;
+        console.error("📋 Preview error details:", errorMessage);
+        
         // Google Drive specific errors
-        if (error.message.includes('Invalid Google Drive URL')) {
+        if (errorMessage.includes('Invalid Google Drive URL')) {
           return res.status(400).json({ message: "Invalid Google Drive URL format" });
         }
-        if (error.message.includes('Google Drive access expired')) {
+        if (errorMessage.includes('Google Drive access expired') || errorMessage.includes('Google Drive access token has expired')) {
           return res.status(401).json({ message: "Google Drive access expired. Please reconnect your account." });
         }
         
         // Dropbox specific errors
-        if (error.message.includes('Invalid Dropbox URL')) {
+        if (errorMessage.includes('Invalid Dropbox URL')) {
           return res.status(400).json({ message: "Invalid Dropbox URL format" });
         }
-        if (error.message.includes('Dropbox access token has expired')) {
+        if (errorMessage.includes('Dropbox access token has expired') || errorMessage.includes('Dropbox access expired')) {
           return res.status(401).json({ message: "Dropbox access expired. Please reconnect your account." });
         }
         
         // Generic errors that apply to both
-        if (error.message.includes('access token has expired')) {
+        if (errorMessage.includes('access token has expired')) {
           return res.status(401).json({ message: "Cloud storage access expired. Please reconnect your account." });
         }
-        if (error.message.includes('not connected')) {
-          return res.status(401).json({ message: "Cloud storage account not connected" });
+        if (errorMessage.includes('not connected') || errorMessage.includes('has not connected')) {
+          return res.status(401).json({ message: "Cloud storage account not connected. Please connect your account first." });
         }
-        if (error.message.includes('shared link not found') || error.message.includes('not_found')) {
+        if (errorMessage.includes('shared link not found') || errorMessage.includes('not_found')) {
           return res.status(404).json({ message: "Shared file or folder not found" });
         }
+        if (errorMessage.includes('File not found') || errorMessage.includes('notFound')) {
+          return res.status(404).json({ message: "File or folder not found. Check that the link is correct and accessible." });
+        }
+        if (errorMessage.includes('insufficient permissions') || errorMessage.includes('forbidden')) {
+          return res.status(403).json({ message: "No permission to access this file. Make sure the link is publicly shared." });
+        }
+        
+        // Return actual error message for debugging (remove in production if too verbose)
+        return res.status(500).json({ 
+          message: "Failed to get operation preview",
+          details: errorMessage
+        });
       }
       
       res.status(500).json({ message: "Failed to get operation preview" });
