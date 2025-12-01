@@ -910,10 +910,11 @@ export class GoogleDriveService {
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background-color: #4285f4; color: white; padding: 20px; text-align: center; }
+        .header { background-color: #dce4ec; padding: 25px 20px; text-align: center; }
+        .logo { font-family: 'Arial Black', 'Helvetica Bold', sans-serif; font-size: 32px; font-weight: 900; color: #1565c0; letter-spacing: 2px; margin: 0; }
         .content { padding: 30px; }
         .success-message { color: #137333; font-weight: 500; margin-bottom: 20px; }
-        .drive-link { display: inline-block; background-color: #4285f4; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
+        .drive-link { display: inline-block; background-color: #1565c0; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
         .summary { background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
         .summary h3 { margin: 0 0 15px 0; color: #202124; }
         .summary ul { margin: 0; padding-left: 0; list-style: none; }
@@ -925,7 +926,7 @@ export class GoogleDriveService {
 <body>
     <div class="container">
         <div class="header">
-            <h1>CloneDrive</h1>
+            <p class="logo">TERA</p>
         </div>
         <div class="content">
             <p>Hola <strong>${user.firstName || user.email}</strong>,</p>
@@ -948,8 +949,7 @@ export class GoogleDriveService {
             </div>
         </div>
         <div class="footer">
-            <p>Gracias por usar CloneDrive.</p>
-            <p><em>1 archivo adjunto • Analizado por Gmail</em></p>
+            <p>Gracias por usar TERA.</p>
         </div>
     </div>
 </body>
