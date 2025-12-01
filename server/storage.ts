@@ -1397,7 +1397,25 @@ class MemoryStorage implements IStorage {
   }
 }
 
-// Use memory storage for development, database storage for production
-export const storage = (process.env.NODE_ENV === 'development' && !process.env.DATABASE_URL) 
-  ? new MemoryStorage() 
-  : new DatabaseStorage();
+// Helper to check if database is available
+function isDatabaseAvailable(): boolean {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl && databaseUrl.trim() !== '') return true;
+  
+  // Also check for PG* variables
+  const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE } = process.env;
+  return !!(PGHOST && PGUSER && PGPASSWORD && PGDATABASE);
+}
+
+// Use memory storage when no database is available (any environment)
+// Use database storage when DATABASE_URL or PG* variables are configured
+const useMemoryStorage = !isDatabaseAvailable();
+
+if (useMemoryStorage) {
+  console.log('📦 Using in-memory storage (no database configured)');
+  console.log('   Note: Data will be lost on server restart. Configure DATABASE_URL for persistence.');
+} else {
+  console.log('🗄️ Using PostgreSQL database storage');
+}
+
+export const storage = useMemoryStorage ? new MemoryStorage() : new DatabaseStorage();
