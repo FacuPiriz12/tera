@@ -84,9 +84,15 @@ export class GoogleDriveService {
           });
 
           this.auth.setCredentials(credentials);
-        } catch (error) {
-          console.error('Failed to refresh Google token:', error);
-          throw new Error('Google Drive access token has expired. Please reconnect your account.');
+          console.log('Successfully refreshed Google access token');
+        } catch (error: any) {
+          const errorMessage = error?.response?.data?.error_description || error?.message || 'Unknown error';
+          console.error('Failed to refresh Google token:', {
+            error: errorMessage,
+            statusCode: error?.response?.status,
+            hasRefreshToken: !!user.googleRefreshToken
+          });
+          throw new Error(`Google Drive access token has expired: ${errorMessage}. Please reconnect your account.`);
         }
       } else {
         throw new Error('Google Drive access token has expired. Please reconnect your account.');
@@ -134,9 +140,38 @@ export class GoogleDriveService {
       });
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting file info:', error);
-      throw new Error('Failed to get file information');
+      
+      // Extract detailed error information from Google API response
+      const googleError = error?.response?.data?.error;
+      const statusCode = error?.response?.status || error?.code;
+      const errorMessage = googleError?.message || error?.message || 'Unknown error';
+      const errorReason = googleError?.errors?.[0]?.reason || '';
+      
+      console.error('Google Drive API Error Details:', {
+        statusCode,
+        errorMessage,
+        errorReason,
+        fileId
+      });
+      
+      // Provide specific error messages based on Google API error codes
+      if (statusCode === 404 || errorReason === 'notFound') {
+        throw new Error(`File not found: The file with ID "${fileId}" does not exist or you don't have access to it`);
+      }
+      if (statusCode === 403 || errorReason === 'forbidden' || errorReason === 'insufficientPermissions') {
+        throw new Error(`Access denied: You don't have permission to access this file. Make sure the file is shared with your Google account or is publicly accessible`);
+      }
+      if (statusCode === 401 || errorReason === 'authError') {
+        throw new Error('Google Drive authentication failed. Please reconnect your Google account');
+      }
+      if (errorReason === 'rateLimitExceeded') {
+        throw new Error('Google Drive API rate limit exceeded. Please wait a moment and try again');
+      }
+      
+      // Include the original error message for debugging
+      throw new Error(`Failed to get file information: ${errorMessage}`);
     }
   }
 
@@ -617,8 +652,13 @@ export class GoogleDriveService {
    * Get preview information for copy operation
    */
   async getOperationPreview(sourceUrl: string): Promise<OperationPreview> {
+    console.log('🔍 Getting operation preview for URL:', sourceUrl);
+    
     const { fileId, type } = this.parseGoogleDriveUrl(sourceUrl);
+    console.log('🔍 Parsed URL - fileId:', fileId, 'type:', type);
+    
     const sourceInfo = await this.getFileInfo(fileId);
+    console.log('🔍 Got file info:', sourceInfo?.name);
     
     let totalFiles = 0;
     let totalFolders = 0;
