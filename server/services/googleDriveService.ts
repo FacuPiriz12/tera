@@ -149,7 +149,8 @@ export class GoogleDriveService {
       
       const response = await this.drive.files.get({
         fileId,
-        fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime'
+        fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime',
+        supportsAllDrives: true
       });
 
       return response.data;
@@ -208,7 +209,9 @@ export class GoogleDriveService {
           q: query,
           fields: 'nextPageToken,files(id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime)',
           pageSize: 100,
-          pageToken: nextPageToken
+          pageToken: nextPageToken,
+          supportsAllDrives: true,
+          includeItemsFromAllDrives: true
         });
         
         if (response.data.files) {
@@ -245,7 +248,8 @@ export class GoogleDriveService {
       const response = await this.drive.files.copy({
         fileId,
         resource: requestBody,
-        fields: 'id,name,mimeType,size,webViewLink,parents'
+        fields: 'id,name,mimeType,size,webViewLink,parents',
+        supportsAllDrives: true
       });
 
       return response.data;
@@ -411,7 +415,8 @@ export class GoogleDriveService {
     try {
       const response = await this.drive.files.get({
         fileId,
-        alt: 'media'
+        alt: 'media',
+        supportsAllDrives: true
       }, { responseType: 'arraybuffer' });
 
       return response.data as ArrayBuffer;
@@ -987,7 +992,9 @@ export class GoogleDriveService {
         fields: 'files(id,name,parents),nextPageToken',
         pageSize: 20,
         pageToken: pageToken,
-        orderBy: 'name'
+        orderBy: 'name',
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true
       });
 
       return {
@@ -1017,7 +1024,8 @@ export class GoogleDriveService {
       while (currentId && currentId !== 'root') {
         const response = await this.drive.files.get({
           fileId: currentId,
-          fields: 'id,name,parents'
+          fields: 'id,name,parents',
+          supportsAllDrives: true
         });
 
         const folder = response.data;
