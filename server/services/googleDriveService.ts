@@ -116,24 +116,28 @@ export class GoogleDriveService {
   }
 
   /**
-   * Parse Google Drive URL to extract file/folder ID
+   * Parse Google Drive URL to extract file/folder ID and optional resource key
    */
-  parseGoogleDriveUrl(url: string): { fileId: string; type: 'file' | 'folder' } {
+  parseGoogleDriveUrl(url: string): { fileId: string; type: 'file' | 'folder'; resourceKey?: string } {
     console.log('🔗 Parsing Google Drive URL:', url);
+    
+    // Extract resource key if present (for link-shared files)
+    const resourceKeyMatch = url.match(/resourcekey=([a-zA-Z0-9-_]+)/);
+    const resourceKey = resourceKeyMatch ? resourceKeyMatch[1] : undefined;
     
     const folderMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
     const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
     const openMatch = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
 
     if (folderMatch) {
-      console.log('🔗 Detected folder with ID:', folderMatch[1]);
-      return { fileId: folderMatch[1], type: 'folder' };
+      console.log('🔗 Detected folder with ID:', folderMatch[1], resourceKey ? `resourceKey: ${resourceKey}` : '');
+      return { fileId: folderMatch[1], type: 'folder', resourceKey };
     } else if (fileMatch) {
-      console.log('🔗 Detected file with ID:', fileMatch[1]);
-      return { fileId: fileMatch[1], type: 'file' };
+      console.log('🔗 Detected file with ID:', fileMatch[1], resourceKey ? `resourceKey: ${resourceKey}` : '');
+      return { fileId: fileMatch[1], type: 'file', resourceKey };
     } else if (openMatch) {
-      console.log('🔗 Detected file (open format) with ID:', openMatch[1]);
-      return { fileId: openMatch[1], type: 'file' };
+      console.log('🔗 Detected file (open format) with ID:', openMatch[1], resourceKey ? `resourceKey: ${resourceKey}` : '');
+      return { fileId: openMatch[1], type: 'file', resourceKey };
     } else {
       console.error('🔗 Failed to parse URL - no valid ID found');
       throw new Error('Invalid Google Drive URL format');
@@ -143,15 +147,26 @@ export class GoogleDriveService {
   /**
    * Get file/folder information
    */
-  async getFileInfo(fileId: string): Promise<DriveFileInfo> {
+  async getFileInfo(fileId: string, resourceKey?: string): Promise<DriveFileInfo> {
     try {
       await this.ensureValidToken();
       
-      const response = await this.drive.files.get({
+      const requestParams: any = {
         fileId,
         fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime',
         supportsAllDrives: true
-      });
+      };
+      
+      // Add resource key header for link-shared files if provided
+      const requestOptions: any = {};
+      if (resourceKey) {
+        console.log('🔑 Using resource key for shared file access');
+        requestOptions.headers = {
+          'X-Goog-Drive-Resource-Keys': `${fileId}/${resourceKey}`
+        };
+      }
+
+      const response = await this.drive.files.get(requestParams, requestOptions);
 
       return response.data;
     } catch (error: any) {
@@ -672,10 +687,10 @@ export class GoogleDriveService {
   async getOperationPreview(sourceUrl: string): Promise<OperationPreview> {
     console.log('🔍 Getting operation preview for URL:', sourceUrl);
     
-    const { fileId, type } = this.parseGoogleDriveUrl(sourceUrl);
-    console.log('🔍 Parsed URL - fileId:', fileId, 'type:', type);
+    const { fileId, type, resourceKey } = this.parseGoogleDriveUrl(sourceUrl);
+    console.log('🔍 Parsed URL - fileId:', fileId, 'type:', type, 'resourceKey:', resourceKey || 'none');
     
-    const sourceInfo = await this.getFileInfo(fileId);
+    const sourceInfo = await this.getFileInfo(fileId, resourceKey);
     console.log('🔍 Got file info:', sourceInfo?.name);
     
     let totalFiles = 0;
