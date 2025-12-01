@@ -60,6 +60,13 @@ export class GoogleDriveService {
   private async ensureValidToken(): Promise<void> {
     const user = await storage.getUser(this.userId);
     
+    console.log('🔐 Token check for user:', this.userId, {
+      hasAccessToken: !!user?.googleAccessToken,
+      hasRefreshToken: !!user?.googleRefreshToken,
+      tokenExpiry: user?.googleTokenExpiry,
+      isExpired: user?.googleTokenExpiry ? new Date(user.googleTokenExpiry) <= new Date() : 'no expiry set'
+    });
+    
     if (!user?.googleAccessToken) {
       throw new Error('User has not connected their Google Drive account');
     }
@@ -112,17 +119,23 @@ export class GoogleDriveService {
    * Parse Google Drive URL to extract file/folder ID
    */
   parseGoogleDriveUrl(url: string): { fileId: string; type: 'file' | 'folder' } {
+    console.log('🔗 Parsing Google Drive URL:', url);
+    
     const folderMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
     const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9-_]+)/);
     const openMatch = url.match(/[?&]id=([a-zA-Z0-9-_]+)/);
 
     if (folderMatch) {
+      console.log('🔗 Detected folder with ID:', folderMatch[1]);
       return { fileId: folderMatch[1], type: 'folder' };
     } else if (fileMatch) {
+      console.log('🔗 Detected file with ID:', fileMatch[1]);
       return { fileId: fileMatch[1], type: 'file' };
     } else if (openMatch) {
+      console.log('🔗 Detected file (open format) with ID:', openMatch[1]);
       return { fileId: openMatch[1], type: 'file' };
     } else {
+      console.error('🔗 Failed to parse URL - no valid ID found');
       throw new Error('Invalid Google Drive URL format');
     }
   }
