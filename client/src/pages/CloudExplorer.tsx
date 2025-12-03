@@ -654,57 +654,29 @@ export default function CloudExplorer() {
                 </Card>
               ) : (
                 <div className="grid grid-cols-12 gap-4">
-                  {/* Provider Selector */}
-                  <div className="col-span-3">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">Conexiones</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          {accounts.map(account => (
-                            <div
-                              key={account.id}
-                              className={`p-3 rounded-lg cursor-pointer transition-all ${
-                                selectedAccount?.id === account.id 
-                                  ? 'bg-primary text-white shadow-md' 
-                                  : 'hover:bg-gray-100'
-                              }`}
-                              onClick={() => setSelectedAccount(account)}
-                              data-testid={`account-${account.id}`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {renderProviderLogo(account.provider)}
-                                <span className="font-medium text-sm">{account.name}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <Separator className="my-3" />
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="w-full text-xs" 
-                          onClick={() => setLocation('/integrations')}
-                        >
-                          <Settings className="w-3 h-3 mr-1" />
-                          Administrar
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* File Browser */}
-                  <div className="col-span-6">
+                  {/* File Browser with integrated provider selector */}
+                  <div className="col-span-9">
                     <Card>
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm font-medium flex items-center gap-2">
-                            {selectedAccount && renderProviderLogo(selectedAccount.provider)}
-                            {selectedAccount?.name}
-                          </CardTitle>
+                          {/* Provider logos as tabs */}
+                          <div className="flex items-center gap-1">
+                            {accounts.map(account => (
+                              <button
+                                key={account.id}
+                                className={`p-2 rounded-lg transition-all ${
+                                  selectedAccount?.id === account.id 
+                                    ? 'bg-primary/10 ring-2 ring-primary' 
+                                    : 'hover:bg-gray-100'
+                                }`}
+                                onClick={() => setSelectedAccount(account)}
+                                data-testid={`account-${account.id}`}
+                                title={account.name}
+                              >
+                                {renderProviderLogo(account.provider, "w-6 h-6")}
+                              </button>
+                            ))}
+                          </div>
                           <div className="flex items-center gap-2">
                             <div className="relative">
                               <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
