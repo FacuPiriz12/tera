@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Search, RefreshCw, Download, History, ArrowRightLeft, Folder, File, Settings, ChevronLeft, Home, ChevronRight, X } from "lucide-react";
+import { 
+  Search, RefreshCw, ArrowRightLeft, Folder, File, Settings, 
+  ChevronLeft, Home, ChevronRight, Link2, Send, ExternalLink, 
+  Clipboard, CheckCircle2, XCircle, Loader2, ArrowRight
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
@@ -48,45 +50,33 @@ interface TransferJob {
   createdAt: string;
 }
 
-interface TransferOptions {
-  dedupe: boolean;
-  preserveTimestamps: boolean;
-  convertGoogleDocs: 'docx' | 'pdf' | 'odt';
-}
+type DestinationProvider = 'google' | 'dropbox' | 'onedrive' | 'box';
 
 export default function CloudExplorer() {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation(['copy', 'common', 'errors']);
   const [, setLocation] = useLocation();
+  
+  // Quick Link State
+  const [quickLink, setQuickLink] = useState('');
+  const [detectedSource, setDetectedSource] = useState<'google' | 'dropbox' | null>(null);
+  const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
+  
+  // Explorer State
   const [selectedAccount, setSelectedAccount] = useState<CloudAccount | null>(null);
   const [selectedFile, setSelectedFile] = useState<CloudFile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPath, setCurrentPath] = useState<string>('');
   const [pathHistory, setPathHistory] = useState<Array<{name: string, path: string}>>([]);
-  const [transferOpen, setTransferOpen] = useState(false);
-  const [destAccount, setDestAccount] = useState<CloudAccount | null>(null);
-  const [transferOptions, setTransferOptions] = useState<TransferOptions>({
-    dedupe: true,
-    preserveTimestamps: true,
-    convertGoogleDocs: 'docx'
-  });
   const [jobs, setJobs] = useState<TransferJob[]>([]);
 
-  // Server-Sent Events connection for real-time job updates
+  // SSE for real-time job updates
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const eventSource = new EventSource('/api/transfer-jobs/events');
     
-    eventSource.onopen = () => {
-      console.log('SSE connection established');
-    };
-
-    eventSource.addEventListener('connected', (event) => {
-      console.log('SSE connected:', JSON.parse(event.data));
-    });
-
     eventSource.addEventListener('progress', (event) => {
       const jobData = JSON.parse(event.data);
       setJobs(prev => prev.map(job => 
@@ -104,7 +94,6 @@ export default function CloudExplorer() {
           : job
       ));
       
-      // Show success toast
       toast({
         title: "Transferencia completada",
         description: `${jobData.fileName} transferido exitosamente`,
@@ -119,10 +108,9 @@ export default function CloudExplorer() {
           : job
       ));
       
-      // Show error toast
       toast({
         title: "Error en transferencia",
-        description: jobData.errorMessage || `Error al transferir ${jobData.fileName}`,
+        description: jobData.errorMessage || `Error al transferir`,
         variant: "destructive"
       });
     });
@@ -134,34 +122,41 @@ export default function CloudExplorer() {
           ? { ...job, status: 'cancelled' }
           : job
       ));
-      
-      toast({
-        title: "Transferencia cancelada",
-        description: `${jobData.fileName} cancelado por el usuario`,
-        variant: "destructive"
-      });
     });
 
-    eventSource.addEventListener('retry', (event) => {
-      const jobData = JSON.parse(event.data);
-      setJobs(prev => prev.map(job => 
-        job.id === jobData.jobId 
-          ? { ...job, status: 'queued' } // Back to queued for retry
-          : job
-      ));
-    });
-
-    eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
-    };
-
-    // Cleanup on unmount
-    return () => {
-      eventSource.close();
-    };
+    return () => eventSource.close();
   }, [isAuthenticated, toast]);
 
-  // Get connection status for both providers
+  // Detect source from link
+  useEffect(() => {
+    if (!quickLink.trim()) {
+      setDetectedSource(null);
+      setIsValidLink(null);
+      return;
+    }
+    
+    const lowerUrl = quickLink.toLowerCase();
+    
+    if (lowerUrl.includes('drive.google.com') || 
+        lowerUrl.includes('docs.google.com') || 
+        lowerUrl.includes('sheets.google.com') || 
+        lowerUrl.includes('slides.google.com')) {
+      setDetectedSource('google');
+      setIsValidLink(true);
+    } else if (lowerUrl.includes('dropbox.com') || 
+               lowerUrl.includes('dropboxusercontent.com')) {
+      setDetectedSource('dropbox');
+      setIsValidLink(true);
+    } else if (quickLink.length > 10) {
+      setDetectedSource(null);
+      setIsValidLink(false);
+    } else {
+      setDetectedSource(null);
+      setIsValidLink(null);
+    }
+  }, [quickLink]);
+
+  // Get connection status
   const { data: googleStatus } = useQuery({
     queryKey: ['/api/auth/google/status'],
     enabled: isAuthenticated
@@ -172,23 +167,12 @@ export default function CloudExplorer() {
     enabled: isAuthenticated
   });
 
-  // Build accounts list from connection status
   const accounts: CloudAccount[] = [
-    {
-      id: 'google-drive',
-      provider: 'google',
-      name: 'Google Drive',
-      connected: googleStatus?.connected || false
-    },
-    {
-      id: 'dropbox',
-      provider: 'dropbox', 
-      name: 'Dropbox',
-      connected: dropboxStatus?.connected || false
-    }
+    { id: 'google-drive', provider: 'google', name: 'Google Drive', connected: googleStatus?.connected || false },
+    { id: 'dropbox', provider: 'dropbox', name: 'Dropbox', connected: dropboxStatus?.connected || false }
   ].filter(account => account.connected);
 
-  // Set first connected account as default and reset path
+  // Set first connected account as default
   useEffect(() => {
     if (accounts.length > 0 && !selectedAccount) {
       setSelectedAccount(accounts[0]);
@@ -202,7 +186,7 @@ export default function CloudExplorer() {
     setSelectedFile(null);
   }, [selectedAccount?.id]);
 
-  // Get files for selected account and current path
+  // Get files for selected account
   const { data: files = [], isLoading: filesLoading, refetch: refetchFiles } = useQuery({
     queryKey: ['/api/cloud-files', selectedAccount?.id, currentPath],
     queryFn: async () => {
@@ -212,7 +196,7 @@ export default function CloudExplorer() {
         const response = await apiRequest({
           url: '/api/drive/list-files',
           method: 'POST',
-          body: { fileId: currentPath || '' } // Use current path as folderId
+          body: { fileId: currentPath || '' }
         });
         return response.map((file: any) => ({
           id: file.id,
@@ -233,7 +217,6 @@ export default function CloudExplorer() {
           mimeType: file.mimeType,
           size: file.size,
           path: currentPath ? `${currentPath}/${file.name}` : `/${file.name}`,
-          // Fixed: Dropbox folders are identified by mimeType
           isFolder: file.mimeType === 'application/vnd.dropbox.folder'
         }));
       }
@@ -242,28 +225,233 @@ export default function CloudExplorer() {
     enabled: !!selectedAccount && isAuthenticated
   });
 
-  // Filter files by search query
   const filteredFiles = files.filter((file: CloudFile) =>
     file.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleRefresh = () => {
-    refetchFiles();
+  // Extract file ID from Google Drive URL
+  const extractGoogleFileId = (url: string): string | null => {
+    const patterns = [
+      /\/file\/d\/([a-zA-Z0-9_-]+)/,
+      /\/folders\/([a-zA-Z0-9_-]+)/,
+      /id=([a-zA-Z0-9_-]+)/,
+      /\/d\/([a-zA-Z0-9_-]+)/,
+      /\/document\/d\/([a-zA-Z0-9_-]+)/,
+      /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/,
+      /\/presentation\/d\/([a-zA-Z0-9_-]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) return match[1];
+    }
+    return null;
+  };
+
+  // Extract path from Dropbox URL
+  const extractDropboxPath = (url: string): string | null => {
+    try {
+      const urlObj = new URL(url);
+      const pathMatch = urlObj.pathname.match(/\/(?:home|s|sh|scl)\/(.+)/);
+      if (pathMatch) {
+        return '/' + decodeURIComponent(pathMatch[1].split('?')[0]);
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Quick transfer mutation
+  const quickTransferMutation = useMutation({
+    mutationFn: async ({ sourceUrl, destProvider, sourceProvider }: { 
+      sourceUrl: string; 
+      destProvider: DestinationProvider;
+      sourceProvider: 'google' | 'dropbox';
+    }) => {
+      let sourceFileId: string | undefined;
+      let sourceFilePath: string | undefined;
+      let fileName = 'Archivo';
+      
+      if (sourceProvider === 'google') {
+        sourceFileId = extractGoogleFileId(sourceUrl) || undefined;
+        if (!sourceFileId) throw new Error('No se pudo extraer el ID del archivo de Google Drive. Verifica que el link sea válido.');
+        fileName = `Archivo de Google Drive`;
+      } else if (sourceProvider === 'dropbox') {
+        sourceFilePath = extractDropboxPath(sourceUrl) || undefined;
+        if (!sourceFilePath) throw new Error('No se pudo extraer la ruta del archivo de Dropbox. Verifica que el link sea válido.');
+        fileName = sourceFilePath.split('/').pop() || 'Archivo de Dropbox';
+      }
+      
+      const response = await apiRequest({
+        url: '/api/transfer-files',
+        method: 'POST',
+        body: {
+          sourceProvider,
+          targetProvider: destProvider,
+          sourceFileId,
+          sourceFilePath,
+          targetPath: '',
+          fileName
+        }
+      });
+      
+      return { ...response, sourceProvider, destProvider, fileName };
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Transferencia iniciada",
+        description: "Tu archivo está siendo transferido. Verás el progreso abajo.",
+      });
+      setQuickLink('');
+      
+      if (data.jobId) {
+        setJobs(prev => [...prev, {
+          id: data.jobId,
+          fileName: data.fileName || 'Archivo',
+          status: 'queued',
+          progress: 0,
+          sourceProvider: data.sourceProvider,
+          targetProvider: data.destProvider,
+          createdAt: new Date().toISOString()
+        }]);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo iniciar la transferencia",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // File transfer mutation
+  const fileTransferMutation = useMutation({
+    mutationFn: async ({ file, destProvider }: { file: CloudFile; destProvider: DestinationProvider }) => {
+      return apiRequest({
+        url: '/api/transfer-files',
+        method: 'POST',
+        body: {
+          sourceProvider: selectedAccount?.provider,
+          sourceFileId: selectedAccount?.provider === 'google' ? file.id : undefined,
+          sourceFilePath: selectedAccount?.provider === 'dropbox' ? file.path : undefined,
+          targetProvider: destProvider,
+          targetPath: '',
+          fileName: file.name
+        }
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Transferencia iniciada",
+        description: `${variables.file.name} en cola para transferencia.`,
+      });
+      
+      if (data.jobId) {
+        setJobs(prev => [...prev, {
+          id: data.jobId,
+          fileName: variables.file.name,
+          status: 'queued',
+          progress: 0,
+          sourceProvider: selectedAccount?.provider || '',
+          targetProvider: variables.destProvider,
+          createdAt: new Date().toISOString()
+        }]);
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo iniciar la transferencia",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleQuickTransfer = (destProvider: DestinationProvider) => {
+    if (!quickLink || !isValidLink || !detectedSource) return;
+    
+    // Only allow supported cross-cloud transfers (Google <-> Dropbox)
+    if (destProvider !== 'google' && destProvider !== 'dropbox') {
+      toast({
+        title: "No disponible",
+        description: `Transferencias a ${destProvider === 'onedrive' ? 'OneDrive' : 'Box'} próximamente.`,
+      });
+      return;
+    }
+    
+    // Validate source and dest are different
+    if (detectedSource === destProvider) {
+      toast({
+        title: "Error",
+        description: "El origen y destino deben ser diferentes.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const userMembership = user?.membershipPlan || 'free';
+    const membershipExpiry = user?.membershipExpiry ? new Date(user.membershipExpiry) : null;
+    const isExpired = membershipExpiry && membershipExpiry < new Date();
+    
+    if (userMembership === 'free' || isExpired) {
+      toast({
+        title: "Función Premium",
+        description: "Las transferencias entre nubes requieren una suscripción PRO.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    quickTransferMutation.mutate({ sourceUrl: quickLink, destProvider, sourceProvider: detectedSource });
+  };
+
+  const handleFileTransfer = (destProvider: DestinationProvider) => {
+    if (!selectedFile || !selectedAccount) return;
+    
+    // Only allow supported cross-cloud transfers (Google <-> Dropbox)
+    if (destProvider !== 'google' && destProvider !== 'dropbox') {
+      toast({
+        title: "No disponible",
+        description: `Transferencias a ${destProvider === 'onedrive' ? 'OneDrive' : 'Box'} próximamente.`,
+      });
+      return;
+    }
+    
+    if (selectedFile.isFolder) {
+      toast({
+        title: "No soportado",
+        description: "Las transferencias de carpetas no están soportadas aún.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const userMembership = user?.membershipPlan || 'free';
+    const membershipExpiry = user?.membershipExpiry ? new Date(user.membershipExpiry) : null;
+    const isExpired = membershipExpiry && membershipExpiry < new Date();
+    
+    if (userMembership === 'free' || isExpired) {
+      toast({
+        title: "Función Premium",
+        description: "Las transferencias entre nubes requieren una suscripción PRO.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    fileTransferMutation.mutate({ file: selectedFile, destProvider });
   };
 
   const navigateToFolder = (folder: CloudFile) => {
     if (!folder.isFolder) return;
     
-    // Add current folder to history  
-    const currentLocation = {
-      name: folder.name, // Store the folder name we're navigating TO
-      path: currentPath
-    };
+    const currentLocation = { name: folder.name, path: currentPath };
     
     if (selectedAccount?.provider === 'google') {
-      setCurrentPath(folder.id); // Google uses fileId
+      setCurrentPath(folder.id);
     } else {
-      // Dropbox uses path - normalize leading slashes
       const newPath = currentPath ? `${currentPath}/${folder.name}` : `/${folder.name}`;
       setCurrentPath(newPath);
     }
@@ -274,7 +462,6 @@ export default function CloudExplorer() {
 
   const navigateBack = () => {
     if (pathHistory.length === 0) return;
-    
     const previousLocation = pathHistory[pathHistory.length - 1];
     setCurrentPath(previousLocation.path);
     setPathHistory(prev => prev.slice(0, -1));
@@ -287,128 +474,6 @@ export default function CloudExplorer() {
     setSelectedFile(null);
   };
 
-  const openTransferModal = () => {
-    if (!selectedFile) {
-      toast({
-        title: t('errors:general.error'),
-        description: t('copy:select_file_to_transfer'),
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const availableDestinations = accounts.filter(acc => acc.id !== selectedAccount?.id);
-    if (availableDestinations.length > 0) {
-      setDestAccount(availableDestinations[0]);
-    }
-    setTransferOpen(true);
-  };
-
-  // Transfer mutation - Now creates async jobs
-  const transferMutation = useMutation({
-    mutationFn: async ({ sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName }: {
-      sourceProvider: string;
-      sourceFileId?: string;
-      sourceFilePath?: string;
-      targetProvider: string;
-      targetPath?: string;
-      fileName: string;
-    }) => {
-      return apiRequest({
-        url: '/api/transfer-files',
-        method: 'POST',
-        body: {
-          sourceProvider,
-          sourceFileId,
-          sourceFilePath,
-          targetProvider,
-          targetPath,
-          fileName
-        }
-      });
-    },
-    onSuccess: (data) => {
-      // New: data contains jobId instead of immediate result
-      toast({
-        title: "Transferencia iniciada",
-        description: `${selectedFile?.name} en cola para transferencia. Revisa el progreso abajo.`,
-      });
-      setTransferOpen(false);
-      
-      // Add job to local state for tracking
-      if (data.jobId) {
-        setJobs(prev => [...prev, {
-          id: data.jobId,
-          fileName: selectedFile?.name || 'Unknown',
-          status: 'queued',
-          progress: 0,
-          sourceProvider: selectedAccount?.provider || '',
-          targetProvider: destAccount?.provider || '',
-          createdAt: new Date().toISOString()
-        }]);
-      }
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error iniciando transferencia",
-        description: error.message || "No se pudo iniciar la transferencia",
-        variant: "destructive"
-      });
-    }
-  });
-
-  const handleTransfer = async () => {
-    if (!selectedFile || !destAccount || !selectedAccount) return;
-
-    // Block folder transfers until implemented
-    if (selectedFile.isFolder) {
-      toast({
-        title: "No soportado",
-        description: "Las transferencias de carpetas no están soportadas aún. Selecciona un archivo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check if user has PRO membership using real user data
-    const userMembership = user?.membershipPlan || 'free';
-    const membershipExpiry = user?.membershipExpiry ? new Date(user.membershipExpiry) : null;
-    const isExpired = membershipExpiry && membershipExpiry < new Date();
-    
-    if (userMembership === 'free' || isExpired) {
-      toast({
-        title: "Función Premium",
-        description: isExpired 
-          ? "Tu suscripción PRO ha expirado. ¡Renueva tu plan para continuar!"
-          : "Las transferencias entre nubes requieren una suscripción PRO. ¡Actualiza tu plan!",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Prepare transfer parameters
-    const sourceProvider = selectedAccount.provider;
-    const targetProvider = destAccount.provider;
-    
-    let sourceFileId: string | undefined;
-    let sourceFilePath: string | undefined;
-    
-    if (sourceProvider === 'google') {
-      sourceFileId = selectedFile.id;
-    } else {
-      sourceFilePath = selectedFile.path || (currentPath ? `${currentPath}/${selectedFile.name}` : `/${selectedFile.name}`);
-    }
-
-    transferMutation.mutate({
-      sourceProvider,
-      sourceFileId,
-      sourceFilePath,
-      targetProvider,
-      targetPath: '', // Root path for now
-      fileName: selectedFile.name
-    });
-  };
-
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
     const sizes = ['B', 'KB', 'MB', 'GB'];
@@ -416,15 +481,27 @@ export default function CloudExplorer() {
     return `${Math.round(bytes / Math.pow(1024, i))} ${sizes[i]}`;
   };
 
-  const renderProviderLogo = (provider: string) => {
+  const renderProviderLogo = (provider: string, size: string = "w-5 h-5") => {
     switch (provider) {
       case 'google':
-        return <GoogleDriveLogo className="w-5 h-5" />;
+        return <GoogleDriveLogo className={size} />;
       case 'dropbox':
-        return <DropboxLogo className="w-5 h-5" />;
+        return <DropboxLogo className={size} />;
       default:
-        return <Settings className="w-5 h-5" />;
+        return <Settings className={size} />;
     }
+  };
+
+  // Available destinations (excluding source)
+  const getAvailableDestinations = (sourceProvider: string | null) => {
+    const destinations = [
+      { id: 'google', name: 'Google Drive', available: googleStatus?.connected },
+      { id: 'dropbox', name: 'Dropbox', available: dropboxStatus?.connected },
+      { id: 'onedrive', name: 'OneDrive', available: false, comingSoon: true },
+      { id: 'box', name: 'Box', available: false, comingSoon: true },
+    ];
+    
+    return destinations.filter(d => d.id !== sourceProvider);
   };
 
   if (!isAuthenticated) {
@@ -458,449 +535,407 @@ export default function CloudExplorer() {
               <h1 className="text-3xl font-bold text-gray-900">Explorador Multi-nube</h1>
             </div>
             <p className="text-gray-600">
-              Visualiza y transfiere archivos entre tus servicios de almacenamiento en la nube.
+              Transfiere archivos entre tus servicios de nube de forma rápida y sencilla.
             </p>
           </div>
 
-          {/* No connections message */}
-          {accounts.length === 0 && (
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No hay conexiones activas
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Conecta tus servicios de almacenamiento para comenzar a usar el explorador.
-                  </p>
-                  <Button onClick={() => setLocation('/integrations')} data-testid="button-manage-integrations">
-                    Administrar Integraciones
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Main Explorer Grid */}
-          {accounts.length > 0 && (
-            <div className="grid grid-cols-12 gap-6">
-              {/* Accounts Sidebar */}
-              <aside className="col-span-3">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Conexiones</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {accounts.map(account => (
-                        <div
-                          key={account.id}
-                          className={`p-3 rounded-md cursor-pointer transition-colors ${
-                            selectedAccount?.id === account.id 
-                              ? 'bg-primary/10 border border-primary/20' 
-                              : 'hover:bg-gray-50'
-                          }`}
-                          onClick={() => setSelectedAccount(account)}
-                          data-testid={`account-${account.id}`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {renderProviderLogo(account.provider)}
-                              <div>
-                                <div className="font-medium text-sm">{account.name}</div>
-                                <div className="text-xs text-gray-500 capitalize">{account.provider}</div>
-                              </div>
-                            </div>
-                            <Badge variant={account.connected ? "default" : "secondary"} className="text-xs">
-                              {account.connected ? 'Conectado' : 'Desconectado'}
-                            </Badge>
-                          </div>
+          {/* Quick Transfer Section - Prominently displayed */}
+          <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Link2 className="w-5 h-5 text-primary" />
+                Transferencia Rápida
+              </CardTitle>
+              <p className="text-sm text-gray-600">Pega un link y elige a dónde enviarlo</p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                {/* Link Input */}
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Clipboard className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <Input
+                      placeholder="Pega el link de Google Drive, Dropbox, etc..."
+                      value={quickLink}
+                      onChange={(e) => setQuickLink(e.target.value)}
+                      className="pl-10 h-12 text-base"
+                      data-testid="input-quick-link"
+                    />
+                    {/* Link validation indicator */}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isValidLink === true && (
+                        <div className="flex items-center gap-2">
+                          {renderProviderLogo(detectedSource || '', "w-5 h-5")}
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
                         </div>
+                      )}
+                      {isValidLink === false && (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Destination buttons - show when link is valid */}
+                {isValidLink && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm font-medium text-gray-700">Enviar a:</p>
+                    <div className="flex flex-wrap gap-3">
+                      {getAvailableDestinations(detectedSource).map((dest) => (
+                        <Button
+                          key={dest.id}
+                          variant={dest.available ? "default" : "outline"}
+                          disabled={!dest.available || quickTransferMutation.isPending}
+                          onClick={() => handleQuickTransfer(dest.id as DestinationProvider)}
+                          className={`flex items-center gap-2 h-12 px-6 ${
+                            dest.available 
+                              ? 'bg-primary hover:bg-primary/90' 
+                              : 'opacity-50'
+                          }`}
+                          data-testid={`button-send-to-${dest.id}`}
+                        >
+                          {renderProviderLogo(dest.id, "w-5 h-5")}
+                          <span>{dest.name}</span>
+                          {dest.comingSoon && (
+                            <Badge variant="secondary" className="ml-2 text-xs">Próximamente</Badge>
+                          )}
+                          {quickTransferMutation.isPending && (
+                            <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                          )}
+                        </Button>
                       ))}
                     </div>
-                    
-                    <Separator className="my-4" />
-                    
-                    <Button 
-                      variant="outline" 
-                      className="w-full" 
-                      onClick={() => setLocation('/integrations')}
-                      data-testid="button-manage-connections"
-                    >
-                      <Settings className="w-4 h-4 mr-2" />
-                      Administrar
-                    </Button>
-                  </CardContent>
-                </Card>
-              </aside>
-
-              {/* File Explorer */}
-              <div className="col-span-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {selectedAccount ? selectedAccount.name : 'Selecciona una cuenta'}
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                          <Input
-                            placeholder="Buscar archivos..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 w-64"
-                            data-testid="input-search"
-                          />
-                        </div>
-                        <Button variant="outline" size="sm" onClick={handleRefresh} data-testid="button-refresh">
-                          <RefreshCw className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    {/* Navigation Breadcrumbs */}
-                    <div className="flex items-center gap-2 mt-3">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={navigateToRoot}
-                        disabled={currentPath === ''}
-                        data-testid="button-home"
-                      >
-                        <Home className="w-4 h-4" />
-                      </Button>
-                      
-                      {pathHistory.length > 0 && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={navigateBack}
-                          data-testid="button-back"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          Atrás
-                        </Button>
-                      )}
-                      
-                      <div className="flex items-center text-sm text-gray-600">
-                        <span className={currentPath === '' ? 'font-medium' : ''}>Raíz</span>
-                        {pathHistory.map((location, index) => (
-                          <div key={index} className="flex items-center">
-                            <ChevronRight className="w-3 h-3 mx-1" />
-                            <span className={index === pathHistory.length - 1 ? 'font-medium' : ''}>
-                              {location.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="min-h-[400px] max-h-[500px] overflow-auto">
-                      {filesLoading && (
-                        <div className="text-center py-8 text-gray-500">
-                          Cargando archivos...
-                        </div>
-                      )}
-                      
-                      {!filesLoading && filteredFiles.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                          {searchQuery ? 'No se encontraron archivos' : 'No hay archivos'}
-                        </div>
-                      )}
-
-                      <div className="space-y-1">
-                        {filteredFiles.map((file: CloudFile) => (
-                          <div
-                            key={file.id}
-                            className={`p-3 rounded-md cursor-pointer transition-colors ${
-                              selectedFile?.id === file.id 
-                                ? 'bg-primary/10 border border-primary/20' 
-                                : 'hover:bg-gray-50'
-                            }`}
-                            onClick={() => setSelectedFile(file)}
-                            onDoubleClick={() => file.isFolder && navigateToFolder(file)}
-                            data-testid={`file-${file.id}`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                {file.isFolder ? (
-                                  <Folder className="w-5 h-5 text-blue-500" />
-                                ) : (
-                                  <File className="w-5 h-5 text-gray-500" />
-                                )}
-                                <div>
-                                  <div className="font-medium text-sm">{file.name}</div>
-                                  <div className="text-xs text-gray-500">
-                                    {file.isFolder ? 'Carpeta' : file.mimeType}
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-xs text-gray-400">
-                                {formatFileSize(file.size)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Separator className="my-4" />
-
-                    <div className="flex gap-2">
-                      {selectedFile?.isFolder ? (
-                        <Button 
-                          onClick={() => navigateToFolder(selectedFile)} 
-                          data-testid="button-open-folder"
-                        >
-                          <Folder className="w-4 h-4 mr-2" />
-                          Abrir Carpeta
-                        </Button>
-                      ) : null}
-                      
-                      <Button 
-                        onClick={openTransferModal} 
-                        disabled={!selectedFile}
-                        data-testid="button-transfer"
-                      >
-                        <ArrowRightLeft className="w-4 h-4 mr-2" />
-                        Transferir
-                      </Button>
-                      <Button variant="outline" disabled={!selectedFile} data-testid="button-download">
-                        <Download className="w-4 h-4 mr-2" />
-                        Descargar
-                      </Button>
-                      <Button variant="outline" data-testid="button-history">
-                        <History className="w-4 h-4 mr-2" />
-                        Historial
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                )}
+                
+                {isValidLink === false && (
+                  <p className="text-sm text-red-500">
+                    Link no reconocido. Ingresa un link válido de Google Drive o Dropbox.
+                  </p>
+                )}
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Preview Panel */}
-              <aside className="col-span-3">
+          {/* Tabs for different methods */}
+          <Tabs defaultValue="explorer" className="space-y-4">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="explorer" className="flex items-center gap-2">
+                <Folder className="w-4 h-4" />
+                Explorar Archivos
+              </TabsTrigger>
+              <TabsTrigger value="jobs" className="flex items-center gap-2">
+                <ArrowRightLeft className="w-4 h-4" />
+                Transferencias
+                {jobs.filter(j => j.status === 'in_progress' || j.status === 'queued').length > 0 && (
+                  <Badge className="ml-1">{jobs.filter(j => j.status === 'in_progress' || j.status === 'queued').length}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Explorer Tab */}
+            <TabsContent value="explorer" className="space-y-4">
+              {accounts.length === 0 ? (
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Vista Previa</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {!selectedFile ? (
-                      <div className="text-sm text-gray-500">
-                        Selecciona un archivo para ver los detalles.
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="font-medium text-sm mb-2">{selectedFile.name}</h4>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div>Tipo: {selectedFile.isFolder ? 'Carpeta' : selectedFile.mimeType}</div>
-                            <div>Ruta: {selectedFile.path}</div>
-                            {selectedFile.size && (
-                              <div>Tamaño: {formatFileSize(selectedFile.size)}</div>
-                            )}
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        <div>
-                          <h5 className="font-medium text-sm mb-2">Opciones</h5>
-                          <div className="text-xs text-gray-600 space-y-1">
-                            <div>• Descargar</div>
-                            <div>• Ver historial</div>
-                            <div>• Buscar duplicados</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <Separator className="my-4" />
-
-                    <div>
-                      <h5 className="font-medium text-sm mb-2">Transferencias Activas</h5>
-                      {jobs.length === 0 ? (
-                        <div className="text-xs text-gray-500">Sin transferencias activas.</div>
-                      ) : (
-                        <div className="space-y-3">
-                          {jobs.slice(0, 5).map(job => (
-                            <div key={job.id} className="p-3 border rounded-md bg-gray-50">
-                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-medium truncate">{job.fileName}</span>
-                                <Badge 
-                                  variant={
-                                    job.status === 'completed' ? 'default' :
-                                    job.status === 'failed' || job.status === 'cancelled' ? 'destructive' :
-                                    job.status === 'in_progress' ? 'secondary' : 'outline'
-                                  } 
-                                  className="text-xs"
-                                >
-                                  {job.status === 'in_progress' ? 'En progreso' :
-                                   job.status === 'completed' ? 'Completado' :
-                                   job.status === 'failed' ? 'Error' :
-                                   job.status === 'cancelled' ? 'Cancelado' :
-                                   'En cola'}
-                                </Badge>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <Settings className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No hay conexiones activas
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Conecta tus servicios de almacenamiento para comenzar.
+                      </p>
+                      <Button onClick={() => setLocation('/integrations')} data-testid="button-manage-integrations">
+                        Administrar Conexiones
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-12 gap-4">
+                  {/* Provider Selector */}
+                  <div className="col-span-3">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Conexiones</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {accounts.map(account => (
+                            <div
+                              key={account.id}
+                              className={`p-3 rounded-lg cursor-pointer transition-all ${
+                                selectedAccount?.id === account.id 
+                                  ? 'bg-primary text-white shadow-md' 
+                                  : 'hover:bg-gray-100'
+                              }`}
+                              onClick={() => setSelectedAccount(account)}
+                              data-testid={`account-${account.id}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {renderProviderLogo(account.provider)}
+                                <span className="font-medium text-sm">{account.name}</span>
                               </div>
-                              
-                              <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
-                                {renderProviderLogo(job.sourceProvider)}
-                                <ArrowRight className="w-3 h-3" />
-                                {renderProviderLogo(job.targetProvider)}
-                              </div>
-                              
-                              {(job.status === 'in_progress' || job.status === 'queued') && (
-                                <div className="space-y-1">
-                                  <Progress value={job.progress} className="h-2" />
-                                  <div className="text-xs text-gray-500">{job.progress}%</div>
-                                </div>
-                              )}
-                              
-                              {job.status === 'failed' && job.errorMessage && (
-                                <div className="text-xs text-red-600 mt-1">
-                                  {job.errorMessage}
-                                </div>
-                              )}
-                              
-                              {job.status === 'completed' && job.copiedFileUrl && (
-                                <div className="mt-2">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
-                                    className="h-6 text-xs"
-                                    onClick={() => window.open(job.copiedFileUrl, '_blank')}
-                                  >
-                                    <ExternalLink className="w-3 h-3 mr-1" />
-                                    Ver archivo
-                                  </Button>
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </aside>
-            </div>
-          )}
-
-          {/* Transfer Modal */}
-          <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Transferir Archivo</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    {selectedFile ? `Transferir: ${selectedFile.name}` : ''}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Origen</label>
-                    <div className="p-3 border rounded-md bg-gray-50">
-                      <div className="flex items-center gap-2">
-                        {selectedAccount && renderProviderLogo(selectedAccount.provider)}
-                        <span className="text-sm">{selectedAccount?.name}</span>
-                      </div>
-                    </div>
+                        
+                        <Separator className="my-3" />
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="w-full text-xs" 
+                          onClick={() => setLocation('/integrations')}
+                        >
+                          <Settings className="w-3 h-3 mr-1" />
+                          Administrar
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Destino</label>
-                    <Select
-                      value={destAccount?.id || ''}
-                      onValueChange={(value) => setDestAccount(accounts.find(a => a.id === value) || null)}
-                    >
-                      <SelectTrigger data-testid="select-destination">
-                        <SelectValue placeholder="Selecciona destino" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {accounts
-                          .filter(acc => acc.id !== selectedAccount?.id)
-                          .map(account => (
-                            <SelectItem key={account.id} value={account.id}>
-                              <div className="flex items-center gap-2">
-                                {renderProviderLogo(account.provider)}
-                                <span>{account.name}</span>
+
+                  {/* File Browser */}
+                  <div className="col-span-6">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            {selectedAccount && renderProviderLogo(selectedAccount.provider)}
+                            {selectedAccount?.name}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <div className="relative">
+                              <Search className="w-3 h-3 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                              <Input
+                                placeholder="Buscar..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-7 h-8 w-40 text-sm"
+                                data-testid="input-search"
+                              />
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={() => refetchFiles()} data-testid="button-refresh">
+                              <RefreshCw className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Breadcrumbs */}
+                        <div className="flex items-center gap-1 mt-2 text-xs text-gray-600">
+                          <Button variant="ghost" size="sm" className="h-6 px-2" onClick={navigateToRoot}>
+                            <Home className="w-3 h-3" />
+                          </Button>
+                          {pathHistory.length > 0 && (
+                            <Button variant="ghost" size="sm" className="h-6 px-2" onClick={navigateBack}>
+                              <ChevronLeft className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <span>Raíz</span>
+                          {pathHistory.map((location, index) => (
+                            <div key={index} className="flex items-center">
+                              <ChevronRight className="w-3 h-3 mx-1" />
+                              <span className={index === pathHistory.length - 1 ? 'font-medium' : ''}>
+                                {location.name}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="min-h-[350px] max-h-[400px] overflow-auto">
+                          {filesLoading && (
+                            <div className="flex items-center justify-center py-12">
+                              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                            </div>
+                          )}
+                          
+                          {!filesLoading && filteredFiles.length === 0 && (
+                            <div className="text-center py-12 text-gray-500 text-sm">
+                              {searchQuery ? 'No se encontraron archivos' : 'Carpeta vacía'}
+                            </div>
+                          )}
+
+                          <div className="space-y-1">
+                            {filteredFiles.map((file: CloudFile) => (
+                              <div
+                                key={file.id}
+                                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                                  selectedFile?.id === file.id 
+                                    ? 'bg-primary/10 border-2 border-primary/30' 
+                                    : 'hover:bg-gray-50 border-2 border-transparent'
+                                }`}
+                                onClick={() => setSelectedFile(file)}
+                                onDoubleClick={() => file.isFolder && navigateToFolder(file)}
+                                data-testid={`file-${file.id}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-3">
+                                    {file.isFolder ? (
+                                      <Folder className="w-5 h-5 text-blue-500" />
+                                    ) : (
+                                      <File className="w-5 h-5 text-gray-500" />
+                                    )}
+                                    <div>
+                                      <div className="font-medium text-sm">{file.name}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {file.isFolder ? 'Carpeta' : formatFileSize(file.size)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
-                            </SelectItem>
-                          ))
-                        }
-                      </SelectContent>
-                    </Select>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Action Panel */}
+                  <div className="col-span-3">
+                    <Card className={selectedFile ? 'border-primary/30' : ''}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">Acciones</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {!selectedFile ? (
+                          <div className="text-center py-8 text-gray-500 text-sm">
+                            <File className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                            Selecciona un archivo para ver las opciones
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Selected file info */}
+                            <div className="p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-2 mb-1">
+                                {selectedFile.isFolder ? (
+                                  <Folder className="w-4 h-4 text-blue-500" />
+                                ) : (
+                                  <File className="w-4 h-4 text-gray-500" />
+                                )}
+                                <span className="font-medium text-sm truncate">{selectedFile.name}</span>
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {selectedFile.isFolder ? 'Carpeta' : formatFileSize(selectedFile.size)}
+                              </div>
+                            </div>
+
+                            {/* Quick actions */}
+                            {selectedFile.isFolder ? (
+                              <Button 
+                                className="w-full" 
+                                onClick={() => navigateToFolder(selectedFile)}
+                                data-testid="button-open-folder"
+                              >
+                                <Folder className="w-4 h-4 mr-2" />
+                                Abrir Carpeta
+                              </Button>
+                            ) : (
+                              <>
+                                <div className="space-y-2">
+                                  <p className="text-xs font-medium text-gray-700">Enviar a:</p>
+                                  {getAvailableDestinations(selectedAccount?.provider || null).map((dest) => (
+                                    <Button
+                                      key={dest.id}
+                                      variant={dest.available ? "default" : "outline"}
+                                      disabled={!dest.available || fileTransferMutation.isPending}
+                                      onClick={() => handleFileTransfer(dest.id as DestinationProvider)}
+                                      className="w-full justify-start"
+                                      data-testid={`button-transfer-to-${dest.id}`}
+                                    >
+                                      {renderProviderLogo(dest.id, "w-4 h-4 mr-2")}
+                                      {dest.name}
+                                      {dest.comingSoon && (
+                                        <Badge variant="secondary" className="ml-auto text-xs">Próx.</Badge>
+                                      )}
+                                      {fileTransferMutation.isPending && (
+                                        <Loader2 className="w-3 h-3 animate-spin ml-auto" />
+                                      )}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
+              )}
+            </TabsContent>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Opciones</label>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="dedupe"
-                        checked={transferOptions.dedupe}
-                        onCheckedChange={(checked) => 
-                          setTransferOptions(prev => ({ ...prev, dedupe: checked as boolean }))
-                        }
-                      />
-                      <label htmlFor="dedupe" className="text-sm">Omitir duplicados</label>
+            {/* Transfers Tab */}
+            <TabsContent value="jobs">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Transferencias</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {jobs.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <ArrowRightLeft className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p>No hay transferencias recientes</p>
+                      <p className="text-sm mt-2">Las transferencias que inicies aparecerán aquí</p>
                     </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="preserveTimestamps"
-                        checked={transferOptions.preserveTimestamps}
-                        onCheckedChange={(checked) => 
-                          setTransferOptions(prev => ({ ...prev, preserveTimestamps: checked as boolean }))
-                        }
-                      />
-                      <label htmlFor="preserveTimestamps" className="text-sm">Conservar fechas originales</label>
+                  ) : (
+                    <div className="space-y-3">
+                      {jobs.map(job => (
+                        <div key={job.id} className="p-4 border rounded-lg bg-gray-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              {renderProviderLogo(job.sourceProvider)}
+                              <ArrowRight className="w-4 h-4 text-gray-400" />
+                              {renderProviderLogo(job.targetProvider)}
+                              <span className="font-medium">{job.fileName}</span>
+                            </div>
+                            <Badge 
+                              variant={
+                                job.status === 'completed' ? 'default' :
+                                job.status === 'failed' || job.status === 'cancelled' ? 'destructive' :
+                                job.status === 'in_progress' ? 'secondary' : 'outline'
+                              }
+                            >
+                              {job.status === 'in_progress' ? 'En progreso' :
+                               job.status === 'completed' ? 'Completado' :
+                               job.status === 'failed' ? 'Error' :
+                               job.status === 'cancelled' ? 'Cancelado' :
+                               'En cola'}
+                            </Badge>
+                          </div>
+                          
+                          {(job.status === 'in_progress' || job.status === 'queued') && (
+                            <div className="space-y-1">
+                              <Progress value={job.progress} className="h-2" />
+                              <div className="text-xs text-gray-500">{job.progress}%</div>
+                            </div>
+                          )}
+                          
+                          {job.status === 'failed' && job.errorMessage && (
+                            <div className="text-sm text-red-600 mt-2">{job.errorMessage}</div>
+                          )}
+                          
+                          {job.status === 'completed' && job.copiedFileUrl && (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="mt-2"
+                              onClick={() => window.open(job.copiedFileUrl, '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Ver archivo
+                            </Button>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    
-                    <div>
-                      <label className="block text-sm mb-1">Convertir documentos de Google:</label>
-                      <Select
-                        value={transferOptions.convertGoogleDocs}
-                        onValueChange={(value: 'docx' | 'pdf' | 'odt') => 
-                          setTransferOptions(prev => ({ ...prev, convertGoogleDocs: value }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="docx">Microsoft Word (.docx)</SelectItem>
-                          <SelectItem value="pdf">PDF (.pdf)</SelectItem>
-                          <SelectItem value="odt">OpenDocument (.odt)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button variant="outline" onClick={() => setTransferOpen(false)} data-testid="button-cancel-transfer">
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={handleTransfer} 
-                    disabled={!destAccount || transferMutation.isPending} 
-                    data-testid="button-start-transfer"
-                  >
-                    {transferMutation.isPending ? 'Transfiriendo...' : 'Iniciar Transferencia'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </div>
