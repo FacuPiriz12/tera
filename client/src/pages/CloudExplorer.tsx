@@ -21,6 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { getCachedSession } from "@/lib/supabaseSession";
 
 interface CloudAccount {
   id: string;
@@ -75,7 +76,11 @@ export default function CloudExplorer() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const eventSource = new EventSource('/api/transfer-jobs/events');
+    // Get auth token for SSE connection (EventSource can't send headers, so we use query param)
+    const session = getCachedSession();
+    const tokenParam = session?.access_token ? `?token=${encodeURIComponent(session.access_token)}` : '';
+    
+    const eventSource = new EventSource(`/api/transfer-jobs/events${tokenParam}`);
     
     eventSource.addEventListener('progress', (event) => {
       const jobData = JSON.parse(event.data);

@@ -283,17 +283,27 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Check for Supabase auth first
+  // Check for Supabase auth first - from header or query param (for SSE which can't send headers)
   const authHeader = req.headers.authorization;
+  const queryToken = req.query.token as string | undefined;
+  
+  // Use header token first, fall back to query token for SSE connections
+  let token: string | null = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  } else if (queryToken) {
+    token = queryToken;
+  }
+  
   console.log('🔐 isAuthenticated check:', {
     hasAuthHeader: !!authHeader,
+    hasQueryToken: !!queryToken,
     authHeaderValue: authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none',
     path: req.path,
     nodeEnv: process.env.NODE_ENV
   });
   
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.substring(7);
+  if (token) {
     const supabase = createSupabaseClient();
     
     if (supabase) {
