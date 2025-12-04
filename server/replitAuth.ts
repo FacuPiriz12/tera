@@ -283,25 +283,38 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // Check for Supabase auth first - from header or query param (for SSE which can't send headers)
+  // Check for Supabase auth first - from header (preferred) or session (for SSE which can't send headers)
   const authHeader = req.headers.authorization;
-  const queryToken = req.query.token as string | undefined;
-  
-  // Use header token first, fall back to query token for SSE connections
-  let token: string | null = null;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.substring(7);
-  } else if (queryToken) {
-    token = queryToken;
-  }
   
   console.log('🔐 isAuthenticated check:', {
     hasAuthHeader: !!authHeader,
-    hasQueryToken: !!queryToken,
+    hasSessionUser: !!req.session?.supabaseUserId,
     authHeaderValue: authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'none',
     path: req.path,
     nodeEnv: process.env.NODE_ENV
   });
+  
+  // Check if we have session-based auth for SSE connections (no headers possible)
+  if (req.session?.supabaseUserId && !authHeader) {
+    console.log('✅ Session-based auth for SSE:', req.session.supabaseUserEmail);
+    req.user = {
+      claims: {
+        sub: req.session.supabaseUserId,
+        email: req.session.supabaseUserEmail || '',
+        first_name: '',
+        last_name: ''
+      },
+      access_token: 'session-based',
+      expires_at: Math.floor(Date.now() / 1000) + 3600
+    };
+    return next();
+  }
+  
+  // Use header token for standard API requests
+  let token: string | null = null;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7);
+  }
   
   if (token) {
     const supabase = createSupabaseClient();
@@ -345,6 +358,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
           } catch (dbError) {
             console.error('Database upsert error (non-fatal):', dbError);
             // Continue even if database upsert fails - user is still authenticated via Supabase
+          }
+          
+          // Store user ID in session for SSE connections (which can't send headers)
+          if (req.session) {
+            req.session.supabaseUserId = user.id;
+            req.session.supabaseUserEmail = user.email;
           }
           
           return next();
