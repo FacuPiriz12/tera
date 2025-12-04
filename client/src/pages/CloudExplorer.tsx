@@ -196,7 +196,7 @@ export default function CloudExplorer() {
         const response = await apiRequest({
           url: '/api/drive/list-files',
           method: 'POST',
-          body: { fileId: currentPath || '' }
+          body: { fileId: currentPath || 'root' }
         });
         return response.map((file: any) => ({
           id: file.id,
@@ -643,12 +643,9 @@ export default function CloudExplorer() {
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
                         No hay conexiones activas
                       </h3>
-                      <p className="text-gray-600 mb-4">
-                        Conecta tus servicios de almacenamiento para comenzar.
+                      <p className="text-gray-600">
+                        Conecta tus servicios de almacenamiento en la sección de Integraciones para comenzar.
                       </p>
-                      <Button onClick={() => setLocation('/integrations')} data-testid="button-manage-integrations">
-                        Administrar Conexiones
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
