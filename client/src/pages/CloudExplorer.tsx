@@ -198,12 +198,9 @@ export default function CloudExplorer() {
       if (!selectedAccount) return [];
       
       if (selectedAccount.provider === 'google') {
-        const response = await apiRequest({
-          url: '/api/drive/list-files',
-          method: 'POST',
-          body: { fileId: currentPath || 'root' }
-        });
-        return response.map((file: any) => ({
+        const response = await apiRequest('POST', '/api/drive/list-files', { fileId: currentPath || 'root' });
+        const data = await response.json();
+        return data.map((file: any) => ({
           id: file.id,
           name: file.name,
           mimeType: file.mimeType,
@@ -212,11 +209,9 @@ export default function CloudExplorer() {
           isFolder: file.mimeType === 'application/vnd.google-apps.folder'
         }));
       } else if (selectedAccount.provider === 'dropbox') {
-        const response = await apiRequest({
-          url: `/api/dropbox/files?path=${encodeURIComponent(currentPath)}`,
-          method: 'GET'
-        });
-        return response.map((file: any) => ({
+        const response = await apiRequest('GET', `/api/dropbox/files?path=${encodeURIComponent(currentPath)}`);
+        const data = await response.json();
+        return data.map((file: any) => ({
           id: file.id,
           name: file.name,
           mimeType: file.mimeType,
@@ -288,20 +283,17 @@ export default function CloudExplorer() {
         fileName = sourceFilePath.split('/').pop() || 'Archivo de Dropbox';
       }
       
-      const response = await apiRequest({
-        url: '/api/transfer-files',
-        method: 'POST',
-        body: {
-          sourceProvider,
-          targetProvider: destProvider,
-          sourceFileId,
-          sourceFilePath,
-          targetPath: '',
-          fileName
-        }
+      const response = await apiRequest('POST', '/api/transfer-files', {
+        sourceProvider,
+        targetProvider: destProvider,
+        sourceFileId,
+        sourceFilePath,
+        targetPath: '',
+        fileName
       });
+      const data = await response.json();
       
-      return { ...response, sourceProvider, destProvider, fileName };
+      return { ...data, sourceProvider, destProvider, fileName };
     },
     onSuccess: (data) => {
       toast({
@@ -334,18 +326,15 @@ export default function CloudExplorer() {
   // File transfer mutation
   const fileTransferMutation = useMutation({
     mutationFn: async ({ file, destProvider }: { file: CloudFile; destProvider: DestinationProvider }) => {
-      return apiRequest({
-        url: '/api/transfer-files',
-        method: 'POST',
-        body: {
-          sourceProvider: selectedAccount?.provider,
-          sourceFileId: selectedAccount?.provider === 'google' ? file.id : undefined,
-          sourceFilePath: selectedAccount?.provider === 'dropbox' ? file.path : undefined,
-          targetProvider: destProvider,
-          targetPath: '',
-          fileName: file.name
-        }
+      const response = await apiRequest('POST', '/api/transfer-files', {
+        sourceProvider: selectedAccount?.provider,
+        sourceFileId: selectedAccount?.provider === 'google' ? file.id : undefined,
+        sourceFilePath: selectedAccount?.provider === 'dropbox' ? file.path : undefined,
+        targetProvider: destProvider,
+        targetPath: '',
+        fileName: file.name
       });
+      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
