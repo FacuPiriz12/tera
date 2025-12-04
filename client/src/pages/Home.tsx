@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQueryFn } from "@/lib/queryClient";
+import { getQueryFn, getAuthHeaders } from "@/lib/queryClient";
 import { 
   FolderPlus, 
   Files, 
@@ -45,11 +45,18 @@ export default function Home() {
     queryKey: ["/api/drive-files", 1, 10],
     queryFn: async ({ queryKey }) => {
       const [, page, limit] = queryKey;
-      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`);
-      if (!response.ok) throw new Error('Failed to fetch files');
+      const authHeaders = await getAuthHeaders();
+      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`, {
+        headers: authHeaders,
+        credentials: "include",
+      });
+      if (!response.ok) {
+        if (response.status === 401) return { files: [], total: 0, totalPages: 0 };
+        throw new Error('Failed to fetch files');
+      }
       return response.json();
     },
-    enabled: isAuthenticated, // Only run query if authenticated
+    enabled: isAuthenticated,
   });
 
   // Check connection status for Google Drive and Dropbox

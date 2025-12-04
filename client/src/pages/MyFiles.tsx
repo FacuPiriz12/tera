@@ -22,6 +22,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { useState } from "react";
 import type { DriveFile } from "@shared/schema";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 export default function MyFiles() {
   const { t } = useTranslation(['pages', 'common']);
@@ -34,8 +35,15 @@ export default function MyFiles() {
     queryKey: ["/api/drive-files", currentPage, itemsPerPage],
     queryFn: async ({ queryKey }) => {
       const [, page, limit] = queryKey;
-      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`);
-      if (!response.ok) throw new Error('Failed to fetch files');
+      const authHeaders = await getAuthHeaders();
+      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`, {
+        headers: authHeaders,
+        credentials: "include",
+      });
+      if (!response.ok) {
+        if (response.status === 401) return { files: [], total: 0, totalPages: 0 };
+        throw new Error('Failed to fetch files');
+      }
       return response.json();
     },
     keepPreviousData: true,
