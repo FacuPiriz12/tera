@@ -717,36 +717,92 @@ export default function CloudExplorer() {
                             </div>
                           )}
 
-                          <div className="space-y-1">
-                            {filteredFiles.map((file: CloudFile) => (
-                              <div
-                                key={file.id}
-                                className={`p-3 rounded-lg cursor-pointer transition-all ${
-                                  selectedFile?.id === file.id 
-                                    ? 'bg-primary/10 border-2 border-primary/30' 
-                                    : 'hover:bg-gray-50 border-2 border-transparent'
-                                }`}
-                                onClick={() => setSelectedFile(file)}
-                                onDoubleClick={() => file.isFolder && navigateToFolder(file)}
-                                data-testid={`file-${file.id}`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-3">
-                                    {file.isFolder ? (
-                                      <Folder className="w-5 h-5 text-blue-500" />
-                                    ) : (
-                                      <File className="w-5 h-5 text-gray-500" />
-                                    )}
-                                    <div>
-                                      <div className="font-medium text-sm">{file.name}</div>
-                                      <div className="text-xs text-gray-500">
-                                        {file.isFolder ? 'Carpeta' : formatFileSize(file.size)}
+                          <div className="space-y-4">
+                            {/* Folders Section */}
+                            {filteredFiles.filter((f: CloudFile) => f.isFolder).length > 0 && (
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {filteredFiles
+                                  .filter((file: CloudFile) => file.isFolder)
+                                  .map((file: CloudFile) => (
+                                    <div
+                                      key={file.id}
+                                      className={`p-3 rounded-lg cursor-pointer transition-all border ${
+                                        selectedFile?.id === file.id 
+                                          ? 'bg-primary/10 border-primary/50 ring-2 ring-primary/30' 
+                                          : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'
+                                      }`}
+                                      onClick={() => setSelectedFile(file)}
+                                      onDoubleClick={() => navigateToFolder(file)}
+                                      data-testid={`file-${file.id}`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Folder className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                                        <span className="text-sm font-medium truncate" title={file.name}>
+                                          {file.name}
+                                        </span>
                                       </div>
                                     </div>
-                                  </div>
-                                </div>
+                                  ))}
                               </div>
-                            ))}
+                            )}
+                            
+                            {/* Files Section */}
+                            {filteredFiles.filter((f: CloudFile) => !f.isFolder).length > 0 && (
+                              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                {filteredFiles
+                                  .filter((file: CloudFile) => !file.isFolder)
+                                  .map((file: CloudFile) => (
+                                    <div
+                                      key={file.id}
+                                      className={`rounded-lg cursor-pointer transition-all border overflow-hidden ${
+                                        selectedFile?.id === file.id 
+                                          ? 'border-primary/50 ring-2 ring-primary/30' 
+                                          : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+                                      }`}
+                                      onClick={() => setSelectedFile(file)}
+                                      data-testid={`file-${file.id}`}
+                                    >
+                                      {/* File Preview Area */}
+                                      <div className="aspect-[4/3] bg-gray-100 flex items-center justify-center">
+                                        {file.mimeType?.startsWith('image/') ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-blue-400" />
+                                          </div>
+                                        ) : file.mimeType?.includes('pdf') ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-red-400" />
+                                          </div>
+                                        ) : file.mimeType?.includes('spreadsheet') || file.mimeType?.includes('excel') ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-green-500" />
+                                          </div>
+                                        ) : file.mimeType?.includes('document') || file.mimeType?.includes('word') ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-blue-500" />
+                                          </div>
+                                        ) : file.mimeType?.includes('presentation') || file.mimeType?.includes('powerpoint') ? (
+                                          <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-orange-50 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-yellow-500" />
+                                          </div>
+                                        ) : (
+                                          <div className="w-full h-full bg-gradient-to-br from-gray-50 to-slate-100 flex items-center justify-center">
+                                            <File className="w-8 h-8 text-gray-400" />
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* File Info */}
+                                      <div className="p-2 bg-white">
+                                        <div className="text-sm font-medium truncate" title={file.name}>
+                                          {file.name}
+                                        </div>
+                                        <div className="text-xs text-gray-500">
+                                          {formatFileSize(file.size)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
