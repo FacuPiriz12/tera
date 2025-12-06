@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import QuickCopyDialog from "@/components/QuickCopyDialog";
 import CopyProgressModal from "@/components/CopyProgressModal";
 import GoogleDriveConnection from "@/components/GoogleDriveConnection";
+import ConnectionWarningBanner from "@/components/ConnectionWarningBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -107,7 +108,10 @@ export default function Home() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 p-8" data-testid="main-content">
+        <main className="flex-1" data-testid="main-content">
+          <ConnectionWarningBanner />
+          
+          <div className="p-8">
           {/* Page Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-[1.5rem] font-semibold text-foreground">{t('navigation.home')}</h1>
@@ -258,6 +262,7 @@ export default function Home() {
               </div>
             </CardContent>
           </Card>
+          </div>
         </main>
       </div>
 
