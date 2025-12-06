@@ -238,20 +238,20 @@ export default function MyFiles() {
                 Todos
               </Button>
               <Button
-                variant={platformFilter === 'google' ? 'default' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 onClick={() => setPlatformFilter('google')}
-                className="rounded-none border-l px-3"
+                className={`rounded-none border-l px-3 ${platformFilter === 'google' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''}`}
                 data-testid="button-filter-google"
               >
                 <GoogleDriveLogo className="w-4 h-4 mr-1" />
                 Drive
               </Button>
               <Button
-                variant={platformFilter === 'dropbox' ? 'default' : 'ghost'}
+                variant="ghost"
                 size="sm"
                 onClick={() => setPlatformFilter('dropbox')}
-                className="rounded-l-none border-l px-3"
+                className={`rounded-l-none border-l px-3 ${platformFilter === 'dropbox' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''}`}
                 data-testid="button-filter-dropbox"
               >
                 <DropboxLogo className="w-4 h-4 mr-1" />
@@ -295,7 +295,11 @@ export default function MyFiles() {
               <p className="text-muted-foreground text-center">
                 {searchTerm 
                   ? t('myFiles.tryDifferentSearch')
-                  : t('myFiles.filesWillAppearHere')
+                  : platformFilter === 'dropbox'
+                    ? 'Los archivos y carpetas de Dropbox aparecerán aquí.'
+                    : platformFilter === 'google'
+                      ? 'Los archivos y carpetas de Google Drive aparecerán aquí.'
+                      : t('myFiles.filesWillAppearHere')
                 }
               </p>
             </CardContent>
