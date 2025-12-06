@@ -103,20 +103,6 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50" data-testid="page-home">
       <Header />
       
-      {/* Connection Warning */}
-      {!hasAnyAccountConnected && (
-        <div className="bg-gray-50 border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-8 py-3">
-            <div className="flex items-center justify-center gap-2 text-gray-500">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-sm">
-                {t('dashboard.noAccountConnected')}{" "}
-                <span className="font-medium text-gray-600">{t('dashboard.integrations')}</span> {t('dashboard.toStartWorking')}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
       
       <div className="flex">
         <Sidebar />

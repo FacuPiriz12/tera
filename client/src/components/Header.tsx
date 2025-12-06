@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import CloneDriveLogo from "./CloneDriveLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ConnectionWarningBanner from "@/components/ConnectionWarningBanner";
 import { Search, LogOut, Settings, User } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ export default function Header() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-[9999] bg-white shadow-[0_2px_10px_rgba(0,0,0,0.1)] border-b border-border" data-testid="header-main">
       <div className="px-8 h-[65px] flex justify-between items-center">
         {/* Logo */}
@@ -123,5 +125,7 @@ export default function Header() {
         </div>
       </div>
     </header>
+    <ConnectionWarningBanner />
+    </>
   );
 }
