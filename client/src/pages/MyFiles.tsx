@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { 
   Download, 
   FileText, 
@@ -11,24 +12,48 @@ import {
   List,
   MoreVertical,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ExternalLink,
+  Copy,
+  Trash2,
+  Info,
+  Calendar,
+  HardDrive,
+  Link2,
+  Eye
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { DriveFile } from "@shared/schema";
 import { getAuthHeaders } from "@/lib/queryClient";
 
 export default function MyFiles() {
   const { t } = useTranslation(['pages', 'common']);
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const itemsPerPage = 10;
   
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
@@ -90,10 +115,60 @@ export default function MyFiles() {
     });
   };
 
-  const handleDownload = (file: DriveFile) => {
-    // Crear URL de descarga desde Google Drive
+  const formatFullDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getFileType = (mimeType?: string): string => {
+    if (!mimeType) return 'Archivo';
+    if (mimeType.includes('folder')) return 'Carpeta';
+    if (mimeType.includes('image/')) return 'Imagen';
+    if (mimeType.includes('video/')) return 'Video';
+    if (mimeType.includes('audio/')) return 'Audio';
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Hoja de cálculo';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'Documento';
+    if (mimeType.includes('zip') || mimeType.includes('archive')) return 'Archivo comprimido';
+    return 'Archivo';
+  };
+
+  const handleDownload = (file: DriveFile, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.copiedFileId}`;
     window.open(downloadUrl, '_blank');
+  };
+
+  const handleOpenInDrive = (file: DriveFile, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const driveUrl = `https://drive.google.com/file/d/${file.copiedFileId}/view`;
+    window.open(driveUrl, '_blank');
+  };
+
+  const handleCopyLink = (file: DriveFile, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const driveUrl = `https://drive.google.com/file/d/${file.copiedFileId}/view`;
+    navigator.clipboard.writeText(driveUrl);
+    toast({
+      title: "Enlace copiado",
+      description: "El enlace se ha copiado al portapapeles",
+    });
+  };
+
+  const handleViewDetails = (file: DriveFile, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setSelectedFile(file);
+    setDetailsOpen(true);
+  };
+
+  const handleCardClick = (file: DriveFile) => {
+    setSelectedFile(file);
+    setDetailsOpen(true);
   };
 
   const filteredFiles = files.filter((file: DriveFile) =>
@@ -126,7 +201,7 @@ export default function MyFiles() {
           <div className="mb-6">
             <h1 className="text-[1.5rem] font-semibold text-foreground mb-2">{t('myFiles.title')}</h1>
             <p className="text-muted-foreground">
-              {t('myFiles.description')}
+              Archivos y Carpetas
             </p>
           </div>
 
@@ -139,6 +214,7 @@ export default function MyFiles() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              data-testid="input-search-files"
             />
           </div>
           
@@ -149,6 +225,7 @@ export default function MyFiles() {
                 size="sm"
                 onClick={() => setViewMode('grid')}
                 className="rounded-r-none"
+                data-testid="button-view-grid"
               >
                 <Grid3x3 className="w-4 h-4" />
               </Button>
@@ -157,6 +234,7 @@ export default function MyFiles() {
                 size="sm"
                 onClick={() => setViewMode('list')}
                 className="rounded-l-none border-l"
+                data-testid="button-view-list"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -188,16 +266,18 @@ export default function MyFiles() {
             {filteredFiles.map((file: DriveFile) => (
               <Card 
                 key={file.id} 
-                className="hover:shadow-md transition-shadow group"
+                className="hover:shadow-md transition-shadow group cursor-pointer"
+                onClick={() => handleCardClick(file)}
+                data-testid={`card-file-${file.id}`}
               >
                 <CardContent className={viewMode === 'grid' ? 'p-4' : 'p-3 flex items-center space-x-4'}>
                   <div className={viewMode === 'grid' ? 'space-y-3' : 'flex items-center space-x-3 flex-1'}>
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
                         {getFileIcon(file.mimeType || undefined)}
                       </div>
-                      <div className={viewMode === 'list' ? 'flex-1' : ''}>
-                        <h3 className="font-medium text-sm truncate mb-1">
+                      <div className={viewMode === 'list' ? 'flex-1 min-w-0' : 'min-w-0 flex-1'}>
+                        <h3 className="font-medium text-sm truncate max-w-[180px]" title={file.fileName}>
                           {file.fileName}
                         </h3>
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
@@ -210,25 +290,50 @@ export default function MyFiles() {
                     
                     {viewMode === 'grid' && (
                       <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs">
-                          {t('myFiles.copied')}
+                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                          Copiado
                         </Badge>
                         <div className="flex space-x-1">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDownload(file)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => handleDownload(file, e)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                            data-testid={`button-download-${file.id}`}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                                data-testid={`button-more-${file.id}`}
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)} data-testid={`menu-details-${file.id}`}>
+                                <Info className="w-4 h-4 mr-2" />
+                                Ver detalles
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => handleOpenInDrive(file, e as any)} data-testid={`menu-open-drive-${file.id}`}>
+                                <ExternalLink className="w-4 h-4 mr-2" />
+                                Abrir en Google Drive
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)} data-testid={`menu-download-${file.id}`}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Descargar
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)} data-testid={`menu-copy-link-${file.id}`}>
+                                <Link2 className="w-4 h-4 mr-2" />
+                                Copiar enlace
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                     )}
@@ -236,24 +341,47 @@ export default function MyFiles() {
                   
                   {viewMode === 'list' && (
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {t('myFiles.copied')}
+                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                        Copiado
                       </Badge>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDownload(file)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => handleDownload(file, e)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
                       >
                         <Download className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)}>
+                            <Info className="w-4 h-4 mr-2" />
+                            Ver detalles
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleOpenInDrive(file, e as any)}>
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Abrir en Google Drive
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Descargar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)}>
+                            <Link2 className="w-4 h-4 mr-2" />
+                            Copiar enlace
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   )}
                 </CardContent>
@@ -318,6 +446,89 @@ export default function MyFiles() {
           )}
         </main>
       </div>
+
+      {/* File Details Dialog */}
+      <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              {selectedFile && getFileIcon(selectedFile.mimeType || undefined)}
+              <span className="truncate">{selectedFile?.fileName}</span>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedFile && (
+            <div className="space-y-4">
+              {/* File Name Full */}
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-xs text-muted-foreground mb-1">Nombre completo</p>
+                <p className="text-sm font-medium break-all">{selectedFile.fileName}</p>
+              </div>
+
+              {/* File Info Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <HardDrive className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tamaño</p>
+                    <p className="text-sm font-medium">{formatFileSize(selectedFile.fileSize || undefined)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tipo</p>
+                    <p className="text-sm font-medium">{getFileType(selectedFile.mimeType || undefined)}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 col-span-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs text-muted-foreground">Fecha de copia</p>
+                    <p className="text-sm font-medium">{formatFullDate(selectedFile.createdAt!)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                  Copiado exitosamente
+                </Badge>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-2">
+                <Button 
+                  onClick={() => handleOpenInDrive(selectedFile)} 
+                  className="flex-1"
+                  data-testid="button-dialog-open-drive"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Abrir en Drive
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleDownload(selectedFile)}
+                  data-testid="button-dialog-download"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Descargar
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handleCopyLink(selectedFile)}
+                  data-testid="button-dialog-copy-link"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
