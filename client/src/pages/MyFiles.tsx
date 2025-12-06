@@ -42,9 +42,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import GoogleDriveLogo from "@/components/GoogleDriveLogo";
+import DropboxLogo from "@/components/DropboxLogo";
 import { useToast } from "@/hooks/use-toast";
 import type { DriveFile } from "@shared/schema";
 import { getAuthHeaders } from "@/lib/queryClient";
+
+type PlatformFilter = 'all' | 'google' | 'dropbox';
 
 export default function MyFiles() {
   const { t } = useTranslation(['pages', 'common']);
@@ -54,6 +58,7 @@ export default function MyFiles() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   const itemsPerPage = 10;
   
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
@@ -171,9 +176,11 @@ export default function MyFiles() {
     setDetailsOpen(true);
   };
 
-  const filteredFiles = files.filter((file: DriveFile) =>
-    file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFiles = files.filter((file: DriveFile) => {
+    const matchesSearch = file.fileName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesPlatform = platformFilter === 'all' || file.provider === platformFilter;
+    return matchesSearch && matchesPlatform;
+  });
 
   if (isLoading) {
     return (
@@ -207,15 +214,50 @@ export default function MyFiles() {
 
         {/* Controls */}
         <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={t('myFiles.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-              data-testid="input-search-files"
-            />
+          <div className="flex items-center gap-3 flex-1">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('myFiles.searchPlaceholder')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                data-testid="input-search-files"
+              />
+            </div>
+            
+            {/* Platform Filter */}
+            <div className="flex border border-border rounded-lg">
+              <Button
+                variant={platformFilter === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPlatformFilter('all')}
+                className="rounded-r-none px-3"
+                data-testid="button-filter-all"
+              >
+                Todos
+              </Button>
+              <Button
+                variant={platformFilter === 'google' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPlatformFilter('google')}
+                className="rounded-none border-l px-3"
+                data-testid="button-filter-google"
+              >
+                <GoogleDriveLogo className="w-4 h-4 mr-1" />
+                Drive
+              </Button>
+              <Button
+                variant={platformFilter === 'dropbox' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setPlatformFilter('dropbox')}
+                className="rounded-l-none border-l px-3"
+                data-testid="button-filter-dropbox"
+              >
+                <DropboxLogo className="w-4 h-4 mr-1" />
+                Dropbox
+              </Button>
+            </div>
           </div>
           
           <div className="flex items-center space-x-2">
