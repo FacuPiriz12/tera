@@ -166,42 +166,6 @@ export default function Integrations() {
             </Card>
           </div>
 
-          {/* Integration Status Summary */}
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="text-xl">Estado de Integraciones</CardTitle>
-              <p className="text-gray-600">Resumen del estado actual de tus conexiones</p>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">Google Drive</span>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-gray-600">Verificando conexión...</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Estado de la conexión con tu cuenta de Google Drive
-                  </p>
-                </div>
-                
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">Dropbox</span>
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                      <span className="text-gray-600">Verificando conexión...</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-500">
-                    Estado de la conexión con tu cuenta de Dropbox
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </main>
       </div>
     </div>
