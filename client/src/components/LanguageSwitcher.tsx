@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Globe, Languages } from 'lucide-react';
+import { Globe } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -16,8 +16,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const languages = [
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
 ];
 
 interface LanguageSwitcherProps {
@@ -45,7 +45,6 @@ export default function LanguageSwitcher({ variant = 'select' }: LanguageSwitche
             className="flex items-center gap-1"
             data-testid={`button-language-${lang.code}`}
           >
-            <span className="text-sm">{lang.flag}</span>
             <span className="text-xs">{lang.code.toUpperCase()}</span>
           </Button>
         ))}
@@ -59,30 +58,33 @@ export default function LanguageSwitcher({ variant = 'select' }: LanguageSwitche
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            size="sm" 
-            className="h-9 w-9 p-0 hover:bg-muted"
+            size="icon"
+            className="h-9 w-9 rounded-full hover:bg-accent/50 focus-visible:ring-1 focus-visible:ring-ring"
             data-testid="button-language-icon"
             aria-label={t('language.switchLanguage')}
-            title={t('language.switchLanguage')}
           >
-            <Languages className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+            <Globe className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={1.5} />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent 
+          align="end" 
+          sideOffset={8}
+          className="min-w-[160px] p-1 bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg rounded-lg"
+        >
           {languages.map((lang) => (
             <DropdownMenuItem 
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
-              className={`flex items-center gap-2 cursor-pointer ${
-                i18n.language === lang.code ? 'bg-accent text-accent-foreground' : ''
-              }`}
+              className={`
+                px-3 py-2 text-sm cursor-pointer rounded-md transition-colors
+                ${i18n.language === lang.code 
+                  ? 'bg-accent text-accent-foreground font-medium' 
+                  : 'text-foreground/80 hover:text-foreground hover:bg-accent/50'
+                }
+              `}
               data-testid={`menu-language-${lang.code}`}
             >
-              <span>{lang.flag}</span>
-              <span>{lang.name}</span>
-              {i18n.language === lang.code && (
-                <span className="ml-auto text-xs text-muted-foreground">✓</span>
-              )}
+              {lang.name}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
@@ -92,27 +94,21 @@ export default function LanguageSwitcher({ variant = 'select' }: LanguageSwitche
   
   return (
     <div className="flex items-center gap-2">
-      <Globe className="w-4 h-4 text-muted-foreground" />
+      <Globe className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
       <Select value={i18n.language} onValueChange={changeLanguage}>
-        <SelectTrigger className="w-[140px]" data-testid="select-language">
+        <SelectTrigger className="w-[120px] border-0 bg-transparent hover:bg-accent/50" data-testid="select-language">
           <SelectValue>
-            <div className="flex items-center gap-2">
-              <span>{currentLanguage.flag}</span>
-              <span className="text-sm">{currentLanguage.name}</span>
-            </div>
+            <span className="text-sm">{currentLanguage.name}</span>
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-[140px]">
           {languages.map((lang) => (
             <SelectItem 
               key={lang.code} 
               value={lang.code}
               data-testid={`option-language-${lang.code}`}
             >
-              <div className="flex items-center gap-2">
-                <span>{lang.flag}</span>
-                <span>{lang.name}</span>
-              </div>
+              {lang.name}
             </SelectItem>
           ))}
         </SelectContent>
