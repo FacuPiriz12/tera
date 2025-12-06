@@ -179,6 +179,18 @@ const DropdownMenuShortcut = ({
 }
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
 
+const DropdownMenuArrow = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Arrow>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Arrow>
+>(({ className, ...props }, ref) => (
+  <DropdownMenuPrimitive.Arrow
+    ref={ref}
+    className={cn("fill-card", className)}
+    {...props}
+  />
+))
+DropdownMenuArrow.displayName = DropdownMenuPrimitive.Arrow.displayName
+
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -195,4 +207,5 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
+  DropdownMenuArrow,
 }

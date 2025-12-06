@@ -12,6 +12,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuArrow,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
@@ -68,9 +69,10 @@ export default function LanguageSwitcher({ variant = 'select' }: LanguageSwitche
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          sideOffset={8}
+          sideOffset={12}
           className="min-w-[160px] p-1 bg-card border border-border shadow-xl rounded-lg"
         >
+          <DropdownMenuArrow className="fill-card" />
           {languages.map((lang) => (
             <DropdownMenuItem 
               key={lang.code}
