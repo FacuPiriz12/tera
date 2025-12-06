@@ -69,7 +69,7 @@ export default function LanguageSwitcher({ variant = 'select' }: LanguageSwitche
         <DropdownMenuContent 
           align="end" 
           sideOffset={8}
-          className="min-w-[160px] p-1 bg-popover/95 backdrop-blur-sm border border-border/50 shadow-lg rounded-lg"
+          className="min-w-[160px] p-1 bg-card border border-border shadow-xl rounded-lg"
         >
           {languages.map((lang) => (
             <DropdownMenuItem 
