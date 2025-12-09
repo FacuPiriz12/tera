@@ -168,7 +168,7 @@ export default function EmailConfirmation() {
         <CardContent className="space-y-6">
           <div className="flex justify-center">
             {status === 'loading' && (
-              <Loader2 className="h-16 w-16 text-primary animate-spin" data-testid="icon-loading" />
+              <Loader2 className="h-16 w-16 text-blue-500 animate-spin" data-testid="icon-loading" />
             )}
             {status === 'success' && (
               <CheckCircle2 className="h-16 w-16 text-green-500" data-testid="icon-success" />
