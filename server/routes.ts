@@ -1406,13 +1406,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create asynchronous transfer job in queue
+      // Build sourceUrl for cross-cloud transfers
+      const sourceUrl = sourceProvider === 'google' 
+        ? `https://drive.google.com/file/d/${sourceFileId}` 
+        : `dropbox://${sourceFilePath}`;
+      
       const copyOperation = await storage.createCopyOperation({
         userId,
+        sourceUrl,
         sourceProvider,
         sourceFileId: sourceFileId || null,
         sourceFilePath: sourceFilePath || null,
-        destinationProvider: targetProvider,
-        destinationFolderId: targetPath || null,
+        destProvider: targetProvider,
+        destinationFolderId: targetPath || 'root',
         fileName: fileName,
         status: 'pending'
       });
