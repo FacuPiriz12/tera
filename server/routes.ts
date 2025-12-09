@@ -1394,8 +1394,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userMembership = user.membershipPlan || 'free';
       const membershipExpiry = user.membershipExpiry ? new Date(user.membershipExpiry) : null;
       const isExpired = membershipExpiry && membershipExpiry < new Date();
+      const isAdmin = user.role === 'admin';
 
-      if (userMembership === 'free' || isExpired) {
+      if (!isAdmin && (userMembership === 'free' || isExpired)) {
         return res.status(403).json({ 
           message: "Premium feature", 
           detail: isExpired 
