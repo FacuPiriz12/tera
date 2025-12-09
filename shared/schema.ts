@@ -120,6 +120,59 @@ export type CloudFile = typeof cloudFiles.$inferSelect;
 export type InsertCopyOperation = typeof copyOperations.$inferInsert;
 export type CopyOperation = typeof copyOperations.$inferSelect;
 
+// File sharing between users
+export const shareRequests = pgTable("share_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").notNull().references(() => users.id),
+  recipientId: varchar("recipient_id").notNull().references(() => users.id),
+  recipientEmail: varchar("recipient_email").notNull(),
+  
+  // File information
+  provider: varchar("provider").notNull(), // 'google' | 'dropbox'
+  fileId: varchar("file_id").notNull(),
+  filePath: text("file_path"),
+  fileName: text("file_name").notNull(),
+  fileType: varchar("file_type").notNull(), // 'file' | 'folder'
+  fileSize: bigint("file_size", { mode: "number" }),
+  mimeType: varchar("mime_type"),
+  
+  // Share details
+  message: text("message"),
+  status: varchar("status").notNull().default('pending'), // 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled'
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+  expiresAt: timestamp("expires_at"),
+});
+
+// Share events for audit trail
+export const shareEvents = pgTable("share_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shareRequestId: varchar("share_request_id").notNull().references(() => shareRequests.id),
+  eventType: varchar("event_type").notNull(), // 'created' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'downloaded'
+  actorId: varchar("actor_id").notNull().references(() => users.id),
+  details: text("details"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type InsertShareRequest = typeof shareRequests.$inferInsert;
+export type ShareRequest = typeof shareRequests.$inferSelect;
+
+export type InsertShareEvent = typeof shareEvents.$inferInsert;
+export type ShareEvent = typeof shareEvents.$inferSelect;
+
+export const insertShareRequestSchema = createInsertSchema(shareRequests).omit({
+  id: true,
+  createdAt: true,
+  respondedAt: true,
+});
+
+export const insertShareEventSchema = createInsertSchema(shareEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertCloudFileSchema = createInsertSchema(cloudFiles).omit({
   id: true,
   createdAt: true,

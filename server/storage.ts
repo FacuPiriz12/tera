@@ -2,12 +2,18 @@ import {
   users,
   cloudFiles,
   copyOperations,
+  shareRequests,
+  shareEvents,
   type User,
   type UpsertUser,
   type CloudFile,
   type InsertCloudFile,
   type CopyOperation,
   type InsertCopyOperation,
+  type ShareRequest,
+  type InsertShareRequest,
+  type ShareEvent,
+  type InsertShareEvent,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc } from "drizzle-orm";
@@ -102,6 +108,18 @@ export interface IStorage {
   
   // Cleanup operations for old completed/failed jobs
   cleanupOldOperations(olderThanMs: number): Promise<number>;
+  
+  // Share request operations
+  createShareRequest(request: InsertShareRequest): Promise<ShareRequest>;
+  getShareRequest(id: string): Promise<ShareRequest | undefined>;
+  updateShareRequest(id: string, updates: Partial<ShareRequest>): Promise<ShareRequest>;
+  getUserInbox(userId: string): Promise<ShareRequest[]>;
+  getUserOutbox(userId: string): Promise<ShareRequest[]>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  
+  // Share events
+  createShareEvent(event: InsertShareEvent): Promise<ShareEvent>;
+  getShareEvents(shareRequestId: string): Promise<ShareEvent[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -776,6 +794,72 @@ export class DatabaseStorage implements IStorage {
 
     return deletedOps.length;
   }
+
+  // Share request operations
+  async createShareRequest(request: InsertShareRequest): Promise<ShareRequest> {
+    const [shareRequest] = await getDb()
+      .insert(shareRequests)
+      .values(request)
+      .returning();
+    return shareRequest;
+  }
+
+  async getShareRequest(id: string): Promise<ShareRequest | undefined> {
+    const [shareRequest] = await getDb()
+      .select()
+      .from(shareRequests)
+      .where(eq(shareRequests.id, id));
+    return shareRequest;
+  }
+
+  async updateShareRequest(id: string, updates: Partial<ShareRequest>): Promise<ShareRequest> {
+    const [shareRequest] = await getDb()
+      .update(shareRequests)
+      .set(updates)
+      .where(eq(shareRequests.id, id))
+      .returning();
+    return shareRequest;
+  }
+
+  async getUserInbox(userId: string): Promise<ShareRequest[]> {
+    return await getDb()
+      .select()
+      .from(shareRequests)
+      .where(eq(shareRequests.recipientId, userId))
+      .orderBy(desc(shareRequests.createdAt));
+  }
+
+  async getUserOutbox(userId: string): Promise<ShareRequest[]> {
+    return await getDb()
+      .select()
+      .from(shareRequests)
+      .where(eq(shareRequests.senderId, userId))
+      .orderBy(desc(shareRequests.createdAt));
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await getDb()
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return user;
+  }
+
+  async createShareEvent(event: InsertShareEvent): Promise<ShareEvent> {
+    const [shareEvent] = await getDb()
+      .insert(shareEvents)
+      .values(event)
+      .returning();
+    return shareEvent;
+  }
+
+  async getShareEvents(shareRequestId: string): Promise<ShareEvent[]> {
+    return await getDb()
+      .select()
+      .from(shareEvents)
+      .where(eq(shareEvents.shareRequestId, shareRequestId))
+      .orderBy(desc(shareEvents.createdAt));
+  }
 }
 
 // Memory storage for development when DATABASE_URL is not available
@@ -783,6 +867,8 @@ class MemoryStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private cloudFiles: Map<string, CloudFile> = new Map();
   private copyOperations: Map<string, CopyOperation> = new Map();
+  private shareRequestsMap: Map<string, ShareRequest> = new Map();
+  private shareEventsMap: Map<string, ShareEvent> = new Map();
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
@@ -1394,6 +1480,68 @@ class MemoryStorage implements IStorage {
     }
 
     return deletedCount;
+  }
+
+  // Share request operations
+  async createShareRequest(request: InsertShareRequest): Promise<ShareRequest> {
+    const id = crypto.randomUUID();
+    const shareRequest: ShareRequest = {
+      id,
+      ...request,
+      status: request.status || 'pending',
+      createdAt: new Date(),
+      respondedAt: null,
+      expiresAt: request.expiresAt || null,
+    };
+    this.shareRequestsMap.set(id, shareRequest);
+    return shareRequest;
+  }
+
+  async getShareRequest(id: string): Promise<ShareRequest | undefined> {
+    return this.shareRequestsMap.get(id);
+  }
+
+  async updateShareRequest(id: string, updates: Partial<ShareRequest>): Promise<ShareRequest> {
+    const existing = this.shareRequestsMap.get(id);
+    if (!existing) {
+      throw new Error('Share request not found');
+    }
+    const updated = { ...existing, ...updates };
+    this.shareRequestsMap.set(id, updated);
+    return updated;
+  }
+
+  async getUserInbox(userId: string): Promise<ShareRequest[]> {
+    return Array.from(this.shareRequestsMap.values())
+      .filter(sr => sr.recipientId === userId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getUserOutbox(userId: string): Promise<ShareRequest[]> {
+    return Array.from(this.shareRequestsMap.values())
+      .filter(sr => sr.senderId === userId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async createShareEvent(event: InsertShareEvent): Promise<ShareEvent> {
+    const id = crypto.randomUUID();
+    const shareEvent: ShareEvent = {
+      id,
+      ...event,
+      createdAt: new Date(),
+    };
+    this.shareEventsMap.set(id, shareEvent);
+    return shareEvent;
+  }
+
+  async getShareEvents(shareRequestId: string): Promise<ShareEvent[]> {
+    return Array.from(this.shareEventsMap.values())
+      .filter(se => se.shareRequestId === shareRequestId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 }
 
