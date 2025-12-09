@@ -2110,6 +2110,269 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==========================================
+  // FILE SHARING BETWEEN USERS
+  // ==========================================
+
+  // Create a share request (send file to another user)
+  app.post('/api/shares', isAuthenticated, async (req: any, res) => {
+    try {
+      const senderId = req.user.claims.sub;
+      const { recipientEmail, provider, fileId, filePath, fileName, fileType, fileSize, mimeType, message } = req.body;
+
+      if (!recipientEmail || !provider || !fileId || !fileName || !fileType) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Find recipient by email
+      const recipient = await storage.getUserByEmail(recipientEmail);
+      if (!recipient) {
+        return res.status(404).json({ message: "User not found with this email" });
+      }
+
+      // Cannot share with yourself
+      if (recipient.id === senderId) {
+        return res.status(400).json({ message: "Cannot share with yourself" });
+      }
+
+      // Create share request
+      const shareRequest = await storage.createShareRequest({
+        senderId,
+        recipientId: recipient.id,
+        recipientEmail,
+        provider,
+        fileId,
+        filePath: filePath || null,
+        fileName,
+        fileType,
+        fileSize: fileSize || null,
+        mimeType: mimeType || null,
+        message: message || null,
+        status: 'pending',
+      });
+
+      // Create event
+      await storage.createShareEvent({
+        shareRequestId: shareRequest.id,
+        eventType: 'created',
+        actorId: senderId,
+        details: `File "${fileName}" shared with ${recipientEmail}`,
+      });
+
+      res.status(201).json(shareRequest);
+    } catch (error: any) {
+      console.error("Error creating share request:", error);
+      res.status(500).json({ message: "Failed to create share request" });
+    }
+  });
+
+  // Get user's inbox (files shared with them)
+  app.get('/api/shares/inbox', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const inbox = await storage.getUserInbox(userId);
+      
+      // Enrich with sender info
+      const enrichedInbox = await Promise.all(inbox.map(async (share) => {
+        const sender = await storage.getUser(share.senderId);
+        return {
+          ...share,
+          senderName: sender ? `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || sender.email : 'Unknown',
+          senderEmail: sender?.email || 'Unknown',
+          senderAvatar: sender?.profileImageUrl || null,
+        };
+      }));
+      
+      res.json(enrichedInbox);
+    } catch (error: any) {
+      console.error("Error fetching inbox:", error);
+      res.status(500).json({ message: "Failed to fetch inbox" });
+    }
+  });
+
+  // Get user's outbox (files they shared)
+  app.get('/api/shares/outbox', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const outbox = await storage.getUserOutbox(userId);
+      
+      // Enrich with recipient info
+      const enrichedOutbox = await Promise.all(outbox.map(async (share) => {
+        const recipient = await storage.getUser(share.recipientId);
+        return {
+          ...share,
+          recipientName: recipient ? `${recipient.firstName || ''} ${recipient.lastName || ''}`.trim() || recipient.email : 'Unknown',
+          recipientAvatar: recipient?.profileImageUrl || null,
+        };
+      }));
+      
+      res.json(enrichedOutbox);
+    } catch (error: any) {
+      console.error("Error fetching outbox:", error);
+      res.status(500).json({ message: "Failed to fetch outbox" });
+    }
+  });
+
+  // Respond to share request (accept/reject)
+  app.patch('/api/shares/:id/respond', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const shareId = req.params.id;
+      const { action } = req.body; // 'accept' or 'reject'
+
+      if (!action || !['accept', 'reject'].includes(action)) {
+        return res.status(400).json({ message: "Invalid action. Must be 'accept' or 'reject'" });
+      }
+
+      const shareRequest = await storage.getShareRequest(shareId);
+      if (!shareRequest) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      // Only recipient can respond
+      if (shareRequest.recipientId !== userId) {
+        return res.status(403).json({ message: "Not authorized to respond to this share" });
+      }
+
+      // Can only respond to pending requests
+      if (shareRequest.status !== 'pending') {
+        return res.status(400).json({ message: "Share request already processed" });
+      }
+
+      const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+      const updated = await storage.updateShareRequest(shareId, {
+        status: newStatus,
+        respondedAt: new Date(),
+      });
+
+      // Create event
+      await storage.createShareEvent({
+        shareRequestId: shareId,
+        eventType: newStatus,
+        actorId: userId,
+        details: `Share request ${newStatus}`,
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error responding to share:", error);
+      res.status(500).json({ message: "Failed to respond to share request" });
+    }
+  });
+
+  // Get share request details
+  app.get('/api/shares/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const shareId = req.params.id;
+
+      const shareRequest = await storage.getShareRequest(shareId);
+      if (!shareRequest) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      // Only sender or recipient can view
+      if (shareRequest.senderId !== userId && shareRequest.recipientId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view this share" });
+      }
+
+      res.json(shareRequest);
+    } catch (error: any) {
+      console.error("Error fetching share:", error);
+      res.status(500).json({ message: "Failed to fetch share request" });
+    }
+  });
+
+  // Get share events/history
+  app.get('/api/shares/:id/events', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const shareId = req.params.id;
+
+      const shareRequest = await storage.getShareRequest(shareId);
+      if (!shareRequest) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      // Only sender or recipient can view events
+      if (shareRequest.senderId !== userId && shareRequest.recipientId !== userId) {
+        return res.status(403).json({ message: "Not authorized to view these events" });
+      }
+
+      const events = await storage.getShareEvents(shareId);
+      res.json(events);
+    } catch (error: any) {
+      console.error("Error fetching share events:", error);
+      res.status(500).json({ message: "Failed to fetch share events" });
+    }
+  });
+
+  // Cancel share request (sender only)
+  app.delete('/api/shares/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const shareId = req.params.id;
+
+      const shareRequest = await storage.getShareRequest(shareId);
+      if (!shareRequest) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      // Only sender can cancel
+      if (shareRequest.senderId !== userId) {
+        return res.status(403).json({ message: "Not authorized to cancel this share" });
+      }
+
+      // Can only cancel pending requests
+      if (shareRequest.status !== 'pending') {
+        return res.status(400).json({ message: "Cannot cancel a processed share request" });
+      }
+
+      const updated = await storage.updateShareRequest(shareId, {
+        status: 'cancelled',
+        respondedAt: new Date(),
+      });
+
+      // Create event
+      await storage.createShareEvent({
+        shareRequestId: shareId,
+        eventType: 'cancelled',
+        actorId: userId,
+        details: 'Share request cancelled by sender',
+      });
+
+      res.json(updated);
+    } catch (error: any) {
+      console.error("Error cancelling share:", error);
+      res.status(500).json({ message: "Failed to cancel share request" });
+    }
+  });
+
+  // Search users by email for sharing
+  app.get('/api/users/search', isAuthenticated, async (req: any, res) => {
+    try {
+      const email = req.query.email as string;
+      if (!email || email.length < 3) {
+        return res.json([]);
+      }
+
+      const user = await storage.getUserByEmail(email);
+      if (user && user.id !== req.user.claims.sub) {
+        res.json([{
+          id: user.id,
+          email: user.email,
+          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          avatar: user.profileImageUrl,
+        }]);
+      } else {
+        res.json([]);
+      }
+    } catch (error: any) {
+      console.error("Error searching users:", error);
+      res.status(500).json({ message: "Failed to search users" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
