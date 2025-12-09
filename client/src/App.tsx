@@ -21,6 +21,7 @@ import Profile from "@/pages/Profile";
 import AdminDashboard from "@/pages/admin/Dashboard";
 import AdminUsers from "@/pages/admin/Users";
 import AdminOperations from "@/pages/admin/Operations";
+import ShareInbox from "@/pages/ShareInbox";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
