@@ -20,7 +20,8 @@ import {
   Calendar,
   HardDrive,
   Link2,
-  Eye
+  Eye,
+  Share2
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ import DropboxLogo from "@/components/DropboxLogo";
 import { useToast } from "@/hooks/use-toast";
 import type { DriveFile } from "@shared/schema";
 import { getAuthHeaders } from "@/lib/queryClient";
+import ShareFileDialog from "@/components/ShareFileDialog";
 
 type PlatformFilter = 'all' | 'google' | 'dropbox';
 
@@ -59,6 +61,8 @@ export default function MyFiles() {
   const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [fileToShare, setFileToShare] = useState<DriveFile | null>(null);
   const itemsPerPage = 10;
   
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
@@ -174,6 +178,12 @@ export default function MyFiles() {
   const handleCardClick = (file: DriveFile) => {
     setSelectedFile(file);
     setDetailsOpen(true);
+  };
+
+  const handleShare = (file: DriveFile, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setFileToShare(file);
+    setShareDialogOpen(true);
   };
 
   const filteredFiles = files.filter((file: DriveFile) => {
@@ -378,6 +388,10 @@ export default function MyFiles() {
                                 <Link2 className="w-4 h-4 mr-2" />
                                 Copiar enlace
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-${file.id}`}>
+                                <Share2 className="w-4 h-4 mr-2" />
+                                Compartir
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -425,6 +439,10 @@ export default function MyFiles() {
                           <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)}>
                             <Link2 className="w-4 h-4 mr-2" />
                             Copiar enlace
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-list-${file.id}`}>
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Compartir
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -575,6 +593,20 @@ export default function MyFiles() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ShareFileDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        file={fileToShare ? {
+          id: fileToShare.copiedFileId || fileToShare.id?.toString() || "",
+          name: fileToShare.fileName,
+          type: fileToShare.mimeType?.includes("folder") ? "folder" : "file",
+          size: fileToShare.fileSize,
+          mimeType: fileToShare.mimeType,
+          provider: (fileToShare.provider as "google" | "dropbox") || "google",
+          path: null,
+        } : null}
+      />
     </div>
   );
 }

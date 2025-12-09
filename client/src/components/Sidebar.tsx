@@ -12,7 +12,8 @@ import {
   ArrowRightLeft,
   Shield,
   Users,
-  FileText
+  FileText,
+  Share2
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
@@ -59,6 +60,7 @@ export default function Sidebar() {
     { path: "/integrations", icon: Settings, label: t('navigation.integrations') },
     { path: "/cloud-explorer", icon: ArrowRightLeft, label: "Explorador Multi-nube" },
     { path: "/my-files", icon: Folder, label: t('navigation.myFiles') },
+    { path: "/shared", icon: Share2, label: "Compartidos" },
     { path: "/analytics", icon: BarChart3, label: t('navigation.analytics') },
   ];
 

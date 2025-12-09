@@ -62,6 +62,7 @@ function Router() {
           <Route path="/integrations" component={Integrations} />
           <Route path="/cloud-explorer" component={CloudExplorer} />
           <Route path="/my-files" component={MyFiles} />
+          <Route path="/shared" component={ShareInbox} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/settings" component={Settings} />
           <Route path="/profile" component={Profile} />
