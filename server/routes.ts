@@ -1452,101 +1452,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Job tracking endpoints
-  app.get('/api/transfer-jobs/:jobId', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { jobId } = req.params;
-
-      const job = await storage.getCopyOperation(jobId);
-      if (!job) {
-        return res.status(404).json({ message: "Job not found" });
-      }
-
-      // Ensure user can only access their own jobs
-      if (job.userId !== userId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      res.json({
-        id: job.id,
-        status: job.status,
-        fileName: job.fileName,
-        sourceProvider: job.sourceProvider,
-        destinationProvider: job.destinationProvider,
-        progressPct: job.progressPct || 0,
-        completedFiles: job.completedFiles || 0,
-        totalFiles: job.totalFiles || 1,
-        errorMessage: job.errorMessage,
-        copiedFileUrl: job.copiedFileUrl,
-        createdAt: job.createdAt,
-        updatedAt: job.updatedAt
-      });
-    } catch (error) {
-      console.error("Error getting job status:", error);
-      res.status(500).json({ message: "Failed to get job status" });
-    }
-  });
-
-  app.get('/api/transfer-jobs', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const jobs = await storage.getUserCopyOperations(userId);
-
-      res.json(jobs.map(job => ({
-        id: job.id,
-        status: job.status,
-        fileName: job.fileName,
-        sourceProvider: job.sourceProvider,
-        destinationProvider: job.destinationProvider,
-        progressPct: job.progressPct || 0,
-        errorMessage: job.errorMessage,
-        createdAt: job.createdAt,
-        updatedAt: job.updatedAt
-      })));
-    } catch (error) {
-      console.error("Error getting user jobs:", error);
-      res.status(500).json({ message: "Failed to get jobs" });
-    }
-  });
-
-  app.post('/api/transfer-jobs/:jobId/cancel', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { jobId } = req.params;
-
-      const job = await storage.getCopyOperation(jobId);
-      if (!job) {
-        return res.status(404).json({ message: "Job not found" });
-      }
-
-      // Ensure user can only cancel their own jobs
-      if (job.userId !== userId) {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      // Only allow cancellation of pending or in-progress jobs
-      if (job.status !== 'pending' && job.status !== 'in_progress') {
-        return res.status(400).json({ 
-          message: `Cannot cancel job with status: ${job.status}` 
-        });
-      }
-
-      const updatedJob = await storage.requestJobCancel(jobId);
-      
-      res.json({
-        id: updatedJob.id,
-        status: updatedJob.status,
-        cancelRequested: updatedJob.cancelRequested,
-        message: 'Cancellation requested'
-      });
-    } catch (error) {
-      console.error("Error canceling job:", error);
-      res.status(500).json({ message: "Failed to cancel job" });
-    }
-  });
-
   // Server-Sent Events endpoint for real-time job updates
+  // IMPORTANT: This static route must be defined BEFORE the dynamic :jobId route
   app.get('/api/transfer-jobs/events', isAuthenticated, (req: any, res) => {
     const userId = req.user.claims.sub;
     
@@ -1649,6 +1556,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     req.on('close', () => {
       clearInterval(heartbeat);
     });
+  });
+
+  // Job tracking endpoints
+  app.get('/api/transfer-jobs/:jobId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { jobId } = req.params;
+
+      const job = await storage.getCopyOperation(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      // Ensure user can only access their own jobs
+      if (job.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({
+        id: job.id,
+        status: job.status,
+        fileName: job.fileName,
+        sourceProvider: job.sourceProvider,
+        destinationProvider: job.destinationProvider,
+        progressPct: job.progressPct || 0,
+        completedFiles: job.completedFiles || 0,
+        totalFiles: job.totalFiles || 1,
+        errorMessage: job.errorMessage,
+        copiedFileUrl: job.copiedFileUrl,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt
+      });
+    } catch (error) {
+      console.error("Error getting job status:", error);
+      res.status(500).json({ message: "Failed to get job status" });
+    }
+  });
+
+  app.get('/api/transfer-jobs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const jobs = await storage.getUserCopyOperations(userId);
+
+      res.json(jobs.map(job => ({
+        id: job.id,
+        status: job.status,
+        fileName: job.fileName,
+        sourceProvider: job.sourceProvider,
+        destinationProvider: job.destinationProvider,
+        progressPct: job.progressPct || 0,
+        errorMessage: job.errorMessage,
+        createdAt: job.createdAt,
+        updatedAt: job.updatedAt
+      })));
+    } catch (error) {
+      console.error("Error getting user jobs:", error);
+      res.status(500).json({ message: "Failed to get jobs" });
+    }
+  });
+
+  app.post('/api/transfer-jobs/:jobId/cancel', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { jobId } = req.params;
+
+      const job = await storage.getCopyOperation(jobId);
+      if (!job) {
+        return res.status(404).json({ message: "Job not found" });
+      }
+
+      // Ensure user can only cancel their own jobs
+      if (job.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Only allow cancellation of pending or in-progress jobs
+      if (job.status !== 'pending' && job.status !== 'in_progress') {
+        return res.status(400).json({ 
+          message: `Cannot cancel job with status: ${job.status}` 
+        });
+      }
+
+      const updatedJob = await storage.requestJobCancel(jobId);
+      
+      res.json({
+        id: updatedJob.id,
+        status: updatedJob.status,
+        cancelRequested: updatedJob.cancelRequested,
+        message: 'Cancellation requested'
+      });
+    } catch (error) {
+      console.error("Error canceling job:", error);
+      res.status(500).json({ message: "Failed to cancel job" });
+    }
   });
 
   // Membership management routes
