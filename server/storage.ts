@@ -1292,7 +1292,12 @@ class MemoryStorage implements IStorage {
   // Job queue operations implementation for memory storage
   async claimPendingJobs(workerId: string, limit: number): Promise<CopyOperation[]> {
     const now = new Date();
-    const readyJobs = Array.from(this.copyOperations.values())
+    const allOps = Array.from(this.copyOperations.values());
+    console.log(`🔍 claimPendingJobs: Total operations in memory: ${allOps.length}`);
+    if (allOps.length > 0) {
+      console.log(`🔍 Operations status breakdown:`, allOps.map(op => ({ id: op.id.slice(0, 8), status: op.status, nextRunAt: op.nextRunAt })));
+    }
+    const readyJobs = allOps
       .filter(op => 
         op.status === 'pending' && 
         (!op.nextRunAt || op.nextRunAt <= now)
