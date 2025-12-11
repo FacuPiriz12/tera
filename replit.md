@@ -95,7 +95,29 @@ Implemented as a manual alternative to Replit's Dropbox integration. Uses Dropbo
 The system stores Dropbox tokens separately from Google Drive tokens, allowing users to connect to both services simultaneously.
 
 ## Real-time Features
-Implements polling-based real-time updates for copy operation progress using React Query's refetch intervals. Progress tracking includes file counts, completion status, and error handling with user-friendly status displays.
+Implements Server-Sent Events (SSE) for real-time transfer progress updates. The system includes:
+
+### Global Transfer Context
+A global React context (`TransferContext`) manages transfer operations at the application level, ensuring transfers continue running even when users navigate between sections:
+
+1. **TransferProvider** (`client/src/contexts/TransferContext.tsx`):
+   - Maintains SSE connection for real-time job updates
+   - Fetches active jobs on mount to restore state after page reload
+   - Automatically reconnects with exponential backoff on connection loss
+   - Clears state on logout to prevent session bleed
+   - Reconciles job state to prevent duplicates and remove stale entries
+
+2. **GlobalTransferIndicator** (`client/src/components/GlobalTransferIndicator.tsx`):
+   - Persistent floating panel visible from any page
+   - Shows active, completed, and failed transfers
+   - Expandable/collapsible/minimizable interface
+   - Links to open completed files and view all operations
+
+3. **Key Features**:
+   - Transfers continue running in background when navigating away
+   - Progress updates visible from any section of the app
+   - Automatic state recovery on page reload
+   - Session-scoped job tracking (cleared on logout)
 
 ## Development Environment
 Configured for Replit development with hot module replacement via Vite. Includes development-specific middleware for error overlay and source mapping. The build process uses esbuild for server bundling and Vite for client optimization.
