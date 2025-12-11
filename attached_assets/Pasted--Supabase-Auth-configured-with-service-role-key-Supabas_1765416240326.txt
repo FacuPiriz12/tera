@@ -1,0 +1,73 @@
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:21:30 AM [express] GET /api/copy-operations 304 in 561ms :: [{"id":"6bec6a99-b80f-4c44-93ec-11aa8f…
+📋 Claimed 1 jobs for processing
+🔄 Processing job 6bec6a99-b80f-4c44-93ec-11aa8f4355d9: 12.PNG (dropbox -> google)
+Could not parse Dropbox URL, assuming file: Error: Invalid Dropbox URL format. Supported formats: https://dropbox.com/s/... (files), https://dropbox.com/sh/... (folders), or https://dropbox.com/scl/... (modern formats)
+    at DropboxService.parseDropboxUrl (file:///opt/render/project/src/dist/index.js:2542:13)
+    at QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3469:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+Error uploading file to Google Drive: TypeError: part.body.pipe is not a function
+    at multipartUpload (/opt/render/project/src/node_modules/googleapis-common/build/src/apirequest.js:177:27)
+    at createAPIRequestAsync (/opt/render/project/src/node_modules/googleapis-common/build/src/apirequest.js:216:17)
+    at createAPIRequest (/opt/render/project/src/node_modules/googleapis-common/build/src/apirequest.js:53:16)
+    at Resource$Files.create (/opt/render/project/src/node_modules/googleapis/build/src/apis/drive/v3.js:872:65)
+    at GoogleDriveService.uploadFile (file:///opt/render/project/src/dist/index.js:1859:47)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3506:28)
+❌ Job 6bec6a99-b80f-4c44-93ec-11aa8f4355d9 failed: Error: Failed to upload file to Google Drive
+    at GoogleDriveService.uploadFile (file:///opt/render/project/src/dist/index.js:1867:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3506:28)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:21:36 AM [express] GET /api/copy-operations 200 in 582ms :: [{"id":"6bec6a99-b80f-4c44-93ec-11aa8f…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:21:42 AM [express] GET /api/copy-operations 304 in 567ms :: [{"id":"6bec6a99-b80f-4c44-93ec-11aa8f…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:21:47 AM [express] GET /api/copy-operations 304 in 583ms :: [{"id":"6bec6a99-b80f-4c44-93ec-11aa8f…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:21:54 AM [express] GET /api/copy-operations 304 in 1419ms :: [{"id":"6bec6a99-b80f-4c44-93ec-11aa8…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 15187.5ms

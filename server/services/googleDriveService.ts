@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { Readable } from 'stream';
 import { storage } from '../storage';
 
 export interface DriveFileInfo {
@@ -330,9 +331,13 @@ export class GoogleDriveService {
         parents: parentFolderId ? [parentFolderId] : undefined
       };
 
+      // Convert ArrayBuffer to a Readable stream for googleapis compatibility
+      const buffer = Buffer.from(content);
+      const stream = Readable.from(buffer);
+      
       const media = {
         mimeType: mimeType || 'application/octet-stream',
-        body: Buffer.from(content)
+        body: stream
       };
 
       const response = await this.drive.files.create({
