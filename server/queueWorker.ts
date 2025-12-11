@@ -357,13 +357,17 @@ export class QueueWorker extends EventEmitter {
       const uploadResult = await dropboxService.uploadFile(fileName || 'untitled', arrayBufferContent, targetFolderPath);
       
       // Construct the expected full path for shared link creation
-      const fullFilePath = targetFolderPath ? `${targetFolderPath}/${fileName}` : `/${fileName}`;
+      // Normalize path to ensure it starts with /
+      let normalizedFolderPath = targetFolderPath || '';
+      if (normalizedFolderPath && !normalizedFolderPath.startsWith('/')) {
+        normalizedFolderPath = '/' + normalizedFolderPath;
+      }
+      const fullFilePath = normalizedFolderPath ? `${normalizedFolderPath}/${fileName}` : `/${fileName}`;
       
       // Create shared link using the constructed path
       let sharedUrl: string | undefined;
       try {
-        const sharedLink = await dropboxService.createSharedLink(fullFilePath);
-        sharedUrl = sharedLink.url;
+        sharedUrl = await dropboxService.getSharedLink(fullFilePath);
       } catch (error) {
         console.warn(`Failed to create shared link for ${fullFilePath}:`, error);
         // Fallback: try without shared link

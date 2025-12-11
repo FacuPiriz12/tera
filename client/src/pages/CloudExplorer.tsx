@@ -943,7 +943,7 @@ export default function CloudExplorer() {
                               onClick={() => window.open(job.copiedFileUrl, '_blank')}
                             >
                               <ExternalLink className="w-3 h-3 mr-1" />
-                              Ver archivo
+                              {job.itemType === 'folder' ? 'Ver carpeta' : 'Ver archivo'}
                             </Button>
                           )}
                         </div>
