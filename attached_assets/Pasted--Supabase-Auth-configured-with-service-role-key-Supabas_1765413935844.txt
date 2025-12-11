@@ -1,0 +1,103 @@
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:00 AM [express] GET /api/copy-operations 304 in 567ms :: [{"id":"56a603b4-91c6-4f7f-b3a9-3ab471…
+📋 Claimed 1 jobs for processing
+🔄 Processing job c327bbfa-96bf-4524-b32a-c2cc447d7cdc: 12.PNG (google -> dropbox)
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+Refreshing Dropbox token...
+Failed to refresh Dropbox token: TypeError: Cannot read properties of undefined (reading 'result')
+    at DropboxService.ensureValidToken (file:///opt/render/project/src/dist/index.js:2464:39)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2563:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3467:28)
+❌ Job c327bbfa-96bf-4524-b32a-c2cc447d7cdc failed: Error: Dropbox access token has expired. Please reconnect your account.
+    at DropboxService.ensureValidToken (file:///opt/render/project/src/dist/index.js:2473:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2563:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3467:28)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:06 AM [express] GET /api/copy-operations 200 in 606ms :: [{"id":"56a603b4-91c6-4f7f-b3a9-3ab471…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 4500ms
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:12 AM [express] GET /api/copy-operations 304 in 577ms :: [{"id":"56a603b4-91c6-4f7f-b3a9-3ab471…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:18 AM [express] GET /api/copy-operations 304 in 577ms :: [{"id":"56a603b4-91c6-4f7f-b3a9-3ab471…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/dropbox/status',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/google/status',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+12:41:19 AM [express] GET /api/auth/dropbox/status 304 in 677ms :: {"connected":true,"hasValidToken":…
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:20 AM [express] GET /api/auth/google/status 304 in 1168ms :: {"connected":true,"hasValidToken":…
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:22 AM [express] GET /api/auth/user 200 in 3114ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:41:23 AM [express] GET /api/auth/user 200 in 561ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
