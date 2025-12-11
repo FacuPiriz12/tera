@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
 
 export interface TransferJob {
   id: string;
@@ -167,18 +167,17 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
     };
   }, [isAuthenticated, toast, updateJob]);
 
-  const fetchActiveJobs = useCallback(async () => {
+  const fetchAllJobs = useCallback(async () => {
     try {
-      const response = await fetch('/api/copy-operations?status=active', { 
+      const authHeaders = await getAuthHeaders();
+      const response = await fetch('/api/copy-operations', { 
+        headers: authHeaders,
         credentials: 'include' 
       });
       if (response.ok) {
         const operations = await response.json();
-        const activeOps = operations.filter((op: any) => 
-          ['pending', 'in_progress', 'queued'].includes(op.status)
-        );
         
-        const newJobs: TransferJob[] = activeOps.map((op: any) => ({
+        const fetchedJobs: TransferJob[] = operations.map((op: any) => ({
           id: op.id,
           fileName: op.fileName || 'Transferencia',
           status: op.status,
@@ -191,33 +190,41 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
         }));
         
         setJobs(prev => {
-          const activeIds = new Set(newJobs.map(j => j.id));
-          const filteredPrev = prev.filter(j => 
-            j.status === 'completed' || j.status === 'failed' || j.status === 'cancelled' || activeIds.has(j.id)
+          const fetchedIds = new Set(fetchedJobs.map(j => j.id));
+          const existingActiveJobs = prev.filter(j => 
+            !fetchedIds.has(j.id) && 
+            (j.status === 'in_progress' || j.status === 'pending' || j.status === 'queued')
           );
           
-          const mergedJobs = [...filteredPrev];
-          for (const newJob of newJobs) {
-            const existingIndex = mergedJobs.findIndex(j => j.id === newJob.id);
+          const mergedJobs = [...existingActiveJobs];
+          for (const job of fetchedJobs) {
+            const existingIndex = mergedJobs.findIndex(j => j.id === job.id);
             if (existingIndex >= 0) {
-              mergedJobs[existingIndex] = { ...mergedJobs[existingIndex], ...newJob };
+              const existing = mergedJobs[existingIndex];
+              if (existing.status === 'in_progress' || existing.status === 'pending') {
+                continue;
+              }
+              mergedJobs[existingIndex] = job;
             } else {
-              mergedJobs.unshift(newJob);
+              mergedJobs.push(job);
             }
           }
-          return mergedJobs;
+          
+          return mergedJobs.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         });
         
         reconnectAttempts.current = 0;
       }
     } catch (error) {
-      console.error('Error fetching active jobs:', error);
+      console.error('Error fetching jobs:', error);
     }
   }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchActiveJobs();
+      fetchAllJobs();
       connectSSE();
     } else {
       if (eventSourceRef.current) {
@@ -241,7 +248,7 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(reconnectTimeoutRef.current);
       }
     };
-  }, [isAuthenticated, connectSSE, fetchActiveJobs]);
+  }, [isAuthenticated, connectSSE, fetchAllJobs]);
 
   const activeJobsCount = jobs.filter(j => 
     j.status === 'in_progress' || j.status === 'pending' || j.status === 'queued'
