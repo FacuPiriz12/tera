@@ -1,0 +1,73 @@
+✅ Supabase Auth configured with service role key
+12:25:00 AM [express] GET /api/drive-files 304 in 623ms :: {"files":[{"id":"ea766180-8a93-441e-8664-2…
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+📋 Claimed 1 jobs for processing
+🔑 Admin user logged in: facupiriz87@gmail.com
+🔄 Processing job edfae4f4-b097-4e09-90c0-6aba4f2068b9: 12.PNG (google -> dropbox)
+12:25:00 AM [express] GET /api/auth/user 200 in 872ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+SSE client error: Error: aborted
+SSE client disconnected: 7edbe23c-99ef-460c-adff-3438858fcc62
+    at abortIncoming (node:_http_server:809:17)
+    at socketOnClose (node:_http_server:803:3)
+    at Socket.emit (node:events:530:35)
+    at TCP.<anonymous> (node:net:351:12) {
+  code: 'ECONNRESET'
+}
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:25:01 AM [express] GET /api/auth/user 200 in 600ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
+❌ Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 failed: TypeError: this.dbx.setAccessToken is not a function
+    at DropboxService.ensureValidToken (file:///opt/render/project/src/dist/index.js:2445:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2555:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3459:28)
+🔄 Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 will retry in 1s (attempt 1/5)
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 2000ms
+📋 Claimed 1 jobs for processing
+🔄 Processing job edfae4f4-b097-4e09-90c0-6aba4f2068b9: 12.PNG (google -> dropbox)
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+❌ Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 failed: TypeError: this.dbx.setAccessToken is not a function
+    at DropboxService.ensureValidToken (file:///opt/render/project/src/dist/index.js:2445:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2555:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3459:28)
+🔄 Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 will retry in 2s (attempt 2/5)
+📋 Claimed 1 jobs for processing
+🔄 Processing job edfae4f4-b097-4e09-90c0-6aba4f2068b9: 12.PNG (google -> dropbox)
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+❌ Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 failed: TypeError: this.dbx.setAccessToken is not a function
+    at DropboxService.ensureValidToken (file:///opt/render/project/src/dist/index.js:2445:16)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2555:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3459:28)
+🔄 Job edfae4f4-b097-4e09-90c0-6aba4f2068b9 will retry in 4s (attempt 3/5)

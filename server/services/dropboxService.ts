@@ -41,9 +41,19 @@ export class DropboxService {
       throw new Error('User has not connected their Dropbox account');
     }
 
-    // If we have access token, set it
+    // Helper function to recreate Dropbox instance with access token
+    const setAccessToken = (token: string) => {
+      this.dbx = new Dropbox({
+        clientId: process.env.DROPBOX_APP_KEY,
+        clientSecret: process.env.DROPBOX_APP_SECRET,
+        accessToken: token,
+        fetch: fetch,
+      });
+    };
+
+    // If we have access token, set it by recreating the instance
     if (user.dropboxAccessToken) {
-      this.dbx.setAccessToken(user.dropboxAccessToken);
+      setAccessToken(user.dropboxAccessToken);
     }
     
     // Set refresh token if available
@@ -72,8 +82,8 @@ export class DropboxService {
           expiry: newExpiresAt
         });
 
-        // Update the SDK with new access token
-        this.dbx.setAccessToken(response.result.access_token);
+        // Update the SDK with new access token by recreating the instance
+        setAccessToken(response.result.access_token);
       } catch (error) {
         console.error('Failed to refresh Dropbox token:', error);
         throw new Error('Dropbox access token has expired. Please reconnect your account.');
@@ -81,7 +91,7 @@ export class DropboxService {
     }
     
     // Final check - ensure we have an access token set
-    const currentToken = this.dbx.auth?.getAccessToken?.() || this.dbx.getAccessToken();
+    const currentToken = this.dbx.auth?.getAccessToken?.();
     if (!currentToken) {
       throw new Error('Unable to obtain valid Dropbox access token. Please reconnect your account.');
     }
