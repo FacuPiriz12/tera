@@ -755,6 +755,10 @@ export class DatabaseStorage implements IStorage {
   async reclaimStaleJobs(staleDurationMs: number): Promise<number> {
     const staleThreshold = new Date(Date.now() - staleDurationMs);
     
+    // Reclaim jobs that are:
+    // 1. in_progress AND lockedAt is old (worker crashed while processing)
+    // 2. in_progress AND lockedAt is NULL (orphaned job without proper lock)
+    // 3. in_progress AND updatedAt is old (fallback for jobs without lock info)
     const reclaimedJobs = await getDb()
       .update(copyOperations)
       .set({
@@ -767,7 +771,11 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(copyOperations.status, 'in_progress'),
-          lte(copyOperations.lockedAt, staleThreshold)
+          or(
+            lte(copyOperations.lockedAt, staleThreshold),
+            isNull(copyOperations.lockedAt),
+            lte(copyOperations.updatedAt, staleThreshold)
+          )
         )
       )
       .returning();
@@ -1452,10 +1460,15 @@ class MemoryStorage implements IStorage {
     let reclaimedCount = 0;
 
     for (const [id, job] of this.copyOperations.entries()) {
-      if (job.status === 'in_progress' && 
-          job.lockedAt && 
-          job.lockedAt <= staleThreshold) {
-        
+      // Reclaim jobs that are:
+      // 1. in_progress AND lockedAt is old (worker crashed while processing)
+      // 2. in_progress AND lockedAt is NULL (orphaned job without proper lock)
+      // 3. in_progress AND updatedAt is old (fallback for jobs without lock info)
+      const isStaleByLock = job.lockedAt && job.lockedAt <= staleThreshold;
+      const hasNoLock = !job.lockedAt;
+      const isStaleByUpdate = job.updatedAt && job.updatedAt <= staleThreshold;
+      
+      if (job.status === 'in_progress' && (isStaleByLock || hasNoLock || isStaleByUpdate)) {
         const updated: CopyOperation = {
           ...job,
           status: 'pending',

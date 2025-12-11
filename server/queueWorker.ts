@@ -56,9 +56,9 @@ export class QueueWorker extends EventEmitter {
     console.log(`🚀 Queue worker started with ID: ${this.config.workerId}`);
     console.log(`📊 Config: Global concurrency: ${this.config.globalConcurrency}, Poll interval: ${this.config.pollInterval}ms`);
 
-    // Reclaim any stale jobs from previous worker instances
+    // Aggressively reclaim any stale jobs from previous worker instances (2 minutes threshold)
     try {
-      const reclaimedCount = await storage.reclaimStaleJobs(300000); // 5 minutes
+      const reclaimedCount = await storage.reclaimStaleJobs(120000); // 2 minutes - more aggressive
       if (reclaimedCount > 0) {
         console.log(`🔄 Reclaimed ${reclaimedCount} stale jobs from previous worker instances`);
       }
@@ -124,10 +124,10 @@ export class QueueWorker extends EventEmitter {
       return 0;
     }
 
-    // Periodically reclaim stale jobs (every ~30 poll cycles)
-    if (Math.random() < 0.033) { // ~3.3% chance per poll
+    // Periodically reclaim stale jobs (every ~10 poll cycles) - more frequent cleanup
+    if (Math.random() < 0.1) { // ~10% chance per poll
       try {
-        const reclaimedCount = await storage.reclaimStaleJobs(300000); // 5 minutes
+        const reclaimedCount = await storage.reclaimStaleJobs(120000); // 2 minutes - more aggressive
         if (reclaimedCount > 0) {
           console.log(`🔄 Reclaimed ${reclaimedCount} stale jobs`);
         }
@@ -160,9 +160,30 @@ export class QueueWorker extends EventEmitter {
       const userLimit = this.userLimits[userPlan as keyof UserConcurrencyLimits] || this.userLimits.free;
 
       if (userRunningCount >= userLimit) {
-        // User has reached their limit, put job back with short delay
+        // User has reached their limit - this might indicate stale jobs
         console.log(`⏸️ User ${job.userId} (${userPlan}) has reached concurrency limit (${userRunningCount}/${userLimit})`);
-        const nextRunAt = new Date(Date.now() + 5000); // 5 seconds delay
+        
+        // Try to reclaim stale jobs for this specific user (jobs stuck for >2 minutes)
+        try {
+          const reclaimedCount = await storage.reclaimStaleJobs(120000); // 2 minutes
+          if (reclaimedCount > 0) {
+            console.log(`🔄 Auto-reclaimed ${reclaimedCount} stale jobs due to concurrency limit hit`);
+            // Re-check after reclaim
+            const newRunningCount = await storage.countUserRunningJobs(job.userId);
+            if (newRunningCount < userLimit) {
+              console.log(`✅ After reclaim, user ${job.userId} now has ${newRunningCount}/${userLimit} running - proceeding with job`);
+              this.processJob(job).catch(error => {
+                console.error(`❌ Unhandled error processing job ${job.id}:`, error);
+              });
+              jobsStarted++;
+              continue;
+            }
+          }
+        } catch (error) {
+          console.error('❌ Failed to reclaim stale jobs:', error);
+        }
+        
+        const nextRunAt = new Date(Date.now() + 10000); // 10 seconds delay (increased from 5)
         await storage.setJobPendingWithBackoff(job.id, job.attempts || 0, nextRunAt, 'User concurrency limit reached');
         continue;
       }
