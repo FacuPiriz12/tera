@@ -463,7 +463,7 @@ export default function CloudExplorer() {
             </p>
           </div>
 
-          {/* Quick Transfer Section - Prominently displayed */}
+          {/* Quick Transfer Section - HIDDEN FOR NOW, functionality preserved for future use
           <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -474,7 +474,6 @@ export default function CloudExplorer() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-4">
-                {/* Link Input */}
                 <div className="flex gap-3">
                   <div className="relative flex-1">
                     <Clipboard className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -485,7 +484,6 @@ export default function CloudExplorer() {
                       className="pl-10 h-12 text-base"
                       data-testid="input-quick-link"
                     />
-                    {/* Link validation indicator */}
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       {isValidLink === true && (
                         <div className="flex items-center gap-2">
@@ -500,7 +498,6 @@ export default function CloudExplorer() {
                   </div>
                 </div>
 
-                {/* Destination buttons - show when link is valid */}
                 {isValidLink && (
                   <div className="flex flex-col gap-3">
                     <p className="text-sm font-medium text-gray-700">Enviar a:</p>
@@ -540,6 +537,7 @@ export default function CloudExplorer() {
               </div>
             </CardContent>
           </Card>
+          */}
 
           {/* Tabs for different methods */}
           <Tabs defaultValue="explorer" className="space-y-4">
