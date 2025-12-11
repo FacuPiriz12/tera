@@ -1600,10 +1600,18 @@ class MemoryStorage implements IStorage {
 // Helper to check if database is available
 function isDatabaseAvailable(): boolean {
   const databaseUrl = process.env.DATABASE_URL;
+  const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE } = process.env;
+  console.log('🔍 Database env check:', {
+    hasDbUrl: !!databaseUrl,
+    dbUrlLength: databaseUrl?.length || 0,
+    hasPgHost: !!PGHOST,
+    hasPgUser: !!PGUSER,
+    hasPgPassword: !!PGPASSWORD,
+    hasPgDatabase: !!PGDATABASE
+  });
   if (databaseUrl && databaseUrl.trim() !== '') return true;
   
   // Also check for PG* variables
-  const { PGHOST, PGUSER, PGPASSWORD, PGDATABASE } = process.env;
   return !!(PGHOST && PGUSER && PGPASSWORD && PGDATABASE);
 }
 
