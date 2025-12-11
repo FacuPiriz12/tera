@@ -157,9 +157,12 @@ export class QueueWorker extends EventEmitter {
       const userRunningCount = await storage.countUserRunningJobs(job.userId);
       const user = await storage.getUser(job.userId);
       const userPlan = user?.membershipPlan || 'free';
-      const userLimit = this.userLimits[userPlan as keyof UserConcurrencyLimits] || this.userLimits.free;
+      const isAdmin = user?.role === 'admin';
+      
+      // Admins have no concurrency limits
+      const userLimit = isAdmin ? Infinity : (this.userLimits[userPlan as keyof UserConcurrencyLimits] || this.userLimits.free);
 
-      if (userRunningCount >= userLimit) {
+      if (!isAdmin && userRunningCount >= userLimit) {
         // User has reached their limit - this might indicate stale jobs
         console.log(`⏸️ User ${job.userId} (${userPlan}) has reached concurrency limit (${userRunningCount}/${userLimit})`);
         
