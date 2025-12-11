@@ -1,0 +1,142 @@
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:02 AM [express] GET /api/copy-operations 200 in 546ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+📋 Claimed 1 jobs for processing
+🔄 Processing job 40a6e6cb-57a5-41aa-81f5-5637cd6a17fb: 12.PNG (dropbox -> google)
+Could not parse Dropbox URL, assuming file: Error: Invalid Dropbox URL format. Supported formats: https://dropbox.com/s/... (files), https://dropbox.com/sh/... (folders), or https://dropbox.com/scl/... (modern formats)
+    at DropboxService.parseDropboxUrl (file:///opt/render/project/src/dist/index.js:2542:13)
+    at QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3444:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+Error downloading file from Dropbox: TypeError: res.buffer is not a function
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/response.js:67:11
+    at new Promise (<anonymous>)
+    at parseDownloadResponse (/opt/render/project/src/node_modules/dropbox/cjs/src/response.js:61:10)
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/dropbox.js:146:52
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.downloadFile (file:///opt/render/project/src/dist/index.js:2668:24)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3466:33)
+❌ Job 40a6e6cb-57a5-41aa-81f5-5637cd6a17fb failed: Error: Failed to download file from Dropbox
+    at DropboxService.downloadFile (file:///opt/render/project/src/dist/index.js:2672:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3466:33)
+🔄 Job 40a6e6cb-57a5-41aa-81f5-5637cd6a17fb will retry in 9s (attempt 4/5)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:08 AM [express] GET /api/copy-operations 200 in 544ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:14 AM [express] GET /api/copy-operations 304 in 552ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 6750ms
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:20 AM [express] GET /api/copy-operations 304 in 543ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+📋 Claimed 1 jobs for processing
+🔄 Processing job 40a6e6cb-57a5-41aa-81f5-5637cd6a17fb: 12.PNG (dropbox -> google)
+Could not parse Dropbox URL, assuming file: Error: Invalid Dropbox URL format. Supported formats: https://dropbox.com/s/... (files), https://dropbox.com/sh/... (folders), or https://dropbox.com/scl/... (modern formats)
+    at DropboxService.parseDropboxUrl (file:///opt/render/project/src/dist/index.js:2542:13)
+    at QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3444:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:26 AM [express] GET /api/copy-operations 200 in 551ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+Error downloading file from Dropbox: TypeError: res.buffer is not a function
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/response.js:67:11
+    at new Promise (<anonymous>)
+    at parseDownloadResponse (/opt/render/project/src/node_modules/dropbox/cjs/src/response.js:61:10)
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/dropbox.js:146:52
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.downloadFile (file:///opt/render/project/src/dist/index.js:2668:24)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3466:33)
+❌ Job 40a6e6cb-57a5-41aa-81f5-5637cd6a17fb failed: Error: Failed to download file from Dropbox
+    at DropboxService.downloadFile (file:///opt/render/project/src/dist/index.js:2672:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3466:33)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:32 AM [express] GET /api/copy-operations 200 in 557ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:38 AM [express] GET /api/copy-operations 304 in 580ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:44 AM [express] GET /api/copy-operations 304 in 568ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 15187.5ms
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:50 AM [express] GET /api/copy-operations 304 in 701ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+1:12:56 AM [express] GET /api/copy-operations 304 in 592ms :: [{"id":"40a6e6cb-57a5-41aa-81f5-5637cd…

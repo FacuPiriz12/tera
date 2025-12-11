@@ -326,9 +326,28 @@ export class DropboxService {
   async downloadFile(path: string): Promise<ArrayBuffer> {
     await this.ensureValidToken();
     
+    // Ensure path starts with / for Dropbox API
+    const normalizedPath = path.startsWith('/') ? path : '/' + path;
+    
     try {
-      const response = await this.dbx.filesDownload({ path });
-      return response.result.fileBinary as ArrayBuffer;
+      // Use direct HTTP call to avoid SDK compatibility issues with Node.js fetch
+      const accessToken = this.dbx.auth.getAccessToken();
+      
+      const response = await fetch('https://content.dropboxapi.com/2/files/download', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Dropbox-API-Arg': JSON.stringify({ path: normalizedPath }),
+        },
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Dropbox download failed:', response.status, errorText);
+        throw new Error(`Download failed: ${response.status}`);
+      }
+      
+      return await response.arrayBuffer();
     } catch (error) {
       console.error('Error downloading file from Dropbox:', error);
       throw new Error('Failed to download file from Dropbox');
@@ -429,16 +448,30 @@ export class DropboxService {
     await this.ensureValidToken();
     
     try {
-      // For direct file links (like /s/[ID]/[filename]), don't pass path
-      // For folder links with specific file, pass the path
-      const requestOptions: any = { url: sharedUrl };
+      // Use direct HTTP call to avoid SDK compatibility issues with Node.js fetch
+      const accessToken = this.dbx.auth.getAccessToken();
+      
+      // Build the API arg for shared link download
+      const apiArg: any = { url: sharedUrl };
       if (filePath && filePath !== '/') {
-        requestOptions.path = filePath;
+        apiArg.path = filePath;
       }
       
-      const response = await this.dbx.sharingGetSharedLinkFile(requestOptions);
+      const response = await fetch('https://content.dropboxapi.com/2/sharing/get_shared_link_file', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Dropbox-API-Arg': JSON.stringify(apiArg),
+        },
+      });
       
-      return response.result.fileBinary as ArrayBuffer;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Dropbox shared link download failed:', response.status, errorText);
+        throw new Error(`Shared link download failed: ${response.status}`);
+      }
+      
+      return await response.arrayBuffer();
     } catch (error) {
       console.error('Error downloading file from shared link:', error);
       throw new Error('Failed to download file from shared link');
