@@ -1,0 +1,47 @@
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+4:24:03 PM [express] GET /api/copy-operations 304 in 490ms :: [{"id":"2bbab968-cce5-495c-a833-880d4e…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/google/status',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/dropbox/status',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+4:24:08 PM [express] GET /api/auth/google/status 304 in 486ms :: {"connected":true,"hasValidToken":t…
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+4:24:08 PM [express] GET /api/auth/dropbox/status 304 in 484ms :: {"connected":true,"hasValidToken":…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+4:24:09 PM [express] GET /api/copy-operations 304 in 476ms :: [{"id":"2bbab968-cce5-495c-a833-880d4e…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 30000ms
+SSE client disconnected: 7edbe23c-99ef-460c-adff-3438858fcc62
+SSE client error: Error: aborted
+    at abortIncoming (node:_http_server:809:17)
+    at socketOnClose (node:_http_server:803:3)
+    at Socket.emit (node:events:530:35)
+    at TCP.<anonymous> (node:net:351:12) {
+  code: 'ECONNRESET'
+}
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 30000ms

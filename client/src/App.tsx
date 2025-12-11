@@ -1,4 +1,5 @@
-import { Switch, Route, Redirect } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +28,14 @@ import ShareInbox from "@/pages/ShareInbox";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
+
+function RedirectToLogin() {
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    setLocation("/login");
+  }, [setLocation]);
+  return null;
+}
 
 function Router() {
   const { isAuthenticated, isLoading, user, error } = useAuth();
@@ -63,51 +72,51 @@ function Router() {
       
       {/* Protected routes - redirect to login if not authenticated */}
       <Route path="/shared-drives">
-        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <RedirectToLogin />}
       </Route>
       <Route path="/operations">
-        {() => isLoggedIn ? <Operations /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <Operations /> : <RedirectToLogin />}
       </Route>
       <Route path="/integrations">
-        {() => isLoggedIn ? <Integrations /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <Integrations /> : <RedirectToLogin />}
       </Route>
       <Route path="/cloud-explorer">
-        {() => isLoggedIn ? <CloudExplorer /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <CloudExplorer /> : <RedirectToLogin />}
       </Route>
       <Route path="/my-files">
-        {() => isLoggedIn ? <MyFiles /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <MyFiles /> : <RedirectToLogin />}
       </Route>
       <Route path="/shared">
-        {() => isLoggedIn ? <ShareInbox /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <ShareInbox /> : <RedirectToLogin />}
       </Route>
       <Route path="/analytics">
-        {() => isLoggedIn ? <Analytics /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <Analytics /> : <RedirectToLogin />}
       </Route>
       <Route path="/settings">
-        {() => isLoggedIn ? <Settings /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <Settings /> : <RedirectToLogin />}
       </Route>
       <Route path="/profile">
-        {() => isLoggedIn ? <Profile /> : <Redirect to="/login" />}
+        {() => isLoggedIn ? <Profile /> : <RedirectToLogin />}
       </Route>
       
       {/* Admin routes */}
       <Route path="/admin">
         {() => {
-          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isLoggedIn) return <RedirectToLogin />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminDashboard />;
         }}
       </Route>
       <Route path="/admin/users">
         {() => {
-          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isLoggedIn) return <RedirectToLogin />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminUsers />;
         }}
       </Route>
       <Route path="/admin/operations">
         {() => {
-          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isLoggedIn) return <RedirectToLogin />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminOperations />;
         }}
