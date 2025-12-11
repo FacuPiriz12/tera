@@ -28,37 +28,8 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
-function ProtectedRoute({ component: Component, ...props }: { component: React.ComponentType<any>, path?: string }) {
-  const { isAuthenticated, error } = useAuth();
-  
-  if (!isAuthenticated || error) {
-    return <Redirect to="/login" />;
-  }
-  
-  return <Component {...props} />;
-}
-
-function AdminRoute({ component: Component, ...props }: { component: React.ComponentType<any>, path?: string }) {
-  const { isAuthenticated, user, error } = useAuth();
-  
-  if (!isAuthenticated || error) {
-    return <Redirect to="/login" />;
-  }
-  
-  if (user?.role !== 'admin') {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1>
-        <p>No tienes permisos para acceder a esta página.</p>
-      </div>
-    );
-  }
-  
-  return <Component {...props} />;
-}
-
 function Router() {
-  const { isAuthenticated, isLoading, error } = useAuth();
+  const { isAuthenticated, isLoading, user, error } = useAuth();
   
   if (isLoading) {
     return (
@@ -71,6 +42,9 @@ function Router() {
     );
   }
 
+  const isLoggedIn = isAuthenticated && !error;
+  const isAdmin = isLoggedIn && user?.role === 'admin';
+
   return (
     <Switch>
       {/* Public routes - available to all users */}
@@ -82,49 +56,61 @@ function Router() {
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
       
-      {/* Landing page for non-authenticated users */}
+      {/* Landing page for non-authenticated users, Home for authenticated */}
       <Route path="/">
-        {() => (!isAuthenticated || error) ? <Landing /> : <Home />}
+        {() => isLoggedIn ? <Home /> : <Landing />}
       </Route>
       
       {/* Protected routes - redirect to login if not authenticated */}
       <Route path="/shared-drives">
-        {() => <ProtectedRoute component={() => <div>Drives Compartidos (En desarrollo)</div>} />}
+        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <Redirect to="/login" />}
       </Route>
       <Route path="/operations">
-        {() => <ProtectedRoute component={Operations} />}
+        {() => isLoggedIn ? <Operations /> : <Redirect to="/login" />}
       </Route>
       <Route path="/integrations">
-        {() => <ProtectedRoute component={Integrations} />}
+        {() => isLoggedIn ? <Integrations /> : <Redirect to="/login" />}
       </Route>
       <Route path="/cloud-explorer">
-        {() => <ProtectedRoute component={CloudExplorer} />}
+        {() => isLoggedIn ? <CloudExplorer /> : <Redirect to="/login" />}
       </Route>
       <Route path="/my-files">
-        {() => <ProtectedRoute component={MyFiles} />}
+        {() => isLoggedIn ? <MyFiles /> : <Redirect to="/login" />}
       </Route>
       <Route path="/shared">
-        {() => <ProtectedRoute component={ShareInbox} />}
+        {() => isLoggedIn ? <ShareInbox /> : <Redirect to="/login" />}
       </Route>
       <Route path="/analytics">
-        {() => <ProtectedRoute component={Analytics} />}
+        {() => isLoggedIn ? <Analytics /> : <Redirect to="/login" />}
       </Route>
       <Route path="/settings">
-        {() => <ProtectedRoute component={Settings} />}
+        {() => isLoggedIn ? <Settings /> : <Redirect to="/login" />}
       </Route>
       <Route path="/profile">
-        {() => <ProtectedRoute component={Profile} />}
+        {() => isLoggedIn ? <Profile /> : <Redirect to="/login" />}
       </Route>
       
       {/* Admin routes */}
       <Route path="/admin">
-        {() => <AdminRoute component={AdminDashboard} />}
+        {() => {
+          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          return <AdminDashboard />;
+        }}
       </Route>
       <Route path="/admin/users">
-        {() => <AdminRoute component={AdminUsers} />}
+        {() => {
+          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          return <AdminUsers />;
+        }}
       </Route>
       <Route path="/admin/operations">
-        {() => <AdminRoute component={AdminOperations} />}
+        {() => {
+          if (!isLoggedIn) return <Redirect to="/login" />;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          return <AdminOperations />;
+        }}
       </Route>
       
       <Route component={NotFound} />
