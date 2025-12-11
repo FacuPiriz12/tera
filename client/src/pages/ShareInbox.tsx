@@ -316,11 +316,12 @@ interface FilePickerDialogProps {
 function FilePickerDialog({ open, onOpenChange, onSelectFile }: FilePickerDialogProps) {
   const [selectedProvider, setSelectedProvider] = useState<"google" | "dropbox">("google");
   
-  const { data: files = [], isLoading } = useQuery<DriveFile[]>({
-    queryKey: ["/api/my-files"],
+  const { data: response, isLoading } = useQuery<{ files: DriveFile[]; total: number; totalPages: number }>({
+    queryKey: ["/api/drive-files"],
     enabled: open,
   });
 
+  const files = response?.files || [];
   const googleFiles = files.filter(f => f.provider === "google");
   const dropboxFiles = files.filter(f => f.provider === "dropbox");
   

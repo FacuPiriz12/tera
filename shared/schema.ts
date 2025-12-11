@@ -178,6 +178,8 @@ export const insertCloudFileSchema = createInsertSchema(cloudFiles).omit({
   createdAt: true,
 });
 
+export type DriveFile = CloudFile;
+
 export const insertCopyOperationSchema = createInsertSchema(copyOperations).omit({
   id: true,
   createdAt: true,
