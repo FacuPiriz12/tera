@@ -46,7 +46,7 @@ import Sidebar from "@/components/Sidebar";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
 import { useToast } from "@/hooks/use-toast";
-import type { DriveFile } from "@shared/schema";
+import type { CloudFile } from "@shared/schema";
 import { getAuthHeaders } from "@/lib/queryClient";
 import ShareFileDialog from "@/components/ShareFileDialog";
 
@@ -58,11 +58,11 @@ export default function MyFiles() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<DriveFile | null>(null);
+  const [selectedFile, setSelectedFile] = useState<CloudFile | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [fileToShare, setFileToShare] = useState<DriveFile | null>(null);
+  const [fileToShare, setFileToShare] = useState<CloudFile | null>(null);
   const itemsPerPage = 10;
   
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
@@ -147,46 +147,64 @@ export default function MyFiles() {
     return 'Archivo';
   };
 
-  const handleDownload = (file: DriveFile, e?: React.MouseEvent) => {
+  const getFileUrl = (file: CloudFile): string => {
+    if (file.provider === 'dropbox') {
+      return file.sourceUrl || `https://www.dropbox.com/home/${file.copiedFileId}`;
+    }
+    return `https://drive.google.com/file/d/${file.copiedFileId}/view`;
+  };
+
+  const getDownloadUrl = (file: CloudFile): string => {
+    if (file.provider === 'dropbox') {
+      return file.sourceUrl?.replace('?dl=0', '?dl=1') || `https://www.dropbox.com/home/${file.copiedFileId}?dl=1`;
+    }
+    return `https://drive.google.com/uc?export=download&id=${file.copiedFileId}`;
+  };
+
+  const getProviderName = (file: CloudFile): string => {
+    return file.provider === 'dropbox' ? 'Dropbox' : 'Google Drive';
+  };
+
+  const handleDownload = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const downloadUrl = `https://drive.google.com/uc?export=download&id=${file.copiedFileId}`;
+    const downloadUrl = getDownloadUrl(file);
     window.open(downloadUrl, '_blank');
   };
 
-  const handleOpenInDrive = (file: DriveFile, e?: React.MouseEvent) => {
+  const handleOpenInCloud = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const driveUrl = `https://drive.google.com/file/d/${file.copiedFileId}/view`;
-    window.open(driveUrl, '_blank');
+    const cloudUrl = getFileUrl(file);
+    window.open(cloudUrl, '_blank');
   };
 
-  const handleCopyLink = (file: DriveFile, e?: React.MouseEvent) => {
+  const handleCopyLink = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const driveUrl = `https://drive.google.com/file/d/${file.copiedFileId}/view`;
-    navigator.clipboard.writeText(driveUrl);
+    const cloudUrl = getFileUrl(file);
+    navigator.clipboard.writeText(cloudUrl);
     toast({
       title: "Enlace copiado",
       description: "El enlace se ha copiado al portapapeles",
     });
   };
 
-  const handleViewDetails = (file: DriveFile, e?: React.MouseEvent) => {
+  const handleViewDetails = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setSelectedFile(file);
     setDetailsOpen(true);
   };
 
-  const handleCardClick = (file: DriveFile) => {
+  const handleCardClick = (file: CloudFile) => {
     setSelectedFile(file);
     setDetailsOpen(true);
   };
 
-  const handleShare = (file: DriveFile, e?: React.MouseEvent) => {
+  const handleShare = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
     setFileToShare(file);
     setShareDialogOpen(true);
   };
 
-  const filteredFiles = files.filter((file: DriveFile) => {
+  const filteredFiles = files.filter((file: CloudFile) => {
     const matchesSearch = file.fileName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPlatform = platformFilter === 'all' || file.provider === platformFilter;
     return matchesSearch && matchesPlatform;
@@ -319,7 +337,7 @@ export default function MyFiles() {
             "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : 
             "space-y-2"
           }>
-            {filteredFiles.map((file: DriveFile) => (
+            {filteredFiles.map((file: CloudFile) => (
               <Card 
                 key={file.id} 
                 className="hover:shadow-md transition-shadow group cursor-pointer"
@@ -329,8 +347,15 @@ export default function MyFiles() {
                 <CardContent className={viewMode === 'grid' ? 'p-4' : 'p-3 flex items-center space-x-4'}>
                   <div className={viewMode === 'grid' ? 'space-y-3' : 'flex items-center space-x-3 flex-1'}>
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 relative">
                         {getFileIcon(file.mimeType || undefined)}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4">
+                          {file.provider === 'dropbox' ? (
+                            <DropboxLogo className="w-4 h-4" />
+                          ) : (
+                            <GoogleDriveLogo className="w-4 h-4" />
+                          )}
+                        </div>
                       </div>
                       <div className={viewMode === 'list' ? 'flex-1 min-w-0' : 'min-w-0 flex-1'}>
                         <h3 className="font-medium text-sm truncate max-w-[180px]" title={file.fileName}>
@@ -375,9 +400,9 @@ export default function MyFiles() {
                                 <Info className="w-4 h-4 mr-2" />
                                 Ver detalles
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => handleOpenInDrive(file, e as any)} data-testid={`menu-open-drive-${file.id}`}>
+                              <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)} data-testid={`menu-open-cloud-${file.id}`}>
                                 <ExternalLink className="w-4 h-4 mr-2" />
-                                Abrir en Google Drive
+                                Abrir en {getProviderName(file)}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)} data-testid={`menu-download-${file.id}`}>
                                 <Download className="w-4 h-4 mr-2" />
@@ -401,6 +426,13 @@ export default function MyFiles() {
                   
                   {viewMode === 'list' && (
                     <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 flex-shrink-0">
+                        {file.provider === 'dropbox' ? (
+                          <DropboxLogo className="w-4 h-4" />
+                        ) : (
+                          <GoogleDriveLogo className="w-4 h-4" />
+                        )}
+                      </div>
                       <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
                         Copiado
                       </Badge>
@@ -427,9 +459,9 @@ export default function MyFiles() {
                             <Info className="w-4 h-4 mr-2" />
                             Ver detalles
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => handleOpenInDrive(file, e as any)}>
+                          <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)}>
                             <ExternalLink className="w-4 h-4 mr-2" />
-                            Abrir en Google Drive
+                            Abrir en {getProviderName(file)}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)}>
                             <Download className="w-4 h-4 mr-2" />
@@ -563,15 +595,27 @@ export default function MyFiles() {
                 </Badge>
               </div>
 
+              {/* Provider indicator */}
+              <div className="flex items-center gap-2">
+                {selectedFile.provider === 'dropbox' ? (
+                  <DropboxLogo className="w-5 h-5" />
+                ) : (
+                  <GoogleDriveLogo className="w-5 h-5" />
+                )}
+                <span className="text-sm text-muted-foreground">
+                  Almacenado en {getProviderName(selectedFile)}
+                </span>
+              </div>
+
               {/* Actions */}
               <div className="flex gap-2 pt-2">
                 <Button 
-                  onClick={() => handleOpenInDrive(selectedFile)} 
+                  onClick={() => handleOpenInCloud(selectedFile)} 
                   className="flex-1"
-                  data-testid="button-dialog-open-drive"
+                  data-testid="button-dialog-open-cloud"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Abrir en Drive
+                  Abrir en {getProviderName(selectedFile)}
                 </Button>
                 <Button 
                   variant="outline" 
