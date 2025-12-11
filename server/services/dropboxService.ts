@@ -218,7 +218,12 @@ export class DropboxService {
     await this.ensureValidToken();
     
     try {
-      const fullPath = destinationPath ? `${destinationPath}/${filename}` : `/${filename}`;
+      // Ensure path starts with / for Dropbox API
+      let normalizedPath = destinationPath || '';
+      if (normalizedPath && !normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+      }
+      const fullPath = normalizedPath ? `${normalizedPath}/${filename}` : `/${filename}`;
       const fileSize = content.byteLength;
       const maxRegularUploadSize = 150 * 1024 * 1024; // 150MB
       const maxDropboxSize = 350 * 1024 * 1024 * 1024; // 350GB maximum for Dropbox
@@ -333,9 +338,12 @@ export class DropboxService {
   async createFolder(path: string): Promise<DropboxFile> {
     await this.ensureValidToken();
     
+    // Ensure path starts with / for Dropbox API
+    const normalizedPath = path.startsWith('/') ? path : '/' + path;
+    
     try {
       const response = await this.dbx.filesCreateFolderV2({
-        path: path,
+        path: normalizedPath,
         autorename: true,
       });
 
@@ -490,8 +498,14 @@ export class DropboxService {
       const sourceFolder = await this.getSharedLinkMetadata(sharedUrl);
       const folderName = newFolderName || `Copy of ${sourceFolder.name}`;
       
+      // Normalize destination path to ensure it starts with /
+      let normalizedPath = destinationPath || '';
+      if (normalizedPath && !normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+      }
+      
       // Create destination path
-      const targetPath = destinationPath ? `${destinationPath}/${folderName}` : `/${folderName}`;
+      const targetPath = normalizedPath ? `${normalizedPath}/${folderName}` : `/${folderName}`;
       
       // Create new folder
       const newFolder = await this.createFolder(targetPath);

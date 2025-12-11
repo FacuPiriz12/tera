@@ -1,0 +1,202 @@
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:57:18 AM [express] GET /api/copy-operations 200 in 557ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+📋 Claimed 1 jobs for processing
+🔄 Processing job 785a681b-9686-49ab-ab19-f819eba20d1b: 12.PNG (google -> dropbox)
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+Error uploading file to Dropbox: DropboxResponseError: Response failed with a 400 code
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/response.js:34:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2594:24)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3485:28) {
+  status: 400,
+  headers: Headers {
+    'content-type': 'text/plain; charset=utf-8',
+    'cache-control': 'no-cache',
+    'content-security-policy': 'sandbox allow-forms allow-scripts',
+    'x-content-type-options': 'nosniff',
+    date: 'Thu, 11 Dec 2025 00:57:23 GMT',
+    server: 'envoy',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-robots-tag': 'noindex, nofollow, noimageindex',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'x-dropbox-response-origin': 'far_remote',
+    'x-dropbox-request-id': '392fb2f44977447dbaf593bf693a16f3',
+    'transfer-encoding': 'chunked'
+  },
+  error: `Error in call to API function "files/upload": HTTP header "Dropbox-API-Arg": path: 'root/12.PNG' did not match pattern '(/(.|[\\r\\n])*)|(ns:[0-9]+(/(.|[\\r\\n])*)?)|(id:.*)'`
+}
+❌ Job 785a681b-9686-49ab-ab19-f819eba20d1b failed: Error: Failed to upload file to Dropbox
+    at DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2608:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3485:28)
+🔄 Job 785a681b-9686-49ab-ab19-f819eba20d1b will retry in 9s (attempt 4/5)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:57:24 AM [express] GET /api/copy-operations 200 in 580ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:57:30 AM [express] GET /api/copy-operations 304 in 560ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 6750ms
+📋 Claimed 1 jobs for processing
+🔄 Processing job 785a681b-9686-49ab-ab19-f819eba20d1b: 12.PNG (google -> dropbox)
+🔗 Parsing Google Drive URL: https://drive.google.com/file/d/1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB
+🔗 Detected file with ID: 1-HSn0lT5sjv_BnEyeLoGCjLVKXWwGziB 
+🔐 Token check for user: 7edbe23c-99ef-460c-adff-3438858fcc62 {
+  hasAccessToken: true,
+  hasRefreshToken: true,
+  tokenExpiry: 2025-12-11T01:23:09.815Z,
+  isExpired: false
+}
+Error uploading file to Dropbox: DropboxResponseError: Response failed with a 400 code
+    at /opt/render/project/src/node_modules/dropbox/cjs/src/response.js:34:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2594:24)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3485:28) {
+  status: 400,
+  headers: Headers {
+    'content-type': 'text/plain; charset=utf-8',
+    'cache-control': 'no-cache',
+    'content-security-policy': 'sandbox allow-forms allow-scripts',
+    'x-content-type-options': 'nosniff',
+    date: 'Thu, 11 Dec 2025 00:57:41 GMT',
+    server: 'envoy',
+    'strict-transport-security': 'max-age=31536000; includeSubDomains; preload',
+    'x-robots-tag': 'noindex, nofollow, noimageindex',
+    'content-encoding': 'gzip',
+    vary: 'Accept-Encoding',
+    'x-dropbox-response-origin': 'far_remote',
+    'x-dropbox-request-id': '8f9e5255d6f94d6c903c0b9d693a1705',
+    'transfer-encoding': 'chunked'
+  },
+  error: `Error in call to API function "files/upload": HTTP header "Dropbox-API-Arg": path: 'root/12.PNG' did not match pattern '(/(.|[\\r\\n])*)|(ns:[0-9]+(/(.|[\\r\\n])*)?)|(id:.*)'`
+}
+❌ Job 785a681b-9686-49ab-ab19-f819eba20d1b failed: Error: Failed to upload file to Dropbox
+    at DropboxService.uploadFile (file:///opt/render/project/src/dist/index.js:2608:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async QueueWorker.executeTransfer (file:///opt/render/project/src/dist/index.js:3485:28)
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:57:58 AM [express] GET /api/auth/user 200 in 928ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:00 AM [express] GET /api/auth/user 200 in 571ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/auth/user',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+12:58:01 AM [express] GET /api/auth/user 200 in 557ms :: {"id":"7edbe23c-99ef-460c-adff-3438858fcc62"…
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:01 AM [express] GET /api/copy-operations 200 in 888ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+💓 Heartbeat: Active jobs: 0/5, Poll interval: 15187.5ms
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:07 AM [express] GET /api/copy-operations 304 in 557ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:13 AM [express] GET /api/copy-operations 304 in 564ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:19 AM [express] GET /api/copy-operations 304 in 584ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:25 AM [express] GET /api/copy-operations 304 in 690ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
+🔐 isAuthenticated check: {
+  hasAuthHeader: true,
+  hasSessionUser: true,
+  authHeaderValue: 'Bearer eyJhbGciOiJIU...',
+  path: '/api/copy-operations',
+  nodeEnv: 'production'
+}
+✅ Supabase Auth configured with service role key
+✅ Supabase auth successful for user: facupiriz87@gmail.com
+🔑 Admin user logged in: facupiriz87@gmail.com
+12:58:31 AM [express] GET /api/copy-operations 304 in 611ms :: [{"id":"785a681b-9686-49ab-ab19-f819eb…
