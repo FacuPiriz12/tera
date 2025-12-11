@@ -70,20 +70,42 @@ export class DropboxService {
     if ((!user.dropboxAccessToken || isTokenExpired) && user.dropboxRefreshToken) {
       try {
         console.log('Refreshing Dropbox token...');
-        const response = await this.dbx.auth.refreshAccessToken();
+        
+        // Use direct HTTP call to refresh token endpoint for reliability
+        const refreshResponse = await fetch('https://api.dropboxapi.com/oauth2/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            grant_type: 'refresh_token',
+            refresh_token: user.dropboxRefreshToken,
+            client_id: process.env.DROPBOX_APP_KEY || '',
+            client_secret: process.env.DROPBOX_APP_SECRET || '',
+          }).toString(),
+        });
+        
+        if (!refreshResponse.ok) {
+          const errorText = await refreshResponse.text();
+          console.error('Dropbox token refresh failed:', refreshResponse.status, errorText);
+          throw new Error(`Token refresh failed: ${refreshResponse.status}`);
+        }
+        
+        const tokenData = await refreshResponse.json();
+        console.log('Dropbox token refreshed successfully');
         
         // Update tokens in database with new values
-        const newExpiresAt = response.result.expires_in ? 
-          new Date(Date.now() + (response.result.expires_in * 1000)) : null;
+        const newExpiresAt = tokenData.expires_in ? 
+          new Date(Date.now() + (tokenData.expires_in * 1000)) : null;
         
         await storage.updateUserDropboxTokens(this.userId, {
-          accessToken: response.result.access_token,
-          refreshToken: response.result.refresh_token || user.dropboxRefreshToken,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token || user.dropboxRefreshToken,
           expiry: newExpiresAt
         });
 
         // Update the SDK with new access token by recreating the instance
-        setAccessToken(response.result.access_token);
+        setAccessToken(tokenData.access_token);
       } catch (error) {
         console.error('Failed to refresh Dropbox token:', error);
         throw new Error('Dropbox access token has expired. Please reconnect your account.');
