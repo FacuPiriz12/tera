@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,10 +28,38 @@ import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
 
-function Router() {
-  const { isAuthenticated, isLoading, user, error } = useAuth();
+function ProtectedRoute({ component: Component, ...props }: { component: React.ComponentType<any>, path?: string }) {
+  const { isAuthenticated, error } = useAuth();
   
-  // Show loading state while checking authentication
+  if (!isAuthenticated || error) {
+    return <Redirect to="/login" />;
+  }
+  
+  return <Component {...props} />;
+}
+
+function AdminRoute({ component: Component, ...props }: { component: React.ComponentType<any>, path?: string }) {
+  const { isAuthenticated, user, error } = useAuth();
+  
+  if (!isAuthenticated || error) {
+    return <Redirect to="/login" />;
+  }
+  
+  if (user?.role !== 'admin') {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1>
+        <p>No tienes permisos para acceder a esta página.</p>
+      </div>
+    );
+  }
+  
+  return <Component {...props} />;
+}
+
+function Router() {
+  const { isAuthenticated, isLoading, error } = useAuth();
+  
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -54,40 +82,51 @@ function Router() {
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
       
-      {!isAuthenticated || error ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/shared-drives" component={() => <div>Drives Compartidos (En desarrollo)</div>} />
-          <Route path="/operations" component={Operations} />
-          <Route path="/integrations" component={Integrations} />
-          <Route path="/cloud-explorer" component={CloudExplorer} />
-          <Route path="/my-files" component={MyFiles} />
-          <Route path="/shared" component={ShareInbox} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/admin" component={() => {
-            if (user?.role !== 'admin') {
-              return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
-            }
-            return <AdminDashboard />;
-          }} />
-          <Route path="/admin/users" component={() => {
-            if (user?.role !== 'admin') {
-              return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
-            }
-            return <AdminUsers />;
-          }} />
-          <Route path="/admin/operations" component={() => {
-            if (user?.role !== 'admin') {
-              return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
-            }
-            return <AdminOperations />;
-          }} />
-        </>
-      )}
+      {/* Landing page for non-authenticated users */}
+      <Route path="/">
+        {() => (!isAuthenticated || error) ? <Landing /> : <Home />}
+      </Route>
+      
+      {/* Protected routes - redirect to login if not authenticated */}
+      <Route path="/shared-drives">
+        {() => <ProtectedRoute component={() => <div>Drives Compartidos (En desarrollo)</div>} />}
+      </Route>
+      <Route path="/operations">
+        {() => <ProtectedRoute component={Operations} />}
+      </Route>
+      <Route path="/integrations">
+        {() => <ProtectedRoute component={Integrations} />}
+      </Route>
+      <Route path="/cloud-explorer">
+        {() => <ProtectedRoute component={CloudExplorer} />}
+      </Route>
+      <Route path="/my-files">
+        {() => <ProtectedRoute component={MyFiles} />}
+      </Route>
+      <Route path="/shared">
+        {() => <ProtectedRoute component={ShareInbox} />}
+      </Route>
+      <Route path="/analytics">
+        {() => <ProtectedRoute component={Analytics} />}
+      </Route>
+      <Route path="/settings">
+        {() => <ProtectedRoute component={Settings} />}
+      </Route>
+      <Route path="/profile">
+        {() => <ProtectedRoute component={Profile} />}
+      </Route>
+      
+      {/* Admin routes */}
+      <Route path="/admin">
+        {() => <AdminRoute component={AdminDashboard} />}
+      </Route>
+      <Route path="/admin/users">
+        {() => <AdminRoute component={AdminUsers} />}
+      </Route>
+      <Route path="/admin/operations">
+        {() => <AdminRoute component={AdminOperations} />}
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
