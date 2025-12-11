@@ -21,6 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { useTransfer, TransferJob } from "@/contexts/TransferContext";
 
 interface CloudAccount {
   id: string;
@@ -38,18 +39,6 @@ interface CloudFile {
   isFolder: boolean;
 }
 
-interface TransferJob {
-  id: string;
-  fileName: string;
-  status: 'queued' | 'in_progress' | 'completed' | 'failed' | 'cancelled';
-  progress: number;
-  sourceProvider: string;
-  targetProvider: string;
-  errorMessage?: string;
-  copiedFileUrl?: string;
-  createdAt: string;
-}
-
 type DestinationProvider = 'google' | 'dropbox' | 'onedrive' | 'box';
 
 export default function CloudExplorer() {
@@ -57,6 +46,7 @@ export default function CloudExplorer() {
   const { toast } = useToast();
   const { t } = useTranslation(['copy', 'common', 'errors']);
   const [, setLocation] = useLocation();
+  const { jobs, addJob } = useTransfer();
   
   // Quick Link State
   const [quickLink, setQuickLink] = useState('');
@@ -69,65 +59,6 @@ export default function CloudExplorer() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPath, setCurrentPath] = useState<string>('');
   const [pathHistory, setPathHistory] = useState<Array<{name: string, path: string}>>([]);
-  const [jobs, setJobs] = useState<TransferJob[]>([]);
-
-  // SSE for real-time job updates
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    // SSE uses session-based auth via cookies (set when user authenticates with Supabase)
-    // EventSource can't send custom headers, but cookies are sent automatically
-    const eventSource = new EventSource('/api/transfer-jobs/events', { withCredentials: true });
-    
-    eventSource.addEventListener('progress', (event) => {
-      const jobData = JSON.parse(event.data);
-      setJobs(prev => prev.map(job => 
-        job.id === jobData.jobId 
-          ? { ...job, status: 'in_progress', progress: jobData.progressPct }
-          : job
-      ));
-    });
-
-    eventSource.addEventListener('completed', (event) => {
-      const jobData = JSON.parse(event.data);
-      setJobs(prev => prev.map(job => 
-        job.id === jobData.jobId 
-          ? { ...job, status: 'completed', progress: 100, copiedFileUrl: jobData.copiedFileUrl }
-          : job
-      ));
-      
-      toast({
-        title: "Transferencia completada",
-        description: `${jobData.fileName} transferido exitosamente`,
-      });
-    });
-
-    eventSource.addEventListener('failed', (event) => {
-      const jobData = JSON.parse(event.data);
-      setJobs(prev => prev.map(job => 
-        job.id === jobData.jobId 
-          ? { ...job, status: 'failed', errorMessage: jobData.errorMessage }
-          : job
-      ));
-      
-      toast({
-        title: "Error en transferencia",
-        description: jobData.errorMessage || `Error al transferir`,
-        variant: "destructive"
-      });
-    });
-
-    eventSource.addEventListener('cancelled', (event) => {
-      const jobData = JSON.parse(event.data);
-      setJobs(prev => prev.map(job => 
-        job.id === jobData.jobId 
-          ? { ...job, status: 'cancelled' }
-          : job
-      ));
-    });
-
-    return () => eventSource.close();
-  }, [isAuthenticated, toast]);
 
   // Detect source from link
   useEffect(() => {
@@ -300,7 +231,7 @@ export default function CloudExplorer() {
       setQuickLink('');
       
       if (data.jobId) {
-        setJobs(prev => [...prev, {
+        addJob({
           id: data.jobId,
           fileName: data.fileName || 'Archivo',
           status: 'queued',
@@ -308,7 +239,7 @@ export default function CloudExplorer() {
           sourceProvider: data.sourceProvider,
           targetProvider: data.destProvider,
           createdAt: new Date().toISOString()
-        }]);
+        });
       }
     },
     onError: (error: any) => {
@@ -340,7 +271,7 @@ export default function CloudExplorer() {
       });
       
       if (data.jobId) {
-        setJobs(prev => [...prev, {
+        addJob({
           id: data.jobId,
           fileName: variables.file.name,
           status: 'queued',
@@ -348,7 +279,7 @@ export default function CloudExplorer() {
           sourceProvider: selectedAccount?.provider || '',
           targetProvider: variables.destProvider,
           createdAt: new Date().toISOString()
-        }]);
+        });
       }
     },
     onError: (error: any) => {
