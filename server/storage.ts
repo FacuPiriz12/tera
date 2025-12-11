@@ -16,7 +16,7 @@ import {
   type InsertShareEvent,
 } from "@shared/schema";
 import { getDb } from "./db";
-import { eq, desc, sql, and, or, isNull, lte, count, asc } from "drizzle-orm";
+import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -116,6 +116,7 @@ export interface IStorage {
   getUserInbox(userId: string): Promise<ShareRequest[]>;
   getUserOutbox(userId: string): Promise<ShareRequest[]>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  searchUsers(query: string, excludeUserId: string): Promise<User[]>;
   
   // Share events
   createShareEvent(event: InsertShareEvent): Promise<ShareEvent>;
@@ -853,6 +854,25 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+    const lowerQuery = query.toLowerCase();
+    const results = await getDb()
+      .select()
+      .from(users)
+      .where(
+        and(
+          ne(users.id, excludeUserId),
+          or(
+            ilike(users.email, `%${lowerQuery}%`),
+            ilike(users.firstName, `%${lowerQuery}%`),
+            ilike(users.lastName, `%${lowerQuery}%`)
+          )
+        )
+      )
+      .limit(10);
+    return results;
+  }
+
   async createShareEvent(event: InsertShareEvent): Promise<ShareEvent> {
     const [shareEvent] = await getDb()
       .insert(shareEvents)
@@ -1543,6 +1563,20 @@ class MemoryStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async searchUsers(query: string, excludeUserId: string): Promise<User[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.users.values())
+      .filter(u => 
+        u.id !== excludeUserId &&
+        (
+          u.email?.toLowerCase().includes(lowerQuery) ||
+          u.firstName?.toLowerCase().includes(lowerQuery) ||
+          u.lastName?.toLowerCase().includes(lowerQuery)
+        )
+      )
+      .slice(0, 10);
   }
 
   async createShareEvent(event: InsertShareEvent): Promise<ShareEvent> {

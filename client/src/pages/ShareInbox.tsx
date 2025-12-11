@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
@@ -23,8 +31,14 @@ import {
   Loader2,
   User,
   Cloud,
+  Plus,
+  Image,
+  FileSpreadsheet,
+  File,
 } from "lucide-react";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
+import ShareFileDialog from "@/components/ShareFileDialog";
+import type { DriveFile } from "@shared/schema";
 
 interface ShareRequest {
   id: string;
@@ -276,11 +290,141 @@ function OutboxItem({ share, onCancel, isCancelling }: {
   );
 }
 
+function getFileIcon(file: DriveFile) {
+  const mimeType = file.mimeType || "";
+  if (mimeType.includes("folder")) {
+    return <FolderOpen className="w-5 h-5 text-yellow-600" />;
+  }
+  if (mimeType.includes("image")) {
+    return <Image className="w-5 h-5 text-purple-600" />;
+  }
+  if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) {
+    return <FileSpreadsheet className="w-5 h-5 text-green-600" />;
+  }
+  if (mimeType.includes("document") || mimeType.includes("word")) {
+    return <FileText className="w-5 h-5 text-blue-600" />;
+  }
+  return <File className="w-5 h-5 text-gray-600" />;
+}
+
+interface FilePickerDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelectFile: (file: DriveFile, provider: "google" | "dropbox") => void;
+}
+
+function FilePickerDialog({ open, onOpenChange, onSelectFile }: FilePickerDialogProps) {
+  const [selectedProvider, setSelectedProvider] = useState<"google" | "dropbox">("google");
+  
+  const { data: files = [], isLoading } = useQuery<DriveFile[]>({
+    queryKey: ["/api/my-files"],
+    enabled: open,
+  });
+
+  const googleFiles = files.filter(f => f.provider === "google");
+  const dropboxFiles = files.filter(f => f.provider === "dropbox");
+  
+  const currentFiles = selectedProvider === "google" ? googleFiles : dropboxFiles;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg" data-testid="dialog-file-picker">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <FolderOpen className="h-5 w-5 text-blue-600" />
+            Seleccionar archivo para compartir
+          </DialogTitle>
+          <DialogDescription>
+            Elige un archivo o carpeta de tu almacenamiento
+          </DialogDescription>
+        </DialogHeader>
+
+        <Tabs value={selectedProvider} onValueChange={(v) => setSelectedProvider(v as "google" | "dropbox")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="google" className="flex items-center gap-2" data-testid="tab-google-files">
+              <SiGoogledrive className="h-4 w-4" />
+              Google Drive
+              {googleFiles.length > 0 && (
+                <Badge variant="secondary" className="ml-1">{googleFiles.length}</Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="dropbox" className="flex items-center gap-2" data-testid="tab-dropbox-files">
+              <SiDropbox className="h-4 w-4" />
+              Dropbox
+              {dropboxFiles.length > 0 && (
+                <Badge variant="secondary" className="ml-1">{dropboxFiles.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <ScrollArea className="h-[300px] rounded-md border p-2">
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-14 w-full" />
+                ))}
+              </div>
+            ) : currentFiles.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Cloud className="h-12 w-12 text-gray-300 mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  No hay archivos en {selectedProvider === "google" ? "Google Drive" : "Dropbox"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ve a "Mis Archivos" para copiar archivos primero
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {currentFiles.map((file) => (
+                  <button
+                    key={file.id}
+                    type="button"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-muted text-left transition-colors"
+                    onClick={() => onSelectFile(file, selectedProvider)}
+                    data-testid={`file-picker-item-${file.id}`}
+                  >
+                    <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+                      {getFileIcon(file)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{file.fileName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {file.fileSize ? formatFileSize(file.fileSize) : ""}
+                      </p>
+                    </div>
+                    {selectedProvider === "google" ? (
+                      <SiGoogledrive className="h-4 w-4 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <SiDropbox className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function ShareInbox() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("inbox");
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [filePickerOpen, setFilePickerOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [fileToShare, setFileToShare] = useState<{
+    id: string;
+    name: string;
+    type: "file" | "folder";
+    size?: number | null;
+    mimeType?: string | null;
+    provider: "google" | "dropbox";
+    path?: string | null;
+  } | null>(null);
 
   const { data: inbox = [], isLoading: inboxLoading } = useQuery<ShareRequest[]>({
     queryKey: ["/api/shares/inbox"],
@@ -346,6 +490,20 @@ export default function ShareInbox() {
     cancelMutation.mutate(id);
   };
 
+  const handleSelectFile = (file: DriveFile, provider: "google" | "dropbox") => {
+    setFileToShare({
+      id: file.copiedFileId || file.id?.toString() || "",
+      name: file.fileName,
+      type: file.mimeType?.includes("folder") ? "folder" : "file",
+      size: file.fileSize,
+      mimeType: file.mimeType,
+      provider: provider,
+      path: null,
+    });
+    setFilePickerOpen(false);
+    setShareDialogOpen(true);
+  };
+
   const pendingInboxCount = inbox.filter(s => s.status === "pending").length;
 
   return (
@@ -360,11 +518,20 @@ export default function ShareInbox() {
             Gestiona los archivos que otros usuarios te han compartido
           </p>
         </div>
-        {pendingInboxCount > 0 && (
-          <Badge className="bg-blue-500 text-white">
-            {pendingInboxCount} pendiente{pendingInboxCount > 1 ? "s" : ""}
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          {pendingInboxCount > 0 && (
+            <Badge className="bg-blue-500 text-white">
+              {pendingInboxCount} pendiente{pendingInboxCount > 1 ? "s" : ""}
+            </Badge>
+          )}
+          <Button 
+            onClick={() => setFilePickerOpen(true)}
+            data-testid="button-new-share"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo compartido
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -428,6 +595,18 @@ export default function ShareInbox() {
           )}
         </TabsContent>
       </Tabs>
+
+      <FilePickerDialog
+        open={filePickerOpen}
+        onOpenChange={setFilePickerOpen}
+        onSelectFile={handleSelectFile}
+      />
+
+      <ShareFileDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        file={fileToShare}
+      />
     </div>
   );
 }

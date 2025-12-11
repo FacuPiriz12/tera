@@ -2355,25 +2355,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search users by email for sharing
+  // Search users by email or name for sharing
   app.get('/api/users/search', isAuthenticated, async (req: any, res) => {
     try {
-      const email = req.query.email as string;
-      if (!email || email.length < 3) {
+      const query = (req.query.q || req.query.email) as string;
+      if (!query || query.length < 2) {
         return res.json([]);
       }
 
-      const user = await storage.getUserByEmail(email);
-      if (user && user.id !== req.user.claims.sub) {
-        res.json([{
-          id: user.id,
-          email: user.email,
-          name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-          avatar: user.profileImageUrl,
-        }]);
-      } else {
-        res.json([]);
-      }
+      const currentUserId = req.user.claims.sub;
+      const users = await storage.searchUsers(query, currentUserId);
+      
+      res.json(users.map(user => ({
+        id: user.id,
+        email: user.email,
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+        avatar: user.profileImageUrl,
+      })));
     } catch (error: any) {
       console.error("Error searching users:", error);
       res.status(500).json({ message: "Failed to search users" });

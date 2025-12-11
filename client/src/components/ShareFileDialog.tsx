@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,8 +23,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Share2, FileText, Folder, Mail } from "lucide-react";
+import { Loader2, Share2, FileText, Folder, User, Search } from "lucide-react";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FileToShare {
   id: string;
@@ -42,8 +43,15 @@ interface ShareFileDialogProps {
   file: FileToShare | null;
 }
 
+interface UserResult {
+  id: string;
+  email: string;
+  name: string;
+  avatar: string | null;
+}
+
 const shareFormSchema = z.object({
-  recipientEmail: z.string().email("Ingresa un email válido"),
+  recipientEmail: z.string().min(1, "Ingresa un email o busca por nombre"),
   message: z.string().max(500, "El mensaje no puede exceder 500 caracteres").optional(),
 });
 
@@ -64,6 +72,9 @@ function formatFileSize(bytes: number | null | undefined): string {
 export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
 
   const form = useForm<ShareFormValues>({
     resolver: zodResolver(shareFormSchema),
@@ -73,12 +84,33 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
     },
   });
 
+  const { data: userSuggestions = [], isLoading: isSearching } = useQuery<UserResult[]>({
+    queryKey: ["/api/users/search", searchQuery],
+    queryFn: async () => {
+      if (searchQuery.length < 2) return [];
+      const response = await fetch(`/api/users/search?q=${encodeURIComponent(searchQuery)}`);
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: searchQuery.length >= 2 && !selectedUser,
+  });
+
+  useEffect(() => {
+    if (userSuggestions.length > 0 && !selectedUser && searchQuery.length >= 2) {
+      setShowSuggestions(true);
+    } else if (userSuggestions.length === 0 || selectedUser || searchQuery.length < 2) {
+      setShowSuggestions(false);
+    }
+  }, [userSuggestions, selectedUser, searchQuery]);
+
   const shareMutation = useMutation({
     mutationFn: async (data: ShareFormValues) => {
       if (!file) throw new Error("No file selected");
       
+      const emailToUse = selectedUser?.email || data.recipientEmail;
+      
       return apiRequest("POST", "/api/shares", {
-        recipientEmail: data.recipientEmail,
+        recipientEmail: emailToUse,
         provider: file.provider,
         fileId: file.id,
         filePath: file.path || null,
@@ -92,10 +124,12 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
     onSuccess: () => {
       toast({
         title: "Archivo compartido",
-        description: `Se ha enviado una invitación a ${form.getValues("recipientEmail")}`,
+        description: `Se ha enviado una invitación a ${selectedUser?.name || form.getValues("recipientEmail")}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/shares/outbox"] });
       form.reset();
+      setSelectedUser(null);
+      setSearchQuery("");
       onOpenChange(false);
       setIsSubmitting(false);
     },
@@ -111,6 +145,17 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
   });
 
   const onSubmit = (data: ShareFormValues) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailToUse = selectedUser?.email || data.recipientEmail;
+    
+    if (!emailRegex.test(emailToUse)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor selecciona un usuario de las sugerencias o ingresa un email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsSubmitting(true);
     shareMutation.mutate(data);
   };
@@ -118,8 +163,32 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
       form.reset();
+      setSelectedUser(null);
+      setSearchQuery("");
+      setShowSuggestions(false);
     }
     onOpenChange(newOpen);
+  };
+
+  const handleSelectUser = (user: UserResult) => {
+    setSelectedUser(user);
+    form.setValue("recipientEmail", user.email);
+    setShowSuggestions(false);
+    setSearchQuery("");
+  };
+
+  const handleClearUser = () => {
+    setSelectedUser(null);
+    form.setValue("recipientEmail", "");
+    setSearchQuery("");
+  };
+
+  const handleInputChange = (value: string) => {
+    if (selectedUser) {
+      setSelectedUser(null);
+    }
+    setSearchQuery(value);
+    form.setValue("recipientEmail", value);
   };
 
   if (!file) return null;
@@ -176,15 +245,75 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email del destinatario
+                    <Search className="w-4 h-4" />
+                    Email o nombre del destinatario
                   </FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="usuario@ejemplo.com"
-                      {...field}
-                      data-testid="input-recipient-email"
-                    />
+                    <div className="relative">
+                      {selectedUser ? (
+                        <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={selectedUser.avatar || undefined} />
+                            <AvatarFallback>
+                              <User className="h-3 w-3" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{selectedUser.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">{selectedUser.email}</p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleClearUser}
+                            className="h-6 w-6 p-0"
+                            data-testid="button-clear-recipient"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Input
+                            placeholder="Buscar por email o nombre..."
+                            value={searchQuery || field.value}
+                            onChange={(e) => handleInputChange(e.target.value)}
+                            data-testid="input-recipient-email"
+                          />
+                          {isSearching && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                        </>
+                      )}
+                      
+                      {showSuggestions && userSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                          {userSuggestions.map((user) => (
+                            <button
+                              key={user.id}
+                              type="button"
+                              className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left"
+                              onClick={() => handleSelectUser(user)}
+                              data-testid={`user-suggestion-${user.id}`}
+                            >
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user.avatar || undefined} />
+                                <AvatarFallback>
+                                  <User className="h-4 w-4" />
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{user.name}</p>
+                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -223,7 +352,7 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (!selectedUser && !form.getValues("recipientEmail"))}
                 data-testid="button-confirm-share"
               >
                 {isSubmitting ? (
