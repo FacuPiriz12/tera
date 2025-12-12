@@ -1130,6 +1130,13 @@ const resources = {
   }
 };
 
+// Lista de países hispanohablantes (códigos de idioma del navegador)
+const spanishLocales = [
+  'es', 'es-ES', 'es-MX', 'es-AR', 'es-CO', 'es-CL', 'es-PE', 'es-VE', 
+  'es-EC', 'es-GT', 'es-CU', 'es-BO', 'es-DO', 'es-HN', 'es-PY', 'es-SV',
+  'es-NI', 'es-CR', 'es-PA', 'es-UY', 'es-PR', 'es-419'
+];
+
 // Evitar inicialización duplicada durante HMR
 if (!i18n.isInitialized) {
   i18n
@@ -1141,14 +1148,28 @@ if (!i18n.isInitialized) {
         order: ['localStorage', 'navigator', 'htmlTag'],
         caches: ['localStorage'],
         lookupLocalStorage: 'i18nextLng',
+        // Convertir idiomas detectados al formato correcto
+        convertDetectedLanguage: (lng: string) => {
+          // Si el idioma detectado es español (cualquier variante), usar 'es'
+          if (spanishLocales.some(locale => lng.toLowerCase().startsWith(locale.toLowerCase().split('-')[0]))) {
+            if (lng.toLowerCase().startsWith('es')) {
+              return 'es';
+            }
+          }
+          // Para cualquier otro idioma, usar inglés
+          return 'en';
+        },
       },
       
       resources,
-      fallbackLng: 'es', // Español por defecto
+      fallbackLng: 'en', // Inglés por defecto para países no hispanohablantes
       debug: import.meta.env.DEV,
       
       // Idiomas soportados
       supportedLngs: ['es', 'en'],
+      
+      // Solo cargar el idioma base (sin variantes regionales)
+      load: 'languageOnly',
       
       // Espacios de nombres
       ns: ['common', 'copy', 'errors', 'landing', 'pages', 'auth'],
