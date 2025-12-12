@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import CloneDriveLogo from "./CloneDriveLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { Search, LogOut, Settings, User, Bell, Copy, FolderSync, CheckCircle, AlertCircle } from "lucide-react";
+import { Search, LogOut, Settings, User, Bell, Copy, FolderSync, CheckCircle, AlertCircle, ClipboardList } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -171,6 +171,19 @@ export default function Header() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              {/* Tasks */}
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={goToOperations}
+                className="h-9 w-9 rounded-full hover:bg-accent/50"
+                data-testid="button-tasks"
+                aria-label={t('pages.operations.title')}
+                title={t('pages.operations.title')}
+              >
+                <ClipboardList className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={1.5} />
+              </Button>
               
               {/* User Profile */}
               <DropdownMenu>
