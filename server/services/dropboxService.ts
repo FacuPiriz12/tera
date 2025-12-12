@@ -691,15 +691,16 @@ export class DropboxService {
   async copyFileFromSharedLink(
     sharedUrl: string,
     sourceFilePath: string | undefined,
-    filename: string
+    filename: string,
+    destinationPath?: string
   ): Promise<DropboxFile> {
     try {
       // Download file from shared link
       // For direct file links, sourceFilePath might be undefined or '/'
       const fileContent = await this.downloadFileFromSharedLink(sharedUrl, sourceFilePath);
       
-      // Upload to user's Dropbox (no destination path means root folder)
-      const copiedFile = await this.uploadFile(filename, fileContent);
+      // Upload to user's Dropbox at destination path (or root if not specified)
+      const copiedFile = await this.uploadFile(filename, fileContent, destinationPath);
       
       return copiedFile;
     } catch (error) {

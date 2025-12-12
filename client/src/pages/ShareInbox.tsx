@@ -263,22 +263,18 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
               {share.status === "accepted" && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger data-testid={`menu-sendto-${share.id}`}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Enviar a
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
-                      <DropdownMenuItem onClick={() => onSendTo(share, "google")} data-testid={`menu-sendto-google-${share.id}`}>
-                        <SiGoogledrive className="h-4 w-4 mr-2 text-green-600" />
-                        Google Drive
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onSendTo(share, "dropbox")} data-testid={`menu-sendto-dropbox-${share.id}`}>
-                        <SiDropbox className="h-4 w-4 mr-2 text-blue-500" />
-                        Dropbox
-                      </DropdownMenuItem>
-                    </DropdownMenuSubContent>
-                  </DropdownMenuSub>
+                  <DropdownMenuItem 
+                    onClick={() => onSendTo(share, share.provider as "google" | "dropbox")} 
+                    data-testid={`menu-sendto-${share.id}`}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Copiar a mi {share.provider === "google" ? "Google Drive" : "Dropbox"}
+                    {share.provider === "google" ? (
+                      <SiGoogledrive className="h-4 w-4 ml-2 text-green-600" />
+                    ) : (
+                      <SiDropbox className="h-4 w-4 ml-2 text-blue-500" />
+                    )}
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>

@@ -2252,6 +2252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         respondedAt: new Date(),
       });
 
+      // Note: cloudFile is NOT created on acceptance
+      // The file will be copied to user's cloud storage when they use "Send to" feature
+
       // Create event
       await storage.createShareEvent({
         shareRequestId: shareId,
@@ -2352,6 +2355,166 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error cancelling share:", error);
       res.status(500).json({ message: "Failed to cancel share request" });
+    }
+  });
+
+  // Send accepted share to cloud provider (Google Drive or Dropbox)
+  // Note: Only same-provider transfers are supported (Google->Google, Dropbox->Dropbox)
+  app.post('/api/shares/:id/send-to', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const shareId = req.params.id;
+      const { provider, destinationFolderId, destinationPath } = req.body;
+
+      if (!provider || !['google', 'dropbox'].includes(provider)) {
+        return res.status(400).json({ message: "Invalid provider. Must be 'google' or 'dropbox'" });
+      }
+
+      const shareRequest = await storage.getShareRequest(shareId);
+      if (!shareRequest) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      if (shareRequest.recipientId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      if (shareRequest.status !== 'accepted') {
+        return res.status(400).json({ message: "Share must be accepted first" });
+      }
+
+      // Enforce same-provider transfers for now
+      if (shareRequest.provider !== provider) {
+        return res.status(400).json({ 
+          message: `Cross-provider transfers not supported. The file is from ${shareRequest.provider}, please select ${shareRequest.provider} as destination.`
+        });
+      }
+
+      // Build source URL based on source provider
+      let sourceUrl: string;
+      if (shareRequest.provider === 'google') {
+        sourceUrl = `https://drive.google.com/file/d/${shareRequest.fileId}/view`;
+      } else {
+        sourceUrl = shareRequest.filePath || `https://www.dropbox.com/s/${shareRequest.fileId}`;
+      }
+
+      // Create copy operation using the standard flow
+      // For Google: destinationFolderId is the folder ID
+      // For Dropbox: destinationFolderId stores the destination path
+      const destFolder = provider === 'google' 
+        ? (destinationFolderId || 'root')
+        : (destinationPath || '/');
+      
+      const operation = await storage.createCopyOperation({
+        userId,
+        sourceUrl,
+        destinationFolderId: destFolder,
+        status: 'pending',
+        sourceProvider: shareRequest.provider as 'google' | 'dropbox',
+        destProvider: provider,
+        sourceFileId: shareRequest.fileId,
+        sourceFilePath: shareRequest.filePath,
+        fileName: shareRequest.fileName,
+        itemType: shareRequest.fileType,
+      });
+
+      await storage.createShareEvent({
+        shareRequestId: shareId,
+        eventType: 'sent_to_' + provider,
+        actorId: userId,
+        details: `File sent to ${provider}`,
+      });
+
+      // Start copy process using the source provider's service
+      // (same as destination provider since cross-provider is not supported)
+      if (shareRequest.provider === 'google') {
+        const driveService = new GoogleDriveService(userId);
+        setImmediate(async () => {
+          try {
+            // For Google, copy the file to the destination folder
+            const startTime = Date.now();
+            await storage.updateCopyOperationStatus(operation.id, 'in_progress');
+            
+            const result = await driveService.copyFile(
+              shareRequest.fileId, 
+              undefined, 
+              destinationFolderId || undefined
+            );
+            
+            const duration = Math.round((Date.now() - startTime) / 1000);
+            await storage.updateCopyOperation(operation.id, {
+              status: 'completed',
+              copiedFileId: result.id,
+              copiedFileName: result.name,
+              copiedFileUrl: result.webViewLink,
+              totalFiles: 1,
+              completedFiles: 1,
+              duration
+            });
+
+            // Save to cloud files
+            await storage.createCloudFile({
+              userId,
+              provider: 'google',
+              originalFileId: shareRequest.fileId,
+              copiedFileId: result.id!,
+              fileName: result.name!,
+              mimeType: result.mimeType,
+              fileSize: result.size ? Number(result.size) : null,
+              sourceUrl
+            });
+          } catch (error) {
+            console.error(`Copy to Google Drive failed:`, error);
+            await storage.updateCopyOperationStatus(operation.id, 'failed', error instanceof Error ? error.message : 'Unknown error');
+          }
+        });
+      } else if (shareRequest.provider === 'dropbox') {
+        const dropboxService = new DropboxService(userId);
+        setImmediate(async () => {
+          try {
+            const startTime = Date.now();
+            await storage.updateCopyOperationStatus(operation.id, 'in_progress');
+            
+            // For Dropbox, copy from shared link with destination path
+            const result = await dropboxService.copyFileFromSharedLink(
+              sourceUrl,
+              undefined,
+              shareRequest.fileName,
+              destinationPath || undefined
+            );
+            
+            const duration = Math.round((Date.now() - startTime) / 1000);
+            await storage.updateCopyOperation(operation.id, {
+              status: 'completed',
+              copiedFileId: result.id,
+              copiedFileName: result.name,
+              totalFiles: 1,
+              completedFiles: 1,
+              duration
+            });
+
+            // Save to cloud files
+            await storage.createCloudFile({
+              userId,
+              provider: 'dropbox',
+              originalFileId: shareRequest.fileId,
+              copiedFileId: result.id!,
+              fileName: result.name!,
+              mimeType: result.mimeType,
+              fileSize: result.size ? Number(result.size) : null,
+              sourceUrl
+            });
+          } catch (error) {
+            console.error(`Copy to Dropbox failed:`, error);
+            await storage.updateCopyOperationStatus(operation.id, 'failed', error instanceof Error ? error.message : 'Unknown error');
+          }
+        });
+      }
+
+      res.json({ message: "Copy operation started", operationId: operation.id });
+    } catch (error: any) {
+      console.error("Error sending share to provider:", error);
+      res.status(500).json({ message: "Failed to send file" });
     }
   });
 
