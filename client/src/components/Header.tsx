@@ -10,8 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLocation } from "wouter";
@@ -84,19 +82,32 @@ export default function Header() {
                     </span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>{t('user.myAccount')}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={goToProfile} data-testid="menu-profile">
+                <DropdownMenuContent 
+                  align="end" 
+                  sideOffset={12}
+                  className="min-w-[160px] p-1 bg-card border border-border shadow-xl rounded-lg"
+                >
+                  <DropdownMenuItem 
+                    onClick={goToProfile} 
+                    className="px-3 py-2 text-sm cursor-pointer rounded-md transition-colors text-foreground/80 hover:text-foreground hover:bg-accent/50"
+                    data-testid="menu-profile"
+                  >
                     <User className="mr-2 h-4 w-4" />
                     <span>{t('user.profile')}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={goToSettings} data-testid="menu-settings">
+                  <DropdownMenuItem 
+                    onClick={goToSettings} 
+                    className="px-3 py-2 text-sm cursor-pointer rounded-md transition-colors text-foreground/80 hover:text-foreground hover:bg-accent/50"
+                    data-testid="menu-settings"
+                  >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>{t('user.settings')}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} data-testid="menu-logout">
+                  <DropdownMenuItem 
+                    onClick={handleLogout} 
+                    className="px-3 py-2 text-sm cursor-pointer rounded-md transition-colors text-foreground/80 hover:text-foreground hover:bg-accent/50"
+                    data-testid="menu-logout"
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>{t('auth.logout')}</span>
                   </DropdownMenuItem>
