@@ -20,7 +20,7 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onReplitLogin }: LoginFormProps) {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation(['auth', 'common', 'errors']);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

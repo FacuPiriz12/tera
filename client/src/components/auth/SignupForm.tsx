@@ -20,7 +20,7 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onReplitLogin }: SignupFormProps) {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation(['auth', 'common', 'errors']);
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
