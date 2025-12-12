@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQueryFn, getAuthHeaders } from "@/lib/queryClient";
 import { 
-  FolderPlus, 
   Files, 
   CloudDownload, 
   Activity,
@@ -115,16 +114,6 @@ export default function Home() {
           {/* Page Header */}
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-[1.5rem] font-semibold text-foreground">{t('navigation.home')}</h1>
-            <div className="flex gap-4 items-center">
-              <Button 
-                className="flex items-center gap-2 bg-primary text-white hover:bg-primary/90"
-                onClick={() => setQuickCopyOpen(true)}
-                data-testid="button-new-folder"
-              >
-                <FolderPlus className="w-4 h-4" />
-                {t('navigation.copyFromUrl')}
-              </Button>
-            </div>
           </div>
 
           {/* Dashboard Cards */}
