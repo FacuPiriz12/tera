@@ -374,9 +374,11 @@ interface FilePickerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectFile: (file: any, provider: "google" | "dropbox") => void;
+  onBack?: () => void;
+  showBackButton?: boolean;
 }
 
-function FilePickerDialog({ open, onOpenChange, onSelectFile }: FilePickerDialogProps) {
+function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackButton }: FilePickerDialogProps) {
   const [selectedSource, setSelectedSource] = useState<"myfiles" | "google" | "dropbox">("myfiles");
   const [currentPath, setCurrentPath] = useState<string>("");
   const [pathHistory, setPathHistory] = useState<Array<{name: string, path: string}>>([]);
@@ -490,7 +492,7 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile }: FilePickerDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" data-testid="dialog-file-picker">
+      <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-hidden flex flex-col" data-testid="dialog-file-picker">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-blue-600" />
@@ -527,7 +529,7 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile }: FilePickerDialog
             </TabsTrigger>
           </TabsList>
 
-          {selectedSource !== "myfiles" && (pathHistory.length > 0 || currentPath) && (
+          {(pathHistory.length > 0 || currentPath) && (
             <div className="flex items-center gap-2 mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <Button variant="ghost" size="sm" onClick={handleGoHome} data-testid="button-go-home">
                 <Home className="h-4 w-4" />
@@ -958,6 +960,10 @@ export default function ShareInbox() {
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         file={fileToShare}
+        onBack={() => {
+          setShareDialogOpen(false);
+          setFilePickerOpen(true);
+        }}
       />
 
       <ShareDetailsDialog

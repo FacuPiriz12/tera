@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Share2, FileText, Folder, User, Search } from "lucide-react";
+import { Loader2, Share2, FileText, Folder, User, Search, ArrowLeft } from "lucide-react";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -41,6 +41,7 @@ interface ShareFileDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   file: FileToShare | null;
+  onBack?: () => void;
 }
 
 interface UserResult {
@@ -69,7 +70,7 @@ function formatFileSize(bytes: number | null | undefined): string {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
 
-export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileDialogProps) {
+export default function ShareFileDialog({ open, onOpenChange, file, onBack }: ShareFileDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -340,33 +341,55 @@ export default function ShareFileDialog({ open, onOpenChange, file }: ShareFileD
               )}
             />
 
-            <div className="flex gap-2 justify-end pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleOpenChange(false)}
-                disabled={isSubmitting}
-                data-testid="button-cancel-share"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting || (!selectedUser && !form.getValues("recipientEmail"))}
-                data-testid="button-confirm-share"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Compartiendo...
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="w-4 h-4 mr-2" />
-                    Compartir
-                  </>
+            <div className="flex gap-2 justify-between pt-2">
+              <div>
+                {onBack && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => {
+                      form.reset();
+                      setSelectedUser(null);
+                      setSearchQuery("");
+                      setShowSuggestions(false);
+                      onBack();
+                    }}
+                    disabled={isSubmitting}
+                    data-testid="button-back-share"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Volver
+                  </Button>
                 )}
-              </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={isSubmitting}
+                  data-testid="button-cancel-share"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || (!selectedUser && !form.getValues("recipientEmail"))}
+                  data-testid="button-confirm-share"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Compartiendo...
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Compartir
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
