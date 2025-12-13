@@ -394,7 +394,12 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
   });
 
   const { data: myFilesResponse, isLoading: myFilesLoading } = useQuery<{ files: DriveFile[]; total: number; totalPages: number }>({
-    queryKey: ["/api/drive-files"],
+    queryKey: ["/api/drive-files", { limit: 100 }],
+    queryFn: async () => {
+      const response = await fetch("/api/drive-files?limit=100");
+      if (!response.ok) return { files: [], total: 0, totalPages: 0 };
+      return response.json();
+    },
     enabled: open && selectedSource === "myfiles",
   });
 
