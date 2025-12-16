@@ -2541,6 +2541,265 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===============================
+  // SCHEDULED TASKS ROUTES
+  // ===============================
+
+  // Get all scheduled tasks for the current user
+  app.get('/api/scheduled-tasks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const tasks = await storage.getUserScheduledTasks(userId);
+      res.json(tasks);
+    } catch (error: any) {
+      console.error("Error fetching scheduled tasks:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled tasks" });
+    }
+  });
+
+  // Get a specific scheduled task
+  app.get('/api/scheduled-tasks/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      res.json(task);
+    } catch (error: any) {
+      console.error("Error fetching scheduled task:", error);
+      res.status(500).json({ message: "Failed to fetch scheduled task" });
+    }
+  });
+
+  // Create a new scheduled task
+  app.post('/api/scheduled-tasks', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { getSchedulerService } = await import('./services/schedulerService');
+      const scheduler = getSchedulerService();
+      
+      const taskData = {
+        ...req.body,
+        userId,
+        status: 'active',
+      };
+
+      // Calculate next run time
+      const nextRunAt = scheduler.calculateNextRun({
+        ...taskData,
+        id: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastRunAt: null,
+        lastRunStatus: null,
+        lastRunError: null,
+        totalRuns: 0,
+        successfulRuns: 0,
+        failedRuns: 0,
+      });
+      
+      taskData.nextRunAt = nextRunAt;
+
+      const task = await storage.createScheduledTask(taskData);
+      res.status(201).json(task);
+    } catch (error: any) {
+      console.error("Error creating scheduled task:", error);
+      res.status(500).json({ message: "Failed to create scheduled task" });
+    }
+  });
+
+  // Update a scheduled task
+  app.patch('/api/scheduled-tasks/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const updates = { ...req.body };
+      
+      // Recalculate next run if schedule changed
+      if (updates.frequency || updates.hour !== undefined || updates.minute !== undefined || 
+          updates.dayOfWeek !== undefined || updates.dayOfMonth !== undefined) {
+        const { getSchedulerService } = await import('./services/schedulerService');
+        const scheduler = getSchedulerService();
+        
+        const updatedTask = { ...task, ...updates };
+        updates.nextRunAt = scheduler.calculateNextRun(updatedTask);
+      }
+
+      const updatedTask = await storage.updateScheduledTask(req.params.id, updates);
+      res.json(updatedTask);
+    } catch (error: any) {
+      console.error("Error updating scheduled task:", error);
+      res.status(500).json({ message: "Failed to update scheduled task" });
+    }
+  });
+
+  // Delete a scheduled task
+  app.delete('/api/scheduled-tasks/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      await storage.deleteScheduledTask(req.params.id);
+      res.json({ message: "Task deleted successfully" });
+    } catch (error: any) {
+      console.error("Error deleting scheduled task:", error);
+      res.status(500).json({ message: "Failed to delete scheduled task" });
+    }
+  });
+
+  // Pause a scheduled task
+  app.post('/api/scheduled-tasks/:id/pause', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const pausedTask = await storage.pauseScheduledTask(req.params.id);
+      res.json(pausedTask);
+    } catch (error: any) {
+      console.error("Error pausing scheduled task:", error);
+      res.status(500).json({ message: "Failed to pause scheduled task" });
+    }
+  });
+
+  // Resume a scheduled task
+  app.post('/api/scheduled-tasks/:id/resume', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // Recalculate next run time when resuming
+      const { getSchedulerService } = await import('./services/schedulerService');
+      const scheduler = getSchedulerService();
+      const nextRunAt = scheduler.calculateNextRun(task);
+      
+      await storage.updateScheduledTask(req.params.id, { nextRunAt });
+      const resumedTask = await storage.resumeScheduledTask(req.params.id);
+      res.json(resumedTask);
+    } catch (error: any) {
+      console.error("Error resuming scheduled task:", error);
+      res.status(500).json({ message: "Failed to resume scheduled task" });
+    }
+  });
+
+  // Run a scheduled task immediately
+  app.post('/api/scheduled-tasks/:id/run-now', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // Check if task is already running to prevent duplicates
+      if (task.lastRunStatus === 'running') {
+        return res.status(409).json({ message: "Task is already running" });
+      }
+
+      const startTime = new Date();
+
+      // Create a copy operation for immediate execution
+      const operation = await storage.createCopyOperation({
+        userId: task.userId,
+        sourceUrl: task.sourceUrl,
+        sourceProvider: task.sourceProvider,
+        destinationFolderId: task.destinationFolderId,
+        destProvider: task.destProvider,
+        status: 'pending',
+        fileName: task.sourceName || 'Manual: Scheduled Copy',
+      });
+
+      // Create a task run record
+      const taskRun = await storage.createScheduledTaskRun({
+        scheduledTaskId: task.id,
+        copyOperationId: operation.id,
+        status: 'running',
+        startedAt: startTime,
+        filesProcessed: 0,
+        filesFailed: 0,
+        bytesTransferred: 0,
+      });
+
+      await storage.updateScheduledTask(task.id, {
+        lastRunAt: startTime,
+        lastRunStatus: 'running',
+        totalRuns: (task.totalRuns || 0) + 1,
+      });
+
+      res.json({ message: "Task execution started", operationId: operation.id, taskRunId: taskRun.id });
+    } catch (error: any) {
+      console.error("Error running scheduled task:", error);
+      res.status(500).json({ message: "Failed to run scheduled task" });
+    }
+  });
+
+  // Get task execution history
+  app.get('/api/scheduled-tasks/:id/runs', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 10;
+      const runs = await storage.getTaskRuns(req.params.id, limit);
+      res.json(runs);
+    } catch (error: any) {
+      console.error("Error fetching task runs:", error);
+      res.status(500).json({ message: "Failed to fetch task runs" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

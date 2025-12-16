@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
 import { startQueueWorker } from "./queueWorker";
+import { startSchedulerService } from "./services/schedulerService";
 import { ensureTablesExist } from "./db";
 
 const app = express();
@@ -132,5 +133,13 @@ app.use((req, res, next) => {
     console.log('🚀 Queue worker started successfully');
   } catch (error) {
     console.error('❌ Failed to start queue worker:', error);
+  }
+  
+  // Start scheduler service for automated task execution
+  try {
+    await startSchedulerService();
+    console.log('📅 Scheduler service started successfully');
+  } catch (error) {
+    console.error('❌ Failed to start scheduler service:', error);
   }
 })();

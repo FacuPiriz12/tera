@@ -13,7 +13,8 @@ import {
   Shield,
   Users,
   FileText,
-  Share2
+  Share2,
+  CalendarClock
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
@@ -57,6 +58,7 @@ export default function Sidebar() {
     { path: "/", icon: Home, label: t('navigation.home') },
     { path: "/shared-drives", icon: Cloud, label: t('navigation.sharedDrives') },
     { path: "/operations", icon: Copy, label: t('navigation.operations') },
+    { path: "/tasks", icon: CalendarClock, label: "Tareas Programadas" },
     { path: "/integrations", icon: Settings, label: t('navigation.integrations') },
     { path: "/cloud-explorer", icon: ArrowRightLeft, label: "Explorador Multi-nube" },
     { path: "/my-files", icon: Folder, label: t('navigation.myFiles') },

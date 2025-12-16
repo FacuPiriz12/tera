@@ -119,6 +119,52 @@ A global React context (`TransferContext`) manages transfer operations at the ap
    - Automatic state recovery on page reload
    - Session-scoped job tracking (cleared on logout)
 
+## Scheduled Tasks System
+Automated task scheduling system for recurring file copy operations between cloud storage providers.
+
+### Architecture
+1. **Scheduler Service** (`server/services/schedulerService.ts`):
+   - Background service that polls every 60 seconds for tasks due for execution
+   - Automatically calculates next run time based on configured frequency
+   - Supports hourly, daily, weekly, and monthly schedules
+   - Monitors task completion and updates execution history
+   - Starts automatically with the server
+
+2. **Database Schema** (`shared/schema.ts`):
+   - `scheduled_tasks`: Stores task configuration, schedule, and execution statistics
+   - `scheduled_task_runs`: Execution history with duration, files processed, and error tracking
+   - Fields for source/destination providers, schedule configuration (hour, minute, day), and notification preferences
+
+3. **API Routes** (`server/routes.ts`):
+   - `GET /api/scheduled-tasks`: List user's scheduled tasks
+   - `POST /api/scheduled-tasks`: Create new scheduled task
+   - `PATCH /api/scheduled-tasks/:id`: Update task configuration
+   - `DELETE /api/scheduled-tasks/:id`: Delete task (soft delete)
+   - `POST /api/scheduled-tasks/:id/pause`: Pause scheduled task
+   - `POST /api/scheduled-tasks/:id/resume`: Resume paused task
+   - `POST /api/scheduled-tasks/:id/run-now`: Execute task immediately
+   - `GET /api/scheduled-tasks/:id/runs`: Get task execution history
+
+4. **Frontend Page** (`client/src/pages/Tasks.tsx`):
+   - Full CRUD interface for managing scheduled tasks
+   - Create/edit forms with frequency selection, time configuration
+   - Task status display (active, paused) with last run status
+   - Execution history and statistics
+   - Quick actions: run now, pause/resume, edit, delete
+
+### Usage
+1. Navigate to "Tareas Programadas" in the sidebar
+2. Click "Nueva tarea" to create a scheduled copy operation
+3. Configure source URL, destination, and schedule frequency
+4. The scheduler will automatically execute copies according to the schedule
+5. View execution history and statistics in the task details
+
+### Supported Frequencies
+- **Hourly**: Executes at the specified minute every hour
+- **Daily**: Executes at the specified hour:minute every day
+- **Weekly**: Executes on the specified day of week at the set time
+- **Monthly**: Executes on the specified day of month at the set time
+
 ## Development Environment
 Configured for Replit development with hot module replacement via Vite. Includes development-specific middleware for error overlay and source mapping. The build process uses esbuild for server bundling and Vite for client optimization.
 
