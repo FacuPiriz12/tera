@@ -67,6 +67,12 @@ const FREQUENCIES = [
   { value: "daily", label: "Diario" },
   { value: "weekly", label: "Semanal" },
   { value: "monthly", label: "Mensual" },
+  { value: "custom", label: "Días específicos" },
+];
+
+const OPERATION_TYPES = [
+  { value: "copy", label: "Copiar", description: "Copia los archivos al destino (mantiene el original)" },
+  { value: "transfer", label: "Transferir", description: "Mueve los archivos al destino (elimina el original)" },
 ];
 
 interface TaskFormData {
@@ -78,11 +84,13 @@ interface TaskFormData {
   destProvider: string;
   destinationFolderId: string;
   destinationFolderName: string;
+  operationType: string;
   frequency: string;
   hour: number;
   minute: number;
   dayOfWeek: number;
   dayOfMonth: number;
+  selectedDays: number[];
   skipDuplicates: boolean;
   notifyOnComplete: boolean;
   notifyOnFailure: boolean;
@@ -97,11 +105,13 @@ const defaultFormData: TaskFormData = {
   destProvider: "google",
   destinationFolderId: "root",
   destinationFolderName: "Mi unidad",
+  operationType: "copy",
   frequency: "daily",
   hour: 8,
   minute: 0,
   dayOfWeek: 1,
   dayOfMonth: 1,
+  selectedDays: [],
   skipDuplicates: true,
   notifyOnComplete: true,
   notifyOnFailure: true,
@@ -245,6 +255,13 @@ export default function Tasks() {
         return `Cada ${dayName} a las ${time}`;
       case 'monthly':
         return `El día ${task.dayOfMonth || 1} de cada mes a las ${time}`;
+      case 'custom':
+        const selectedDays = (task as any).selectedDays || [];
+        if (selectedDays.length === 0) {
+          return `Programado a las ${time}`;
+        }
+        const daysList = selectedDays.map((d: number) => DAYS_OF_WEEK.find(day => day.value === d)?.label.slice(0, 3)).join(', ');
+        return `${daysList} a las ${time}`;
       default:
         return `Programado a las ${time}`;
     }
@@ -286,11 +303,13 @@ export default function Tasks() {
       destProvider: task.destProvider,
       destinationFolderId: task.destinationFolderId,
       destinationFolderName: task.destinationFolderName || "",
+      operationType: (task as any).operationType || "copy",
       frequency: task.frequency,
       hour: task.hour || 8,
       minute: task.minute || 0,
       dayOfWeek: task.dayOfWeek || 1,
       dayOfMonth: task.dayOfMonth || 1,
+      selectedDays: (task as any).selectedDays || [],
       skipDuplicates: task.skipDuplicates ?? true,
       notifyOnComplete: task.notifyOnComplete ?? true,
       notifyOnFailure: task.notifyOnFailure ?? true,
@@ -298,8 +317,17 @@ export default function Tasks() {
     setIsEditDialogOpen(true);
   };
 
+  const toggleDay = (day: number) => {
+    const currentDays = formData.selectedDays || [];
+    if (currentDays.includes(day)) {
+      setFormData({ ...formData, selectedDays: currentDays.filter(d => d !== day) });
+    } else {
+      setFormData({ ...formData, selectedDays: [...currentDays, day].sort() });
+    }
+  };
+
   const TaskFormContent = ({ onSubmit, submitLabel, isPending }: { onSubmit: () => void; submitLabel: string; isPending: boolean }) => (
-    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
       <div className="space-y-2">
         <Label htmlFor="task-name">Nombre de la tarea *</Label>
         <Input
@@ -308,6 +336,7 @@ export default function Tasks() {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           data-testid="input-task-name"
+          className="bg-gray-50 dark:bg-gray-800"
         />
       </div>
 
@@ -319,17 +348,40 @@ export default function Tasks() {
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           data-testid="input-task-description"
+          className="bg-gray-50 dark:bg-gray-800 min-h-[60px]"
         />
+      </div>
+
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
+        <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Tipo de operación</h4>
+        <div className="grid grid-cols-2 gap-3">
+          {OPERATION_TYPES.map(op => (
+            <button
+              key={op.value}
+              type="button"
+              onClick={() => setFormData({ ...formData, operationType: op.value })}
+              className={`p-3 rounded-lg border-2 text-left transition-all ${
+                formData.operationType === op.value
+                  ? 'border-primary bg-primary/5'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+              }`}
+              data-testid={`button-operation-${op.value}`}
+            >
+              <div className="font-medium text-sm">{op.label}</div>
+              <div className="text-xs text-muted-foreground mt-1">{op.description}</div>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Proveedor origen</Label>
+          <Label>Origen</Label>
           <Select
             value={formData.sourceProvider}
             onValueChange={(value) => setFormData({ ...formData, sourceProvider: value })}
           >
-            <SelectTrigger data-testid="select-source-provider">
+            <SelectTrigger data-testid="select-source-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -340,12 +392,12 @@ export default function Tasks() {
         </div>
 
         <div className="space-y-2">
-          <Label>Proveedor destino</Label>
+          <Label>Destino</Label>
           <Select
             value={formData.destProvider}
             onValueChange={(value) => setFormData({ ...formData, destProvider: value })}
           >
-            <SelectTrigger data-testid="select-dest-provider">
+            <SelectTrigger data-testid="select-dest-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -364,17 +416,19 @@ export default function Tasks() {
           value={formData.sourceUrl}
           onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
           data-testid="input-source-url"
+          className="bg-gray-50 dark:bg-gray-800"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="source-name">Nombre del archivo/carpeta origen</Label>
+        <Label htmlFor="source-name">Nombre del archivo/carpeta</Label>
         <Input
           id="source-name"
           placeholder="Nombre para identificar el origen"
           value={formData.sourceName}
           onChange={(e) => setFormData({ ...formData, sourceName: e.target.value })}
           data-testid="input-source-name"
+          className="bg-gray-50 dark:bg-gray-800"
         />
       </div>
 
@@ -387,31 +441,36 @@ export default function Tasks() {
             value={formData.destinationFolderId}
             onChange={(e) => setFormData({ ...formData, destinationFolderId: e.target.value })}
             data-testid="input-dest-folder-id"
+            className="bg-gray-50 dark:bg-gray-800"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="dest-folder-name">Nombre carpeta destino</Label>
+          <Label htmlFor="dest-folder-name">Nombre carpeta</Label>
           <Input
             id="dest-folder-name"
             placeholder="Mi unidad"
             value={formData.destinationFolderName}
             onChange={(e) => setFormData({ ...formData, destinationFolderName: e.target.value })}
             data-testid="input-dest-folder-name"
+            className="bg-gray-50 dark:bg-gray-800"
           />
         </div>
       </div>
 
-      <div className="border-t pt-4 mt-4">
-        <h4 className="font-medium mb-3">Programación</h4>
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
+        <h4 className="font-medium text-sm flex items-center gap-2 text-blue-700 dark:text-blue-300">
+          <Calendar className="w-4 h-4" />
+          Programación
+        </h4>
         
-        <div className="space-y-2 mb-4">
+        <div className="space-y-2">
           <Label>Frecuencia</Label>
           <Select
             value={formData.frequency}
-            onValueChange={(value) => setFormData({ ...formData, frequency: value })}
+            onValueChange={(value) => setFormData({ ...formData, frequency: value, selectedDays: [] })}
           >
-            <SelectTrigger data-testid="select-frequency">
+            <SelectTrigger data-testid="select-frequency" className="bg-white dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -422,41 +481,40 @@ export default function Tasks() {
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        {formData.frequency === 'custom' && (
           <div className="space-y-2">
-            <Label htmlFor="hour">Hora</Label>
-            <Input
-              id="hour"
-              type="number"
-              min={0}
-              max={23}
-              value={formData.hour}
-              onChange={(e) => setFormData({ ...formData, hour: parseInt(e.target.value) || 0 })}
-              data-testid="input-hour"
-            />
+            <Label>Selecciona los días</Label>
+            <div className="flex flex-wrap gap-2">
+              {DAYS_OF_WEEK.map(day => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => toggleDay(day.value)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    (formData.selectedDays || []).includes(day.value)
+                      ? 'bg-primary text-white'
+                      : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-primary'
+                  }`}
+                  data-testid={`button-day-${day.value}`}
+                >
+                  {day.label.slice(0, 3)}
+                </button>
+              ))}
+            </div>
+            {(formData.selectedDays || []).length === 0 && (
+              <p className="text-xs text-amber-600">Selecciona al menos un día</p>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="minute">Minuto</Label>
-            <Input
-              id="minute"
-              type="number"
-              min={0}
-              max={59}
-              value={formData.minute}
-              onChange={(e) => setFormData({ ...formData, minute: parseInt(e.target.value) || 0 })}
-              data-testid="input-minute"
-            />
-          </div>
-        </div>
+        )}
 
         {formData.frequency === 'weekly' && (
-          <div className="space-y-2 mt-4">
+          <div className="space-y-2">
             <Label>Día de la semana</Label>
             <Select
               value={formData.dayOfWeek.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfWeek: parseInt(value) })}
             >
-              <SelectTrigger data-testid="select-day-of-week">
+              <SelectTrigger data-testid="select-day-of-week" className="bg-white dark:bg-gray-800">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -469,7 +527,7 @@ export default function Tasks() {
         )}
 
         {formData.frequency === 'monthly' && (
-          <div className="space-y-2 mt-4">
+          <div className="space-y-2">
             <Label htmlFor="day-of-month">Día del mes</Label>
             <Input
               id="day-of-month"
@@ -479,58 +537,85 @@ export default function Tasks() {
               value={formData.dayOfMonth}
               onChange={(e) => setFormData({ ...formData, dayOfMonth: parseInt(e.target.value) || 1 })}
               data-testid="input-day-of-month"
+              className="bg-white dark:bg-gray-800"
             />
           </div>
         )}
-      </div>
 
-      <div className="border-t pt-4 mt-4">
-        <h4 className="font-medium mb-3">Opciones</h4>
-        
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Omitir duplicados</Label>
-              <p className="text-xs text-muted-foreground">No copiar archivos que ya existen</p>
-            </div>
-            <Switch
-              checked={formData.skipDuplicates}
-              onCheckedChange={(checked) => setFormData({ ...formData, skipDuplicates: checked })}
-              data-testid="switch-skip-duplicates"
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="hour">Hora</Label>
+            <Input
+              id="hour"
+              type="number"
+              min={0}
+              max={23}
+              value={formData.hour}
+              onChange={(e) => setFormData({ ...formData, hour: parseInt(e.target.value) || 0 })}
+              data-testid="input-hour"
+              className="bg-white dark:bg-gray-800"
             />
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Notificar al completar</Label>
-              <p className="text-xs text-muted-foreground">Enviar notificación cuando termine</p>
-            </div>
-            <Switch
-              checked={formData.notifyOnComplete}
-              onCheckedChange={(checked) => setFormData({ ...formData, notifyOnComplete: checked })}
-              data-testid="switch-notify-complete"
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Notificar errores</Label>
-              <p className="text-xs text-muted-foreground">Enviar notificación si hay errores</p>
-            </div>
-            <Switch
-              checked={formData.notifyOnFailure}
-              onCheckedChange={(checked) => setFormData({ ...formData, notifyOnFailure: checked })}
-              data-testid="switch-notify-failure"
+          <div className="space-y-2">
+            <Label htmlFor="minute">Minuto</Label>
+            <Input
+              id="minute"
+              type="number"
+              min={0}
+              max={59}
+              value={formData.minute}
+              onChange={(e) => setFormData({ ...formData, minute: parseInt(e.target.value) || 0 })}
+              data-testid="input-minute"
+              className="bg-white dark:bg-gray-800"
             />
           </div>
         </div>
       </div>
 
-      <DialogFooter className="pt-4">
+      <div className="space-y-3">
+        <div className="flex items-center justify-between py-2">
+          <div className="space-y-0.5">
+            <Label>Omitir duplicados</Label>
+            <p className="text-xs text-muted-foreground">No copiar archivos que ya existen</p>
+          </div>
+          <Switch
+            checked={formData.skipDuplicates}
+            onCheckedChange={(checked) => setFormData({ ...formData, skipDuplicates: checked })}
+            data-testid="switch-skip-duplicates"
+          />
+        </div>
+
+        <div className="flex items-center justify-between py-2">
+          <div className="space-y-0.5">
+            <Label>Notificar al completar</Label>
+            <p className="text-xs text-muted-foreground">Enviar notificación cuando termine</p>
+          </div>
+          <Switch
+            checked={formData.notifyOnComplete}
+            onCheckedChange={(checked) => setFormData({ ...formData, notifyOnComplete: checked })}
+            data-testid="switch-notify-complete"
+          />
+        </div>
+
+        <div className="flex items-center justify-between py-2">
+          <div className="space-y-0.5">
+            <Label>Notificar errores</Label>
+            <p className="text-xs text-muted-foreground">Enviar notificación si hay errores</p>
+          </div>
+          <Switch
+            checked={formData.notifyOnFailure}
+            onCheckedChange={(checked) => setFormData({ ...formData, notifyOnFailure: checked })}
+            data-testid="switch-notify-failure"
+          />
+        </div>
+      </div>
+
+      <DialogFooter className="pt-4 border-t sticky bottom-0 bg-white dark:bg-gray-900 -mx-1 px-1">
         <Button
           type="button"
           onClick={onSubmit}
-          disabled={isPending}
+          disabled={isPending || (formData.frequency === 'custom' && (formData.selectedDays || []).length === 0)}
+          className="w-full"
           data-testid="button-submit-task"
         >
           {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}

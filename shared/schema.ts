@@ -205,12 +205,16 @@ export const scheduledTasks = pgTable("scheduled_tasks", {
   destinationFolderId: text("destination_folder_id").notNull().default('root'),
   destinationFolderName: varchar("destination_folder_name"), // Display name
   
+  // Operation type
+  operationType: varchar("operation_type").default('copy'), // 'copy' | 'transfer'
+  
   // Schedule configuration (user-friendly, not cron)
   frequency: varchar("frequency").notNull(), // 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom'
   hour: integer("hour").default(8), // Hour of day (0-23)
   minute: integer("minute").default(0), // Minute (0-59)
   dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0=Sunday)
   dayOfMonth: integer("day_of_month"), // 1-31 for monthly
+  selectedDays: integer("selected_days").array(), // Array of days 0-6 for custom frequency
   timezone: varchar("timezone").default('America/Argentina/Buenos_Aires'),
   
   // Status

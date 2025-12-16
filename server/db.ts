@@ -138,6 +138,61 @@ async function ensureTablesExist() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
+
+    // Create scheduled_tasks table
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS scheduled_tasks (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        name VARCHAR NOT NULL,
+        description TEXT,
+        source_url TEXT NOT NULL,
+        source_provider VARCHAR NOT NULL,
+        source_name VARCHAR,
+        dest_provider VARCHAR NOT NULL,
+        destination_folder_id TEXT NOT NULL DEFAULT 'root',
+        destination_folder_name VARCHAR,
+        operation_type VARCHAR DEFAULT 'copy',
+        frequency VARCHAR NOT NULL,
+        hour INTEGER DEFAULT 8,
+        minute INTEGER DEFAULT 0,
+        day_of_week INTEGER,
+        day_of_month INTEGER,
+        selected_days INTEGER[],
+        timezone VARCHAR DEFAULT 'America/Argentina/Buenos_Aires',
+        status VARCHAR NOT NULL DEFAULT 'active',
+        last_run_at TIMESTAMP,
+        last_run_status VARCHAR,
+        last_run_error TEXT,
+        next_run_at TIMESTAMP,
+        total_runs INTEGER DEFAULT 0,
+        successful_runs INTEGER DEFAULT 0,
+        failed_runs INTEGER DEFAULT 0,
+        skip_duplicates BOOLEAN DEFAULT true,
+        notify_on_complete BOOLEAN DEFAULT true,
+        notify_on_failure BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // Create scheduled_task_runs table
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS scheduled_task_runs (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        scheduled_task_id VARCHAR NOT NULL REFERENCES scheduled_tasks(id),
+        copy_operation_id VARCHAR REFERENCES copy_operations(id),
+        status VARCHAR NOT NULL,
+        started_at TIMESTAMP,
+        completed_at TIMESTAMP,
+        duration INTEGER,
+        files_processed INTEGER DEFAULT 0,
+        files_failed INTEGER DEFAULT 0,
+        bytes_transferred BIGINT DEFAULT 0,
+        error_message TEXT,
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
     
     tablesInitialized = true;
     console.log('✅ Database tables initialized successfully');

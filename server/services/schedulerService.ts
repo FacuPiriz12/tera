@@ -260,6 +260,45 @@ export class SchedulerService {
         break;
 
       case 'custom':
+        const selectedDays = task.selectedDays || [];
+        if (selectedDays.length === 0) {
+          nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+          nextRun.setHours(task.hour || 8, task.minute || 0, 0, 0);
+        } else {
+          nextRun.setHours(task.hour || 8, task.minute || 0, 0, 0);
+          const currentDay = now.getDay();
+          let daysToAdd = 0;
+          let found = false;
+          
+          for (let i = 0; i <= 7; i++) {
+            const checkDay = (currentDay + i) % 7;
+            if (selectedDays.includes(checkDay)) {
+              const potentialNextRun = new Date(now);
+              potentialNextRun.setDate(now.getDate() + i);
+              potentialNextRun.setHours(task.hour || 8, task.minute || 0, 0, 0);
+              
+              if (potentialNextRun > now) {
+                daysToAdd = i;
+                found = true;
+                break;
+              }
+            }
+          }
+          
+          if (!found) {
+            for (let i = 1; i <= 7; i++) {
+              const checkDay = (currentDay + i) % 7;
+              if (selectedDays.includes(checkDay)) {
+                daysToAdd = i;
+                break;
+              }
+            }
+          }
+          
+          nextRun.setDate(now.getDate() + daysToAdd);
+        }
+        break;
+
       default:
         nextRun = new Date(now.getTime() + 24 * 60 * 60 * 1000);
         nextRun.setHours(task.hour || 8, task.minute || 0, 0, 0);
@@ -285,6 +324,13 @@ export class SchedulerService {
         return `Cada ${dayName} a las ${time}`;
       case 'monthly':
         return `El día ${task.dayOfMonth || 1} de cada mes a las ${time}`;
+      case 'custom':
+        const selectedDays = task.selectedDays || [];
+        if (selectedDays.length === 0) {
+          return `Programado a las ${time}`;
+        }
+        const daysList = selectedDays.map(d => dayNames[d].slice(0, 3)).join(', ');
+        return `${daysList} a las ${time}`;
       default:
         return `Programado a las ${time}`;
     }
