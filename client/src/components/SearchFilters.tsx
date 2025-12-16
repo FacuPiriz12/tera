@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { SlidersHorizontal, Folder, FileText, FileImage, FileSpreadsheet, FileVideo, FileAudio, File, Box, Palette, X } from "lucide-react";
+import { SlidersHorizontal, Folder, FileText, FileImage, FileSpreadsheet, FileVideo, FileAudio, File, Box, Palette, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -80,6 +80,7 @@ const defaultFilters: SearchFiltersState = {
 
 export default function SearchFilters({ onFiltersChange, onSearch }: SearchFiltersProps) {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFiltersState>(defaultFilters);
 
@@ -131,6 +132,31 @@ export default function SearchFilters({ onFiltersChange, onSearch }: SearchFilte
   const handleSearch = () => {
     onSearch?.(filters);
     setIsOpen(false);
+    
+    // Build query params from filters
+    const params = new URLSearchParams();
+    if (filters.fileTypes.length > 0) {
+      params.set('types', filters.fileTypes.join(','));
+    }
+    if (filters.dateRange !== 'any') {
+      params.set('date', filters.dateRange);
+    }
+    if (filters.sizeRange !== 'any') {
+      params.set('size', filters.sizeRange);
+    }
+    if (filters.owner) {
+      params.set('owner', filters.owner);
+    }
+    if (filters.folder) {
+      params.set('folder', filters.folder);
+    }
+    if (filters.tags) {
+      params.set('tags', filters.tags);
+    }
+    
+    // Navigate to my-files with filters
+    const queryString = params.toString();
+    setLocation(`/my-files${queryString ? `?${queryString}` : ''}`);
   };
 
   const hasActiveFilters = 
@@ -169,24 +195,31 @@ export default function SearchFilters({ onFiltersChange, onSearch }: SearchFilte
                   <span className="font-medium text-sm">Filtros</span>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
-                  <div className="space-y-3">
-                    {FILE_TYPES.map((type) => (
-                      <div key={type.id} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={`filter-${type.id}`}
-                          checked={filters.fileTypes.includes(type.id)}
-                          onCheckedChange={(checked) => handleFileTypeChange(type.id, checked as boolean)}
+                  <div className="space-y-1">
+                    {FILE_TYPES.map((type) => {
+                      const isSelected = filters.fileTypes.includes(type.id);
+                      return (
+                        <button
+                          key={type.id}
+                          type="button"
+                          onClick={() => handleFileTypeChange(type.id, !isSelected)}
+                          className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
                           data-testid={`checkbox-filter-${type.id}`}
-                        />
-                        <type.icon className={`h-4 w-4 ${type.color}`} />
-                        <Label
-                          htmlFor={`filter-${type.id}`}
-                          className="text-sm font-normal cursor-pointer"
                         >
-                          {type.label}
-                        </Label>
-                      </div>
-                    ))}
+                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isSelected 
+                              ? 'bg-primary border-primary' 
+                              : 'border-gray-300 bg-white'
+                          }`}>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                          </div>
+                          <type.icon className={`h-5 w-5 ${type.color}`} />
+                          <span className="text-sm font-normal text-foreground">
+                            {type.label}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>
