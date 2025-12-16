@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import CloneDriveLogo from "./CloneDriveLogo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import SearchFilters from "@/components/SearchFilters";
 import { Search, LogOut, Settings, User, Bell, Copy, FolderSync, CheckCircle, AlertCircle, ClipboardList, FileText, ExternalLink, CheckSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -140,6 +141,12 @@ export default function Header() {
               className="ml-2 w-full border-none bg-transparent text-[0.95rem] focus:outline-none focus:ring-0 shadow-none"
               data-testid="input-search"
             />
+            <div className="relative">
+              <SearchFilters 
+                onFiltersChange={(filters) => console.log('Filters changed:', filters)}
+                onSearch={(filters) => console.log('Search with filters:', filters)}
+              />
+            </div>
           </div>
         </div>
         
