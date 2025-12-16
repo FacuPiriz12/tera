@@ -4,6 +4,8 @@ import {
   copyOperations,
   shareRequests,
   shareEvents,
+  scheduledTasks,
+  scheduledTaskRuns,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -14,6 +16,10 @@ import {
   type InsertShareRequest,
   type ShareEvent,
   type InsertShareEvent,
+  type ScheduledTask,
+  type InsertScheduledTask,
+  type ScheduledTaskRun,
+  type InsertScheduledTaskRun,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -121,6 +127,21 @@ export interface IStorage {
   // Share events
   createShareEvent(event: InsertShareEvent): Promise<ShareEvent>;
   getShareEvents(shareRequestId: string): Promise<ShareEvent[]>;
+  
+  // Scheduled tasks operations
+  createScheduledTask(task: InsertScheduledTask): Promise<ScheduledTask>;
+  getScheduledTask(id: string): Promise<ScheduledTask | undefined>;
+  getUserScheduledTasks(userId: string): Promise<ScheduledTask[]>;
+  updateScheduledTask(id: string, updates: Partial<ScheduledTask>): Promise<ScheduledTask>;
+  deleteScheduledTask(id: string): Promise<void>;
+  getTasksDueForExecution(): Promise<ScheduledTask[]>;
+  pauseScheduledTask(id: string): Promise<ScheduledTask>;
+  resumeScheduledTask(id: string): Promise<ScheduledTask>;
+  
+  // Scheduled task runs
+  createScheduledTaskRun(run: InsertScheduledTaskRun): Promise<ScheduledTaskRun>;
+  getTaskRuns(taskId: string, limit?: number): Promise<ScheduledTaskRun[]>;
+  updateTaskRun(id: string, updates: Partial<ScheduledTaskRun>): Promise<ScheduledTaskRun>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -888,6 +909,110 @@ export class DatabaseStorage implements IStorage {
       .where(eq(shareEvents.shareRequestId, shareRequestId))
       .orderBy(desc(shareEvents.createdAt));
   }
+
+  // Scheduled tasks operations
+  async createScheduledTask(task: InsertScheduledTask): Promise<ScheduledTask> {
+    const [scheduledTask] = await getDb()
+      .insert(scheduledTasks)
+      .values(task)
+      .returning();
+    return scheduledTask;
+  }
+
+  async getScheduledTask(id: string): Promise<ScheduledTask | undefined> {
+    const [task] = await getDb()
+      .select()
+      .from(scheduledTasks)
+      .where(eq(scheduledTasks.id, id));
+    return task;
+  }
+
+  async getUserScheduledTasks(userId: string): Promise<ScheduledTask[]> {
+    return await getDb()
+      .select()
+      .from(scheduledTasks)
+      .where(and(
+        eq(scheduledTasks.userId, userId),
+        ne(scheduledTasks.status, 'deleted')
+      ))
+      .orderBy(desc(scheduledTasks.createdAt));
+  }
+
+  async updateScheduledTask(id: string, updates: Partial<ScheduledTask>): Promise<ScheduledTask> {
+    const [task] = await getDb()
+      .update(scheduledTasks)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(scheduledTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async deleteScheduledTask(id: string): Promise<void> {
+    await getDb()
+      .update(scheduledTasks)
+      .set({ status: 'deleted', updatedAt: new Date() })
+      .where(eq(scheduledTasks.id, id));
+  }
+
+  async getTasksDueForExecution(): Promise<ScheduledTask[]> {
+    const now = new Date();
+    return await getDb()
+      .select()
+      .from(scheduledTasks)
+      .where(and(
+        eq(scheduledTasks.status, 'active'),
+        lte(scheduledTasks.nextRunAt, now)
+      ))
+      .orderBy(asc(scheduledTasks.nextRunAt));
+  }
+
+  async pauseScheduledTask(id: string): Promise<ScheduledTask> {
+    const [task] = await getDb()
+      .update(scheduledTasks)
+      .set({ status: 'paused', updatedAt: new Date() })
+      .where(eq(scheduledTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  async resumeScheduledTask(id: string): Promise<ScheduledTask> {
+    const [task] = await getDb()
+      .update(scheduledTasks)
+      .set({ status: 'active', updatedAt: new Date() })
+      .where(eq(scheduledTasks.id, id))
+      .returning();
+    return task;
+  }
+
+  // Scheduled task runs
+  async createScheduledTaskRun(run: InsertScheduledTaskRun): Promise<ScheduledTaskRun> {
+    const [taskRun] = await getDb()
+      .insert(scheduledTaskRuns)
+      .values(run)
+      .returning();
+    return taskRun;
+  }
+
+  async getTaskRuns(taskId: string, limit: number = 50): Promise<ScheduledTaskRun[]> {
+    return await getDb()
+      .select()
+      .from(scheduledTaskRuns)
+      .where(eq(scheduledTaskRuns.scheduledTaskId, taskId))
+      .orderBy(desc(scheduledTaskRuns.createdAt))
+      .limit(limit);
+  }
+
+  async updateTaskRun(id: string, updates: Partial<ScheduledTaskRun>): Promise<ScheduledTaskRun> {
+    const [taskRun] = await getDb()
+      .update(scheduledTaskRuns)
+      .set(updates)
+      .where(eq(scheduledTaskRuns.id, id))
+      .returning();
+    return taskRun;
+  }
 }
 
 // Memory storage for development when DATABASE_URL is not available
@@ -897,6 +1022,8 @@ class MemoryStorage implements IStorage {
   private copyOperations: Map<string, CopyOperation> = new Map();
   private shareRequestsMap: Map<string, ShareRequest> = new Map();
   private shareEventsMap: Map<string, ShareEvent> = new Map();
+  private scheduledTasksMap: Map<string, ScheduledTask> = new Map();
+  private scheduledTaskRunsMap: Map<string, ScheduledTaskRun> = new Map();
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
@@ -1594,6 +1721,103 @@ class MemoryStorage implements IStorage {
     return Array.from(this.shareEventsMap.values())
       .filter(se => se.shareRequestId === shareRequestId)
       .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  // Scheduled tasks operations
+  async createScheduledTask(task: InsertScheduledTask): Promise<ScheduledTask> {
+    const id = crypto.randomUUID();
+    const scheduledTask: ScheduledTask = {
+      id,
+      ...task,
+      status: task.status || 'active',
+      lastRunAt: null,
+      lastRunStatus: null,
+      lastRunError: null,
+      nextRunAt: null,
+      totalRuns: 0,
+      successfulRuns: 0,
+      failedRuns: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.scheduledTasksMap.set(id, scheduledTask);
+    return scheduledTask;
+  }
+
+  async getScheduledTask(id: string): Promise<ScheduledTask | undefined> {
+    return this.scheduledTasksMap.get(id);
+  }
+
+  async getUserScheduledTasks(userId: string): Promise<ScheduledTask[]> {
+    return Array.from(this.scheduledTasksMap.values())
+      .filter(t => t.userId === userId && t.status !== 'deleted')
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async updateScheduledTask(id: string, updates: Partial<ScheduledTask>): Promise<ScheduledTask> {
+    const existing = this.scheduledTasksMap.get(id);
+    if (!existing) {
+      throw new Error('Scheduled task not found');
+    }
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.scheduledTasksMap.set(id, updated);
+    return updated;
+  }
+
+  async deleteScheduledTask(id: string): Promise<void> {
+    const existing = this.scheduledTasksMap.get(id);
+    if (existing) {
+      existing.status = 'deleted';
+      existing.updatedAt = new Date();
+      this.scheduledTasksMap.set(id, existing);
+    }
+  }
+
+  async getTasksDueForExecution(): Promise<ScheduledTask[]> {
+    const now = new Date();
+    return Array.from(this.scheduledTasksMap.values())
+      .filter(t => t.status === 'active' && t.nextRunAt && t.nextRunAt <= now)
+      .sort((a, b) => (a.nextRunAt?.getTime() || 0) - (b.nextRunAt?.getTime() || 0));
+  }
+
+  async pauseScheduledTask(id: string): Promise<ScheduledTask> {
+    return this.updateScheduledTask(id, { status: 'paused' });
+  }
+
+  async resumeScheduledTask(id: string): Promise<ScheduledTask> {
+    return this.updateScheduledTask(id, { status: 'active' });
+  }
+
+  // Scheduled task runs
+  async createScheduledTaskRun(run: InsertScheduledTaskRun): Promise<ScheduledTaskRun> {
+    const id = crypto.randomUUID();
+    const taskRun: ScheduledTaskRun = {
+      id,
+      ...run,
+      filesProcessed: run.filesProcessed || 0,
+      filesFailed: run.filesFailed || 0,
+      bytesTransferred: run.bytesTransferred || 0,
+      createdAt: new Date(),
+    };
+    this.scheduledTaskRunsMap.set(id, taskRun);
+    return taskRun;
+  }
+
+  async getTaskRuns(taskId: string, limit: number = 50): Promise<ScheduledTaskRun[]> {
+    return Array.from(this.scheduledTaskRunsMap.values())
+      .filter(r => r.scheduledTaskId === taskId)
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0))
+      .slice(0, limit);
+  }
+
+  async updateTaskRun(id: string, updates: Partial<ScheduledTaskRun>): Promise<ScheduledTaskRun> {
+    const existing = this.scheduledTaskRunsMap.get(id);
+    if (!existing) {
+      throw new Error('Task run not found');
+    }
+    const updated = { ...existing, ...updates };
+    this.scheduledTaskRunsMap.set(id, updated);
+    return updated;
   }
 }
 
