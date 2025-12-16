@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSearch } from "wouter";
 import { 
   Download, 
   FileText, 
@@ -21,7 +22,8 @@ import {
   HardDrive,
   Link2,
   Eye,
-  Share2
+  Share2,
+  Filter
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,7 @@ type PlatformFilter = 'all' | 'google' | 'dropbox';
 export default function MyFiles() {
   const { t } = useTranslation(['pages', 'common']);
   const { toast } = useToast();
+  const searchString = useSearch();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,6 +67,25 @@ export default function MyFiles() {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [fileToShare, setFileToShare] = useState<CloudFile | null>(null);
   const itemsPerPage = 10;
+  
+  const urlFilters = useMemo(() => {
+    const params = new URLSearchParams(searchString);
+    return {
+      types: params.get('types')?.split(',').filter(Boolean) || [],
+      date: params.get('date') || 'any',
+      size: params.get('size') || 'any',
+      owner: params.get('owner') || '',
+      folder: params.get('folder') || '',
+      tags: params.get('tags') || '',
+    };
+  }, [searchString]);
+
+  const hasActiveFilters = urlFilters.types.length > 0 || 
+    urlFilters.date !== 'any' || 
+    urlFilters.size !== 'any' || 
+    urlFilters.owner !== '' || 
+    urlFilters.folder !== '' || 
+    urlFilters.tags !== '';
   
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
     queryKey: ["/api/drive-files", currentPage, itemsPerPage],
@@ -83,9 +105,81 @@ export default function MyFiles() {
     keepPreviousData: true,
   });
 
-  const files = filesData.files || [];
+  const rawFiles = filesData.files || [];
   const total = filesData.total || 0;
   const totalPages = filesData.totalPages || 0;
+
+  const matchesTypeFilter = (file: CloudFile, types: string[]): boolean => {
+    if (types.length === 0) return true;
+    const mimeType = file.mimeType?.toLowerCase() || '';
+    
+    return types.some(type => {
+      switch (type) {
+        case 'folders': return mimeType.includes('folder');
+        case 'files': return !mimeType.includes('folder');
+        case 'pdf': return mimeType.includes('pdf');
+        case 'document': return mimeType.includes('word') || mimeType.includes('document');
+        case 'spreadsheet': return mimeType.includes('spreadsheet') || mimeType.includes('excel');
+        case 'presentation': return mimeType.includes('presentation') || mimeType.includes('powerpoint');
+        case 'image': return mimeType.includes('image');
+        case 'audio': return mimeType.includes('audio');
+        case 'video': return mimeType.includes('video');
+        default: return false;
+      }
+    });
+  };
+
+  const matchesSizeFilter = (file: CloudFile, sizeRange: string): boolean => {
+    if (sizeRange === 'any') return true;
+    const size = file.fileSize || 0;
+    const MB = 1024 * 1024;
+    const GB = 1024 * MB;
+    
+    switch (sizeRange) {
+      case '0-1mb': return size <= 1 * MB;
+      case '1-5mb': return size > 1 * MB && size <= 5 * MB;
+      case '5-25mb': return size > 5 * MB && size <= 25 * MB;
+      case '25-100mb': return size > 25 * MB && size <= 100 * MB;
+      case '100mb-1gb': return size > 100 * MB && size <= 1 * GB;
+      case '1gb+': return size > 1 * GB;
+      default: return true;
+    }
+  };
+
+  const matchesDateFilter = (file: CloudFile, dateRange: string): boolean => {
+    if (dateRange === 'any') return true;
+    const fileDate = new Date(file.modifiedAt || file.copiedAt);
+    const now = new Date();
+    
+    switch (dateRange) {
+      case 'last_day':
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        return fileDate >= oneDayAgo;
+      case 'last_week':
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return fileDate >= oneWeekAgo;
+      case 'last_month':
+        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return fileDate >= oneMonthAgo;
+      case 'last_year':
+        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        return fileDate >= oneYearAgo;
+      default: return true;
+    }
+  };
+
+  const files = useMemo(() => {
+    if (!hasActiveFilters) return rawFiles;
+    
+    return rawFiles.filter(file => {
+      if (!matchesTypeFilter(file, urlFilters.types)) return false;
+      if (!matchesSizeFilter(file, urlFilters.size)) return false;
+      if (!matchesDateFilter(file, urlFilters.date)) return false;
+      if (urlFilters.owner && !file.fileName?.toLowerCase().includes(urlFilters.owner.toLowerCase())) return false;
+      if (urlFilters.folder && !file.fileName?.toLowerCase().includes(urlFilters.folder.toLowerCase())) return false;
+      return true;
+    });
+  }, [rawFiles, urlFilters, hasActiveFilters]);
 
   const getFileIcon = (mimeType?: string) => {
     if (!mimeType) return <FileText className="w-6 h-6 text-gray-600" />;

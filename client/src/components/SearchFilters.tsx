@@ -3,8 +3,6 @@ import { SlidersHorizontal, Folder, FileText, FileImage, FileSpreadsheet, FileVi
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -208,10 +206,10 @@ export default function SearchFilters({ onFiltersChange, onSearch }: SearchFilte
                         >
                           <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                             isSelected 
-                              ? 'bg-primary border-primary' 
-                              : 'border-gray-300 bg-white'
+                              ? 'bg-gray-200 border-gray-400' 
+                              : 'border-gray-300 bg-gray-100'
                           }`}>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />}
+                            {isSelected && <Check className="w-3.5 h-3.5 text-gray-800" strokeWidth={3} />}
                           </div>
                           <type.icon className={`h-5 w-5 ${type.color}`} />
                           <span className="text-sm font-normal text-foreground">
@@ -229,27 +227,31 @@ export default function SearchFilters({ onFiltersChange, onSearch }: SearchFilte
                   <span className="font-medium text-sm">Fecha de actualización</span>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
-                  <RadioGroup
-                    value={filters.dateRange}
-                    onValueChange={handleDateRangeChange}
-                    className="space-y-3"
-                  >
-                    {DATE_OPTIONS.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-3">
-                        <RadioGroupItem
-                          value={option.id}
-                          id={`date-${option.id}`}
+                  <div className="space-y-1">
+                    {DATE_OPTIONS.map((option) => {
+                      const isSelected = filters.dateRange === option.id;
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => handleDateRangeChange(option.id)}
+                          className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
                           data-testid={`radio-date-${option.id}`}
-                        />
-                        <Label
-                          htmlFor={`date-${option.id}`}
-                          className="text-sm font-normal cursor-pointer"
                         >
-                          {option.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            isSelected 
+                              ? 'bg-gray-200 border-gray-400' 
+                              : 'border-gray-300 bg-gray-100'
+                          }`}>
+                            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-gray-800" />}
+                          </div>
+                          <span className="text-sm font-normal text-foreground">
+                            {option.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
 
@@ -290,27 +292,31 @@ export default function SearchFilters({ onFiltersChange, onSearch }: SearchFilte
                   <span className="font-medium text-sm">Tamaño</span>
                 </AccordionTrigger>
                 <AccordionContent className="px-6 pb-4">
-                  <RadioGroup
-                    value={filters.sizeRange}
-                    onValueChange={handleSizeRangeChange}
-                    className="space-y-3"
-                  >
-                    {SIZE_OPTIONS.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-3">
-                        <RadioGroupItem
-                          value={option.id}
-                          id={`size-${option.id}`}
+                  <div className="space-y-1">
+                    {SIZE_OPTIONS.map((option) => {
+                      const isSelected = filters.sizeRange === option.id;
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          onClick={() => handleSizeRangeChange(option.id)}
+                          className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-accent/50 transition-colors cursor-pointer"
                           data-testid={`radio-size-${option.id}`}
-                        />
-                        <Label
-                          htmlFor={`size-${option.id}`}
-                          className="text-sm font-normal cursor-pointer"
                         >
-                          {option.label}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                            isSelected 
+                              ? 'bg-gray-200 border-gray-400' 
+                              : 'border-gray-300 bg-gray-100'
+                          }`}>
+                            {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-gray-800" />}
+                          </div>
+                          <span className="text-sm font-normal text-foreground">
+                            {option.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </AccordionContent>
               </AccordionItem>
 
