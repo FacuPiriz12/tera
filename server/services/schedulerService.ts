@@ -98,6 +98,9 @@ export class SchedulerService {
         totalRuns: (task.totalRuns || 0) + 1,
       });
 
+      const isTransfer = task.sourceProvider !== task.destProvider;
+      const operationType = task.operationType || (isTransfer ? 'transfer' : 'copy');
+      
       const copyOperation: InsertCopyOperation = {
         userId: task.userId,
         sourceUrl: task.sourceUrl,
@@ -105,7 +108,7 @@ export class SchedulerService {
         destinationFolderId: task.destinationFolderId,
         destProvider: task.destProvider,
         status: 'pending',
-        fileName: task.sourceName || 'Scheduled Copy',
+        fileName: task.sourceName || (isTransfer ? 'Scheduled Transfer' : 'Scheduled Copy'),
       };
 
       const operation = await storage.createCopyOperation(copyOperation);
@@ -114,7 +117,8 @@ export class SchedulerService {
         copyOperationId: operation.id,
       });
 
-      console.log(`✅ Created copy operation ${operation.id} for scheduled task ${task.id}`);
+      const opLabel = isTransfer ? '🔄 transfer' : '📋 copy';
+      console.log(`✅ Created ${opLabel} operation ${operation.id} for scheduled task ${task.id}`);
       console.log(`📅 Next run scheduled for: ${nextRunAt?.toISOString()}`);
 
       this.monitorTaskCompletion(task.id, taskRun.id, operation.id, startTime);

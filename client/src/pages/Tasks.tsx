@@ -71,8 +71,8 @@ const FREQUENCIES = [
 ];
 
 const OPERATION_TYPES = [
-  { value: "copy", label: "Copiar", description: "Copia los archivos al destino (mantiene el original)" },
-  { value: "transfer", label: "Transferir", description: "Mueve los archivos al destino (elimina el original)" },
+  { value: "copy", label: "Copiar", description: "Copia archivos dentro del mismo proveedor" },
+  { value: "transfer", label: "Transferir", description: "Transfiere archivos entre proveedores (Drive ↔ Dropbox)" },
 ];
 
 interface TaskFormData {
