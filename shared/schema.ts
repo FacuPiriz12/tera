@@ -185,3 +185,93 @@ export const insertCopyOperationSchema = createInsertSchema(copyOperations).omit
   createdAt: true,
   updatedAt: true,
 });
+
+// Scheduled tasks for automated copy operations
+export const scheduledTasks = pgTable("scheduled_tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // Task name and description
+  name: varchar("name").notNull(),
+  description: text("description"),
+  
+  // Source configuration
+  sourceUrl: text("source_url").notNull(),
+  sourceProvider: varchar("source_provider").notNull(), // 'google' | 'dropbox'
+  sourceName: varchar("source_name"), // Display name of source file/folder
+  
+  // Destination configuration
+  destProvider: varchar("dest_provider").notNull(), // 'google' | 'dropbox'
+  destinationFolderId: text("destination_folder_id").notNull().default('root'),
+  destinationFolderName: varchar("destination_folder_name"), // Display name
+  
+  // Schedule configuration (user-friendly, not cron)
+  frequency: varchar("frequency").notNull(), // 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom'
+  hour: integer("hour").default(8), // Hour of day (0-23)
+  minute: integer("minute").default(0), // Minute (0-59)
+  dayOfWeek: integer("day_of_week"), // 0-6 for weekly (0=Sunday)
+  dayOfMonth: integer("day_of_month"), // 1-31 for monthly
+  timezone: varchar("timezone").default('America/Argentina/Buenos_Aires'),
+  
+  // Status
+  status: varchar("status").notNull().default('active'), // 'active' | 'paused' | 'deleted'
+  
+  // Execution tracking
+  lastRunAt: timestamp("last_run_at"),
+  lastRunStatus: varchar("last_run_status"), // 'success' | 'failed' | 'running'
+  lastRunError: text("last_run_error"),
+  nextRunAt: timestamp("next_run_at"),
+  totalRuns: integer("total_runs").default(0),
+  successfulRuns: integer("successful_runs").default(0),
+  failedRuns: integer("failed_runs").default(0),
+  
+  // Options
+  skipDuplicates: boolean("skip_duplicates").default(true),
+  notifyOnComplete: boolean("notify_on_complete").default(true),
+  notifyOnFailure: boolean("notify_on_failure").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Scheduled task execution history
+export const scheduledTaskRuns = pgTable("scheduled_task_runs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scheduledTaskId: varchar("scheduled_task_id").notNull().references(() => scheduledTasks.id),
+  copyOperationId: varchar("copy_operation_id").references(() => copyOperations.id),
+  
+  status: varchar("status").notNull(), // 'pending' | 'running' | 'completed' | 'failed' | 'skipped'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  duration: integer("duration"), // seconds
+  
+  filesProcessed: integer("files_processed").default(0),
+  filesFailed: integer("files_failed").default(0),
+  bytesTransferred: bigint("bytes_transferred", { mode: "number" }).default(0),
+  
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type ScheduledTask = typeof scheduledTasks.$inferSelect;
+export type InsertScheduledTask = typeof scheduledTasks.$inferInsert;
+export type ScheduledTaskRun = typeof scheduledTaskRuns.$inferSelect;
+export type InsertScheduledTaskRun = typeof scheduledTaskRuns.$inferInsert;
+
+export const insertScheduledTaskSchema = createInsertSchema(scheduledTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastRunAt: true,
+  lastRunStatus: true,
+  lastRunError: true,
+  nextRunAt: true,
+  totalRuns: true,
+  successfulRuns: true,
+  failedRuns: true,
+});
+
+export const insertScheduledTaskRunSchema = createInsertSchema(scheduledTaskRuns).omit({
+  id: true,
+  createdAt: true,
+});
