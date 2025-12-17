@@ -11,6 +11,14 @@ export interface DriveFileInfo {
   parents?: string[];
   createdTime?: string;
   modifiedTime?: string;
+  owners?: Array<{ displayName?: string; emailAddress?: string }>;
+  sharingUser?: { displayName?: string; emailAddress?: string };
+}
+
+export interface FileMetadata {
+  modifiedTime?: string | Date;
+  createdTime?: string | Date;
+  description?: string;
 }
 
 export interface FileStructure {
@@ -154,7 +162,7 @@ export class GoogleDriveService {
       
       const requestParams: any = {
         fileId,
-        fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime',
+        fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime,owners,sharingUser,description',
         supportsAllDrives: true
       };
       
@@ -223,7 +231,7 @@ export class GoogleDriveService {
       do {
         const response = await this.drive.files.list({
           q: query,
-          fields: 'nextPageToken,files(id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime)',
+          fields: 'nextPageToken,files(id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime,owners)',
           pageSize: 100,
           pageToken: nextPageToken,
           supportsAllDrives: true,
@@ -305,8 +313,9 @@ export class GoogleDriveService {
 
   /**
    * Upload file content to Google Drive with support for large files using resumable uploads
+   * Now supports metadata retention (modifiedTime, createdTime, description)
    */
-  async uploadFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string): Promise<DriveFileInfo> {
+  async uploadFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata): Promise<DriveFileInfo> {
     await this.ensureValidToken();
     
     try {
@@ -322,14 +331,25 @@ export class GoogleDriveService {
       // Use resumable uploads for larger files
       if (fileSize > maxRegularUploadSize) {
         console.log(`Large file detected (${Math.round(fileSize / 1024 / 1024)}MB), using resumable upload`);
-        return await this.uploadLargeFile(filename, content, parentFolderId, mimeType);
+        return await this.uploadLargeFile(filename, content, parentFolderId, mimeType, metadata);
       }
       
-      // Regular upload for smaller files
+      // Regular upload for smaller files with metadata retention
       const requestBody: any = {
         name: filename,
         parents: parentFolderId ? [parentFolderId] : undefined
       };
+
+      // Preserve original metadata if provided
+      if (metadata?.modifiedTime) {
+        requestBody.modifiedTime = metadata.modifiedTime instanceof Date 
+          ? metadata.modifiedTime.toISOString() 
+          : metadata.modifiedTime;
+        console.log(`📅 Preserving modifiedTime: ${requestBody.modifiedTime}`);
+      }
+      if (metadata?.description) {
+        requestBody.description = metadata.description;
+      }
 
       // Convert ArrayBuffer to a Readable stream for googleapis compatibility
       const buffer = Buffer.from(content);
@@ -343,7 +363,7 @@ export class GoogleDriveService {
       const response = await this.drive.files.create({
         resource: requestBody,
         media: media,
-        fields: 'id,name,mimeType,size,webViewLink,parents'
+        fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime'
       });
 
       return response.data;
@@ -353,16 +373,27 @@ export class GoogleDriveService {
     }
   }
 
-  private async uploadLargeFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string): Promise<DriveFileInfo> {
+  private async uploadLargeFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata): Promise<DriveFileInfo> {
     const chunkSize = 256 * 1024; // 256KB chunks for resumable uploads
     const totalSize = content.byteLength;
     
     try {
-      // Create resumable upload session
+      // Create resumable upload session with metadata retention
       const requestBody: any = {
         name: filename,
         parents: parentFolderId ? [parentFolderId] : undefined
       };
+
+      // Preserve original metadata for large files too
+      if (metadata?.modifiedTime) {
+        requestBody.modifiedTime = metadata.modifiedTime instanceof Date 
+          ? metadata.modifiedTime.toISOString() 
+          : metadata.modifiedTime;
+        console.log(`📅 Preserving modifiedTime for large file: ${requestBody.modifiedTime}`);
+      }
+      if (metadata?.description) {
+        requestBody.description = metadata.description;
+      }
 
       // Start resumable upload session
       const initResponse = await this.auth.request({

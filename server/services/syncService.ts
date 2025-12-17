@@ -216,6 +216,10 @@ export class SyncService {
     return false;
   }
 
+  /**
+   * Copy file with metadata retention
+   * Preserves original modification time when transferring between providers
+   */
   private async copyFile(task: ScheduledTask, file: FileInfo): Promise<{ success: boolean; destFileId?: string; destFilePath?: string; error?: string }> {
     try {
       const isTransfer = task.sourceProvider !== task.destProvider;
@@ -232,25 +236,41 @@ export class SyncService {
           return { success: true, destFilePath: copiedFile.path_display };
         }
       } else {
+        // Cross-platform transfer with metadata retention
         if (task.sourceProvider === 'google' && task.destProvider === 'dropbox') {
           const googleService = await this.getGoogleService();
           const dropboxService = await this.getDropboxService();
           
           const fileContent = await googleService.downloadFile(file.id);
-          const destPath = `${task.destinationFolderId === 'root' ? '' : task.destinationFolderId}/${file.name}`;
-          const uploadedFile = await dropboxService.uploadFile(destPath, fileContent);
+          const destPath = `${task.destinationFolderId === 'root' ? '' : task.destinationFolderId}`;
           
-          return { success: true, destFilePath: uploadedFile.path_display };
+          // Preserve original modification time
+          const metadata = file.modifiedTime ? { clientModified: file.modifiedTime } : undefined;
+          if (metadata) {
+            console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
+          }
+          
+          const uploadedFile = await dropboxService.uploadFile(file.name, fileContent, destPath, metadata);
+          
+          return { success: true, destFilePath: destPath + '/' + file.name };
         } else if (task.sourceProvider === 'dropbox' && task.destProvider === 'google') {
           const googleService = await this.getGoogleService();
           const dropboxService = await this.getDropboxService();
           
           const fileContent = await dropboxService.downloadFile(file.path!);
+          
+          // Preserve original modification time
+          const metadata = file.modifiedTime ? { modifiedTime: file.modifiedTime } : undefined;
+          if (metadata) {
+            console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
+          }
+          
           const uploadedFile = await googleService.uploadFile(
             file.name,
             fileContent,
+            task.destinationFolderId,
             file.mimeType || 'application/octet-stream',
-            task.destinationFolderId
+            metadata
           );
           
           return { success: true, destFileId: uploadedFile.id };

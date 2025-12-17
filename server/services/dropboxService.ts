@@ -7,6 +7,12 @@ export interface DropboxFile {
   size?: number;
   mimeType?: string;
   url?: string;
+  clientModified?: string;
+  serverModified?: string;
+}
+
+export interface DropboxFileMetadata {
+  clientModified?: string | Date;
 }
 
 export interface DropboxAuthStatus {
@@ -214,7 +220,11 @@ export class DropboxService {
     }
   }
 
-  async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string): Promise<DropboxFile> {
+  /**
+   * Upload file to Dropbox with optional metadata retention
+   * Supports preserving original modification time via client_modified
+   */
+  async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string, metadata?: DropboxFileMetadata): Promise<DropboxFile> {
     await this.ensureValidToken();
     
     try {
@@ -236,22 +246,36 @@ export class DropboxService {
       // Use upload sessions for files larger than 150MB
       if (fileSize > maxRegularUploadSize) {
         console.log(`Large file detected (${Math.round(fileSize / 1024 / 1024)}MB), using upload sessions`);
-        return await this.uploadLargeFile(filename, content, fullPath);
+        return await this.uploadLargeFile(filename, content, fullPath, metadata);
       }
       
-      // Regular upload for smaller files
-      const response = await this.dbx.filesUpload({
+      // Prepare upload options with metadata retention
+      const uploadOptions: any = {
         path: fullPath,
         contents: content,
         mode: 'add',
         autorename: true,
-      });
+      };
+
+      // Preserve original modification time if provided
+      if (metadata?.clientModified) {
+        const clientModifiedTime = metadata.clientModified instanceof Date 
+          ? metadata.clientModified.toISOString().replace(/\.\d{3}Z$/, 'Z') // Dropbox requires specific format
+          : metadata.clientModified;
+        uploadOptions.client_modified = clientModifiedTime;
+        console.log(`📅 Preserving client_modified for Dropbox: ${clientModifiedTime}`);
+      }
+      
+      // Regular upload for smaller files with metadata
+      const response = await this.dbx.filesUpload(uploadOptions);
 
       return {
         id: response.result.id,
         name: response.result.name,
         size: response.result.size,
         mimeType: this.getMimeTypeFromName(response.result.name),
+        clientModified: response.result.client_modified,
+        serverModified: response.result.server_modified,
       };
     } catch (error) {
       console.error('Error uploading file to Dropbox:', error);
@@ -259,7 +283,7 @@ export class DropboxService {
     }
   }
 
-  private async uploadLargeFile(filename: string, content: ArrayBuffer, fullPath: string): Promise<DropboxFile> {
+  private async uploadLargeFile(filename: string, content: ArrayBuffer, fullPath: string, metadata?: DropboxFileMetadata): Promise<DropboxFile> {
     const chunkSize = 4 * 1024 * 1024; // 4MB chunks for optimal performance
     const totalSize = content.byteLength;
     const totalChunks = Math.ceil(totalSize / chunkSize);
@@ -277,6 +301,22 @@ export class DropboxService {
       const sessionId = startResponse.result.session_id;
       let cursor = { session_id: sessionId, offset: firstChunk.byteLength };
       
+      // Prepare commit options with metadata retention
+      const commitOptions: any = {
+        path: fullPath,
+        mode: 'add',
+        autorename: true,
+      };
+
+      // Preserve original modification time if provided
+      if (metadata?.clientModified) {
+        const clientModifiedTime = metadata.clientModified instanceof Date 
+          ? metadata.clientModified.toISOString().replace(/\.\d{3}Z$/, 'Z')
+          : metadata.clientModified;
+        commitOptions.client_modified = clientModifiedTime;
+        console.log(`📅 Preserving client_modified for large Dropbox file: ${clientModifiedTime}`);
+      }
+      
       // Upload remaining chunks
       for (let i = 1; i < totalChunks; i++) {
         const start = i * chunkSize;
@@ -287,14 +327,10 @@ export class DropboxService {
         console.log(`Uploading chunk ${i + 1}/${totalChunks} (${Math.round(start / 1024 / 1024)}-${Math.round(end / 1024 / 1024)}MB)`);
         
         if (isLastChunk) {
-          // Finish upload session with last chunk
+          // Finish upload session with last chunk and metadata
           const finishResponse = await this.dbx.filesUploadSessionFinish({
             cursor: cursor,
-            commit: {
-              path: fullPath,
-              mode: 'add',
-              autorename: true,
-            },
+            commit: commitOptions,
             contents: chunk,
           });
           
@@ -303,6 +339,8 @@ export class DropboxService {
             name: finishResponse.result.name,
             size: finishResponse.result.size,
             mimeType: this.getMimeTypeFromName(finishResponse.result.name),
+            clientModified: finishResponse.result.client_modified,
+            serverModified: finishResponse.result.server_modified,
           };
         } else {
           // Append chunk to session
