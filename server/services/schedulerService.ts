@@ -1,5 +1,6 @@
 import { storage } from '../storage';
 import { getQueueWorker } from '../queueWorker';
+import { getSyncService } from './syncService';
 import type { ScheduledTask, InsertCopyOperation } from '@shared/schema';
 
 interface SchedulerConfig {
@@ -98,6 +99,13 @@ export class SchedulerService {
         totalRuns: (task.totalRuns || 0) + 1,
       });
 
+      // Check if this is a cumulative sync task
+      if (task.syncMode === 'cumulative_sync') {
+        await this.executeCumulativeSyncTask(task, taskRun.id, startTime);
+        return;
+      }
+
+      // Standard copy/transfer operation
       const isTransfer = task.sourceProvider !== task.destProvider;
       const operationType = task.operationType || (isTransfer ? 'transfer' : 'copy');
       
@@ -134,6 +142,61 @@ export class SchedulerService {
         lastRunError: error.message || 'Unknown error',
         nextRunAt,
         totalRuns: (task.totalRuns || 0) + 1,
+        failedRuns: (task.failedRuns || 0) + 1,
+      });
+    }
+  }
+
+  private async executeCumulativeSyncTask(
+    task: ScheduledTask,
+    taskRunId: string,
+    startTime: Date
+  ): Promise<void> {
+    console.log(`🔄 Executing cumulative sync for task: ${task.name}`);
+
+    try {
+      const syncService = getSyncService(task.userId);
+      const result = await syncService.executeCumulativeSync(task);
+
+      const completedAt = new Date();
+      const duration = Math.floor((completedAt.getTime() - startTime.getTime()) / 1000);
+
+      await storage.updateTaskRun(taskRunId, {
+        status: result.success ? 'completed' : 'failed',
+        completedAt,
+        duration,
+        filesProcessed: result.filesCopied,
+        filesFailed: result.filesFailed,
+        errorMessage: result.errors.length > 0 ? result.errors.join('; ') : null,
+      });
+
+      if (result.success) {
+        await storage.updateScheduledTask(task.id, {
+          lastRunStatus: 'success',
+          lastRunError: null,
+          successfulRuns: (task.successfulRuns || 0) + 1,
+        });
+        console.log(`✅ Cumulative sync completed: ${result.filesCopied} files copied, ${result.filesSkipped} skipped`);
+      } else {
+        await storage.updateScheduledTask(task.id, {
+          lastRunStatus: 'failed',
+          lastRunError: result.errors.join('; '),
+          failedRuns: (task.failedRuns || 0) + 1,
+        });
+        console.log(`⚠️ Cumulative sync completed with errors: ${result.errors.length} errors`);
+      }
+    } catch (error: any) {
+      console.error(`❌ Cumulative sync failed for task ${task.id}:`, error);
+      
+      await storage.updateTaskRun(taskRunId, {
+        status: 'failed',
+        completedAt: new Date(),
+        errorMessage: error.message || 'Unknown error',
+      });
+
+      await storage.updateScheduledTask(task.id, {
+        lastRunStatus: 'failed',
+        lastRunError: error.message || 'Unknown error',
         failedRuns: (task.failedRuns || 0) + 1,
       });
     }

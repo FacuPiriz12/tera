@@ -6,6 +6,7 @@ import {
   shareEvents,
   scheduledTasks,
   scheduledTaskRuns,
+  syncFileRegistry,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -20,6 +21,8 @@ import {
   type InsertScheduledTask,
   type ScheduledTaskRun,
   type InsertScheduledTaskRun,
+  type SyncFileRegistry,
+  type InsertSyncFileRegistry,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -142,6 +145,13 @@ export interface IStorage {
   createScheduledTaskRun(run: InsertScheduledTaskRun): Promise<ScheduledTaskRun>;
   getTaskRuns(taskId: string, limit?: number): Promise<ScheduledTaskRun[]>;
   updateTaskRun(id: string, updates: Partial<ScheduledTaskRun>): Promise<ScheduledTaskRun>;
+  
+  // Sync file registry operations (for cumulative sync)
+  createSyncFileRecord(record: InsertSyncFileRegistry): Promise<SyncFileRegistry>;
+  getSyncFilesByTask(taskId: string): Promise<SyncFileRegistry[]>;
+  getSyncFileBySourceId(taskId: string, sourceFileId: string): Promise<SyncFileRegistry | undefined>;
+  updateSyncFileRecord(id: string, updates: Partial<SyncFileRegistry>): Promise<SyncFileRegistry>;
+  deleteSyncFilesByTask(taskId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1013,6 +1023,50 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return taskRun;
   }
+
+  // Sync file registry operations (for cumulative sync)
+  async createSyncFileRecord(record: InsertSyncFileRegistry): Promise<SyncFileRegistry> {
+    const [syncFile] = await getDb()
+      .insert(syncFileRegistry)
+      .values(record)
+      .returning();
+    return syncFile;
+  }
+
+  async getSyncFilesByTask(taskId: string): Promise<SyncFileRegistry[]> {
+    return await getDb()
+      .select()
+      .from(syncFileRegistry)
+      .where(eq(syncFileRegistry.scheduledTaskId, taskId));
+  }
+
+  async getSyncFileBySourceId(taskId: string, sourceFileId: string): Promise<SyncFileRegistry | undefined> {
+    const [syncFile] = await getDb()
+      .select()
+      .from(syncFileRegistry)
+      .where(and(
+        eq(syncFileRegistry.scheduledTaskId, taskId),
+        eq(syncFileRegistry.sourceFileId, sourceFileId)
+      ));
+    return syncFile;
+  }
+
+  async updateSyncFileRecord(id: string, updates: Partial<SyncFileRegistry>): Promise<SyncFileRegistry> {
+    const [syncFile] = await getDb()
+      .update(syncFileRegistry)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(syncFileRegistry.id, id))
+      .returning();
+    return syncFile;
+  }
+
+  async deleteSyncFilesByTask(taskId: string): Promise<number> {
+    const result = await getDb()
+      .delete(syncFileRegistry)
+      .where(eq(syncFileRegistry.scheduledTaskId, taskId))
+      .returning();
+    return result.length;
+  }
 }
 
 // Memory storage for development when DATABASE_URL is not available
@@ -1818,6 +1872,50 @@ class MemoryStorage implements IStorage {
     const updated = { ...existing, ...updates };
     this.scheduledTaskRunsMap.set(id, updated);
     return updated;
+  }
+
+  // Sync file registry operations (for cumulative sync)
+  private syncFileRegistryMap: Map<string, SyncFileRegistry> = new Map();
+
+  async createSyncFileRecord(record: InsertSyncFileRegistry): Promise<SyncFileRegistry> {
+    const id = crypto.randomUUID();
+    const syncFile: SyncFileRegistry = {
+      id,
+      ...record,
+      lastSyncedAt: new Date(),
+      syncStatus: record.syncStatus || 'synced',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.syncFileRegistryMap.set(id, syncFile);
+    return syncFile;
+  }
+
+  async getSyncFilesByTask(taskId: string): Promise<SyncFileRegistry[]> {
+    return Array.from(this.syncFileRegistryMap.values())
+      .filter(sf => sf.scheduledTaskId === taskId);
+  }
+
+  async getSyncFileBySourceId(taskId: string, sourceFileId: string): Promise<SyncFileRegistry | undefined> {
+    return Array.from(this.syncFileRegistryMap.values())
+      .find(sf => sf.scheduledTaskId === taskId && sf.sourceFileId === sourceFileId);
+  }
+
+  async updateSyncFileRecord(id: string, updates: Partial<SyncFileRegistry>): Promise<SyncFileRegistry> {
+    const existing = this.syncFileRegistryMap.get(id);
+    if (!existing) {
+      throw new Error('Sync file record not found');
+    }
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.syncFileRegistryMap.set(id, updated);
+    return updated;
+  }
+
+  async deleteSyncFilesByTask(taskId: string): Promise<number> {
+    const toDelete = Array.from(this.syncFileRegistryMap.entries())
+      .filter(([, sf]) => sf.scheduledTaskId === taskId);
+    toDelete.forEach(([id]) => this.syncFileRegistryMap.delete(id));
+    return toDelete.length;
   }
 }
 

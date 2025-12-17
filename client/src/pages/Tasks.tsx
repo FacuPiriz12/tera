@@ -75,16 +75,31 @@ const OPERATION_TYPES = [
   { value: "transfer", label: "Transferir", description: "Transfiere archivos entre proveedores (Drive ↔ Dropbox)" },
 ];
 
+const SYNC_MODES = [
+  { 
+    value: "copy", 
+    label: "Copia simple", 
+    description: "Copia todos los archivos cada vez que se ejecuta" 
+  },
+  { 
+    value: "cumulative_sync", 
+    label: "Sincronización acumulativa", 
+    description: "Solo copia archivos nuevos o modificados (nunca elimina)" 
+  },
+];
+
 interface TaskFormData {
   name: string;
   description: string;
   sourceUrl: string;
   sourceProvider: string;
   sourceName: string;
+  sourceFolderId: string;
   destProvider: string;
   destinationFolderId: string;
   destinationFolderName: string;
   operationType: string;
+  syncMode: string;
   frequency: string;
   hour: number;
   minute: number;
@@ -102,10 +117,12 @@ const defaultFormData: TaskFormData = {
   sourceUrl: "",
   sourceProvider: "google",
   sourceName: "",
+  sourceFolderId: "",
   destProvider: "google",
   destinationFolderId: "root",
   destinationFolderName: "Mi unidad",
   operationType: "copy",
+  syncMode: "copy",
   frequency: "daily",
   hour: 8,
   minute: 0,
@@ -300,10 +317,12 @@ export default function Tasks() {
       sourceUrl: task.sourceUrl,
       sourceProvider: task.sourceProvider,
       sourceName: task.sourceName || "",
+      sourceFolderId: (task as any).sourceFolderId || "",
       destProvider: task.destProvider,
       destinationFolderId: task.destinationFolderId,
       destinationFolderName: task.destinationFolderName || "",
       operationType: (task as any).operationType || "copy",
+      syncMode: (task as any).syncMode || "copy",
       frequency: task.frequency,
       hour: task.hour || 8,
       minute: task.minute || 0,
@@ -372,6 +391,36 @@ export default function Tasks() {
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
+        <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Modo de sincronización
+        </h4>
+        <div className="grid grid-cols-1 gap-3">
+          {SYNC_MODES.map(mode => (
+            <button
+              key={mode.value}
+              type="button"
+              onClick={() => setFormData({ ...formData, syncMode: mode.value })}
+              className={`p-3 rounded-lg border-2 text-left transition-all ${
+                formData.syncMode === mode.value
+                  ? 'border-blue-500 bg-blue-500/10'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+              }`}
+              data-testid={`button-sync-${mode.value}`}
+            >
+              <div className="font-medium text-sm">{mode.label}</div>
+              <div className="text-xs text-muted-foreground mt-1">{mode.description}</div>
+            </button>
+          ))}
+        </div>
+        {formData.syncMode === 'cumulative_sync' && (
+          <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
+            La sincronización acumulativa detecta archivos nuevos o modificados y solo copia esos. Los archivos que borres en el origen seguirán existiendo en el destino.
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
