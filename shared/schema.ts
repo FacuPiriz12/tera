@@ -199,6 +199,7 @@ export const scheduledTasks = pgTable("scheduled_tasks", {
   sourceUrl: text("source_url").notNull(),
   sourceProvider: varchar("source_provider").notNull(), // 'google' | 'dropbox'
   sourceName: varchar("source_name"), // Display name of source file/folder
+  sourceFolderId: text("source_folder_id"), // Folder ID for sync operations
   
   // Destination configuration
   destProvider: varchar("dest_provider").notNull(), // 'google' | 'dropbox'
@@ -207,6 +208,9 @@ export const scheduledTasks = pgTable("scheduled_tasks", {
   
   // Operation type
   operationType: varchar("operation_type").default('copy'), // 'copy' | 'transfer'
+  
+  // Sync mode: 'copy' (simple copy) | 'cumulative_sync' (only new/modified files)
+  syncMode: varchar("sync_mode").default('copy'), // 'copy' | 'cumulative_sync'
   
   // Schedule configuration (user-friendly, not cron)
   frequency: varchar("frequency").notNull(), // 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom'
@@ -278,4 +282,43 @@ export const insertScheduledTaskSchema = createInsertSchema(scheduledTasks).omit
 export const insertScheduledTaskRunSchema = createInsertSchema(scheduledTaskRuns).omit({
   id: true,
   createdAt: true,
+});
+
+// Sync file registry - tracks files that have been synced for cumulative sync
+export const syncFileRegistry = pgTable("sync_file_registry", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scheduledTaskId: varchar("scheduled_task_id").notNull().references(() => scheduledTasks.id, { onDelete: 'cascade' }),
+  
+  // Source file info
+  sourceFileId: varchar("source_file_id").notNull(),
+  sourceProvider: varchar("source_provider").notNull(), // 'google' | 'dropbox'
+  sourceFilePath: text("source_file_path"), // For Dropbox path tracking
+  fileName: text("file_name").notNull(),
+  mimeType: varchar("mime_type"),
+  fileSize: bigint("file_size", { mode: "number" }),
+  
+  // Source file modification tracking (for detecting changes)
+  sourceModifiedAt: timestamp("source_modified_at"),
+  sourceContentHash: varchar("source_content_hash"), // MD5/checksum for change detection
+  
+  // Destination file info
+  destFileId: varchar("dest_file_id"),
+  destProvider: varchar("dest_provider").notNull(),
+  destFilePath: text("dest_file_path"),
+  
+  // Sync status
+  lastSyncedAt: timestamp("last_synced_at").defaultNow(),
+  syncStatus: varchar("sync_status").default('synced'), // 'synced' | 'pending' | 'failed'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SyncFileRegistry = typeof syncFileRegistry.$inferSelect;
+export type InsertSyncFileRegistry = typeof syncFileRegistry.$inferInsert;
+
+export const insertSyncFileRegistrySchema = createInsertSchema(syncFileRegistry).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
