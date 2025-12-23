@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
+import { DuplicateDetectionService } from "./services/duplicateDetectionService";
 import { getQueueWorker } from "./queueWorker";
 import { insertCloudFileSchema, insertCopyOperationSchema } from "@shared/schema";
 import { z } from "zod";
@@ -292,14 +293,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-
+      // Validate with Zod schema
       const validation = insertCopyOperationSchema.parse({
         ...req.body,
         userId,
         status: 'pending',
       });
 
+      // Handle duplicates if specified in request
+      const duplicateAction = req.body.duplicateAction || 'skip'; // 'skip' | 'replace' | 'copy_with_suffix'
+      
       const operation = await storage.createCopyOperation(validation);
+      
+      // Store duplicate handling preference if provided
+      if (req.body.duplicateAction) {
+        await storage.updateCopyOperation(operation.id, { 
+          fileName: validation.fileName,
+        });
+      }
+      
       res.json(operation);
 
       // Start copy process in background with error handling based on provider
@@ -308,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Wrap in try-catch to handle background errors
         setImmediate(async () => {
           try {
-            await driveService.startCopyOperation(operation.id, validation.sourceUrl);
+            await driveService.startCopyOperation(operation.id, validation.sourceUrl, duplicateAction);
           } catch (error) {
             console.error(`Google Drive copy operation ${operation.id} failed:`, error);
             await storage.updateCopyOperationStatus(operation.id, 'failed', error instanceof Error ? error.message : 'Unknown error occurred');
@@ -319,7 +331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Wrap in try-catch to handle background errors
         setImmediate(async () => {
           try {
-            await dropboxService.startCopyOperation(operation.id, validation.sourceUrl);
+            await dropboxService.startCopyOperation(operation.id, validation.sourceUrl, duplicateAction);
           } catch (error) {
             console.error(`Dropbox copy operation ${operation.id} failed:`, error);
             await storage.updateCopyOperationStatus(operation.id, 'failed', error instanceof Error ? error.message : 'Unknown error occurred');
@@ -1346,6 +1358,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Duplicate detection check before copy/transfer
+  app.post('/api/duplicate-check', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { fileName, fileSize, provider } = req.body;
+
+      if (!fileName || fileSize === undefined) {
+        return res.status(400).json({ 
+          message: "fileName and fileSize are required for duplicate check"
+        });
+      }
+
+      const duplicateService = new DuplicateDetectionService(userId);
+      const result = await duplicateService.checkDuplicate(fileName, fileSize, undefined, provider);
+
+      res.json({
+        isDuplicate: result.isDuplicate,
+        matchType: result.matchType,
+        duplicateFile: result.duplicateFile || null,
+        resolutionOptions: result.isDuplicate 
+          ? ['skip', 'replace', 'copy_with_suffix'] 
+          : []
+      });
+    } catch (error) {
+      console.error("Error checking duplicates:", error);
+      res.status(500).json({ message: "Failed to check duplicates" });
+    }
+  });
+
   // Cross-cloud transfer route - Queue-based asynchronous transfers
   app.post('/api/transfer-files', isAuthenticated, async (req: any, res) => {
     try {
@@ -1356,7 +1397,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceProvider: z.enum(['google', 'dropbox']),
         targetProvider: z.enum(['google', 'dropbox']),
         fileName: z.string().min(1, "File name is required").max(255, "File name too long"),
+        fileSize: z.number().optional(),
         targetPath: z.string().optional(),
+        duplicateAction: z.enum(['skip', 'replace', 'copy_with_suffix']).default('skip'),
         sourceFileId: z.string().optional(),
         sourceFilePath: z.string().optional()
       }).refine(data => data.sourceProvider !== data.targetProvider, {
@@ -1383,7 +1426,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName } = validation.data;
+      const { sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName, fileSize, duplicateAction } = validation.data;
 
       // Check user membership in backend for security
       const user = await storage.getUser(userId);
@@ -1405,12 +1448,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check for duplicates if fileSize is provided
+      if (fileSize) {
+        const duplicateService = new DuplicateDetectionService(userId);
+        const dupCheck = await duplicateService.checkDuplicate(fileName, fileSize, undefined, targetProvider);
+        
+        if (dupCheck.isDuplicate && duplicateAction === 'skip') {
+          return res.status(409).json({
+            message: "File already exists",
+            isDuplicate: true,
+            duplicateFile: dupCheck.duplicateFile,
+            suggestedAction: 'skip',
+            detail: `A file named "${fileName}" already exists in your ${targetProvider} storage`
+          });
+        }
+      }
+
       // Create asynchronous transfer job in queue
       // Build sourceUrl for cross-cloud transfers
       const sourceUrl = sourceProvider === 'google' 
         ? `https://drive.google.com/file/d/${sourceFileId}` 
         : `dropbox://${sourceFilePath}`;
       
+      let finalFileName = fileName;
+      
+      // Apply duplicate resolution if needed
+      if (fileSize) {
+        const duplicateService = new DuplicateDetectionService(userId);
+        const dupCheck = await duplicateService.checkDuplicate(fileName, fileSize, undefined, targetProvider);
+        if (dupCheck.isDuplicate && duplicateAction === 'copy_with_suffix') {
+          const resolution = duplicateService.applyResolution(fileName, { action: 'copy_with_suffix' });
+          finalFileName = resolution.newFileName;
+        }
+      }
+
       const copyOperation = await storage.createCopyOperation({
         userId,
         sourceUrl,
@@ -1419,14 +1490,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceFilePath: sourceFilePath || null,
         destProvider: targetProvider,
         destinationFolderId: targetPath || 'root',
-        fileName: fileName,
+        fileName: finalFileName,
         status: 'pending'
       });
 
       console.log(`Transfer job created: ${sourceProvider} → ${targetProvider}`, {
         jobId: copyOperation.id,
         userId,
-        fileName
+        fileName: finalFileName,
+        duplicateAction
       });
 
       // Return job ID immediately for tracking (202 Accepted for async processing)
@@ -1434,6 +1506,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         jobId: copyOperation.id,
         status: 'queued',
+        fileName: finalFileName,
+        duplicateAction,
         message: 'Transfer started in background. Use the job ID to track progress.'
       });
 
