@@ -225,10 +225,27 @@ export class DropboxService {
   }
 
   /**
+   * Check if file is duplicate (without uploading)
+   */
+  async checkForDuplicate(filename: string, content: ArrayBuffer, provider: string = 'dropbox') {
+    try {
+      const fileSize = content.byteLength;
+      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, provider);
+      return duplicateCheck;
+    } catch (error) {
+      console.error('Error checking for duplicate:', error);
+      return { isDuplicate: false, matchType: 'none' as const };
+    }
+  }
+
+  /**
    * Upload file to Dropbox with optional metadata retention and duplicate detection
    * Supports preserving original modification time via client_modified
+   * skipDuplicateCheck: if true, skips duplicate detection
+   * forceOverwrite: if true, allows overwriting existing files
    */
-  async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string, metadata?: DropboxFileMetadata): Promise<DropboxFile> {
+  async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string, metadata?: DropboxFileMetadata, options?: { skipDuplicateCheck?: boolean; forceOverwrite?: boolean }): Promise<DropboxFile> {
     await this.ensureValidToken();
     
     try {
@@ -240,13 +257,19 @@ export class DropboxService {
       const fullPath = normalizedPath ? `${normalizedPath}/${filename}` : `/${filename}`;
       const fileSize = content.byteLength;
       
-      // Check for duplicates using combined approach (metadata + hash)
-      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
-      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'dropbox');
-      
-      if (duplicateCheck.isDuplicate) {
-        console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), skipping upload`);
-        throw new Error(`Duplicate file: ${filename} already exists in your Dropbox`);
+      // Check for duplicates using combined approach (metadata + hash) unless skipped
+      let contentHash = '';
+      if (!options?.skipDuplicateCheck) {
+        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+        const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'dropbox');
+        
+        if (duplicateCheck.isDuplicate && !options?.forceOverwrite) {
+          console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), returning duplicate info`);
+          throw { isDuplicate: true, duplicateInfo: duplicateCheck } as any;
+        }
+      } else {
+        // Still calculate hash for registration later
+        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
       }
       const maxRegularUploadSize = 150 * 1024 * 1024; // 150MB
       const maxDropboxSize = 350 * 1024 * 1024 * 1024; // 350GB maximum for Dropbox

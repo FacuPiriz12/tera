@@ -196,13 +196,22 @@ Intelligent duplicate file detection using combined approach: metadata + hash-ba
    - Queries metadata index first (fast path)
    - Falls back to hash verification if needed
 
-2. **Registration**:
+2. **User Options on Duplicate Detection**:
+   - **Omitir (Skip)**: Skip this file, don't upload
+   - **Copiar de todas formas (Copy with suffix)**: Upload as `filename_copy.ext`
+   - **Reemplazar (Replace)**: Overwrite existing file
+
+3. **Registration**:
    - After successful upload, registers file hash in database
    - Enables detection for future transfer attempts
 
-3. **Detection Modes**:
+4. **Detection Modes**:
    - Metadata match: Same name + size + provider
    - Hash match: Same content (catches renamed duplicates)
+
+### API Endpoints
+- `POST /api/check-duplicate` - Check if file exists without uploading
+- Services throw special error with `isDuplicate: true` to trigger user dialog
 
 # External Dependencies
 

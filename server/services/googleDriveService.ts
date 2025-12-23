@@ -315,22 +315,45 @@ export class GoogleDriveService {
   }
 
   /**
+   * Check if file is duplicate (without uploading)
+   */
+  async checkForDuplicate(filename: string, content: ArrayBuffer, provider: string = 'google') {
+    try {
+      const fileSize = content.byteLength;
+      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, provider);
+      return duplicateCheck;
+    } catch (error) {
+      console.error('Error checking for duplicate:', error);
+      return { isDuplicate: false, matchType: 'none' as const };
+    }
+  }
+
+  /**
    * Upload file content to Google Drive with support for large files using resumable uploads
    * Now supports metadata retention (modifiedTime, createdTime, description) and duplicate detection
+   * skipDuplicateCheck: if true, skips duplicate detection
+   * forceOverwrite: if true, allows overwriting existing files
    */
-  async uploadFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata): Promise<DriveFileInfo> {
+  async uploadFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata, options?: { skipDuplicateCheck?: boolean; forceOverwrite?: boolean }): Promise<DriveFileInfo> {
     await this.ensureValidToken();
     
     try {
       const fileSize = content.byteLength;
       
-      // Check for duplicates using combined approach (metadata + hash)
-      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
-      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'google');
-      
-      if (duplicateCheck.isDuplicate) {
-        console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), skipping upload`);
-        throw new Error(`Duplicate file: ${filename} already exists in your Google Drive`);
+      // Check for duplicates using combined approach (metadata + hash) unless skipped
+      let contentHash = '';
+      if (!options?.skipDuplicateCheck) {
+        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+        const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'google');
+        
+        if (duplicateCheck.isDuplicate && !options?.forceOverwrite) {
+          console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), returning duplicate info`);
+          throw { isDuplicate: true, duplicateInfo: duplicateCheck } as any;
+        }
+      } else {
+        // Still calculate hash for registration later
+        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
       }
       const maxRegularUploadSize = 10 * 1024 * 1024; // 10MB threshold for resumable uploads
       const maxGoogleDriveSize = 5 * 1024 * 1024 * 1024 * 1024; // 5TB maximum for Google Drive

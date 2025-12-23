@@ -13,6 +13,13 @@ export interface DuplicateCheckResult {
   matchType: 'hash' | 'metadata' | 'none';
 }
 
+export interface DuplicateUploadResult {
+  success: boolean;
+  isDuplicate: boolean;
+  duplicateInfo?: DuplicateCheckResult;
+  uploadedFileId?: string;
+}
+
 export interface DuplicateResolution {
   action: 'skip' | 'replace' | 'copy_with_suffix';
   newFileName?: string;
