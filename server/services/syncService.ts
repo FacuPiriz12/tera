@@ -86,7 +86,44 @@ export class SyncService {
             console.log(`📄 New file detected: ${file.name}`);
             result.filesNew++;
             
-            const copyResult = await this.copyFile(task, file);
+            // Get duplicate action from task (default to 'skip')
+            const duplicateAction = (task.duplicateAction as 'skip' | 'replace' | 'copy_with_suffix') || 'skip';
+            
+            const copyResult = await this.copyFile(task, file, duplicateAction);
+            
+            // Handle duplicate detection - skip or report
+            if (copyResult.isDuplicate) {
+              console.log(`⚠️ Duplicate detected for ${file.name}, applying action: ${duplicateAction}`);
+              if (duplicateAction === 'skip') {
+                result.filesSkipped++;
+                continue;
+              }
+              // For replace and copy_with_suffix, retry the copy with the action
+              const retryResult = await this.copyFile(task, file, duplicateAction);
+              if (retryResult.success) {
+                await storage.createSyncFileRecord({
+                  scheduledTaskId: task.id,
+                  sourceFileId: file.id,
+                  sourceProvider: task.sourceProvider,
+                  sourceFilePath: file.path || null,
+                  fileName: file.name,
+                  mimeType: file.mimeType || null,
+                  fileSize: file.size || null,
+                  sourceModifiedAt: file.modifiedTime || null,
+                  sourceContentHash: file.contentHash || null,
+                  destFileId: retryResult.destFileId || null,
+                  destProvider: task.destProvider,
+                  destFilePath: retryResult.destFilePath || null,
+                  syncStatus: 'synced',
+                });
+                result.filesCopied++;
+              } else {
+                result.filesFailed++;
+                result.errors.push(`Failed to copy ${file.name}: ${retryResult.error}`);
+              }
+              continue;
+            }
+            
             if (copyResult.success) {
               await storage.createSyncFileRecord({
                 scheduledTaskId: task.id,

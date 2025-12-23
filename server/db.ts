@@ -169,12 +169,22 @@ async function ensureTablesExist() {
         successful_runs INTEGER DEFAULT 0,
         failed_runs INTEGER DEFAULT 0,
         skip_duplicates BOOLEAN DEFAULT true,
+        duplicate_action VARCHAR DEFAULT 'skip',
         notify_on_complete BOOLEAN DEFAULT true,
         notify_on_failure BOOLEAN DEFAULT true,
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    
+    // Add duplicate_action column if it doesn't exist (for migrations)
+    try {
+      await database.execute(sql`
+        ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS duplicate_action VARCHAR DEFAULT 'skip'
+      `);
+    } catch (error) {
+      // Column might already exist, ignore
+    }
 
     // Create scheduled_task_runs table
     await database.execute(sql`

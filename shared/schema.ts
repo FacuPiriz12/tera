@@ -235,6 +235,8 @@ export const scheduledTasks = pgTable("scheduled_tasks", {
   
   // Options
   skipDuplicates: boolean("skip_duplicates").default(true),
+  // Duplicate handling strategy: 'skip' | 'replace' | 'copy_with_suffix'
+  duplicateAction: varchar("duplicate_action").default('skip'), // 'skip' | 'replace' | 'copy_with_suffix'
   notifyOnComplete: boolean("notify_on_complete").default(true),
   notifyOnFailure: boolean("notify_on_failure").default(true),
   

@@ -187,10 +187,13 @@ Intelligent duplicate file detection using combined approach: metadata + hash-ba
 ### Features
 - **Automatic Detection**: Checks for duplicates before every file copy/transfer
 - **Cross-Platform**: Works for Google Drive ↔ Dropbox transfers (both directions)
-- **Error Reporting**: Clear error messages when duplicates detected
+- **User Control**: Choose action on duplicates (skip, replace, copy with suffix)
+- **Scheduled Tasks**: Define duplicate handling strategy when creating tasks
 - **Scalable**: Indexed database queries for performance
 
 ### How It Works
+
+#### For Manual Copies & Transfers:
 1. **Pre-Upload Check**:
    - Calculates SHA-256 hash of file content
    - Queries metadata index first (fast path)
@@ -205,13 +208,24 @@ Intelligent duplicate file detection using combined approach: metadata + hash-ba
    - After successful upload, registers file hash in database
    - Enables detection for future transfer attempts
 
-4. **Detection Modes**:
-   - Metadata match: Same name + size + provider
-   - Hash match: Same content (catches renamed duplicates)
+#### For Scheduled Tasks:
+1. **Task Configuration**:
+   - Set `duplicateAction` field when creating/editing task
+   - Options: `skip` | `replace` | `copy_with_suffix`
+   - Applied automatically during scheduled executions
 
-### API Endpoints
-- `POST /api/check-duplicate` - Check if file exists without uploading
-- Services throw special error with `isDuplicate: true` to trigger user dialog
+2. **Automatic Handling**:
+   - No user interaction needed - applies configured action
+   - Logs duplicate detections in task execution history
+   - Continues processing remaining files
+
+### Database Fields
+- `file_hashes`: SHA-256 hashes for duplicate detection
+- `scheduledTasks.duplicateAction`: Strategy for task (skip|replace|copy_with_suffix)
+
+### Detection Modes
+- Metadata match: Same name + size + provider
+- Hash match: Same content (catches renamed duplicates)
 
 # External Dependencies
 
