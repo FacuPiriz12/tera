@@ -168,6 +168,42 @@ Automated task scheduling system for recurring file copy operations between clou
 ## Development Environment
 Configured for Replit development with hot module replacement via Vite. Includes development-specific middleware for error overlay and source mapping. The build process uses esbuild for server bundling and Vite for client optimization.
 
+## Duplicate Detection System
+Intelligent duplicate file detection using combined approach: metadata + hash-based verification.
+
+### Architecture
+1. **Metadata-First Matching** (`duplicateDetectionService.ts`):
+   - Quick matching by filename + fileSize + provider
+   - Identifies potential duplicates instantly
+
+2. **Hash Verification** (SHA-256):
+   - Content hash calculation for definitive duplicate confirmation
+   - Prevents false positives from same-named files with different content
+
+3. **Database Tracking** (`file_hashes` table):
+   - Persistent tracking of file hashes per user
+   - Indexed by content hash and metadata for fast lookups
+
+### Features
+- **Automatic Detection**: Checks for duplicates before every file copy/transfer
+- **Cross-Platform**: Works for Google Drive ↔ Dropbox transfers (both directions)
+- **Error Reporting**: Clear error messages when duplicates detected
+- **Scalable**: Indexed database queries for performance
+
+### How It Works
+1. **Pre-Upload Check**:
+   - Calculates SHA-256 hash of file content
+   - Queries metadata index first (fast path)
+   - Falls back to hash verification if needed
+
+2. **Registration**:
+   - After successful upload, registers file hash in database
+   - Enables detection for future transfer attempts
+
+3. **Detection Modes**:
+   - Metadata match: Same name + size + provider
+   - Hash match: Same content (catches renamed duplicates)
+
 # External Dependencies
 
 ## Core Framework Dependencies

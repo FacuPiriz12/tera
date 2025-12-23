@@ -322,3 +322,27 @@ export const insertSyncFileRegistrySchema = createInsertSchema(syncFileRegistry)
   createdAt: true,
   updatedAt: true,
 });
+
+// File hashes for duplicate detection
+export const fileHashes = pgTable("file_hashes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // File metadata (for quick matching)
+  fileName: text("file_name").notNull(),
+  fileSize: bigint("file_size", { mode: "number" }).notNull(),
+  
+  // Hash (for content verification)
+  contentHash: varchar("content_hash").notNull(), // SHA-256
+  
+  // Provider info
+  provider: varchar("provider").notNull(), // 'google' | 'dropbox'
+  fileId: varchar("file_id").notNull(),
+  filePath: text("file_path"), // For Dropbox
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type FileHash = typeof fileHashes.$inferSelect;
+export type InsertFileHash = typeof fileHashes.$inferInsert;

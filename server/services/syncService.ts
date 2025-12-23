@@ -1,6 +1,7 @@
 import { storage } from '../storage';
 import { GoogleDriveService } from './googleDriveService';
 import { DropboxService } from './dropboxService';
+import { DuplicateDetectionService } from './duplicateDetectionService';
 import type { ScheduledTask, SyncFileRegistry, InsertSyncFileRegistry } from '@shared/schema';
 
 interface SyncResult {
@@ -29,9 +30,11 @@ export class SyncService {
   private userId: string;
   private googleService: GoogleDriveService | null = null;
   private dropboxService: DropboxService | null = null;
+  private duplicateDetection: DuplicateDetectionService;
 
   constructor(userId: string) {
     this.userId = userId;
+    this.duplicateDetection = new DuplicateDetectionService(userId);
   }
 
   private async getGoogleService(): Promise<GoogleDriveService> {

@@ -1,5 +1,7 @@
 import { Dropbox } from 'dropbox';
 import { storage } from '../storage';
+import { DuplicateDetectionService } from './duplicateDetectionService';
+import { Readable } from 'stream';
 
 export interface DropboxFile {
   id: string;
@@ -30,6 +32,7 @@ interface ProgressContext {
 export class DropboxService {
   private dbx: Dropbox;
   private userId: string;
+  private duplicateDetection: DuplicateDetectionService;
 
   constructor(userId: string) {
     this.userId = userId;
@@ -38,6 +41,7 @@ export class DropboxService {
       clientSecret: process.env.DROPBOX_APP_SECRET,
       fetch: fetch,
     });
+    this.duplicateDetection = new DuplicateDetectionService(userId);
   }
 
   private async ensureValidToken(): Promise<void> {
@@ -221,7 +225,7 @@ export class DropboxService {
   }
 
   /**
-   * Upload file to Dropbox with optional metadata retention
+   * Upload file to Dropbox with optional metadata retention and duplicate detection
    * Supports preserving original modification time via client_modified
    */
   async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string, metadata?: DropboxFileMetadata): Promise<DropboxFile> {
@@ -235,6 +239,15 @@ export class DropboxService {
       }
       const fullPath = normalizedPath ? `${normalizedPath}/${filename}` : `/${filename}`;
       const fileSize = content.byteLength;
+      
+      // Check for duplicates using combined approach (metadata + hash)
+      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'dropbox');
+      
+      if (duplicateCheck.isDuplicate) {
+        console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), skipping upload`);
+        throw new Error(`Duplicate file: ${filename} already exists in your Dropbox`);
+      }
       const maxRegularUploadSize = 150 * 1024 * 1024; // 150MB
       const maxDropboxSize = 350 * 1024 * 1024 * 1024; // 350GB maximum for Dropbox
       
@@ -268,6 +281,11 @@ export class DropboxService {
       
       // Regular upload for smaller files with metadata
       const response = await this.dbx.filesUpload(uploadOptions);
+
+      // Register file hash for future duplicate detection
+      if (response.result.id && response.result.size) {
+        await this.duplicateDetection.registerFile(filename, response.result.size, contentHash, 'dropbox', response.result.id, fullPath);
+      }
 
       return {
         id: response.result.id,

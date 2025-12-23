@@ -194,6 +194,34 @@ async function ensureTablesExist() {
       )
     `);
     
+    // Create file_hashes table for duplicate detection
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS file_hashes (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        file_name TEXT NOT NULL,
+        file_size BIGINT NOT NULL,
+        content_hash VARCHAR NOT NULL,
+        provider VARCHAR NOT NULL,
+        file_id VARCHAR NOT NULL,
+        file_path TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+    
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_file_hashes_user_id" ON file_hashes (user_id)
+    `);
+    
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_file_hashes_content_hash" ON file_hashes (user_id, content_hash)
+    `);
+    
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_file_hashes_metadata" ON file_hashes (user_id, file_name, file_size, provider)
+    `);
+    
     tablesInitialized = true;
     console.log('✅ Database tables initialized successfully');
   } catch (error) {

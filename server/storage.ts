@@ -7,6 +7,7 @@ import {
   scheduledTasks,
   scheduledTaskRuns,
   syncFileRegistry,
+  fileHashes,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -23,6 +24,8 @@ import {
   type InsertScheduledTaskRun,
   type SyncFileRegistry,
   type InsertSyncFileRegistry,
+  type FileHash,
+  type InsertFileHash,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -152,6 +155,11 @@ export interface IStorage {
   getSyncFileBySourceId(taskId: string, sourceFileId: string): Promise<SyncFileRegistry | undefined>;
   updateSyncFileRecord(id: string, updates: Partial<SyncFileRegistry>): Promise<SyncFileRegistry>;
   deleteSyncFilesByTask(taskId: string): Promise<number>;
+  
+  // Duplicate detection operations
+  createFileHash(hash: InsertFileHash): Promise<FileHash>;
+  findFilesByMetadata(userId: string, fileName: string, fileSize: number, provider?: string): Promise<FileHash[]>;
+  findFileByHash(userId: string, contentHash: string): Promise<FileHash | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1916,6 +1924,48 @@ class MemoryStorage implements IStorage {
       .filter(([, sf]) => sf.scheduledTaskId === taskId);
     toDelete.forEach(([id]) => this.syncFileRegistryMap.delete(id));
     return toDelete.length;
+  }
+
+  // Duplicate detection operations
+  async createFileHash(hash: InsertFileHash): Promise<FileHash> {
+    const [created] = await getDb()
+      .insert(fileHashes)
+      .values(hash)
+      .returning();
+    return created;
+  }
+
+  async findFilesByMetadata(userId: string, fileName: string, fileSize: number, provider?: string): Promise<FileHash[]> {
+    let query = getDb()
+      .select()
+      .from(fileHashes)
+      .where(and(
+        eq(fileHashes.userId, userId),
+        eq(fileHashes.fileName, fileName),
+        eq(fileHashes.fileSize, fileSize)
+      ));
+    
+    if (provider) {
+      query = query.where(and(
+        eq(fileHashes.userId, userId),
+        eq(fileHashes.fileName, fileName),
+        eq(fileHashes.fileSize, fileSize),
+        eq(fileHashes.provider, provider)
+      ));
+    }
+    
+    return await query;
+  }
+
+  async findFileByHash(userId: string, contentHash: string): Promise<FileHash | undefined> {
+    const [hash] = await getDb()
+      .select()
+      .from(fileHashes)
+      .where(and(
+        eq(fileHashes.userId, userId),
+        eq(fileHashes.contentHash, contentHash)
+      ));
+    return hash;
   }
 }
 

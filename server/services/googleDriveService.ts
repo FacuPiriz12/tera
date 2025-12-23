@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { storage } from '../storage';
+import { DuplicateDetectionService } from './duplicateDetectionService';
 
 export interface DriveFileInfo {
   id: string;
@@ -50,9 +51,11 @@ export class GoogleDriveService {
   private drive: any;
   private auth: any;
   private userId: string;
+  private duplicateDetection: DuplicateDetectionService;
 
   constructor(userId: string) {
     this.userId = userId;
+    this.duplicateDetection = new DuplicateDetectionService(userId);
     // Redirect URI is not critical for token refresh operations
     // It's set properly in routes.ts for initial OAuth flow
     const redirectUri = process.env.REPLIT_DEV_DOMAIN 
@@ -313,13 +316,22 @@ export class GoogleDriveService {
 
   /**
    * Upload file content to Google Drive with support for large files using resumable uploads
-   * Now supports metadata retention (modifiedTime, createdTime, description)
+   * Now supports metadata retention (modifiedTime, createdTime, description) and duplicate detection
    */
   async uploadFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata): Promise<DriveFileInfo> {
     await this.ensureValidToken();
     
     try {
       const fileSize = content.byteLength;
+      
+      // Check for duplicates using combined approach (metadata + hash)
+      const contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
+      const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'google');
+      
+      if (duplicateCheck.isDuplicate) {
+        console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), skipping upload`);
+        throw new Error(`Duplicate file: ${filename} already exists in your Google Drive`);
+      }
       const maxRegularUploadSize = 10 * 1024 * 1024; // 10MB threshold for resumable uploads
       const maxGoogleDriveSize = 5 * 1024 * 1024 * 1024 * 1024; // 5TB maximum for Google Drive
       
@@ -365,6 +377,11 @@ export class GoogleDriveService {
         media: media,
         fields: 'id,name,mimeType,size,webViewLink,parents,createdTime,modifiedTime'
       });
+
+      // Register file hash for future duplicate detection
+      if (response.data.id && response.data.size) {
+        await this.duplicateDetection.registerFile(filename, response.data.size, contentHash, 'google', response.data.id);
+      }
 
       return response.data;
     } catch (error) {
