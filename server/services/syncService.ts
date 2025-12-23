@@ -220,10 +220,22 @@ export class SyncService {
   }
 
   /**
-   * Copy file with metadata retention
+   * Copy file with metadata retention and duplicate handling
    * Preserves original modification time when transferring between providers
+   * Allows user to choose action on duplicate (skip, replace, or copy_with_suffix)
    */
-  private async copyFile(task: ScheduledTask, file: FileInfo): Promise<{ success: boolean; destFileId?: string; destFilePath?: string; error?: string }> {
+  private async copyFile(
+    task: ScheduledTask, 
+    file: FileInfo,
+    duplicateAction?: 'skip' | 'replace' | 'copy_with_suffix'
+  ): Promise<{ 
+    success: boolean; 
+    destFileId?: string; 
+    destFilePath?: string; 
+    error?: string;
+    isDuplicate?: boolean;
+    duplicateInfo?: any;
+  }> {
     try {
       const isTransfer = task.sourceProvider !== task.destProvider;
 
@@ -239,7 +251,7 @@ export class SyncService {
           return { success: true, destFilePath: copiedFile.path_display };
         }
       } else {
-        // Cross-platform transfer with metadata retention
+        // Cross-platform transfer with metadata retention and duplicate detection
         if (task.sourceProvider === 'google' && task.destProvider === 'dropbox') {
           const googleService = await this.getGoogleService();
           const dropboxService = await this.getDropboxService();
@@ -253,9 +265,36 @@ export class SyncService {
             console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
           }
           
-          const uploadedFile = await dropboxService.uploadFile(file.name, fileContent, destPath, metadata);
+          // Determine upload options based on duplicate action
+          const uploadOptions: any = {};
+          let uploadFileName = file.name;
           
-          return { success: true, destFilePath: destPath + '/' + file.name };
+          if (duplicateAction === 'skip') {
+            return { success: false, error: 'File skipped by user' };
+          }
+          if (duplicateAction === 'replace') {
+            uploadOptions.forceOverwrite = true;
+          }
+          if (duplicateAction === 'copy_with_suffix') {
+            const { name, ext } = this.parseFileName(file.name);
+            uploadFileName = `${name}_copy${ext}`;
+          }
+          
+          try {
+            const uploadedFile = await dropboxService.uploadFile(uploadFileName, fileContent, destPath, metadata, uploadOptions);
+            return { success: true, destFilePath: destPath + '/' + uploadFileName };
+          } catch (uploadError: any) {
+            // Handle duplicate detection error
+            if (uploadError.isDuplicate) {
+              return { 
+                success: false, 
+                isDuplicate: true, 
+                duplicateInfo: uploadError.duplicateInfo,
+                error: 'Duplicate file detected'
+              };
+            }
+            throw uploadError;
+          }
         } else if (task.sourceProvider === 'dropbox' && task.destProvider === 'google') {
           const googleService = await this.getGoogleService();
           const dropboxService = await this.getDropboxService();
@@ -268,15 +307,43 @@ export class SyncService {
             console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
           }
           
-          const uploadedFile = await googleService.uploadFile(
-            file.name,
-            fileContent,
-            task.destinationFolderId,
-            file.mimeType || 'application/octet-stream',
-            metadata
-          );
+          // Determine upload options based on duplicate action
+          const uploadOptions: any = {};
+          let uploadFileName = file.name;
           
-          return { success: true, destFileId: uploadedFile.id };
+          if (duplicateAction === 'skip') {
+            return { success: false, error: 'File skipped by user' };
+          }
+          if (duplicateAction === 'replace') {
+            uploadOptions.forceOverwrite = true;
+          }
+          if (duplicateAction === 'copy_with_suffix') {
+            const { name, ext } = this.parseFileName(file.name);
+            uploadFileName = `${name}_copy${ext}`;
+          }
+          
+          try {
+            const uploadedFile = await googleService.uploadFile(
+              uploadFileName,
+              fileContent,
+              task.destinationFolderId,
+              file.mimeType || 'application/octet-stream',
+              metadata,
+              uploadOptions
+            );
+            return { success: true, destFileId: uploadedFile.id };
+          } catch (uploadError: any) {
+            // Handle duplicate detection error
+            if (uploadError.isDuplicate) {
+              return { 
+                success: false, 
+                isDuplicate: true, 
+                duplicateInfo: uploadError.duplicateInfo,
+                error: 'Duplicate file detected'
+              };
+            }
+            throw uploadError;
+          }
         }
       }
 
@@ -284,6 +351,17 @@ export class SyncService {
     } catch (error: any) {
       return { success: false, error: error.message };
     }
+  }
+
+  private parseFileName(fileName: string): { name: string; ext: string } {
+    const lastDot = fileName.lastIndexOf('.');
+    if (lastDot === -1) {
+      return { name: fileName, ext: '' };
+    }
+    return {
+      name: fileName.substring(0, lastDot),
+      ext: fileName.substring(lastDot)
+    };
   }
 
   private extractFolderIdFromUrl(url: string): string | null {
