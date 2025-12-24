@@ -389,3 +389,40 @@ export const insertFileConflictSchema = createInsertSchema(fileConflicts).omit({
   updatedAt: true,
   resolvedAt: true,
 });
+
+// File versions for visual versioning history
+export const fileVersions = pgTable("file_versions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  
+  // File metadata
+  fileName: text("file_name").notNull(),
+  fileId: varchar("file_id").notNull(),
+  provider: varchar("provider").notNull(), // 'google' | 'dropbox'
+  filePath: text("file_path"),
+  
+  // Version info
+  versionNumber: integer("version_number").notNull(), // 1, 2, 3...
+  size: bigint("size", { mode: "number" }),
+  mimeType: varchar("mime_type"),
+  
+  // Change metadata
+  changeType: varchar("change_type").notNull(), // 'created' | 'modified' | 'synced' | 'copied' | 'transferred'
+  changedBy: varchar("changed_by"), // User ID or system
+  changeDetails: text("change_details"), // What changed
+  
+  // References
+  copyOperationId: varchar("copy_operation_id").references(() => copyOperations.id),
+  scheduledTaskId: varchar("scheduled_task_id").references(() => scheduledTasks.id),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type FileVersion = typeof fileVersions.$inferSelect;
+export type InsertFileVersion = typeof fileVersions.$inferInsert;
+
+export const insertFileVersionSchema = createInsertSchema(fileVersions).omit({
+  id: true,
+  createdAt: true,
+});

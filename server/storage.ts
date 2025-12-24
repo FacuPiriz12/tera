@@ -9,6 +9,7 @@ import {
   syncFileRegistry,
   fileHashes,
   fileConflicts,
+  fileVersions,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -29,6 +30,8 @@ import {
   type InsertFileHash,
   type FileConflict,
   type InsertFileConflict,
+  type FileVersion,
+  type InsertFileVersion,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -163,6 +166,10 @@ export interface IStorage {
   createFileHash(hash: InsertFileHash): Promise<FileHash>;
   findFilesByMetadata(userId: string, fileName: string, fileSize: number, provider?: string): Promise<FileHash[]>;
   findFileByHash(userId: string, contentHash: string): Promise<FileHash | undefined>;
+  
+  // File versioning operations
+  createFileVersion(version: InsertFileVersion): Promise<FileVersion>;
+  getFileVersions(userId: string, fileId: string): Promise<FileVersion[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2038,6 +2045,26 @@ class MemoryStorage implements IStorage {
       .where(eq(fileConflicts.id, conflictId))
       .returning();
     return result;
+  }
+
+  // File versioning methods
+  async createFileVersion(version: InsertFileVersion): Promise<FileVersion> {
+    const [result] = await getDb()
+      .insert(fileVersions)
+      .values(version)
+      .returning();
+    return result;
+  }
+
+  async getFileVersions(userId: string, fileId: string): Promise<FileVersion[]> {
+    return await getDb()
+      .select()
+      .from(fileVersions)
+      .where(and(
+        eq(fileVersions.userId, userId),
+        eq(fileVersions.fileId, fileId)
+      ))
+      .orderBy(desc(fileVersions.versionNumber));
   }
 }
 

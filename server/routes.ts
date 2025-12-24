@@ -3275,6 +3275,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // File versioning endpoint
+  app.get('/api/files/:fileId/versions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const versions = await storage.getFileVersions(userId, req.params.fileId);
+      res.json({ versions });
+    } catch (error: any) {
+      console.error("Error fetching file versions:", error);
+      res.status(500).json({ message: "Failed to fetch versions", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
