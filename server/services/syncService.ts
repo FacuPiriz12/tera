@@ -428,6 +428,166 @@ export class SyncService {
       return null;
     }
   }
+
+  /**
+   * Execute Mirror Sync - Bidirectional synchronization
+   * Syncs files in BOTH directions: source → dest AND dest → source
+   * Handles conflicts when files are modified on both sides
+   */
+  async executeMirrorSync(task: ScheduledTask): Promise<SyncResult> {
+    const startTime = Date.now();
+    const result: SyncResult = {
+      success: false,
+      filesScanned: 0,
+      filesNew: 0,
+      filesModified: 0,
+      filesCopied: 0,
+      filesSkipped: 0,
+      filesFailed: 0,
+      errors: [],
+      duration: 0,
+    };
+
+    try {
+      console.log(`🔀 Starting mirror sync for task: ${task.name} (${task.id})`);
+
+      // Get files from source
+      const sourceFiles = await this.listSourceFiles(task);
+      console.log(`📂 Source: ${sourceFiles.length} files`);
+
+      // Get files from destination
+      const destFiles = await this.listDestinationFiles(task);
+      console.log(`📂 Destination: ${destFiles.length} files`);
+
+      result.filesScanned = sourceFiles.length + destFiles.length;
+
+      // Create maps for quick lookup
+      const sourceMap = new Map(sourceFiles.map(f => [f.name, f]));
+      const destMap = new Map(destFiles.map(f => [f.name, f]));
+
+      // Phase 1: Source → Destination (copy new/modified from source)
+      for (const sourceFile of sourceFiles) {
+        try {
+          const destFile = destMap.get(sourceFile.name);
+          
+          if (!destFile) {
+            // New file in source
+            console.log(`✨ New file in source: ${sourceFile.name}`);
+            result.filesNew++;
+            
+            const copyResult = await this.copyFile(task, sourceFile, task.duplicateAction as 'skip' | 'replace' | 'copy_with_suffix');
+            if (copyResult.success) {
+              result.filesCopied++;
+            } else {
+              result.filesFailed++;
+              result.errors.push(`Failed to copy ${sourceFile.name}: ${copyResult.error}`);
+            }
+          } else if (this.isFileModified(sourceFile, { ...destFile, sourceContentHash: destFile.contentHash } as any)) {
+            // Modified file in source
+            console.log(`📝 Modified in source: ${sourceFile.name}`);
+            result.filesModified++;
+            
+            const copyResult = await this.copyFile(task, sourceFile, 'replace');
+            if (copyResult.success) {
+              result.filesCopied++;
+            } else {
+              result.filesFailed++;
+              result.errors.push(`Failed to update ${sourceFile.name}: ${copyResult.error}`);
+            }
+          } else {
+            result.filesSkipped++;
+          }
+        } catch (fileError: any) {
+          result.filesFailed++;
+          result.errors.push(`Error processing ${sourceFile.name}: ${fileError.message}`);
+          console.error(`❌ Error processing source file:`, fileError);
+        }
+      }
+
+      // Phase 2: Destination → Source (copy new/modified from dest that don't exist in source)
+      for (const destFile of destFiles) {
+        try {
+          const sourceFile = sourceMap.get(destFile.name);
+          
+          if (!sourceFile) {
+            // New file ONLY in destination
+            console.log(`✨ New file in destination: ${destFile.name}`);
+            result.filesNew++;
+            
+            // Reverse the copy direction
+            const reversedTask = { ...task, sourceProvider: task.destProvider, destProvider: task.sourceProvider };
+            const copyResult = await this.copyFile(reversedTask, destFile, task.duplicateAction as 'skip' | 'replace' | 'copy_with_suffix');
+            if (copyResult.success) {
+              result.filesCopied++;
+            } else {
+              result.filesFailed++;
+              result.errors.push(`Failed to sync ${destFile.name} back: ${copyResult.error}`);
+            }
+          }
+        } catch (fileError: any) {
+          result.filesFailed++;
+          result.errors.push(`Error processing destination file ${destFile.name}: ${fileError.message}`);
+          console.error(`❌ Error processing dest file:`, fileError);
+        }
+      }
+
+      result.success = result.filesFailed === 0;
+      result.duration = Math.floor((Date.now() - startTime) / 1000);
+
+      console.log(`✅ Mirror sync completed: ${result.filesCopied} synced, ${result.filesSkipped} skipped, ${result.filesFailed} failed`);
+      
+      return result;
+    } catch (error: any) {
+      result.errors.push(`Mirror sync failed: ${error.message}`);
+      result.duration = Math.floor((Date.now() - startTime) / 1000);
+      console.error(`❌ Mirror sync failed:`, error);
+      return result;
+    }
+  }
+
+  private async listDestinationFiles(task: ScheduledTask): Promise<FileInfo[]> {
+    const files: FileInfo[] = [];
+    
+    if (task.destProvider === 'google') {
+      const googleService = await this.getGoogleService();
+      const folderId = task.destinationFolderId || this.extractFolderIdFromUrl(task.sourceUrl);
+      
+      if (folderId && folderId !== 'root') {
+        const driveFiles = await googleService.listFolderContentsRecursive(folderId);
+        for (const file of driveFiles) {
+          if (file.mimeType !== 'application/vnd.google-apps.folder') {
+            files.push({
+              id: file.id,
+              name: file.name,
+              mimeType: file.mimeType,
+              size: file.size ? parseInt(file.size) : undefined,
+              modifiedTime: file.modifiedTime ? new Date(file.modifiedTime) : undefined,
+              contentHash: file.md5Checksum,
+            });
+          }
+        }
+      }
+    } else if (task.destProvider === 'dropbox') {
+      const dropboxService = await this.getDropboxService();
+      const folderPath = task.destinationFolderId === 'root' ? '' : task.destinationFolderId;
+      
+      const dropboxFiles = await dropboxService.listFolderContentsRecursive(folderPath);
+      for (const file of dropboxFiles) {
+        if (file['.tag'] === 'file') {
+          files.push({
+            id: file.id,
+            name: file.name,
+            path: file.path_display,
+            size: file.size,
+            modifiedTime: file.client_modified ? new Date(file.client_modified) : undefined,
+            contentHash: file.content_hash,
+          });
+        }
+      }
+    }
+
+    return files;
+  }
 }
 
 let syncServiceInstances = new Map<string, SyncService>();

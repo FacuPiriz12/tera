@@ -2994,6 +2994,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Execute mirror sync for a scheduled task (bidirectional)
+  app.post('/api/scheduled-tasks/:id/mirror-sync', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // Check if task is already running
+      if (task.lastRunStatus === 'running') {
+        return res.status(409).json({ message: "Task is already running" });
+      }
+
+      const syncService = new SyncService(userId);
+      const startTime = Date.now();
+
+      // Execute mirror sync in background
+      const result = await syncService.executeMirrorSync(task);
+
+      // Update task with results
+      await storage.updateScheduledTask(task.id, {
+        lastRunAt: new Date(),
+        lastRunStatus: result.success ? 'success' : 'failed',
+        lastRunError: result.errors.length > 0 ? result.errors[0] : undefined,
+        totalRuns: (task.totalRuns || 0) + 1,
+        successfulRuns: result.success ? (task.successfulRuns || 0) + 1 : task.successfulRuns,
+        failedRuns: !result.success ? (task.failedRuns || 0) + 1 : task.failedRuns,
+      });
+
+      // Create task run record
+      const taskRun = await storage.createScheduledTaskRun({
+        scheduledTaskId: task.id,
+        status: result.success ? 'completed' : 'failed',
+        startedAt: new Date(startTime),
+        completedAt: new Date(),
+        duration: result.duration,
+        filesProcessed: result.filesNew + result.filesModified,
+        filesFailed: result.filesFailed,
+        bytesTransferred: 0,
+        errorMessage: result.errors.length > 0 ? result.errors.join('; ') : undefined,
+      });
+
+      res.json({
+        success: result.success,
+        filesNew: result.filesNew,
+        filesModified: result.filesModified,
+        filesCopied: result.filesCopied,
+        filesSkipped: result.filesSkipped,
+        filesFailed: result.filesFailed,
+        duration: result.duration,
+        errors: result.errors,
+        taskRunId: taskRun.id,
+        message: 'Mirror sync completed - files synchronized in both directions'
+      });
+    } catch (error: any) {
+      console.error("Error executing mirror sync:", error);
+      res.status(500).json({ message: "Failed to execute mirror sync", error: error.message });
+    }
+  });
+
+  // Get mirror sync status and file comparison
+  app.get('/api/scheduled-tasks/:id/mirror-sync/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // Get recent task runs
+      const runs = await storage.getTaskRuns(task.id, 5);
+      
+      const status = {
+        taskId: task.id,
+        taskName: task.name,
+        syncMode: task.syncMode,
+        isMirrorSync: task.operationType === 'transfer',
+        sourceProvider: task.sourceProvider,
+        destProvider: task.destProvider,
+        lastRunAt: task.lastRunAt,
+        lastRunStatus: task.lastRunStatus,
+        lastRunError: task.lastRunError,
+        totalRuns: task.totalRuns || 0,
+        successfulRuns: task.successfulRuns || 0,
+        failedRuns: task.failedRuns || 0,
+        successRate: task.totalRuns ? ((task.successfulRuns || 0) / task.totalRuns * 100).toFixed(1) + '%' : 'N/A',
+        recentRuns: runs.map(r => ({
+          id: r.id,
+          status: r.status,
+          filesProcessed: r.filesProcessed,
+          filesFailed: r.filesFailed,
+          duration: r.duration,
+          startedAt: r.startedAt,
+          completedAt: r.completedAt,
+        }))
+      };
+
+      res.json(status);
+    } catch (error: any) {
+      console.error("Error fetching mirror sync status:", error);
+      res.status(500).json({ message: "Failed to fetch mirror sync status", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
