@@ -92,6 +92,58 @@ app.use((req, res, next) => {
         });
         
         console.log('✅ Development data seeded: Test task created');
+        
+        // Create sample file versions
+        const fileId = 'file_test_001';
+        const existingVersions = await storage.getFileVersions(testUserId, fileId);
+        if (existingVersions.length === 0) {
+          // V1 - Created
+          await storage.createFileVersion({
+            userId: testUserId,
+            fileName: 'Documento importante.pdf',
+            fileId,
+            provider: 'google',
+            filePath: '/docs/Documento importante.pdf',
+            versionNumber: 1,
+            size: 524288,
+            mimeType: 'application/pdf',
+            changeType: 'created',
+            changedBy: testUserId,
+            changeDetails: 'Documento original creado',
+          });
+          
+          // V2 - Modified
+          await storage.createFileVersion({
+            userId: testUserId,
+            fileName: 'Documento importante.pdf',
+            fileId,
+            provider: 'google',
+            filePath: '/docs/Documento importante.pdf',
+            versionNumber: 2,
+            size: 645120,
+            mimeType: 'application/pdf',
+            changeType: 'modified',
+            changedBy: testUserId,
+            changeDetails: 'Agregados 3 párrafos al capítulo 2',
+          });
+          
+          // V3 - Synced
+          await storage.createFileVersion({
+            userId: testUserId,
+            fileName: 'Documento importante.pdf',
+            fileId,
+            provider: 'google',
+            filePath: '/docs/Documento importante.pdf',
+            versionNumber: 3,
+            size: 645120,
+            mimeType: 'application/pdf',
+            changeType: 'synced',
+            changedBy: 'system',
+            changeDetails: 'Sincronizado automáticamente',
+          });
+          
+          console.log('✅ File versions seeded: 3 versions created');
+        }
       }
     } catch (error) {
       console.error('Dev seed error (non-critical):', error);

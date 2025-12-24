@@ -25,6 +25,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminOperations from "@/pages/admin/Operations";
 import ShareInbox from "@/pages/ShareInbox";
 import Tasks from "@/pages/Tasks";
+import FileVersions from "@/pages/FileVersions";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
@@ -83,6 +84,9 @@ function Router() {
       </Route>
       <Route path="/analytics">
         {() => isLoggedIn ? <Analytics /> : <Login />}
+      </Route>
+      <Route path="/files/versions">
+        {() => isLoggedIn ? <FileVersions /> : <Login />}
       </Route>
       <Route path="/settings">
         {() => isLoggedIn ? <Settings /> : <Login />}

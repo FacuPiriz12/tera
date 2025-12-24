@@ -3303,15 +3303,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File versioning endpoint
+  // File versioning endpoint - get all versions
   app.get('/api/files/:fileId/versions', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const versions = await storage.getFileVersions(userId, req.params.fileId);
-      res.json({ versions });
+      res.json(versions);
     } catch (error: any) {
       console.error("Error fetching file versions:", error);
       res.status(500).json({ message: "Failed to fetch versions", error: error.message });
+    }
+  });
+
+  // File versioning endpoint - restore to previous version
+  app.post('/api/files/:fileId/restore/:versionId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { fileId, versionId } = req.params;
+      
+      // Get the version to restore
+      const versions = await storage.getFileVersions(userId, fileId);
+      const versionToRestore = versions.find(v => v.id === versionId);
+      
+      if (!versionToRestore) {
+        return res.status(404).json({ message: "Version not found" });
+      }
+
+      // Create a new version entry recording this restore action
+      const newVersion = await storage.createFileVersion({
+        userId,
+        fileName: versionToRestore.fileName,
+        fileId,
+        provider: versionToRestore.provider,
+        filePath: versionToRestore.filePath,
+        versionNumber: Math.max(...versions.map(v => v.versionNumber)) + 1,
+        size: versionToRestore.size,
+        mimeType: versionToRestore.mimeType,
+        changeType: 'modified',
+        changedBy: userId,
+        changeDetails: `Restored to version ${versionToRestore.versionNumber}`,
+      });
+
+      res.json(newVersion);
+    } catch (error: any) {
+      console.error("Error restoring file version:", error);
+      res.status(500).json({ message: "Failed to restore version", error: error.message });
     }
   });
 
