@@ -116,6 +116,20 @@ export class SyncService {
                   destFilePath: retryResult.destFilePath || null,
                   syncStatus: 'synced',
                 });
+                // Create version record
+                await storage.createFileVersion({
+                  userId: task.userId,
+                  fileName: file.name,
+                  fileId: retryResult.destFileId || file.id,
+                  provider: task.destProvider,
+                  filePath: retryResult.destFilePath || file.path || null,
+                  versionNumber: 1,
+                  size: file.size || null,
+                  mimeType: file.mimeType || null,
+                  changeType: 'synced',
+                  changeDetails: `Sincronizado desde ${task.sourceProvider} (${duplicateAction})`,
+                  scheduledTaskId: task.id,
+                });
                 result.filesCopied++;
               } else {
                 result.filesFailed++;
@@ -140,6 +154,20 @@ export class SyncService {
                 destFilePath: copyResult.destFilePath || null,
                 syncStatus: 'synced',
               });
+              // Create version record
+              await storage.createFileVersion({
+                userId: task.userId,
+                fileName: file.name,
+                fileId: copyResult.destFileId || file.id,
+                provider: task.destProvider,
+                filePath: copyResult.destFilePath || file.path || null,
+                versionNumber: 1,
+                size: file.size || null,
+                mimeType: file.mimeType || null,
+                changeType: 'synced',
+                changeDetails: `Sincronizado desde ${task.sourceProvider}`,
+                scheduledTaskId: task.id,
+              });
               result.filesCopied++;
             } else {
               result.filesFailed++;
@@ -161,6 +189,22 @@ export class SyncService {
                   destFilePath: copyResult.destFilePath || null,
                   lastSyncedAt: new Date(),
                   syncStatus: 'synced',
+                });
+                // Create version record for modified file
+                const existingVersions = await storage.getFileVersions(task.userId, copyResult.destFileId || file.id);
+                const nextVersion = (existingVersions.length > 0 ? Math.max(...existingVersions.map(v => v.versionNumber || 0)) : 0) + 1;
+                await storage.createFileVersion({
+                  userId: task.userId,
+                  fileName: file.name,
+                  fileId: copyResult.destFileId || file.id,
+                  provider: task.destProvider,
+                  filePath: copyResult.destFilePath || file.path || null,
+                  versionNumber: nextVersion,
+                  size: file.size || null,
+                  mimeType: file.mimeType || null,
+                  changeType: 'modified',
+                  changeDetails: `Actualizado desde ${task.sourceProvider} - Cambios detectados`,
+                  scheduledTaskId: task.id,
                 });
                 result.filesCopied++;
               } else {

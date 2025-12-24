@@ -2527,6 +2527,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               duration
             });
 
+            // Create version record
+            await storage.createFileVersion({
+              userId,
+              fileName: result.name!,
+              fileId: result.id!,
+              provider: 'google',
+              versionNumber: 1,
+              size: result.size ? Number(result.size) : null,
+              mimeType: result.mimeType,
+              changeType: 'copied',
+              changeDetails: 'Copiado desde compartir archivo',
+              copyOperationId: operation.id,
+            });
+
             // Save to cloud files
             await storage.createCloudFile({
               userId,
@@ -2566,6 +2580,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               totalFiles: 1,
               completedFiles: 1,
               duration
+            });
+
+            // Create version record
+            await storage.createFileVersion({
+              userId,
+              fileName: result.name,
+              fileId: result.id,
+              provider: 'dropbox',
+              filePath: result.path_display,
+              versionNumber: 1,
+              size: result.size || null,
+              changeType: 'copied',
+              changeDetails: 'Copiado desde compartir archivo',
+              copyOperationId: operation.id,
             });
 
             // Save to cloud files
