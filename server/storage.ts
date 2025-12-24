@@ -2002,6 +2002,43 @@ class MemoryStorage implements IStorage {
       ));
     return hash;
   }
+
+  // File conflict methods (for mirror sync)
+  async createFileConflict(conflict: InsertFileConflict): Promise<FileConflict> {
+    const [result] = await getDb()
+      .insert(fileConflicts)
+      .values(conflict)
+      .returning();
+    return result;
+  }
+
+  async getFileConflicts(taskId: string): Promise<FileConflict[]> {
+    return await getDb()
+      .select()
+      .from(fileConflicts)
+      .where(and(
+        eq(fileConflicts.scheduledTaskId, taskId),
+        isNull(fileConflicts.resolvedAt)
+      ));
+  }
+
+  async resolveFileConflict(
+    conflictId: string,
+    resolution: 'keep_newer' | 'keep_source' | 'keep_target',
+    details?: string
+  ): Promise<FileConflict> {
+    const [result] = await getDb()
+      .update(fileConflicts)
+      .set({
+        resolution,
+        resolvedAt: new Date(),
+        resolutionDetails: details || '',
+        updatedAt: new Date(),
+      })
+      .where(eq(fileConflicts.id, conflictId))
+      .returning();
+    return result;
+  }
 }
 
 // Always use DatabaseStorage - database is configured externally (Supabase via Render)
