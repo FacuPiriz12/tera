@@ -84,7 +84,12 @@ const SYNC_MODES = [
   { 
     value: "cumulative_sync", 
     label: "Sincronización acumulativa", 
-    description: "Solo copia archivos nuevos o modificados (nunca elimina)" 
+    description: "Solo copia archivos nuevos o modificados desde la última sincronización" 
+  },
+  { 
+    value: "mirror_sync", 
+    label: "Espejo bidireccional (Mirror Sync)", 
+    description: "Sincronización automática en ambas direcciones. Los cambios en cualquier lado se reflejan al otro" 
   },
 ];
 
@@ -425,7 +430,17 @@ export default function Tasks() {
         </div>
         {formData.syncMode === 'cumulative_sync' && (
           <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
-            La sincronización acumulativa detecta archivos nuevos o modificados y solo copia esos. Los archivos que borres en el origen seguirán existiendo en el destino.
+            ✓ Solo copia archivos nuevos o modificados<br/>
+            ✓ Ahorra ancho de banda<br/>
+            ⚠️ Los archivos que borres en origen seguirán en destino
+          </div>
+        )}
+        {formData.syncMode === 'mirror_sync' && (
+          <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 p-2 rounded">
+            ↔️ Sincronización bidireccional automática<br/>
+            ✓ Cambios en Drive se reflejan en Dropbox y viceversa<br/>
+            ⚠️ Puede detectar y resolver conflictos<br/>
+            ⏰ Se ejecuta en el horario programado
           </div>
         )}
       </div>
@@ -626,6 +641,12 @@ export default function Tasks() {
             />
           </div>
         </div>
+      </div>
+
+      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-3">
+        <p className="text-xs text-purple-700 dark:text-purple-300 font-medium">
+          💡 Tip: Con Sincronización Selectiva, solo sincronizarás las carpetas que elijas, ahorrando tiempo y espacio.
+        </p>
       </div>
 
       <div className="space-y-3">
