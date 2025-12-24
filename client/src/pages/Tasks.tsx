@@ -1167,8 +1167,7 @@ function SelectiveSyncDialog({
                 return (
                   <div
                     key={folder.id}
-                    draggable
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
                       isSelected
                         ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
                         : isExcluded
