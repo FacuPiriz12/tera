@@ -352,3 +352,40 @@ export const fileHashes = pgTable("file_hashes", {
 
 export type FileHash = typeof fileHashes.$inferSelect;
 export type InsertFileHash = typeof fileHashes.$inferInsert;
+
+// File conflicts for Mirror Sync - tracks conflicts when file changed on both sides
+export const fileConflicts = pgTable("file_conflicts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scheduledTaskId: varchar("scheduled_task_id").notNull().references(() => scheduledTasks.id, { onDelete: 'cascade' }),
+  
+  // File info
+  fileName: text("file_name").notNull(),
+  fileId: varchar("file_id").notNull(),
+  
+  // Versions
+  sourceVersion: jsonb("source_version").notNull(), // { fileId, modifiedAt, size }
+  destVersion: jsonb("dest_version").notNull(), // { fileId, modifiedAt, size }
+  
+  // Resolution
+  resolvedAt: timestamp("resolved_at"),
+  resolution: varchar("resolution"), // 'keep_newer' | 'keep_source' | 'keep_target' | 'manual'
+  resolutionDetails: text("resolution_details"), // notes on how it was resolved
+  
+  // Versioning - store backup of losing version
+  backupFileId: varchar("backup_file_id"), // ID of archived version
+  backupProvider: varchar("backup_provider"), // where backup is stored
+  backupPath: text("backup_path"), // path to backup file
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type FileConflict = typeof fileConflicts.$inferSelect;
+export type InsertFileConflict = typeof fileConflicts.$inferInsert;
+
+export const insertFileConflictSchema = createInsertSchema(fileConflicts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  resolvedAt: true,
+});

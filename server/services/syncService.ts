@@ -458,6 +458,24 @@ export class SyncService {
   }
 
   /**
+   * Detect if file has conflicting changes (modified on BOTH sides)
+   */
+  private async detectConflict(sourceFile: FileInfo, destFile: FileInfo, task: ScheduledTask): Promise<boolean> {
+    // Conflict = both files modified AND have different timestamps
+    const sourceModified = sourceFile.modifiedTime;
+    const destModified = destFile.modifiedTime;
+    
+    if (!sourceModified || !destModified) return false;
+    
+    const sourceTime = sourceModified.getTime();
+    const destTime = destModified.getTime();
+    const timeDiff = Math.abs(sourceTime - destTime);
+    
+    // If timestamps differ by more than 1 minute, consider it a conflict
+    return timeDiff > 60000;
+  }
+
+  /**
    * Execute Mirror Sync - Bidirectional synchronization
    * Syncs files in BOTH directions: source → dest AND dest → source
    * Handles conflicts when files are modified on both sides
@@ -511,16 +529,41 @@ export class SyncService {
               result.errors.push(`Failed to copy ${sourceFile.name}: ${copyResult.error}`);
             }
           } else if (this.isFileModified(sourceFile, { ...destFile, sourceContentHash: destFile.contentHash } as any)) {
-            // Modified file in source
-            console.log(`📝 Modified in source: ${sourceFile.name}`);
-            result.filesModified++;
+            // Check for conflict (modified on both sides)
+            const hasConflict = await this.detectConflict(sourceFile, destFile, task);
             
-            const copyResult = await this.copyFile(task, sourceFile, 'replace');
-            if (copyResult.success) {
-              result.filesCopied++;
+            if (hasConflict) {
+              // Save conflict for user to resolve
+              console.log(`⚠️ Conflict detected: ${sourceFile.name}`);
+              await storage.createFileConflict({
+                scheduledTaskId: task.id,
+                fileName: sourceFile.name,
+                fileId: sourceFile.id,
+                sourceVersion: {
+                  fileId: sourceFile.id,
+                  modifiedAt: sourceFile.modifiedTime,
+                  size: sourceFile.size
+                },
+                destVersion: {
+                  fileId: destFile.id,
+                  modifiedAt: destFile.modifiedTime,
+                  size: destFile.size
+                },
+                resolution: undefined,
+              } as any);
+              result.filesSkipped++;
             } else {
-              result.filesFailed++;
-              result.errors.push(`Failed to update ${sourceFile.name}: ${copyResult.error}`);
+              // Modified only in source - safe to update
+              console.log(`📝 Modified in source: ${sourceFile.name}`);
+              result.filesModified++;
+              
+              const copyResult = await this.copyFile(task, sourceFile, 'replace');
+              if (copyResult.success) {
+                result.filesCopied++;
+              } else {
+                result.filesFailed++;
+                result.errors.push(`Failed to update ${sourceFile.name}: ${copyResult.error}`);
+              }
             }
           } else {
             result.filesSkipped++;

@@ -3060,6 +3060,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get file conflicts from last mirror sync
+  app.get('/api/scheduled-tasks/:id/conflicts', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) return res.status(404).json({ message: "Task not found" });
+      if (task.userId !== userId) return res.status(403).json({ message: "Not authorized" });
+
+      const conflicts = await storage.getFileConflicts(task.id);
+      res.json({ conflicts, count: conflicts.length });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to fetch conflicts", error: error.message });
+    }
+  });
+
+  // Resolve file conflict
+  app.post('/api/scheduled-tasks/:id/conflicts/:conflictId/resolve', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) return res.status(404).json({ message: "Task not found" });
+      if (task.userId !== userId) return res.status(403).json({ message: "Not authorized" });
+
+      const { resolution, details } = req.body; // 'keep_newer' | 'keep_source' | 'keep_target'
+      const resolved = await storage.resolveFileConflict(req.params.conflictId, resolution, details);
+      
+      res.json({ success: true, conflict: resolved, message: `Conflict resolved: ${resolution}` });
+    } catch (error: any) {
+      res.status(500).json({ message: "Failed to resolve conflict", error: error.message });
+    }
+  });
+
   // Get mirror sync status and file comparison
   app.get('/api/scheduled-tasks/:id/mirror-sync/status', isAuthenticated, async (req: any, res) => {
     try {

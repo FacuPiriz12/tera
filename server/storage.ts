@@ -8,6 +8,7 @@ import {
   scheduledTaskRuns,
   syncFileRegistry,
   fileHashes,
+  fileConflicts,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -26,6 +27,8 @@ import {
   type InsertSyncFileRegistry,
   type FileHash,
   type InsertFileHash,
+  type FileConflict,
+  type InsertFileConflict,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -1879,6 +1882,38 @@ class MemoryStorage implements IStorage {
     }
     const updated = { ...existing, ...updates };
     this.scheduledTaskRunsMap.set(id, updated);
+    return updated;
+  }
+
+  // File conflicts (for mirror sync conflict resolution)
+  private fileConflictsMap: Map<string, FileConflict> = new Map();
+
+  async createFileConflict(conflict: InsertFileConflict): Promise<FileConflict> {
+    const id = crypto.randomUUID();
+    const fileConflict: FileConflict = {
+      id,
+      ...conflict,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.fileConflictsMap.set(id, fileConflict);
+    return fileConflict;
+  }
+
+  async getFileConflicts(taskId: string): Promise<FileConflict[]> {
+    return Array.from(this.fileConflictsMap.values())
+      .filter(fc => fc.scheduledTaskId === taskId && !fc.resolvedAt);
+  }
+
+  async resolveFileConflict(
+    conflictId: string,
+    resolution: 'keep_newer' | 'keep_source' | 'keep_target',
+    details?: string
+  ): Promise<FileConflict> {
+    const conflict = this.fileConflictsMap.get(conflictId);
+    if (!conflict) throw new Error('Conflict not found');
+    const updated = { ...conflict, resolution, resolvedAt: new Date(), resolutionDetails: details || '', updatedAt: new Date() };
+    this.fileConflictsMap.set(conflictId, updated);
     return updated;
   }
 
