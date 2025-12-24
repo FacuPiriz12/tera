@@ -44,7 +44,7 @@ export default function ConnectionWarningBanner() {
           {t('dashboard.noAccountConnected')}{" "}
           <Link 
             href="/integrations" 
-            className="font-medium text-primary hover:underline"
+            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
           >
             {t('dashboard.integrations')}
           </Link>{" "}
