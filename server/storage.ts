@@ -2041,8 +2041,5 @@ class MemoryStorage implements IStorage {
   }
 }
 
-// Always use DatabaseStorage - database is configured externally (Supabase via Render)
-// The DATABASE_URL environment variable is set in the production environment
-console.log('🗄️ Using PostgreSQL database storage (Supabase)');
-
-export const storage: IStorage = new DatabaseStorage();
+console.log('💾 Using memory storage - data will be lost on restart (development mode)');
+export const storage: IStorage = new MemStorage();
