@@ -966,8 +966,21 @@ interface SelectiveSyncFolder {
   id: string;
   name: string;
   type: string;
+  size?: number;
   selected?: boolean;
   excluded?: boolean;
+}
+
+function formatFileSize(bytes?: number): string {
+  if (!bytes) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let size = bytes;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex++;
+  }
+  return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
 
 function SelectiveSyncDialog({
@@ -986,6 +999,7 @@ function SelectiveSyncDialog({
   const [excludedFolders, setExcludedFolders] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [sortBy, setSortBy] = useState<'name' | 'size'>('name');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -1018,26 +1032,39 @@ function SelectiveSyncDialog({
     }
   };
 
+  const sortedFolders = [...folders].sort((a, b) => {
+    if (sortBy === 'size') {
+      return (b.size || 0) - (a.size || 0);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
   const toggleFolderSelection = (folderId: string) => {
     const newSelected = new Set(selectedFolders);
+    const newExcluded = new Set(excludedFolders);
+    
     if (newSelected.has(folderId)) {
       newSelected.delete(folderId);
     } else {
       newSelected.add(folderId);
-      excludedFolders.delete(folderId);
+      newExcluded.delete(folderId);
     }
     setSelectedFolders(newSelected);
+    setExcludedFolders(newExcluded);
   };
 
   const toggleFolderExclusion = (folderId: string) => {
+    const newSelected = new Set(selectedFolders);
     const newExcluded = new Set(excludedFolders);
+    
     if (newExcluded.has(folderId)) {
       newExcluded.delete(folderId);
     } else {
       newExcluded.add(folderId);
-      selectedFolders.delete(folderId);
+      newSelected.delete(folderId);
     }
     setExcludedFolders(newExcluded);
+    setSelectedFolders(newSelected);
   };
 
   const handleSave = async () => {
@@ -1097,48 +1124,91 @@ function SelectiveSyncDialog({
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+          <div className="space-y-3 max-h-[450px] overflow-y-auto">
             <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-              Selecciona "Incluir" para sincronizar solo esas carpetas, o "Excluir" para omitirlas.
+              ✓ Incluir = sincronizar solo esas carpetas | ✗ Excluir = omitir esas carpetas
             </div>
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSortBy('name')}
+                className={`text-xs px-3 py-1 rounded transition-colors ${
+                  sortBy === 'name'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+                data-testid="button-sort-by-name"
+              >
+                Nombre
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortBy('size')}
+                className={`text-xs px-3 py-1 rounded transition-colors ${
+                  sortBy === 'size'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+                data-testid="button-sort-by-size"
+              >
+                Tamaño
+              </button>
+              <span className="text-xs text-muted-foreground flex items-center ml-auto">
+                {selectedFolders.size + excludedFolders.size} de {folders.length}
+              </span>
+            </div>
+
             <div className="space-y-2">
-              {folders.map((folder) => (
-                <div
-                  key={folder.id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                  data-testid={`folder-item-${folder.id}`}
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{folder.name}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => toggleFolderSelection(folder.id)}
-                      className={`px-2 py-1 text-xs rounded border transition-colors ${
-                        selectedFolders.has(folder.id)
-                          ? 'bg-green-100 border-green-300 text-green-700'
-                          : 'border-gray-300 text-gray-600 hover:border-green-300'
-                      }`}
-                      data-testid={`button-select-folder-${folder.id}`}
-                    >
-                      Incluir
-                    </button>
+              {sortedFolders.map((folder) => {
+                const isSelected = selectedFolders.has(folder.id);
+                const isExcluded = excludedFolders.has(folder.id);
+                
+                return (
+                  <div
+                    key={folder.id}
+                    draggable
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+                        : isExcluded
+                        ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'
+                        : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    }`}
+                    data-testid={`folder-item-${folder.id}`}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleFolderSelection(folder.id)}
+                        className="w-4 h-4 rounded"
+                        data-testid={`checkbox-select-${folder.id}`}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{folder.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(folder.size)}
+                        </p>
+                      </div>
+                    </div>
+                    
                     <button
                       type="button"
                       onClick={() => toggleFolderExclusion(folder.id)}
-                      className={`px-2 py-1 text-xs rounded border transition-colors ${
-                        excludedFolders.has(folder.id)
-                          ? 'bg-red-100 border-red-300 text-red-700'
-                          : 'border-gray-300 text-gray-600 hover:border-red-300'
+                      className={`px-2 py-1 text-xs rounded transition-colors flex-shrink-0 ${
+                        isExcluded
+                          ? 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          : 'border border-gray-300 text-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'
                       }`}
+                      title={isExcluded ? 'Incluir esta carpeta' : 'Excluir esta carpeta'}
                       data-testid={`button-exclude-folder-${folder.id}`}
                     >
-                      Excluir
+                      {isExcluded ? '✗' : '○'}
                     </button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

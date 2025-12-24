@@ -3176,6 +3176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: f.id,
             name: f.name,
             type: 'folder',
+            size: f.size || 0,
             selected: task.selectedFolderIds?.includes(f.id) || false,
             excluded: task.excludedFolderIds?.includes(f.id) || false,
           }));
@@ -3188,6 +3189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: f.name,
             path: f.path_display,
             type: 'folder',
+            size: f.size || 0,
             selected: task.selectedFolderIds?.includes(f.id) || false,
             excluded: task.excludedFolderIds?.includes(f.id) || false,
           }));
@@ -3204,6 +3206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: f.id,
             name: f.name,
             type: 'folder',
+            size: f.size || 0,
             selected: task.selectedFolderIds?.includes(f.id) || false,
             excluded: task.excludedFolderIds?.includes(f.id) || false,
           }));
@@ -3216,6 +3219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: f.name,
             path: f.path_display,
             type: 'folder',
+            size: f.size || 0,
             selected: task.selectedFolderIds?.includes(f.id) || false,
             excluded: task.excludedFolderIds?.includes(f.id) || false,
           }));
