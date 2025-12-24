@@ -1968,6 +1968,26 @@ class MemoryStorage implements IStorage {
     return toDelete.length;
   }
 
+  // File versioning operations
+  private fileVersionsMap: Map<string, FileVersion> = new Map();
+
+  async createFileVersion(version: InsertFileVersion): Promise<FileVersion> {
+    const id = crypto.randomUUID();
+    const fileVersion: FileVersion = {
+      id,
+      ...version,
+      createdAt: new Date(),
+    };
+    this.fileVersionsMap.set(id, fileVersion);
+    return fileVersion;
+  }
+
+  async getFileVersions(userId: string, fileId: string): Promise<FileVersion[]> {
+    return Array.from(this.fileVersionsMap.values())
+      .filter(fv => fv.userId === userId && fv.fileId === fileId)
+      .sort((a, b) => (b.versionNumber || 0) - (a.versionNumber || 0));
+  }
+
   // Duplicate detection operations
   async createFileHash(hash: InsertFileHash): Promise<FileHash> {
     const [created] = await getDb()
