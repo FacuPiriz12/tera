@@ -50,7 +50,8 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { apiRequest } from "@/lib/queryClient";
-import type { ScheduledTask } from "@shared/schema";
+import SyncStatsCard from "@/components/SyncStatsCard";
+import type { ScheduledTask, ScheduledTaskRun } from "@shared/schema";
 
 const DAYS_OF_WEEK = [
   { value: 0, label: "Domingo" },
@@ -152,11 +153,23 @@ export default function Tasks() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null);
+  const [selectedTaskForStats, setSelectedTaskForStats] = useState<string | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(defaultFormData);
 
   const { data: tasks = [], isLoading } = useQuery<ScheduledTask[]>({
     queryKey: ["/api/scheduled-tasks"],
     refetchInterval: 30000,
+  });
+
+  const { data: lastRun, isLoading: isLoadingRun } = useQuery<ScheduledTaskRun | null>({
+    queryKey: ["/api/scheduled-tasks", selectedTaskForStats, "runs"],
+    queryFn: async () => {
+      if (!selectedTaskForStats) return null;
+      const res = await apiRequest(`/api/scheduled-tasks/${selectedTaskForStats}/runs?limit=1`);
+      const runs = await res.json();
+      return runs && runs.length > 0 ? runs[0] : null;
+    },
+    enabled: !!selectedTaskForStats,
   });
 
   const createMutation = useMutation({
@@ -814,8 +827,13 @@ export default function Tasks() {
                         
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" data-testid={`button-task-actions-${task.id}`}>
-                              <ChevronDown className="w-4 h-4" />
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSelectedTaskForStats(selectedTaskForStats === task.id ? null : task.id)}
+                              data-testid={`button-task-actions-${task.id}`}
+                            >
+                              <ChevronDown className={`w-4 h-4 transition-transform ${selectedTaskForStats === task.id ? 'rotate-180' : ''}`} />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -922,6 +940,21 @@ export default function Tasks() {
                         {task.sourceName && <span>• {task.sourceName}</span>}
                       </div>
                     </CardContent>
+
+                    {selectedTaskForStats === task.id && lastRun && (
+                      <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">
+                        {isLoadingRun ? (
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          </div>
+                        ) : (
+                          <SyncStatsCard
+                            taskRun={lastRun}
+                            syncMode={task.syncMode || 'copy'}
+                          />
+                        )}
+                      </div>
+                    )}
                   </Card>
                 ))}
               </div>
