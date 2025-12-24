@@ -12,8 +12,6 @@ import type { ScheduledTaskRun } from "@shared/schema";
 interface SyncStatsCardProps {
   taskRun: ScheduledTaskRun;
   syncMode: string;
-  filesFailed?: number;
-  filesSkipped?: number;
 }
 
 // Función auxiliar para formatear bytes a GB/MB
@@ -42,18 +40,13 @@ function formatDuration(seconds: number): string {
 
 export default function SyncStatsCard({
   taskRun,
-  syncMode,
-  filesFailed = 0,
-  filesSkipped = 0
+  syncMode
 }: SyncStatsCardProps) {
-  // Calcular datos del run
-  const filesNew = taskRun.filesProcessed || 0;
+  // Datos del run
+  const filesProcessed = taskRun.filesProcessed || 0;
+  const filesFailed = taskRun.filesFailed || 0;
   const bytesTransferred = taskRun.bytesTransferred || 0;
   const duration = taskRun.duration || 0;
-  
-  // Calcular ahorro estimado si es cumulative sync
-  // En un sync acumulativo, el ahorro es evitar transferir archivos ya sincronizados
-  const estimatedSavings = filesSkipped * (bytesTransferred / Math.max(filesNew, 1));
   
   const statusColor = taskRun.status === 'completed' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
   const statusTextColor = taskRun.status === 'completed' ? 'text-green-700' : 'text-red-700';
@@ -76,16 +69,9 @@ export default function SyncStatsCard({
         {/* Fila 1: Archivos procesados */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1 p-3 bg-white rounded-lg">
-            <p className="text-xs text-muted-foreground font-medium">Nuevos</p>
-            <p className="text-2xl font-bold text-blue-600">{filesNew}</p>
+            <p className="text-xs text-muted-foreground font-medium">Procesados</p>
+            <p className="text-2xl font-bold text-blue-600">{filesProcessed}</p>
           </div>
-          
-          {filesSkipped > 0 && (
-            <div className="space-y-1 p-3 bg-white rounded-lg">
-              <p className="text-xs text-muted-foreground font-medium">Omitidos</p>
-              <p className="text-2xl font-bold text-yellow-600">{filesSkipped}</p>
-            </div>
-          )}
           
           {filesFailed > 0 && (
             <div className="space-y-1 p-3 bg-white rounded-lg">
@@ -98,33 +84,14 @@ export default function SyncStatsCard({
             <p className="text-xs text-muted-foreground font-medium">Duración</p>
             <p className="text-lg font-bold text-purple-600">{formatDuration(duration)}</p>
           </div>
-        </div>
 
-        {/* Fila 2: Datos transferidos y ahorro */}
-        {syncMode === 'cumulative_sync' && bytesTransferred > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-blue-500" />
-                <p className="text-sm font-medium text-foreground">Datos transferidos</p>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{formatBytes(bytesTransferred)}</p>
+          {bytesTransferred > 0 && (
+            <div className="space-y-1 p-3 bg-white rounded-lg">
+              <p className="text-xs text-muted-foreground font-medium">Transferidos</p>
+              <p className="text-sm font-bold text-blue-600">{formatBytes(bytesTransferred)}</p>
             </div>
-            
-            {estimatedSavings > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4 text-green-500" />
-                  <p className="text-sm font-medium text-foreground">Ahorro estimado</p>
-                </div>
-                <p className="text-2xl font-bold text-green-600">{formatBytes(estimatedSavings)}</p>
-                <p className="text-xs text-muted-foreground">
-                  Evitaste transferir archivos duplicados
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Mensaje de éxito o error */}
         <div className={`flex items-start gap-3 p-3 rounded-lg ${taskRun.status === 'completed' ? 'bg-green-100/50' : 'bg-red-100/50'}`}>
