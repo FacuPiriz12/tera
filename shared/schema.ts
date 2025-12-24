@@ -240,6 +240,10 @@ export const scheduledTasks = pgTable("scheduled_tasks", {
   notifyOnComplete: boolean("notify_on_complete").default(true),
   notifyOnFailure: boolean("notify_on_failure").default(true),
   
+  // Selective Sync - which folders to include/exclude
+  selectedFolderIds: text("selected_folder_ids").array(), // Array of folder IDs to sync (if empty, sync all)
+  excludedFolderIds: text("excluded_folder_ids").array(), // Array of folder IDs to exclude
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

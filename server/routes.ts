@@ -3109,6 +3109,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // List available folders for selective sync
+  app.get('/api/scheduled-tasks/:id/folders/list', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const provider = req.query.provider as string; // 'source' | 'destination'
+      
+      if (!provider || !['source', 'destination'].includes(provider)) {
+        return res.status(400).json({ message: "Invalid provider - must be 'source' or 'destination'" });
+      }
+
+      let folders: any[] = [];
+      
+      if (provider === 'source') {
+        const sourceProvider = task.sourceProvider as string;
+        const folderId = task.sourceFolderId || (task.sourceUrl as any);
+        
+        if (sourceProvider === 'google') {
+          const googleService = new (require('../services/googleDriveService').GoogleDriveService)(userId);
+          const result = await googleService.listFolderContentsRecursive(folderId);
+          folders = result.filter((f: any) => f.mimeType === 'application/vnd.google-apps.folder').map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            type: 'folder',
+            selected: task.selectedFolderIds?.includes(f.id) || false,
+            excluded: task.excludedFolderIds?.includes(f.id) || false,
+          }));
+        } else if (sourceProvider === 'dropbox') {
+          const dropboxService = new (require('../services/dropboxService').DropboxService)(userId);
+          const path = task.sourceFolderId || '';
+          const result = await dropboxService.listFolderContentsRecursive(path);
+          folders = result.filter((f: any) => f['.tag'] === 'folder').map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            path: f.path_display,
+            type: 'folder',
+            selected: task.selectedFolderIds?.includes(f.id) || false,
+            excluded: task.excludedFolderIds?.includes(f.id) || false,
+          }));
+        }
+      } else {
+        // Destination folders
+        const destProvider = task.destProvider as string;
+        const folderId = task.destinationFolderId || 'root';
+        
+        if (destProvider === 'google') {
+          const googleService = new (require('../services/googleDriveService').GoogleDriveService)(userId);
+          const result = await googleService.listFolderContentsRecursive(folderId);
+          folders = result.filter((f: any) => f.mimeType === 'application/vnd.google-apps.folder').map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            type: 'folder',
+            selected: task.selectedFolderIds?.includes(f.id) || false,
+            excluded: task.excludedFolderIds?.includes(f.id) || false,
+          }));
+        } else if (destProvider === 'dropbox') {
+          const dropboxService = new (require('../services/dropboxService').DropboxService)(userId);
+          const path = task.destinationFolderId === 'root' ? '' : task.destinationFolderId;
+          const result = await dropboxService.listFolderContentsRecursive(path);
+          folders = result.filter((f: any) => f['.tag'] === 'folder').map((f: any) => ({
+            id: f.id,
+            name: f.name,
+            path: f.path_display,
+            type: 'folder',
+            selected: task.selectedFolderIds?.includes(f.id) || false,
+            excluded: task.excludedFolderIds?.includes(f.id) || false,
+          }));
+        }
+      }
+
+      res.json({
+        provider,
+        folders,
+        totalFolders: folders.length,
+      });
+    } catch (error: any) {
+      console.error("Error listing folders:", error);
+      res.status(500).json({ message: "Failed to list folders", error: error.message });
+    }
+  });
+
+  // Save selective sync folder selection
+  app.post('/api/scheduled-tasks/:id/folders/select', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      const { selectedFolderIds, excludedFolderIds } = req.body;
+      
+      if (!Array.isArray(selectedFolderIds) && !Array.isArray(excludedFolderIds)) {
+        return res.status(400).json({ message: "Invalid request - provide selectedFolderIds or excludedFolderIds arrays" });
+      }
+
+      // Update task with folder selections
+      await storage.updateScheduledTask(task.id, {
+        selectedFolderIds: selectedFolderIds || undefined,
+        excludedFolderIds: excludedFolderIds || undefined,
+      });
+
+      res.json({
+        success: true,
+        message: 'Folder selection updated',
+        selectedFolders: selectedFolderIds?.length || 0,
+        excludedFolders: excludedFolderIds?.length || 0,
+      });
+    } catch (error: any) {
+      console.error("Error saving folder selection:", error);
+      res.status(500).json({ message: "Failed to save folder selection", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

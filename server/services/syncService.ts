@@ -207,6 +207,11 @@ export class SyncService {
       
       for (const file of driveFiles) {
         if (file.mimeType !== 'application/vnd.google-apps.folder') {
+          // Apply selective sync filters
+          if (!this.shouldIncludeFile(file.id, task)) {
+            continue;
+          }
+          
           files.push({
             id: file.id,
             name: file.name,
@@ -225,6 +230,11 @@ export class SyncService {
       
       for (const file of dropboxFiles) {
         if (file['.tag'] === 'file') {
+          // Apply selective sync filters
+          if (!this.shouldIncludeFile(file.id, task)) {
+            continue;
+          }
+          
           files.push({
             id: file.id,
             name: file.name,
@@ -238,6 +248,24 @@ export class SyncService {
     }
 
     return files;
+  }
+
+  private shouldIncludeFile(fileId: string, task: ScheduledTask): boolean {
+    // If excluded folders specified, check if file is in any excluded folder
+    if (task.excludedFolderIds && task.excludedFolderIds.length > 0) {
+      if (task.excludedFolderIds.includes(fileId)) {
+        return false;
+      }
+    }
+    
+    // If selected folders specified, only include files from those folders
+    if (task.selectedFolderIds && task.selectedFolderIds.length > 0) {
+      if (!task.selectedFolderIds.includes(fileId)) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   private isFileModified(file: FileInfo, record: SyncFileRegistry): boolean {
