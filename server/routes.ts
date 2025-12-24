@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { DuplicateDetectionService } from "./services/duplicateDetectionService";
+import { SyncService } from "./services/syncService";
 import { getQueueWorker } from "./queueWorker";
 import { insertCloudFileSchema, insertCopyOperationSchema } from "@shared/schema";
 import { z } from "zod";
@@ -2848,6 +2849,125 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error running scheduled task:", error);
       res.status(500).json({ message: "Failed to run scheduled task" });
+    }
+  });
+
+  // Execute cumulative sync for a scheduled task
+  app.post('/api/scheduled-tasks/:id/cumulative-sync', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      if (task.syncMode !== 'cumulative_sync') {
+        return res.status(400).json({ message: "This task is not configured for cumulative sync" });
+      }
+
+      // Check if task is already running
+      if (task.lastRunStatus === 'running') {
+        return res.status(409).json({ message: "Task is already running" });
+      }
+
+      const syncService = new SyncService(userId);
+      const startTime = Date.now();
+
+      // Execute cumulative sync in background
+      const result = await syncService.executeCumulativeSync(task);
+
+      // Update task with results
+      await storage.updateScheduledTask(task.id, {
+        lastRunAt: new Date(),
+        lastRunStatus: result.success ? 'success' : 'failed',
+        lastRunError: result.errors.length > 0 ? result.errors[0] : undefined,
+        totalRuns: (task.totalRuns || 0) + 1,
+        successfulRuns: result.success ? (task.successfulRuns || 0) + 1 : task.successfulRuns,
+        failedRuns: !result.success ? (task.failedRuns || 0) + 1 : task.failedRuns,
+      });
+
+      // Create task run record
+      const taskRun = await storage.createScheduledTaskRun({
+        scheduledTaskId: task.id,
+        status: result.success ? 'completed' : 'failed',
+        startedAt: new Date(startTime),
+        completedAt: new Date(),
+        duration: result.duration,
+        filesProcessed: result.filesNew + result.filesModified,
+        filesFailed: result.filesFailed,
+        bytesTransferred: 0,
+        errorMessage: result.errors.length > 0 ? result.errors.join('; ') : undefined,
+      });
+
+      res.json({
+        success: result.success,
+        filesNew: result.filesNew,
+        filesModified: result.filesModified,
+        filesCopied: result.filesCopied,
+        filesSkipped: result.filesSkipped,
+        filesFailed: result.filesFailed,
+        duration: result.duration,
+        errors: result.errors,
+        taskRunId: taskRun.id
+      });
+    } catch (error: any) {
+      console.error("Error executing cumulative sync:", error);
+      res.status(500).json({ message: "Failed to execute cumulative sync", error: error.message });
+    }
+  });
+
+  // Get cumulative sync statistics
+  app.get('/api/scheduled-tasks/:id/cumulative-sync/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const task = await storage.getScheduledTask(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      if (task.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+
+      // Get sync file registry for this task
+      const syncFiles = await storage.getSyncFilesByTask(task.id);
+      
+      // Calculate statistics
+      const stats = {
+        taskId: task.id,
+        taskName: task.name,
+        syncMode: task.syncMode,
+        totalFilesTracked: syncFiles.length,
+        lastSyncedAt: task.lastRunAt,
+        lastSyncStatus: task.lastRunStatus,
+        totalRuns: task.totalRuns || 0,
+        successfulRuns: task.successfulRuns || 0,
+        failedRuns: task.failedRuns || 0,
+        successRate: task.totalRuns ? ((task.successfulRuns || 0) / task.totalRuns * 100).toFixed(1) + '%' : 'N/A',
+        filesByStatus: {
+          synced: syncFiles.filter(f => f.syncStatus === 'synced').length,
+          pending: syncFiles.filter(f => f.syncStatus === 'pending').length,
+          failed: syncFiles.filter(f => f.syncStatus === 'failed').length,
+        },
+        recentFiles: syncFiles.slice(0, 10).map(f => ({
+          fileName: f.fileName,
+          lastSyncedAt: f.lastSyncedAt,
+          status: f.syncStatus,
+          size: f.fileSize,
+          provider: f.sourceProvider,
+        }))
+      };
+
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching cumulative sync stats:", error);
+      res.status(500).json({ message: "Failed to fetch sync statistics", error: error.message });
     }
   });
 
