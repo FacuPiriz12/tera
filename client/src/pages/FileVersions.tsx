@@ -1,5 +1,4 @@
 import { useLocation } from "wouter";
-import { useSearchParams } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";

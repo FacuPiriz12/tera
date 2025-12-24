@@ -6,6 +6,7 @@ import { createServer } from "http";
 import { startQueueWorker } from "./queueWorker";
 import { startSchedulerService } from "./services/schedulerService";
 import { ensureTablesExist } from "./db";
+import { storage } from "./storage";
 
 const app = express();
 app.use(cookieParser());
