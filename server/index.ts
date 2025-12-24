@@ -50,6 +50,54 @@ app.use((req, res, next) => {
     console.error('Warning: Could not initialize database tables:', error);
   }
   
+  // Seed development data
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      const testUserId = 'dev-user-001';
+      const existingTasks = await storage.getUserScheduledTasks(testUserId);
+      if (existingTasks.length === 0) {
+        const task = await storage.createScheduledTask({
+          userId: testUserId,
+          name: 'Google Drive → Dropbox (Cumulative Sync)',
+          description: 'Sincronización acumulativa de documentos importantes',
+          sourceProvider: 'google',
+          destProvider: 'dropbox',
+          sourceFolderId: 'folder_google_123',
+          sourceName: 'My Documents',
+          destinationFolderId: 'folder_dropbox_456',
+          destinationFolderName: 'Backup Dropbox',
+          operationType: 'transfer',
+          syncMode: 'cumulative_sync',
+          frequency: 'daily',
+          hour: 14,
+          minute: 30,
+          skipDuplicates: true,
+          notifyOnComplete: true,
+          notifyOnFailure: true,
+          status: 'active',
+          successfulRuns: 3,
+          failedRuns: 0,
+        });
+        
+        // Create a sample run to show stats
+        await storage.createScheduledTaskRun({
+          scheduledTaskId: task.id,
+          status: 'completed',
+          startedAt: new Date(Date.now() - 3600000),
+          completedAt: new Date(),
+          filesProcessed: 42,
+          filesFailed: 0,
+          bytesTransferred: 1073741824,
+          duration: 1250,
+        });
+        
+        console.log('✅ Development data seeded: Test task created');
+      }
+    } catch (error) {
+      console.error('Dev seed error (non-critical):', error);
+    }
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
