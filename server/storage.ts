@@ -2042,4 +2042,4 @@ class MemoryStorage implements IStorage {
 }
 
 console.log('💾 Using memory storage - data will be lost on restart (development mode)');
-export const storage: IStorage = new MemStorage();
+export const storage: IStorage = new MemoryStorage();
