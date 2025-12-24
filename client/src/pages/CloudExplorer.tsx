@@ -52,6 +52,7 @@ export default function CloudExplorer() {
   const [quickLink, setQuickLink] = useState('');
   const [detectedSource, setDetectedSource] = useState<'google' | 'dropbox' | null>(null);
   const [isValidLink, setIsValidLink] = useState<boolean | null>(null);
+  const [syncMode, setSyncMode] = useState<'copy' | 'cumulative_sync' | 'mirror_sync'>('copy');
   
   // Explorer State
   const [selectedAccount, setSelectedAccount] = useState<CloudAccount | null>(null);
@@ -217,7 +218,8 @@ export default function CloudExplorer() {
         sourceFileId,
         sourceFilePath,
         targetPath: '',
-        fileName
+        fileName,
+        syncMode
       });
       const data = await response.json();
       
@@ -260,7 +262,8 @@ export default function CloudExplorer() {
         sourceFilePath: selectedAccount?.provider === 'dropbox' ? file.path : undefined,
         targetProvider: destProvider,
         targetPath: '',
-        fileName: file.name
+        fileName: file.name,
+        syncMode
       });
       return response.json();
     },
@@ -781,7 +784,33 @@ export default function CloudExplorer() {
                               </Button>
                             ) : (
                               <>
-                                <div className="space-y-2">
+                                <div className="space-y-3">
+                                  <div className="space-y-2">
+                                    <p className="text-xs font-medium text-gray-700">Modo de sincronización</p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                      {[
+                                        { value: 'copy', label: 'Copia simple' },
+                                        { value: 'cumulative_sync', label: 'Acumulativa' },
+                                        { value: 'mirror_sync', label: 'Mirror Sync' }
+                                      ].map(mode => (
+                                        <button
+                                          key={mode.value}
+                                          onClick={() => setSyncMode(mode.value as any)}
+                                          className={`text-xs p-2 rounded border transition-all ${
+                                            syncMode === mode.value
+                                              ? 'bg-primary/10 border-primary text-primary font-medium'
+                                              : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                          }`}
+                                          data-testid={`button-sync-${mode.value}`}
+                                        >
+                                          {mode.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  
+                                  <Separator className="my-2" />
+                                  
                                   <p className="text-xs font-medium text-gray-700">Enviar a:</p>
                                   {getAvailableDestinations(selectedAccount?.provider || null).map((dest) => (
                                     <Button
