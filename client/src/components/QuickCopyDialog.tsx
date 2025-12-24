@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Folder } from "lucide-react";
+import { Plus, Folder, RefreshCw } from "lucide-react";
 import PreviewDialog from "./PreviewDialog";
 import FolderBrowserModal from "./FolderBrowserModal";
 
@@ -50,12 +50,14 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
     provider: null
   });
   const [includeSubfolders, setIncludeSubfolders] = useState(true);
+  const [syncMode, setSyncMode] = useState<'copy' | 'cumulative_sync' | 'mirror_sync'>('copy');
   const [showPreview, setShowPreview] = useState(false);
   const [showFolderBrowser, setShowFolderBrowser] = useState(false);
   const [pendingCopyData, setPendingCopyData] = useState<{
     sourceUrl: string;
     destinationFolder: DestinationFolder;
     includeSubfolders: boolean;
+    syncMode: string;
   } | null>(null);
   
   const { toast } = useToast();
@@ -117,11 +119,12 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
   }, [url, provider]);
 
   const startCopyMutation = useMutation({
-    mutationFn: async (data: { sourceUrl: string; destinationFolder: DestinationFolder; includeSubfolders: boolean }) => {
+    mutationFn: async (data: { sourceUrl: string; destinationFolder: DestinationFolder; includeSubfolders: boolean; syncMode: string }) => {
       const payload: any = {
         sourceUrl: data.sourceUrl,
         includeSubfolders: data.includeSubfolders,
-        provider: data.destinationFolder.provider
+        provider: data.destinationFolder.provider,
+        syncMode: data.syncMode
       };
       
       // Add the appropriate destination field based on provider
@@ -143,6 +146,7 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
       onOpenChange(false);
       setUrl("");
       setProvider(null);
+      setSyncMode('copy');
       setDestinationFolder({
         id: undefined,
         path: undefined,
@@ -197,6 +201,7 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
       sourceUrl: url.trim(),
       destinationFolder,
       includeSubfolders,
+      syncMode,
     };
     
     setPendingCopyData(copyData);
@@ -329,6 +334,28 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
               <Label htmlFor="include-subfolders" className="text-sm">
                 {t('quickCopy.includeSubfolders')}
               </Label>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="sync-mode" className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4" />
+                Modo de sincronización
+              </Label>
+              <Select value={syncMode} onValueChange={(value: any) => setSyncMode(value)}>
+                <SelectTrigger id="sync-mode" data-testid="select-sync-mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="copy">Copia simple - Todos los archivos</SelectItem>
+                  <SelectItem value="cumulative_sync">Acumulativa - Solo cambios nuevos</SelectItem>
+                  <SelectItem value="mirror_sync">Mirror Sync - Sincronización bidireccional</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {syncMode === 'copy' && 'Se copiarán todos los archivos.'}
+                {syncMode === 'cumulative_sync' && 'Solo se copiarán archivos nuevos o modificados.'}
+                {syncMode === 'mirror_sync' && 'Los cambios en ambas direcciones se sincronizarán automáticamente.'}
+              </p>
             </div>
             
             <div className="flex justify-end space-x-3 pt-4">
