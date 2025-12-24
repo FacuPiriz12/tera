@@ -22,9 +22,9 @@ export default function Integrations() {
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Settings className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold text-gray-900">Integraciones</h1>
+              <h1 className="text-4xl font-extrabold text-foreground">Integraciones</h1>
             </div>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground text-lg">
               Conecta tus servicios de almacenamiento en la nube para sincronizar y gestionar tus archivos.
             </p>
           </div>
