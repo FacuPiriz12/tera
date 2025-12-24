@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Plus, 
   Calendar, 
@@ -109,6 +109,8 @@ interface TaskFormData {
   skipDuplicates: boolean;
   notifyOnComplete: boolean;
   notifyOnFailure: boolean;
+  selectedFolderIds?: string[];
+  excludedFolderIds?: string[];
 }
 
 const defaultFormData: TaskFormData = {
@@ -132,6 +134,8 @@ const defaultFormData: TaskFormData = {
   skipDuplicates: true,
   notifyOnComplete: true,
   notifyOnFailure: true,
+  selectedFolderIds: [],
+  excludedFolderIds: [],
 };
 
 export default function Tasks() {
@@ -141,6 +145,7 @@ export default function Tasks() {
   
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(defaultFormData);
 
@@ -332,6 +337,8 @@ export default function Tasks() {
       skipDuplicates: task.skipDuplicates ?? true,
       notifyOnComplete: task.notifyOnComplete ?? true,
       notifyOnFailure: task.notifyOnFailure ?? true,
+      selectedFolderIds: (task as any).selectedFolderIds || [],
+      excludedFolderIds: (task as any).excludedFolderIds || [],
     });
     setIsEditDialogOpen(true);
   };
@@ -624,6 +631,22 @@ export default function Tasks() {
       <div className="space-y-3">
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
+            <Label>Sincronización Selectiva</Label>
+            <p className="text-xs text-muted-foreground">Elige qué carpetas sincronizar</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSelectiveSyncDialogOpen(true)}
+            data-testid="button-configure-selective-sync"
+          >
+            Configurar
+          </Button>
+        </div>
+
+        <div className="flex items-center justify-between py-2">
+          <div className="space-y-0.5">
             <Label>Omitir duplicados</Label>
             <p className="text-xs text-muted-foreground">No copiar archivos que ya existen</p>
           </div>
@@ -901,6 +924,224 @@ export default function Tasks() {
           />
         </DialogContent>
       </Dialog>
+
+      <SelectiveSyncDialog
+        isOpen={isSelectiveSyncDialogOpen}
+        onOpenChange={setIsSelectiveSyncDialogOpen}
+        taskId={selectedTask?.id}
+        onSave={(selectedFolders, excludedFolders) => {
+          setFormData({
+            ...formData,
+            selectedFolderIds: selectedFolders,
+            excludedFolderIds: excludedFolders,
+          });
+        }}
+      />
     </div>
+  );
+}
+
+interface SelectiveSyncFolder {
+  id: string;
+  name: string;
+  type: string;
+  selected?: boolean;
+  excluded?: boolean;
+}
+
+function SelectiveSyncDialog({
+  isOpen,
+  onOpenChange,
+  taskId,
+  onSave,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  taskId?: string;
+  onSave: (selected: string[], excluded: string[]) => void;
+}) {
+  const [folders, setFolders] = useState<SelectiveSyncFolder[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
+  const [excludedFolders, setExcludedFolders] = useState<Set<string>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (isOpen && taskId) {
+      loadFolders();
+    }
+  }, [isOpen, taskId]);
+
+  const loadFolders = async () => {
+    if (!taskId) {
+      toast({ title: "Error", description: "No se especificó ID de tarea", variant: "destructive" });
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const response = await apiRequest(`/api/scheduled-tasks/${taskId}/folders/list?provider=source`);
+      if (response && response.folders) {
+        setFolders(response.folders);
+        const selected = new Set(response.folders.filter((f: any) => f.selected).map((f: any) => f.id));
+        const excluded = new Set(response.folders.filter((f: any) => f.excluded).map((f: any) => f.id));
+        setSelectedFolders(selected);
+        setExcludedFolders(excluded);
+      }
+    } catch (error) {
+      console.error("Error loading folders:", error);
+      toast({ title: "Error", description: "No se pudieron cargar las carpetas", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleFolderSelection = (folderId: string) => {
+    const newSelected = new Set(selectedFolders);
+    if (newSelected.has(folderId)) {
+      newSelected.delete(folderId);
+    } else {
+      newSelected.add(folderId);
+      excludedFolders.delete(folderId);
+    }
+    setSelectedFolders(newSelected);
+  };
+
+  const toggleFolderExclusion = (folderId: string) => {
+    const newExcluded = new Set(excludedFolders);
+    if (newExcluded.has(folderId)) {
+      newExcluded.delete(folderId);
+    } else {
+      newExcluded.add(folderId);
+      selectedFolders.delete(folderId);
+    }
+    setExcludedFolders(newExcluded);
+  };
+
+  const handleSave = async () => {
+    if (!taskId) {
+      toast({ title: "Error", description: "No se especificó ID de tarea", variant: "destructive" });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiRequest(`/api/scheduled-tasks/${taskId}/folders/select`, {
+        method: 'POST',
+        body: JSON.stringify({
+          selectedFolderIds: Array.from(selectedFolders),
+          excludedFolderIds: Array.from(excludedFolders),
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      onSave(Array.from(selectedFolders), Array.from(excludedFolders));
+      onOpenChange(false);
+      toast({ title: "Guardado", description: "La configuración de sincronización selectiva se ha actualizado." });
+    } catch (error) {
+      console.error("Error saving folder selection:", error);
+      toast({ title: "Error", description: "No se pudieron guardar los cambios", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Sincronización Selectiva</DialogTitle>
+          <DialogDescription>
+            Selecciona qué carpetas deseas sincronizar o excluir
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <p className="text-sm text-muted-foreground">Cargando carpetas...</p>
+          </div>
+        ) : folders.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No hay carpetas disponibles para sincronización selectiva</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={loadFolders}
+              className="mt-4"
+              data-testid="button-retry-load-folders"
+            >
+              Intentar de nuevo
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+              Selecciona "Incluir" para sincronizar solo esas carpetas, o "Excluir" para omitirlas.
+            </div>
+            <div className="space-y-2">
+              {folders.map((folder) => (
+                <div
+                  key={folder.id}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                  data-testid={`folder-item-${folder.id}`}
+                >
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{folder.name}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleFolderSelection(folder.id)}
+                      className={`px-2 py-1 text-xs rounded border transition-colors ${
+                        selectedFolders.has(folder.id)
+                          ? 'bg-green-100 border-green-300 text-green-700'
+                          : 'border-gray-300 text-gray-600 hover:border-green-300'
+                      }`}
+                      data-testid={`button-select-folder-${folder.id}`}
+                    >
+                      Incluir
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleFolderExclusion(folder.id)}
+                      className={`px-2 py-1 text-xs rounded border transition-colors ${
+                        excludedFolders.has(folder.id)
+                          ? 'bg-red-100 border-red-300 text-red-700'
+                          : 'border-gray-300 text-gray-600 hover:border-red-300'
+                      }`}
+                      data-testid={`button-exclude-folder-${folder.id}`}
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            data-testid="button-cancel-selective-sync"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || !taskId}
+            data-testid="button-save-selective-sync"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            Guardar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
