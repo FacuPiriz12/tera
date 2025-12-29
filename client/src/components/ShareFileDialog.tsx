@@ -174,6 +174,11 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
     }
   };
 
+  const handleSelectUser = (user: UserResult) => {
+    handleAddUser(user);
+  };
+
+
   const handleRemoveEmail = (email: string) => {
     const currentEmails = form.getValues("recipientEmails") || [];
     form.setValue("recipientEmails", currentEmails.filter(e => e.email !== email));
@@ -251,70 +256,77 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
                     Email o nombre del destinatario
                   </FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      {selectedUser ? (
-                        <div className="flex items-center gap-2 p-2 border rounded-md bg-muted">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={selectedUser.avatar || undefined} />
-                            <AvatarFallback>
-                              <User className="h-3 w-3" />
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{selectedUser.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{selectedUser.email}</p>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleClearUser}
-                            className="h-6 w-6 p-0"
-                            data-testid="button-clear-recipient"
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <Input
-                            placeholder="Buscar por email o nombre..."
-                            value={searchQuery || field.value}
-                            onChange={(e) => handleInputChange(e.target.value)}
-                            data-testid="input-recipient-email"
-                          />
-                          {isSearching && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                            </div>
-                          )}
-                        </>
-                      )}
-                      
-                      {showSuggestions && userSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                          {userSuggestions.map((user) => (
-                            <button
-                              key={user.id}
-                              type="button"
-                              className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left"
-                              onClick={() => handleSelectUser(user)}
-                              data-testid={`user-suggestion-${user.id}`}
+                    <div className="space-y-3">
+                      {recipientEmails.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {recipientEmails.map((recipient) => (
+                            <Badge 
+                              key={recipient.email} 
+                              variant="secondary" 
+                              className="pl-2 pr-1 py-1 flex items-center gap-1"
                             >
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={user.avatar || undefined} />
-                                <AvatarFallback>
-                                  <User className="h-4 w-4" />
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{user.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                              </div>
-                            </button>
+                              <span className="max-w-[150px] truncate">
+                                {recipient.name || recipient.email}
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveEmail(recipient.email)}
+                                className="h-4 w-4 p-0 hover:bg-transparent text-muted-foreground hover:text-foreground"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </Badge>
                           ))}
                         </div>
                       )}
+                      
+                      <div className="relative">
+                        <Input
+                          placeholder="Buscar por email o nombre..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && searchQuery.includes('@')) {
+                              e.preventDefault();
+                              handleAddUser({ id: 'custom', email: searchQuery, name: '', avatar: null });
+                            }
+                          }}
+                          data-testid="input-recipient-email"
+                        />
+                        {isSearching && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          </div>
+                        )}
+                        
+                        {showSuggestions && userSuggestions.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                            {userSuggestions.map((user) => (
+                              <button
+                                key={user.id}
+                                type="button"
+                                className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left transition-colors"
+                                onClick={() => handleSelectUser(user)}
+                                data-testid={`user-suggestion-${user.id}`}
+                              >
+                                <Avatar className="h-8 w-8 border">
+                                  <AvatarImage src={user.avatar || undefined} />
+                                  <AvatarFallback>
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate">{user.name}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                </div>
+                                <Plus className="h-4 w-4 text-muted-foreground" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </FormControl>
                   <FormMessage />

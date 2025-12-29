@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +7,40 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Search,
+  Inbox,
+  Send,
+  Check,
+  X,
+  FileText,
+  FolderOpen,
+  Clock,
+  Mail,
+  MailOpen,
+  Loader2,
+  User,
+  Cloud,
+  Plus,
+  Image,
+  FileSpreadsheet,
+  File,
+  MoreVertical,
+  Eye,
+  Upload,
+  HardDrive,
+  ChevronRight,
+  ArrowLeft,
+  Home,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -267,13 +301,18 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
                     onClick={() => onSendTo(share, share.provider as "google" | "dropbox")} 
                     data-testid={`menu-sendto-${share.id}`}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Copiar a mi {share.provider === "google" ? "Google Drive" : "Dropbox"}
-                    {share.provider === "google" ? (
-                      <SiGoogledrive className="h-4 w-4 ml-2 text-green-600" />
-                    ) : (
-                      <SiDropbox className="h-4 w-4 ml-2 text-blue-500" />
-                    )}
+                    <HardDrive className="h-4 w-4 mr-2" />
+                    Copiar a Mi Unidad
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      const url = `/api/shares/${share.id}/download`;
+                      window.open(url, '_blank');
+                    }}
+                    data-testid={`menu-download-${share.id}`}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Descargar
                   </DropdownMenuItem>
                 </>
               )}
@@ -732,6 +771,28 @@ export default function ShareInbox() {
     enabled: isAuthenticated,
   });
 
+  const [activeTab, setActiveTab] = useState("inbox");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filteredInbox = useMemo(() => {
+    return inbox.filter(s => 
+      (s.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       (s.senderName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+       (s.senderEmail || "").toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (statusFilter === "all" || s.status === statusFilter)
+    );
+  }, [inbox, searchQuery, statusFilter]);
+
+  const filteredOutbox = useMemo(() => {
+    return outbox.filter(s => 
+      (s.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+       (s.recipientName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+       (s.recipientEmail || "").toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (statusFilter === "all" || s.status === statusFilter)
+    );
+  }, [outbox, searchQuery, statusFilter]);
+
   const respondMutation = useMutation({
     mutationFn: async ({ id, action }: { id: string; action: "accept" | "reject" }) => {
       return apiRequest("PATCH", `/api/shares/${id}/respond`, { action });
@@ -892,6 +953,31 @@ export default function ShareInbox() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nombre o remitente..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+              data-testid="input-search-shares"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              <SelectItem value="pending">Pendientes</SelectItem>
+              <SelectItem value="accepted">Aceptados</SelectItem>
+              <SelectItem value="rejected">Rechazados</SelectItem>
+              <SelectItem value="cancelled">Cancelados</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="inbox" className="flex items-center gap-2" data-testid="tab-inbox">
             <Inbox className="h-4 w-4" />
@@ -913,11 +999,23 @@ export default function ShareInbox() {
               <ShareItemSkeleton />
               <ShareItemSkeleton />
             </>
-          ) : inbox.length === 0 ? (
-            <EmptyState type="inbox" />
+          ) : filteredInbox.length === 0 ? (
+            <div className="py-12 text-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed">
+              <div className="bg-white dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Inbox className="h-8 w-8 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchQuery || statusFilter !== "all" ? "No se encontraron resultados" : "Tu bandeja está vacía"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                {searchQuery || statusFilter !== "all" 
+                  ? "Prueba con otros términos de búsqueda o filtros." 
+                  : "Cuando otros usuarios te compartan archivos, aparecerán aquí con opciones para aceptarlos o ver detalles."}
+              </p>
+            </div>
           ) : (
-            <div>
-              {inbox.map((share) => (
+            <div className="space-y-4">
+              {filteredInbox.map((share) => (
                 <InboxItem
                   key={share.id}
                   share={share}
@@ -938,11 +1036,23 @@ export default function ShareInbox() {
               <ShareItemSkeleton />
               <ShareItemSkeleton />
             </>
-          ) : outbox.length === 0 ? (
-            <EmptyState type="outbox" />
+          ) : filteredOutbox.length === 0 ? (
+            <div className="py-12 text-center bg-gray-50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed">
+              <div className="bg-white dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Send className="h-8 w-8 text-green-500" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchQuery || statusFilter !== "all" ? "No se encontraron resultados" : "No has enviado nada aún"}
+              </h3>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                {searchQuery || statusFilter !== "all" 
+                  ? "Prueba con otros términos de búsqueda o filtros." 
+                  : "Comienza a compartir archivos con otros usuarios haciendo clic en 'Nuevo compartido'."}
+              </p>
+            </div>
           ) : (
-            <div>
-              {outbox.map((share) => (
+            <div className="space-y-4">
+              {filteredOutbox.map((share) => (
                 <OutboxItem
                   key={share.id}
                   share={share}

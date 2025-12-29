@@ -2197,6 +2197,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==========================================
 
   // Create a share request (send file to another user)
+  // Download shared file
+  app.get('/api/shares/:id/download', isAuthenticated, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const share = await storage.getShareRequest(id);
+      
+      if (!share) {
+        return res.status(404).json({ message: "Share request not found" });
+      }
+
+      // Check permissions: either sender or recipient
+      const userId = req.user.claims.sub;
+      if (share.senderId !== userId && share.recipientId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      if (share.status !== 'accepted' && share.senderId !== userId) {
+        return res.status(403).json({ message: "File not accepted yet" });
+      }
+
+      if (share.fileType === 'folder') {
+        return res.status(400).json({ message: "Folders cannot be downloaded directly. Use 'Copy to Drive' instead." });
+      }
+
+      // Initialize service based on provider
+      if (share.provider === 'google') {
+        const driveService = new GoogleDriveService(share.senderId);
+        const { stream, filename, mimeType } = await driveService.downloadFile(share.fileId);
+        
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', mimeType || 'application/octet-stream');
+        stream.pipe(res);
+      } else if (share.provider === 'dropbox') {
+        const dropboxService = new DropboxService(share.senderId);
+        const { buffer, filename, mimeType } = await dropboxService.downloadFile(share.fileId);
+        
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', mimeType || 'application/octet-stream');
+        res.send(buffer);
+      } else {
+        res.status(400).json({ message: "Unsupported provider" });
+      }
+    } catch (error) {
+      console.error("Error downloading shared file:", error);
+      res.status(500).json({ message: "Failed to download file" });
+    }
+  });
+
   app.post('/api/shares', isAuthenticated, async (req: any, res) => {
     try {
       const senderId = req.user.claims.sub;
