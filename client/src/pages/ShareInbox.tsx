@@ -41,6 +41,27 @@ import {
   ArrowLeft,
   Home,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
 import ShareFileDialog from "@/components/ShareFileDialog";
 import FolderBrowserModal from "@/components/FolderBrowserModal";

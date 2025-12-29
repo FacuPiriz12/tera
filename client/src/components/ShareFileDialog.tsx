@@ -244,11 +244,10 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
           </div>
         </div>
 
-        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="recipientEmail"
+              name="recipientEmails"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
@@ -362,7 +361,6 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
                     variant="ghost"
                     onClick={() => {
                       form.reset();
-                      setSelectedUser(null);
                       setSearchQuery("");
                       setShowSuggestions(false);
                       onBack();
@@ -387,7 +385,7 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isSubmitting || (!selectedUser && !form.getValues("recipientEmail"))}
+                  disabled={isSubmitting || recipientEmails.length === 0}
                   data-testid="button-confirm-share"
                 >
                   {isSubmitting ? (
