@@ -41,52 +41,6 @@ import {
   ArrowLeft,
   Home,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
-import {
-  Inbox,
-  Send,
-  Check,
-  X,
-  FileText,
-  FolderOpen,
-  Clock,
-  Mail,
-  MailOpen,
-  Loader2,
-  User,
-  Cloud,
-  Plus,
-  Image,
-  FileSpreadsheet,
-  File,
-  MoreVertical,
-  Eye,
-  Upload,
-  HardDrive,
-  ChevronRight,
-  ArrowLeft,
-  Home,
-} from "lucide-react";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
 import ShareFileDialog from "@/components/ShareFileDialog";
 import FolderBrowserModal from "@/components/FolderBrowserModal";
@@ -771,7 +725,6 @@ export default function ShareInbox() {
     enabled: isAuthenticated,
   });
 
-  const [activeTab, setActiveTab] = useState("inbox");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
