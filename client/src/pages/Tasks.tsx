@@ -1065,6 +1065,8 @@ function SelectiveSyncDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'size'>('name');
+  const [draggedFolder, setDraggedFolder] = useState<string | null>(null);
+  const [dragOverZone, setDragOverZone] = useState<'include' | 'exclude' | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -1132,6 +1134,37 @@ function SelectiveSyncDialog({
     setSelectedFolders(newSelected);
   };
 
+  const handleDragStart = (e: React.DragEvent, folderId: string) => {
+    setDraggedFolder(folderId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDropZone = (zone: 'include' | 'exclude') => {
+    if (!draggedFolder) return;
+    
+    const newSelected = new Set(selectedFolders);
+    const newExcluded = new Set(excludedFolders);
+    
+    newSelected.delete(draggedFolder);
+    newExcluded.delete(draggedFolder);
+    
+    if (zone === 'include') {
+      newSelected.add(draggedFolder);
+    } else {
+      newExcluded.add(draggedFolder);
+    }
+    
+    setSelectedFolders(newSelected);
+    setExcludedFolders(newExcluded);
+    setDraggedFolder(null);
+    setDragOverZone(null);
+  };
+
   const handleSave = async () => {
     if (!taskId) {
       toast({ title: "Error", description: "No se especificó ID de tarea", variant: "destructive" });
@@ -1189,9 +1222,9 @@ function SelectiveSyncDialog({
             </Button>
           </div>
         ) : (
-          <div className="space-y-3 max-h-[450px] overflow-y-auto">
+          <div className="space-y-3 max-h-[550px] overflow-y-auto">
             <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-              ✓ Incluir = sincronizar solo esas carpetas | ✗ Excluir = omitir esas carpetas
+              📌 Arrastra carpetas a las zonas de abajo, o usa los controles
             </div>
             
             <div className="flex gap-2">
@@ -1224,7 +1257,52 @@ function SelectiveSyncDialog({
               </span>
             </div>
 
-            <div className="space-y-2">
+            {/* Drop zones */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Include zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={() => setDragOverZone(null)}
+                onDrop={() => handleDropZone('include')}
+                className={`p-3 rounded-lg border-2 border-dashed transition-colors ${
+                  dragOverZone === 'include'
+                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                    : 'border-green-300 bg-green-50/50 dark:bg-green-900/10'
+                }`}
+                data-testid="drop-zone-include"
+              >
+                <p className="text-xs font-semibold text-green-700 dark:text-green-400 text-center">
+                  ✓ Sincronizar
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-300 text-center mt-1">
+                  {selectedFolders.size} carpeta{selectedFolders.size !== 1 ? 's' : ''}
+                </p>
+              </div>
+
+              {/* Exclude zone */}
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={() => setDragOverZone(null)}
+                onDrop={() => handleDropZone('exclude')}
+                className={`p-3 rounded-lg border-2 border-dashed transition-colors ${
+                  dragOverZone === 'exclude'
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                    : 'border-red-300 bg-red-50/50 dark:bg-red-900/10'
+                }`}
+                data-testid="drop-zone-exclude"
+              >
+                <p className="text-xs font-semibold text-red-700 dark:text-red-400 text-center">
+                  ✗ Omitir
+                </p>
+                <p className="text-xs text-red-600 dark:text-red-300 text-center mt-1">
+                  {excludedFolders.size} carpeta{excludedFolders.size !== 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Folder list */}
+            <div className="space-y-2 border-t pt-3">
+              <p className="text-xs font-semibold text-muted-foreground">Carpetas disponibles:</p>
               {sortedFolders.map((folder) => {
                 const isSelected = selectedFolders.has(folder.id);
                 const isExcluded = excludedFolders.has(folder.id);
@@ -1232,8 +1310,12 @@ function SelectiveSyncDialog({
                 return (
                   <div
                     key={folder.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                      isSelected
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, folder.id)}
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-move ${
+                      draggedFolder === folder.id
+                        ? 'opacity-50 border-blue-400'
+                        : isSelected
                         ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
                         : isExcluded
                         ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'
