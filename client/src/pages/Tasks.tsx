@@ -49,9 +49,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import SyncStatsCard from "@/components/SyncStatsCard";
-import type { ScheduledTask, ScheduledTaskRun } from "@shared/schema";
+import ConflictResolutionModal from "@/components/ConflictResolutionModal";
+import type { ScheduledTask, ScheduledTaskRun, FileConflict } from "@shared/schema";
 
 const DAYS_OF_WEEK = [
   { value: 0, label: "Domingo" },
@@ -152,6 +153,7 @@ export default function Tasks() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
+  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null);
   const [selectedTaskForStats, setSelectedTaskForStats] = useState<string | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(defaultFormData);
@@ -170,6 +172,19 @@ export default function Tasks() {
       return runs && runs.length > 0 ? runs[0] : null;
     },
     enabled: !!selectedTaskForStats,
+  });
+
+  const { data: conflicts = [] } = useQuery<FileConflict[]>({
+    queryKey: ["/api/scheduled-tasks", selectedTaskForStats, "conflicts"],
+    queryFn: async () => {
+      if (!selectedTaskForStats) return [];
+      const response = await apiRequest(
+        `/api/scheduled-tasks/${selectedTaskForStats}/conflicts`
+      );
+      return response.conflicts || [];
+    },
+    enabled: !!selectedTaskForStats && isConflictDialogOpen,
+    refetchInterval: 10000,
   });
 
   const createMutation = useMutation({
@@ -865,6 +880,16 @@ export default function Tasks() {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedTaskForStats(task.id);
+                                setIsConflictDialogOpen(true);
+                              }}
+                              data-testid={`action-view-conflicts-${task.id}`}
+                            >
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              Ver conflictos
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
                               onClick={() => openEditDialog(task)}
                               data-testid={`action-edit-${task.id}`}
                             >
@@ -990,6 +1015,13 @@ export default function Tasks() {
             excludedFolderIds: excludedFolders,
           });
         }}
+      />
+
+      <ConflictResolutionModal
+        isOpen={isConflictDialogOpen}
+        onClose={() => setIsConflictDialogOpen(false)}
+        conflicts={conflicts}
+        taskId={selectedTaskForStats || ""}
       />
     </div>
   );
