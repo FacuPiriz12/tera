@@ -52,7 +52,10 @@ interface UserResult {
 }
 
 const shareFormSchema = z.object({
-  recipientEmail: z.string().min(1, "Ingresa un email o busca por nombre"),
+  recipientEmails: z.array(z.object({
+    email: z.string().email("Email inválido"),
+    name: z.string().optional(),
+  })).min(1, "Agrega al menos un destinatario"),
   message: z.string().max(500, "El mensaje no puede exceder 500 caracteres").optional(),
 });
 
@@ -75,15 +78,16 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserResult | null>(null);
 
   const form = useForm<ShareFormValues>({
     resolver: zodResolver(shareFormSchema),
     defaultValues: {
-      recipientEmail: "",
+      recipientEmails: [],
       message: "",
     },
   });
+
+  const recipientEmails = form.watch("recipientEmails");
 
   const { data: userSuggestions = [], isLoading: isSearching } = useQuery<UserResult[]>({
     queryKey: ["/api/users/search", searchQuery],
@@ -93,43 +97,45 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
       if (!response.ok) return [];
       return response.json();
     },
-    enabled: searchQuery.length >= 2 && !selectedUser,
+    enabled: searchQuery.length >= 2,
   });
 
   useEffect(() => {
-    if (userSuggestions.length > 0 && !selectedUser && searchQuery.length >= 2) {
+    if (userSuggestions.length > 0 && searchQuery.length >= 2) {
       setShowSuggestions(true);
-    } else if (userSuggestions.length === 0 || selectedUser || searchQuery.length < 2) {
+    } else if (userSuggestions.length === 0 || searchQuery.length < 2) {
       setShowSuggestions(false);
     }
-  }, [userSuggestions, selectedUser, searchQuery]);
+  }, [userSuggestions, searchQuery]);
 
   const shareMutation = useMutation({
     mutationFn: async (data: ShareFormValues) => {
       if (!file) throw new Error("No file selected");
       
-      const emailToUse = selectedUser?.email || data.recipientEmail;
+      const sharePromises = data.recipientEmails.map(recipient =>
+        apiRequest("POST", "/api/shares", {
+          recipientEmail: recipient.email,
+          provider: file.provider,
+          fileId: file.id,
+          filePath: file.path || null,
+          fileName: file.name,
+          fileType: file.type,
+          fileSize: file.size || null,
+          mimeType: file.mimeType || null,
+          message: data.message || null,
+        })
+      );
       
-      return apiRequest("POST", "/api/shares", {
-        recipientEmail: emailToUse,
-        provider: file.provider,
-        fileId: file.id,
-        filePath: file.path || null,
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size || null,
-        mimeType: file.mimeType || null,
-        message: data.message || null,
-      });
+      return Promise.all(sharePromises);
     },
-    onSuccess: () => {
+    onSuccess: (_, data) => {
+      const count = data.recipientEmails.length;
       toast({
         title: "Archivo compartido",
-        description: `Se ha enviado una invitación a ${selectedUser?.name || form.getValues("recipientEmail")}`,
+        description: `Se ha enviado invitación a ${count} usuario${count !== 1 ? 's' : ''}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/shares/outbox"] });
-      form.reset();
-      setSelectedUser(null);
+      form.reset({ recipientEmails: [], message: "" });
       setSearchQuery("");
       onOpenChange(false);
       setIsSubmitting(false);
@@ -146,33 +152,32 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
   });
 
   const onSubmit = (data: ShareFormValues) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const emailToUse = selectedUser?.email || data.recipientEmail;
-    
-    if (!emailRegex.test(emailToUse)) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor selecciona un usuario de las sugerencias o ingresa un email válido.",
-        variant: "destructive",
-      });
-      return;
-    }
     setIsSubmitting(true);
     shareMutation.mutate(data);
   };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen) {
-      form.reset();
-      setSelectedUser(null);
+      form.reset({ recipientEmails: [], message: "" });
       setSearchQuery("");
       setShowSuggestions(false);
     }
     onOpenChange(newOpen);
   };
 
-  const handleSelectUser = (user: UserResult) => {
-    setSelectedUser(user);
+  const handleAddUser = (user: UserResult) => {
+    const currentEmails = form.getValues("recipientEmails") || [];
+    if (!currentEmails.find(e => e.email === user.email)) {
+      form.setValue("recipientEmails", [...currentEmails, { email: user.email, name: user.name }]);
+      setSearchQuery("");
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleRemoveEmail = (email: string) => {
+    const currentEmails = form.getValues("recipientEmails") || [];
+    form.setValue("recipientEmails", currentEmails.filter(e => e.email !== email));
+  };
     form.setValue("recipientEmail", user.email);
     setShowSuggestions(false);
     setSearchQuery("");
