@@ -23,9 +23,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, Share2, FileText, Folder, User, Search, ArrowLeft } from "lucide-react";
+import { Loader2, Share2, FileText, Folder, User, Search, ArrowLeft, X, Plus } from "lucide-react";
 import { SiGoogledrive, SiDropbox } from "react-icons/si";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface FileToShare {
   id: string;
@@ -165,7 +166,7 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
     onOpenChange(newOpen);
   };
 
-  const handleAddUser = (user: UserResult) => {
+  const handleAddUser = (user: UserResult | { id: string, email: string, name: string, avatar: null }) => {
     const currentEmails = form.getValues("recipientEmails") || [];
     if (!currentEmails.find(e => e.email === user.email)) {
       form.setValue("recipientEmails", [...currentEmails, { email: user.email, name: user.name }]);
@@ -174,22 +175,9 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
     }
   };
 
-  const handleSelectUser = (user: UserResult) => {
-    handleAddUser(user);
-  };
-
-
   const handleRemoveEmail = (email: string) => {
     const currentEmails = form.getValues("recipientEmails") || [];
     form.setValue("recipientEmails", currentEmails.filter(e => e.email !== email));
-  };
-
-  const handleClearUser = () => {
-    setSearchQuery("");
-  };
-
-  const handleInputChange = (value: string) => {
-    setSearchQuery(value);
   };
 
   if (!file) return null;
@@ -236,6 +224,8 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
               </div>
             </div>
           </div>
+        </div>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -300,7 +290,7 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
                                 key={user.id}
                                 type="button"
                                 className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left transition-colors"
-                                onClick={() => handleSelectUser(user)}
+                                onClick={() => handleAddUser(user)}
                                 data-testid={`user-suggestion-${user.id}`}
                               >
                                 <Avatar className="h-8 w-8 border">

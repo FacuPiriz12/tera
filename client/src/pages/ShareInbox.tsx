@@ -716,7 +716,6 @@ function ShareDetailsDialog({ share, open, onOpenChange }: ShareDetailsDialogPro
 export default function ShareInbox() {
   const { toast } = useToast();
   const { isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState("inbox");
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [filePickerOpen, setFilePickerOpen] = useState(false);
@@ -746,6 +745,7 @@ export default function ShareInbox() {
     enabled: isAuthenticated,
   });
 
+  const [activeTab, setActiveTab] = useState("inbox");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
