@@ -178,10 +178,6 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
     const currentEmails = form.getValues("recipientEmails") || [];
     form.setValue("recipientEmails", currentEmails.filter(e => e.email !== email));
   };
-    form.setValue("recipientEmail", user.email);
-    setShowSuggestions(false);
-    setSearchQuery("");
-  };
 
   const handleClearUser = () => {
     setSelectedUser(null);
