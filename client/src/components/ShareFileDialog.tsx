@@ -185,17 +185,11 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
   };
 
   const handleClearUser = () => {
-    setSelectedUser(null);
-    form.setValue("recipientEmail", "");
     setSearchQuery("");
   };
 
   const handleInputChange = (value: string) => {
-    if (selectedUser) {
-      setSelectedUser(null);
-    }
     setSearchQuery(value);
-    form.setValue("recipientEmail", value);
   };
 
   if (!file) return null;
@@ -242,8 +236,7 @@ export default function ShareFileDialog({ open, onOpenChange, file, onBack }: Sh
               </div>
             </div>
           </div>
-        </div>
-
+        <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
