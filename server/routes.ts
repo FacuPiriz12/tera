@@ -3351,6 +3351,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development endpoint to seed test data
+  if (process.env.NODE_ENV === "development") {
+    app.post('/api/dev/seed-test-conflicts', async (req: any, res) => {
+      try {
+        const userId = "dev-user-123";
+        
+        // Create a test task with Mirror Sync
+        const task = await storage.createScheduledTask({
+          userId,
+          name: "Demo: Mirror Sync con Conflictos",
+          description: "Tarea de prueba para ver el modal de resolución de conflictos",
+          sourceUrl: "https://drive.google.com/drive/folders/root",
+          sourceProvider: "google",
+          sourceName: "Mi unidad",
+          sourceFolderId: "root",
+          destProvider: "dropbox",
+          destinationFolderId: "/",
+          destinationFolderName: "Root",
+          operationType: "transfer",
+          syncMode: "mirror_sync",
+          frequency: "daily",
+          hour: 8,
+          minute: 0,
+          dayOfWeek: 1,
+          dayOfMonth: 1,
+          status: "active",
+          skipDuplicates: false,
+          notifyOnComplete: true,
+          notifyOnFailure: true,
+        });
+
+        // Create test conflicts
+        const conflict1 = await storage.createFileConflict({
+          scheduledTaskId: task.id,
+          fileName: "presupuesto_2025.xlsx",
+          fileId: "file-123-456",
+          sourceVersion: {
+            fileId: "gdrive-123",
+            modifiedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
+            size: 2048000,
+          },
+          destVersion: {
+            fileId: "dropbox-123",
+            modifiedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutos atrás
+            size: 2150000,
+          },
+          sourceProvider: "google",
+          destProvider: "dropbox",
+        });
+
+        const conflict2 = await storage.createFileConflict({
+          scheduledTaskId: task.id,
+          fileName: "informe_trimestral.pdf",
+          fileId: "file-789-101",
+          sourceVersion: {
+            fileId: "gdrive-789",
+            modifiedAt: new Date(Date.now() - 4 * 60 * 60 * 1000), // 4 horas atrás
+            size: 5242880,
+          },
+          destVersion: {
+            fileId: "dropbox-789",
+            modifiedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hora atrás
+            size: 5242880,
+          },
+          sourceProvider: "google",
+          destProvider: "dropbox",
+        });
+
+        res.json({
+          success: true,
+          message: "Test data created successfully",
+          task: {
+            id: task.id,
+            name: task.name,
+          },
+          conflicts: [conflict1, conflict2],
+        });
+      } catch (error: any) {
+        console.error("Error seeding test data:", error);
+        res.status(500).json({ message: "Failed to seed test data", error: error.message });
+      }
+    });
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }
