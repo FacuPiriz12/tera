@@ -68,29 +68,29 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="w-full space-y-8 relative">
-      <div className="space-y-3">
-        <h1 className="text-[36px] font-bold text-gray-900 tracking-tighter leading-[1.1]">Inicia sesión hoy</h1>
-        <p className="text-gray-500 text-[17px] font-medium">Ingresa tu email y contraseña para acceder a tu cuenta</p>
+    <div className="w-full space-y-10 relative">
+      <div className="space-y-4">
+        <h1 className="text-[42px] font-bold text-gray-900 tracking-tighter leading-[1] transition-all hover:tracking-tight">Inicia sesión hoy</h1>
+        <p className="text-gray-500 text-[18px] font-medium leading-relaxed">Ingresa tu email y contraseña para acceder a tu cuenta</p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[13px] font-bold text-gray-400 uppercase tracking-widest">Email</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Email</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
                     placeholder="damien.lewis@gmail.com"
-                    className="h-14 px-5 rounded-2xl border-gray-200 focus:border-[#0061D5] focus:ring-4 focus:ring-blue-50 transition-all bg-gray-50/50 shadow-none text-lg"
+                    className="h-16 px-6 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg placeholder:text-gray-300"
                   />
                 </FormControl>
-                <FormMessage className="text-xs" />
+                <FormMessage className="text-xs font-semibold text-red-500" />
               </FormItem>
             )}
           />
@@ -99,59 +99,59 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-2">
-                <FormLabel className="text-[13px] font-bold text-gray-400 uppercase tracking-widest">Contraseña</FormLabel>
+              <FormItem className="space-y-3">
+                <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Contraseña</FormLabel>
                 <FormControl>
                   <div className="relative group">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="h-14 px-5 pr-14 rounded-2xl border-gray-200 focus:border-[#0061D5] focus:ring-4 focus:ring-blue-50 transition-all bg-gray-50/50 shadow-none text-lg"
+                      className="h-16 px-6 pr-16 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg placeholder:text-gray-300"
                     />
                     <button
                       type="button"
-                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600 transition-colors p-2"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </FormControl>
-                <FormMessage className="text-xs" />
+                <FormMessage className="text-xs font-semibold text-red-500" />
               </FormItem>
             )}
           />
 
           <div className="flex items-center justify-between pt-4">
-            <div className="flex gap-1.5">
+            <div className="flex gap-2.5">
               {[0, 1, 2, 3].map((i) => (
                 <div 
                   key={i} 
-                  className={`h-1.5 rounded-full transition-all duration-500 ${i === 0 ? 'w-6 bg-gray-300' : 'w-1.5 bg-gray-100'}`}
+                  className={`h-2 rounded-full transition-all duration-700 ease-in-out ${i === 0 ? 'w-10 bg-blue-600' : 'w-2 bg-gray-100'}`}
                 />
               ))}
             </div>
 
-            <motion.div whileHover={{ scale: 1.02, x: 5 }} whileTap={{ scale: 0.98 }}>
+            <motion.div whileHover={{ scale: 1.05, x: 8 }} whileTap={{ scale: 0.95 }}>
               <Button 
                 type="submit" 
-                className="h-14 px-10 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white font-extrabold text-base shadow-xl shadow-blue-600/20 gap-3 transition-all group"
+                className="h-16 px-12 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white font-black text-lg shadow-[0_20px_40px_-10px_rgba(0,97,213,0.3)] gap-4 transition-all group"
                 disabled={isLoading}
               >
                 {isLoading ? "Cargando..." : "Continuar"}
-                {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+                {!isLoading && <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />}
               </Button>
             </motion.div>
           </div>
         </form>
       </Form>
 
-      <div className="pt-8 border-t border-gray-50 text-center">
-        <p className="text-gray-500 font-medium">
+      <div className="pt-10 border-t border-gray-100 text-center">
+        <p className="text-gray-400 font-medium text-lg">
           ¿No tienes una cuenta?{" "}
           <Link href="/signup">
-            <span className="text-[#0061D5] font-bold hover:underline cursor-pointer">Regístrate gratis</span>
+            <span className="text-[#0061D5] font-black hover:underline cursor-pointer tracking-tight">Regístrate gratis</span>
           </Link>
         </p>
       </div>

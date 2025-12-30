@@ -2,18 +2,16 @@ import { useState } from "react";
 import { supabasePromise } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import CloneDriveLogo from "@/components/CloneDriveLogo";
+import { motion } from "framer-motion";
 
 interface SignupFormProps {
   onReplitLogin: () => void;
@@ -23,10 +21,8 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
   const { t } = useTranslation(['auth', 'common', 'errors']);
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Create schema inside component to access translations
   const signupSchema = z.object({
     name: z.string().min(2, { message: t('validation.nameRequired') }),
     email: z.string().email({ message: t('validation.invalidEmail') }),
@@ -86,7 +82,6 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
         description: t('signup.checkEmail')
       });
       
-      // Redirect to success page
       setTimeout(() => {
         setLocation('/signup/success');
       }, 1500);
@@ -103,99 +98,77 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
-        <CardHeader className="text-center pb-4">
-          <CloneDriveLogo className="h-16 mx-auto mb-4" />
-          <CardTitle className="text-2xl font-bold">{t('signup.title')}</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {t('signup.subtitle')}
-          </CardDescription>
-        </CardHeader>
+    <div className="w-full space-y-10 relative">
+      <div className="space-y-4">
+        <h1 className="text-[42px] font-bold text-gray-900 tracking-tighter leading-[1]">Crea tu cuenta</h1>
+        <p className="text-gray-500 text-[18px] font-medium leading-relaxed">Únete a TERA y comienza a gestionar tus nubes con facilidad</p>
+      </div>
 
-        <CardContent className="space-y-4">
-          {/* Signup Form - Using Supabase authentication */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('signup.nameLabel')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type="text"
-                          placeholder={t('signup.namePlaceholder')}
-                          className="pl-10"
-                          data-testid="input-name"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Nombre completo</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Damien Lewis"
+                      className="h-16 px-6 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg placeholder:text-gray-300"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs font-semibold text-red-500" />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('signup.emailLabel')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder={t('signup.emailPlaceholder')}
-                          className="pl-10"
-                          data-testid="input-email"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="damien.lewis@gmail.com"
+                      className="h-16 px-6 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg placeholder:text-gray-300"
+                    />
+                  </FormControl>
+                  <FormMessage className="text-xs font-semibold text-red-500" />
+                </FormItem>
+              )}
+            />
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('signup.passwordLabel')}</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Contraseña</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                         <Input
                           {...field}
                           type={showPassword ? "text" : "password"}
-                          placeholder={t('signup.passwordPlaceholder')}
-                          className="pl-10 pr-10"
-                          data-testid="input-password"
+                          placeholder="••••••••"
+                          className="h-16 px-6 pr-14 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg"
                         />
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0"
+                          className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-600 transition-colors"
                           onClick={() => setShowPassword(!showPassword)}
-                          data-testid="button-toggle-password"
                         >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
                       </div>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs font-semibold text-red-500" />
                   </FormItem>
                 )}
               />
@@ -204,95 +177,77 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('signup.confirmPasswordLabel')}</FormLabel>
+                  <FormItem className="space-y-3">
+                    <FormLabel className="text-[12px] font-bold text-gray-400 uppercase tracking-[0.2em]">Confirmar</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type={showConfirmPassword ? "text" : "password"}
-                          placeholder={t('signup.confirmPasswordPlaceholder')}
-                          className="pl-10 pr-10"
-                          data-testid="input-confirm-password"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          data-testid="button-toggle-confirm-password"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="acceptTerms"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="checkbox-accept-terms"
+                      <Input
+                        {...field}
+                        type="password"
+                        placeholder="••••••••"
+                        className="h-16 px-6 rounded-2xl border-gray-100 focus:border-[#0061D5] focus:ring-[6px] focus:ring-blue-50 transition-all bg-gray-50/30 shadow-sm text-lg"
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel className="text-sm text-muted-foreground">
-                        {t('signup.acceptTerms.part1')}{' '}
-                        <Link href="/terms">
-                          <Button variant="link" className="p-0 h-auto font-normal text-sm underline">
-                            {t('signup.acceptTerms.termsLink')}
-                          </Button>
-                        </Link>
-                        {' '}{t('signup.acceptTerms.and')}{' '}
-                        <Link href="/privacy">
-                          <Button variant="link" className="p-0 h-auto font-normal text-sm underline">
-                            {t('signup.acceptTerms.privacyLink')}
-                          </Button>
-                        </Link>
-                      </FormLabel>
-                      <FormMessage />
-                    </div>
+                    <FormMessage className="text-xs font-semibold text-red-500" />
                   </FormItem>
                 )}
               />
-
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-                data-testid="button-signup-submit"
-              >
-                {isLoading ? t('common:status.loading') : t('signup.createAccountButton')}
-              </Button>
-            </form>
-          </Form>
-
-          <div className="text-center">
-            <div className="text-sm text-muted-foreground">
-              {t('signup.hasAccount')}{' '}
-              <Link href="/login">
-                <Button variant="link" className="p-0 h-auto font-normal text-sm">
-                  {t('signup.signIn')}
-                </Button>
-              </Link>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
+          <FormField
+            control={form.control}
+            name="acceptTerms"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-4">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    className="w-6 h-6 rounded-lg border-gray-200 data-[state=checked]:bg-[#0061D5] data-[state=checked]:border-[#0061D5]"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm text-gray-500 font-medium">
+                    Acepto los <Link href="/terms"><span className="text-blue-600 font-bold hover:underline cursor-pointer">Términos</span></Link> y la <Link href="/privacy"><span className="text-blue-600 font-bold hover:underline cursor-pointer">Privacidad</span></Link>
+                  </FormLabel>
+                  <FormMessage className="text-xs font-semibold text-red-500" />
+                </div>
+              </FormItem>
+            )}
+          />
+
+          <div className="flex items-center justify-between pt-4">
+            <div className="flex gap-2.5">
+              {[0, 1, 2, 3].map((i) => (
+                <div 
+                  key={i} 
+                  className={`h-2 rounded-full transition-all duration-700 ease-in-out ${i === 1 ? 'w-10 bg-blue-600' : 'w-2 bg-gray-100'}`}
+                />
+              ))}
+            </div>
+
+            <motion.div whileHover={{ scale: 1.05, x: 8 }} whileTap={{ scale: 0.95 }}>
+              <Button 
+                type="submit" 
+                className="h-16 px-12 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white font-black text-lg shadow-[0_20px_40px_-10px_rgba(0,97,213,0.3)] gap-4 transition-all group"
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Continuar"}
+                {!isLoading && <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />}
+              </Button>
+            </motion.div>
+          </div>
+        </form>
+      </Form>
+
+      <div className="pt-10 border-t border-gray-100 text-center">
+        <p className="text-gray-400 font-medium text-lg">
+          ¿Ya tienes una cuenta?{" "}
+          <Link href="/login">
+            <span className="text-[#0061D5] font-black hover:underline cursor-pointer tracking-tight">Inicia sesión</span>
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
