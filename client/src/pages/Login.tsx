@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "wouter";
 
 export default function Login() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,76 +40,116 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#F8F9FB] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden bg-white p-4 sm:p-6">
+      {/* Refined Background with Stratis-style Pastel Gradients */}
+      <div className="absolute inset-0 z-0">
+        {/* Subtle Grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.05]" 
+          style={{ 
+            backgroundImage: `linear-gradient(#e5e7eb 1px, transparent 1px), linear-gradient(90deg, #e5e7eb 1px, transparent 1px)`,
+            backgroundSize: '50px 50px' 
+          }}
+        />
+        
+        {/* Soft Pastel Orbs */}
+        <motion.div
+          animate={{ 
+            x: [0, 100, 0],
+            y: [0, 50, 0],
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[-10%] left-[-5%] w-[60%] h-[60%] rounded-full blur-[120px] bg-[#FFD6E0]/30"
+        />
+        <motion.div
+          animate={{ 
+            x: [0, -80, 0],
+            y: [0, 100, 0],
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-[10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] bg-[#D6E4FF]/40"
+        />
+        <motion.div
+          animate={{ 
+            x: [0, 50, 0],
+            y: [0, -100, 0],
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-[-10%] left-[20%] w-[50%] h-[50%] rounded-full blur-[120px] bg-[#E0F7FA]/40"
+        />
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
-          transition={{ 
-            duration: 0.8,
-            ease: [0.16, 1, 0.3, 1]
-          }}
-          className="w-full max-w-[1100px] h-full min-h-[600px] grid lg:grid-cols-2 bg-white rounded-[32px] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] border border-gray-100"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[1000px] relative z-10 flex flex-col items-center"
         >
-          {/* Left Side: Animation & Graphics */}
-          <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-[#0061D5] to-[#0047A5] relative overflow-hidden">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="relative z-10"
-            >
-              <h2 className="text-4xl font-bold text-white leading-tight">
-                Gestiona tus archivos <br /> 
-                <span className="text-blue-200">con inteligencia.</span>
-              </h2>
-              <p className="mt-4 text-blue-100 text-lg max-w-sm">
-                La plataforma multi-nube más potente para sincronizar, organizar y proteger tus datos.
-              </p>
-            </motion.div>
+          {/* Logo Section */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center gap-2 mb-12"
+          >
+            <div className="w-9 h-9 bg-black rounded-lg shadow-xl flex items-center justify-center">
+              <div className="w-4 h-4 bg-white rotate-45 rounded-sm" />
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-gray-900">TERA</span>
+          </motion.div>
 
-            {/* Floating Elements Animation */}
-            <div className="absolute inset-0 z-0">
-              <motion.div
-                animate={{ 
-                  y: [0, -20, 0],
-                  rotate: [0, 5, 0]
-                }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute top-[20%] right-[10%] w-64 h-64 bg-white/10 rounded-[40px] blur-3xl"
-              />
-              <motion.div
-                animate={{ 
-                  y: [0, 20, 0],
-                  rotate: [0, -5, 0]
-                }}
-                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute bottom-[10%] left-[10%] w-48 h-48 bg-blue-400/20 rounded-full blur-2xl"
-              />
+          {/* Main Card */}
+          <div className="w-full grid lg:grid-cols-[1.1fr_0.9fr] bg-white rounded-[40px] overflow-hidden shadow-[0_48px_100px_-24px_rgba(0,0,0,0.08)] border border-gray-100 min-h-[580px]">
+            {/* Left Side: Login Form */}
+            <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center bg-white relative">
+              <LoginForm onReplitLogin={handleReplitLogin} />
             </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="relative z-10 flex items-center gap-4 text-blue-100 text-sm font-medium"
-            >
-              <div className="flex -space-x-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0061D5] bg-gray-200 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=${i}`} alt="user" />
+            {/* Right Side: Stratis Quote Style */}
+            <div className="hidden lg:flex flex-col justify-center p-12 lg:p-16 bg-[#F9FAFB] relative overflow-hidden">
+              {/* Decorative circle */}
+              <div className="absolute top-[-50px] right-[-50px] w-40 h-40 bg-white rounded-full blur-3xl opacity-50" />
+              
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="space-y-10 relative z-10"
+              >
+                <div className="space-y-8">
+                  <p className="text-[24px] leading-[1.4] text-gray-800 font-medium tracking-tight italic">
+                    "TERA nos ha permitido construir flujos de trabajo listos para producción en minutos, realmente nos ayudó a expandir nuestras capacidades rápidamente"
+                  </p>
+                  
+                  <div className="flex items-center gap-4 pt-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden border-[3px] border-white shadow-md">
+                      <img 
+                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150" 
+                        alt="Alison Bothman" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 text-lg">Alison Bothman</p>
+                      <p className="text-gray-500 font-medium">Product Designer, Google</p>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <span>+10k usuarios confían en TERA</span>
-            </motion.div>
+                </div>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Right Side: Form */}
-          <div className="flex flex-col justify-center p-8 sm:p-12 lg:p-20 bg-white">
-            <LoginForm onReplitLogin={handleReplitLogin} />
-          </div>
+          {/* Footer Links */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-10 flex gap-8 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
+          >
+            <Link href="/terms" className="hover:text-[#0061D5] transition-colors cursor-pointer">Términos de servicio</Link>
+            <Link href="/privacy" className="hover:text-[#0061D5] transition-colors cursor-pointer">Política de privacidad</Link>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     </div>

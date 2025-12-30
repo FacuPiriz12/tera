@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, Lock, Mail, Github } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Github, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { SiGoogle } from "react-icons/si";
 import { motion } from "framer-motion";
@@ -68,58 +68,27 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-8">
-      <div className="text-center">
-        <CloneDriveLogo className="h-12 w-auto mx-auto mb-6 text-[#0061D5]" />
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Bienvenido a TERA</h1>
-        <p className="text-gray-500 mt-2">Ingresa tus credenciales para continuar</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Button 
-          variant="outline" 
-          className="h-12 rounded-2xl border-gray-200 hover:bg-gray-50 gap-2 font-semibold"
-          onClick={onReplitLogin}
-        >
-          <SiGoogle className="w-5 h-5" />
-          Google
-        </Button>
-        <Button 
-          variant="outline" 
-          className="h-12 rounded-2xl border-gray-200 hover:bg-gray-50 gap-2 font-semibold"
-        >
-          <Github className="w-5 h-5" />
-          GitHub
-        </Button>
-      </div>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-gray-100" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-4 text-gray-400 font-medium">O usa tu email</span>
-        </div>
+    <div className="w-full space-y-8 relative">
+      <div className="space-y-3">
+        <h1 className="text-[36px] font-bold text-gray-900 tracking-tighter leading-[1.1]">Inicia sesión hoy</h1>
+        <p className="text-gray-500 text-[17px] font-medium">Ingresa tu email y contraseña para acceder a tu cuenta</p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
-                <FormLabel className="text-xs font-bold uppercase tracking-wider text-gray-500">Email</FormLabel>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-[13px] font-bold text-gray-400 uppercase tracking-widest">Email</FormLabel>
                 <FormControl>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                    <Input
-                      {...field}
-                      type="email"
-                      placeholder="nombre@ejemplo.com"
-                      className="h-14 pl-12 rounded-2xl border-gray-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all bg-gray-50/30"
-                    />
-                  </div>
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="damien.lewis@gmail.com"
+                    className="h-14 px-5 rounded-2xl border-gray-200 focus:border-[#0061D5] focus:ring-4 focus:ring-blue-50 transition-all bg-gray-50/50 shadow-none text-lg"
+                  />
                 </FormControl>
                 <FormMessage className="text-xs" />
               </FormItem>
@@ -130,25 +99,19 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             control={form.control}
             name="password"
             render={({ field }) => (
-              <FormItem className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-gray-500">Contraseña</FormLabel>
-                  <Link href="/forgot-password">
-                    <span className="text-xs font-bold text-blue-600 hover:text-blue-700 cursor-pointer">¿Olvidaste tu contraseña?</span>
-                  </Link>
-                </div>
+              <FormItem className="space-y-2">
+                <FormLabel className="text-[13px] font-bold text-gray-400 uppercase tracking-widest">Contraseña</FormLabel>
                 <FormControl>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className="h-14 pl-12 pr-12 rounded-2xl border-gray-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all bg-gray-50/30"
+                      className="h-14 px-5 pr-14 rounded-2xl border-gray-200 focus:border-[#0061D5] focus:ring-4 focus:ring-blue-50 transition-all bg-gray-50/50 shadow-none text-lg"
                     />
                     <button
                       type="button"
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -160,24 +123,38 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             )}
           />
 
-          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-            <Button 
-              type="submit" 
-              className="w-full h-14 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white text-base font-bold shadow-[0_8px_24px_-8px_rgba(0,97,213,0.4)] transition-all"
-              disabled={isLoading}
-            >
-              {isLoading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Cargando...</span> : "Iniciar Sesión"}
-            </Button>
-          </motion.div>
+          <div className="flex items-center justify-between pt-4">
+            <div className="flex gap-1.5">
+              {[0, 1, 2, 3].map((i) => (
+                <div 
+                  key={i} 
+                  className={`h-1.5 rounded-full transition-all duration-500 ${i === 0 ? 'w-6 bg-gray-300' : 'w-1.5 bg-gray-100'}`}
+                />
+              ))}
+            </div>
+
+            <motion.div whileHover={{ scale: 1.02, x: 5 }} whileTap={{ scale: 0.98 }}>
+              <Button 
+                type="submit" 
+                className="h-14 px-10 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white font-extrabold text-base shadow-xl shadow-blue-600/20 gap-3 transition-all group"
+                disabled={isLoading}
+              >
+                {isLoading ? "Cargando..." : "Continuar"}
+                {!isLoading && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
+              </Button>
+            </motion.div>
+          </div>
         </form>
       </Form>
 
-      <p className="text-center text-sm text-gray-500">
-        ¿No tienes una cuenta?{" "}
-        <Link href="/signup">
-          <span className="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">Regístrate gratis</span>
-        </Link>
-      </p>
+      <div className="pt-8 border-t border-gray-50 text-center">
+        <p className="text-gray-500 font-medium">
+          ¿No tienes una cuenta?{" "}
+          <Link href="/signup">
+            <span className="text-[#0061D5] font-bold hover:underline cursor-pointer">Regístrate gratis</span>
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }
