@@ -8,9 +8,20 @@ import { Link } from "wouter";
 
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
+import { useState, useMemo } from "react";
 
 export default function Login() {
   const { t } = useTranslation(['auth', 'common']);
+  
+  const welcomeMessages = useMemo(() => {
+    const messages = t('auth:login.welcomeMessages', { returnObjects: true });
+    return Array.isArray(messages) ? messages : ["Welcome back!"];
+  }, [t]);
+
+  const randomWelcome = useMemo(() => {
+    return welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+  }, [welcomeMessages]);
+
   const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -59,7 +70,7 @@ export default function Login() {
           className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
           <div className="w-full space-y-8">
-            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('login.title', { ns: 'auth' })}</h1>
+            <h1 className="text-3xl font-semibold text-center text-[#111827]">{randomWelcome}</h1>
             
             <div className="w-full bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8">
               <LoginForm onReplitLogin={handleReplitLogin} />
