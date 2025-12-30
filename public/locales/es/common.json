@@ -32,5 +32,9 @@
     "completed": "Completado",
     "pending": "Pendiente",
     "inProgress": "En progreso"
+  },
+  "footer": {
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad"
   }
 }

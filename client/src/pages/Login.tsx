@@ -71,8 +71,8 @@ export default function Login() {
             transition={{ delay: 0.6 }}
             className="mt-12 flex gap-10 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
           >
-            <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('footer.terms', { ns: 'common' })}</Link>
-            <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('footer.privacy', { ns: 'common' })}</Link>
+            <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">{t('footer.terms', { ns: 'common' })}</Link>
+            <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">{t('footer.privacy', { ns: 'common' })}</Link>
           </motion.div>
         </motion.div>
       </AnimatePresence>
