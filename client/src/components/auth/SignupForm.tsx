@@ -99,25 +99,6 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
 
   return (
     <div className="w-full space-y-6">
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full h-11 border-[#E5E7EB] text-[#374151] hover:bg-gray-50 flex items-center justify-center gap-2 font-medium"
-        onClick={onReplitLogin}
-      >
-        <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        {t('signup.continueWithReplit', { ns: 'auth' })}
-      </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-[#E5E7EB]" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-[#9CA3AF] lowercase">{t('or', { ns: 'common' })}</span>
-        </div>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -125,11 +106,11 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="name"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.nameLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.nameLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder={t('signup.namePlaceholder', { ns: 'auth' })}
+                    placeholder={t('auth:signup.namePlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -143,12 +124,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.emailLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder={t('signup.emailPlaceholder', { ns: 'auth' })}
+                    placeholder={t('auth:signup.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -162,13 +143,13 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.passwordLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder={t('signup.passwordPlaceholder', { ns: 'auth' })}
+                      placeholder={t('auth:signup.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -190,12 +171,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.confirmPasswordLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.confirmPasswordLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
-                    placeholder={t('signup.confirmPasswordPlaceholder', { ns: 'auth' })}
+                    placeholder={t('auth:signup.confirmPasswordPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -218,13 +199,13 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
                 </FormControl>
                 <div className="leading-none">
                   <FormLabel className="text-xs text-[#6B7280] font-normal">
-                    {t('signup.acceptTerms.part1', { ns: 'auth' })}{' '}
+                    {t('auth:signup.acceptTerms.part1')}{' '}
                     <Link href="/terms">
-                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('signup.acceptTerms.termsLink', { ns: 'auth' })}</span>
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth:signup.acceptTerms.termsLink')}</span>
                     </Link>{' '}
-                    {t('signup.acceptTerms.and', { ns: 'auth' })}{' '}
+                    {t('auth:signup.acceptTerms.and')}{' '}
                     <Link href="/privacy">
-                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('signup.acceptTerms.privacyLink', { ns: 'auth' })}</span>
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth:signup.acceptTerms.privacyLink')}</span>
                     </Link>
                   </FormLabel>
                 </div>
@@ -237,14 +218,14 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('status.loading', { ns: 'common' }) : t('signup.createAccountButton', { ns: 'auth' })}
+            {isLoading ? t('common:status.loading') : t('auth:signup.createAccountButton')}
           </Button>
         </form>
       </Form>
 
       <div className="text-center pt-2">
         <Link href="/login">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('signup.hasAccount', { ns: 'auth' })} {t('signup.signIn', { ns: 'auth' })}</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth:signup.hasAccount')} {t('auth:signup.signIn')}</span>
         </Link>
       </div>
     </div>

@@ -68,25 +68,6 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
 
   return (
     <div className="w-full space-y-6">
-      <Button 
-        type="button" 
-        variant="outline" 
-        className="w-full h-11 border-[#E5E7EB] text-[#374151] hover:bg-gray-50 flex items-center justify-center gap-2 font-medium"
-        onClick={onReplitLogin}
-      >
-        <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        {t('login.button', { ns: 'auth' })}
-      </Button>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-[#E5E7EB]" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-[#9CA3AF] lowercase">{t('or', { ns: 'common' })}</span>
-        </div>
-      </div>
-
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -94,12 +75,12 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('login.emailLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:login.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder={t('login.emailPlaceholder', { ns: 'auth' })}
+                    placeholder={t('auth:login.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -113,13 +94,13 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('login.passwordLabel', { ns: 'auth' })}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:login.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder={t('login.passwordPlaceholder', { ns: 'auth' })}
+                      placeholder={t('auth:login.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -141,17 +122,17 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('status.loading', { ns: 'common' }) : t('login.signInButton', { ns: 'auth' })}
+            {isLoading ? t('common:status.loading') : t('auth:login.signInButton')}
           </Button>
         </form>
       </Form>
 
       <div className="flex items-center justify-between pt-2">
         <Link href="/signup">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('login.noAccount', { ns: 'auth' })}</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth:login.noAccount')}</span>
         </Link>
         <button type="button" className="text-sm text-[#374151] hover:underline">
-          {t('login.forgotPassword', { ns: 'auth' }) || 'Forgot Password?'}
+          {t('auth:login.forgotPassword') || 'Forgot Password?'}
         </button>
       </div>
     </div>
