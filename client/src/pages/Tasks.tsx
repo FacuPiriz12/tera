@@ -52,6 +52,7 @@ import Sidebar from "@/components/Sidebar";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import SyncStatsCard from "@/components/SyncStatsCard";
 import ConflictResolutionModal from "@/components/ConflictResolutionModal";
+import { FileVersionsTimeline } from "@/components/FileVersionsTimeline";
 import type { ScheduledTask, ScheduledTaskRun, FileConflict } from "@shared/schema";
 
 const DAYS_OF_WEEK = [
@@ -180,10 +181,9 @@ export default function Tasks() {
     queryKey: ["/api/scheduled-tasks", selectedTaskForStats, "conflicts"],
     queryFn: async () => {
       if (!selectedTaskForStats) return [];
-      const response = await apiRequest(
-        `/api/scheduled-tasks/${selectedTaskForStats}/conflicts`
-      );
-      return response.conflicts || [];
+      const res = await apiRequest(`/api/scheduled-tasks/${selectedTaskForStats}/conflicts`);
+      const data = await res.json();
+      return data.conflicts || [];
     },
     enabled: !!selectedTaskForStats && isConflictDialogOpen,
     refetchInterval: 10000,
@@ -475,6 +475,30 @@ export default function Tasks() {
         )}
       </div>
 
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
+        <h4 className="font-medium text-sm flex items-center justify-between gap-2 text-blue-700 dark:text-blue-300">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Sincronización Selectiva
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs h-7"
+            onClick={() => setIsSelectiveSyncDialogOpen(true)}
+          >
+            Configurar carpetas
+          </Button>
+        </h4>
+        <div className="text-xs text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
+          {formData.selectedFolderIds?.length ? (
+            <p>✓ {formData.selectedFolderIds.length} carpetas seleccionadas</p>
+          ) : (
+            <p>Sincronizando todo el contenido (por defecto)</p>
+          )}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Origen</Label>
@@ -560,30 +584,6 @@ export default function Tasks() {
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
-        <h4 className="font-medium text-sm flex items-center justify-between gap-2 text-blue-700 dark:text-blue-300">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Sincronización Selectiva
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="text-xs h-7"
-            onClick={() => setIsSelectiveSyncDialogOpen(true)}
-          >
-            Configurar carpetas
-          </Button>
-        </h4>
-        <div className="text-xs text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
-          {formData.selectedFolderIds?.length ? (
-            <p>✓ {formData.selectedFolderIds.length} carpetas seleccionadas</p>
-          ) : (
-            <p>Sincronizando todo el contenido (por defecto)</p>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
         <h4 className="font-medium text-sm flex items-center gap-2 text-blue-700 dark:text-blue-300">
           <Calendar className="w-4 h-4" />
           Programación
@@ -639,12 +639,12 @@ export default function Tasks() {
               value={formData.dayOfWeek.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfWeek: parseInt(value) })}
             >
-              <SelectTrigger data-testid="select-day-of-week" className="bg-white dark:bg-gray-800">
+              <SelectTrigger className="bg-white dark:bg-gray-800">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {DAYS_OF_WEEK.map(d => (
-                  <SelectItem key={d.value} value={d.value.toString()}>{d.label}</SelectItem>
+                {DAYS_OF_WEEK.map(day => (
+                  <SelectItem key={day.value} value={day.value.toString()}>{day.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -653,23 +653,26 @@ export default function Tasks() {
 
         {formData.frequency === 'monthly' && (
           <div className="space-y-2">
-            <Label htmlFor="day-of-month">Día del mes</Label>
-            <Input
-              id="day-of-month"
-              type="number"
-              min={1}
-              max={31}
-              value={formData.dayOfMonth}
-              onChange={(e) => setFormData({ ...formData, dayOfMonth: parseInt(e.target.value) || 1 })}
-              data-testid="input-day-of-month"
-              className="bg-white dark:bg-gray-800"
-            />
+            <Label>Día del mes</Label>
+            <Select
+              value={formData.dayOfMonth.toString()}
+              onValueChange={(value) => setFormData({ ...formData, dayOfMonth: parseInt(value) })}
+            >
+              <SelectTrigger className="bg-white dark:bg-gray-800">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                  <SelectItem key={day} value={day.toString()}>Día {day}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="hour">Hora</Label>
+            <Label htmlFor="hour">Hora (0-23)</Label>
             <Input
               id="hour"
               type="number"
@@ -704,22 +707,6 @@ export default function Tasks() {
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between py-2">
-          <div className="space-y-0.5">
-            <Label>Sincronización Selectiva</Label>
-            <p className="text-xs text-muted-foreground">Elige qué carpetas sincronizar</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSelectiveSyncDialogOpen(true)}
-            data-testid="button-configure-selective-sync"
-          >
-            Configurar
-          </Button>
-        </div>
-
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
             <Label>Omitir duplicados</Label>
@@ -871,10 +858,9 @@ export default function Tasks() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              onClick={() => setSelectedTaskForStats(selectedTaskForStats === task.id ? null : task.id)}
                               data-testid={`button-task-actions-${task.id}`}
                             >
-                              <ChevronDown className={`w-4 h-4 transition-transform ${selectedTaskForStats === task.id ? 'rotate-180' : ''}`} />
+                              <ChevronDown className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -905,20 +891,24 @@ export default function Tasks() {
                                 Reanudar
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedTaskForStats(task.id);
-                                setIsConflictDialogOpen(true);
-                              }}
-                              data-testid={`action-view-conflicts-${task.id}`}
-                            >
-                              <AlertCircle className="w-4 h-4 mr-2" />
-                              Ver conflictos
+                            
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedTaskForVersions({id: task.id, name: task.name});
+                              setIsVersionTimelineOpen(true);
+                            }}>
+                              <History className="w-4 h-4 mr-2" />
+                              Ver historial de versiones
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => openEditDialog(task)}
-                              data-testid={`action-edit-${task.id}`}
-                            >
+
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedTaskForStats(task.id);
+                              setIsConflictDialogOpen(true);
+                            }}>
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              Gestionar conflictos
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => openEditDialog(task)}>
                               <Edit className="w-4 h-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
@@ -937,7 +927,7 @@ export default function Tasks() {
                     </CardHeader>
                     
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm" onClick={() => setSelectedTaskForStats(selectedTaskForStats === task.id ? null : task.id)}>
                         <div className="flex items-start gap-2">
                           <RefreshCw className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div>
@@ -1011,6 +1001,54 @@ export default function Tasks() {
               </div>
             )}
           </div>
+
+          <Dialog open={isVersionTimelineOpen} onOpenChange={setIsVersionTimelineOpen}>
+            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Historial de Versiones</DialogTitle>
+                <DialogDescription>
+                  Explora las versiones anteriores y restaura cambios.
+                </DialogDescription>
+              </DialogHeader>
+              {selectedTaskForVersions && (
+                <FileVersionsTimeline 
+                  fileId={selectedTaskForVersions.id} 
+                  fileName={selectedTaskForVersions.name} 
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isSelectiveSyncDialogOpen} onOpenChange={setIsSelectiveSyncDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Sincronización Selectiva</DialogTitle>
+                <DialogDescription>
+                  Selecciona qué carpetas deseas sincronizar o excluir
+                </DialogDescription>
+              </DialogHeader>
+              <SelectiveSyncDialogContent
+                taskId={selectedTask?.id}
+                onSave={(selectedFolders, excludedFolders) => {
+                  setFormData({
+                    ...formData,
+                    selectedFolderIds: selectedFolders,
+                    excludedFolderIds: excludedFolders,
+                  });
+                  setIsSelectiveSyncDialogOpen(false);
+                }}
+              />
+            </DialogContent>
+          </Dialog>
+
+          {selectedTaskForStats && (
+            <ConflictResolutionModal
+              isOpen={isConflictDialogOpen}
+              onClose={() => setIsConflictDialogOpen(false)}
+              conflicts={conflicts}
+              taskId={selectedTaskForStats}
+            />
+          )}
         </main>
       </div>
 
@@ -1029,26 +1067,6 @@ export default function Tasks() {
           />
         </DialogContent>
       </Dialog>
-
-      <SelectiveSyncDialog
-        isOpen={isSelectiveSyncDialogOpen}
-        onOpenChange={setIsSelectiveSyncDialogOpen}
-        taskId={selectedTask?.id}
-        onSave={(selectedFolders, excludedFolders) => {
-          setFormData({
-            ...formData,
-            selectedFolderIds: selectedFolders,
-            excludedFolderIds: excludedFolders,
-          });
-        }}
-      />
-
-      <ConflictResolutionModal
-        isOpen={isConflictDialogOpen}
-        onClose={() => setIsConflictDialogOpen(false)}
-        conflicts={conflicts}
-        taskId={selectedTaskForStats || ""}
-      />
     </div>
   );
 }
@@ -1074,14 +1092,10 @@ function formatFileSize(bytes?: number): string {
   return `${size.toFixed(1)} ${units[unitIndex]}`;
 }
 
-function SelectiveSyncDialog({
-  isOpen,
-  onOpenChange,
+function SelectiveSyncDialogContent({
   taskId,
   onSave,
 }: {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
   taskId?: string;
   onSave: (selected: string[], excluded: string[]) => void;
 }) {
@@ -1096,24 +1110,21 @@ function SelectiveSyncDialog({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen && taskId) {
+    if (taskId) {
       loadFolders();
     }
-  }, [isOpen, taskId]);
+  }, [taskId]);
 
   const loadFolders = async () => {
-    if (!taskId) {
-      toast({ title: "Error", description: "No se especificó ID de tarea", variant: "destructive" });
-      return;
-    }
-    
+    if (!taskId) return;
     setIsLoading(true);
     try {
       const response = await apiRequest(`/api/scheduled-tasks/${taskId}/folders/list?provider=source`);
-      if (response && response.folders) {
-        setFolders(response.folders);
-        const selected = new Set(response.folders.filter((f: any) => f.selected).map((f: any) => f.id));
-        const excluded = new Set(response.folders.filter((f: any) => f.excluded).map((f: any) => f.id));
+      const data = await response.json();
+      if (data && data.folders) {
+        setFolders(data.folders);
+        const selected = new Set(data.folders.filter((f: any) => f.selected).map((f: any) => f.id));
+        const excluded = new Set(data.folders.filter((f: any) => f.excluded).map((f: any) => f.id));
         setSelectedFolders(selected);
         setExcludedFolders(excluded);
       }
@@ -1135,7 +1146,6 @@ function SelectiveSyncDialog({
   const toggleFolderSelection = (folderId: string) => {
     const newSelected = new Set(selectedFolders);
     const newExcluded = new Set(excludedFolders);
-    
     if (newSelected.has(folderId)) {
       newSelected.delete(folderId);
     } else {
@@ -1149,7 +1159,6 @@ function SelectiveSyncDialog({
   const toggleFolderExclusion = (folderId: string) => {
     const newSelected = new Set(selectedFolders);
     const newExcluded = new Set(excludedFolders);
-    
     if (newExcluded.has(folderId)) {
       newExcluded.delete(folderId);
     } else {
@@ -1172,19 +1181,15 @@ function SelectiveSyncDialog({
 
   const handleDropZone = (zone: 'include' | 'exclude') => {
     if (!draggedFolder) return;
-    
     const newSelected = new Set(selectedFolders);
     const newExcluded = new Set(excludedFolders);
-    
     newSelected.delete(draggedFolder);
     newExcluded.delete(draggedFolder);
-    
     if (zone === 'include') {
       newSelected.add(draggedFolder);
     } else {
       newExcluded.add(draggedFolder);
     }
-    
     setSelectedFolders(newSelected);
     setExcludedFolders(newExcluded);
     setDraggedFolder(null);
@@ -1192,11 +1197,7 @@ function SelectiveSyncDialog({
   };
 
   const handleSave = async () => {
-    if (!taskId) {
-      toast({ title: "Error", description: "No se especificó ID de tarea", variant: "destructive" });
-      return;
-    }
-
+    if (!taskId) return;
     setIsSaving(true);
     try {
       await apiRequest(`/api/scheduled-tasks/${taskId}/folders/select`, {
@@ -1208,7 +1209,6 @@ function SelectiveSyncDialog({
         headers: { 'Content-Type': 'application/json' },
       });
       onSave(Array.from(selectedFolders), Array.from(excludedFolders));
-      onOpenChange(false);
       toast({ title: "Guardado", description: "La configuración de sincronización selectiva se ha actualizado." });
     } catch (error) {
       console.error("Error saving folder selection:", error);
@@ -1219,192 +1219,81 @@ function SelectiveSyncDialog({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Sincronización Selectiva</DialogTitle>
-          <DialogDescription>
-            Selecciona qué carpetas deseas sincronizar o excluir
-          </DialogDescription>
-        </DialogHeader>
-        
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="text-sm text-muted-foreground">Cargando carpetas...</p>
+    <div className="space-y-3 max-h-[550px] overflow-y-auto">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-12 gap-4">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <p className="text-sm text-muted-foreground">Cargando carpetas...</p>
+        </div>
+      ) : folders.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>No hay carpetas disponibles para sincronización selectiva</p>
+          <Button type="button" variant="outline" size="sm" onClick={loadFolders} className="mt-4">
+            Intentar de nuevo
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
+            📌 Arrastra carpetas a las zonas de abajo, o usa los controles
           </div>
-        ) : folders.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <p>No hay carpetas disponibles para sincronización selectiva</p>
-            <Button
+          <div className="flex gap-2">
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              onClick={loadFolders}
-              className="mt-4"
-              data-testid="button-retry-load-folders"
+              onClick={() => setSortBy('name')}
+              className={`text-xs px-3 py-1 rounded transition-colors ${sortBy === 'name' ? 'bg-primary text-primary-foreground' : 'border border-gray-300 hover:bg-gray-100'}`}
             >
-              Intentar de nuevo
-            </Button>
+              Nombre
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortBy('size')}
+              className={`text-xs px-3 py-1 rounded transition-colors ${sortBy === 'size' ? 'bg-primary text-primary-foreground' : 'border border-gray-300 hover:bg-gray-100'}`}
+            >
+              Tamaño
+            </button>
           </div>
-        ) : (
-          <div className="space-y-3 max-h-[550px] overflow-y-auto">
-            <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-              📌 Arrastra carpetas a las zonas de abajo, o usa los controles
+          <div className="grid grid-cols-2 gap-2">
+            <div
+              onDragOver={handleDragOver}
+              onDrop={() => handleDropZone('include')}
+              className="p-3 rounded-lg border-2 border-dashed border-green-300 bg-green-50/50"
+            >
+              <p className="text-xs font-semibold text-green-700 text-center">✓ Sincronizar ({selectedFolders.size})</p>
             </div>
-            
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSortBy('name')}
-                className={`text-xs px-3 py-1 rounded transition-colors ${
-                  sortBy === 'name'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-                data-testid="button-sort-by-name"
-              >
-                Nombre
-              </button>
-              <button
-                type="button"
-                onClick={() => setSortBy('size')}
-                className={`text-xs px-3 py-1 rounded transition-colors ${
-                  sortBy === 'size'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'border border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                }`}
-                data-testid="button-sort-by-size"
-              >
-                Tamaño
-              </button>
-              <span className="text-xs text-muted-foreground flex items-center ml-auto">
-                {selectedFolders.size + excludedFolders.size} de {folders.length}
-              </span>
-            </div>
-
-            {/* Drop zones */}
-            <div className="grid grid-cols-2 gap-2">
-              {/* Include zone */}
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={() => setDragOverZone(null)}
-                onDrop={() => handleDropZone('include')}
-                className={`p-3 rounded-lg border-2 border-dashed transition-colors ${
-                  dragOverZone === 'include'
-                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                    : 'border-green-300 bg-green-50/50 dark:bg-green-900/10'
-                }`}
-                data-testid="drop-zone-include"
-              >
-                <p className="text-xs font-semibold text-green-700 dark:text-green-400 text-center">
-                  ✓ Sincronizar
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-300 text-center mt-1">
-                  {selectedFolders.size} carpeta{selectedFolders.size !== 1 ? 's' : ''}
-                </p>
-              </div>
-
-              {/* Exclude zone */}
-              <div
-                onDragOver={handleDragOver}
-                onDragLeave={() => setDragOverZone(null)}
-                onDrop={() => handleDropZone('exclude')}
-                className={`p-3 rounded-lg border-2 border-dashed transition-colors ${
-                  dragOverZone === 'exclude'
-                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
-                    : 'border-red-300 bg-red-50/50 dark:bg-red-900/10'
-                }`}
-                data-testid="drop-zone-exclude"
-              >
-                <p className="text-xs font-semibold text-red-700 dark:text-red-400 text-center">
-                  ✗ Omitir
-                </p>
-                <p className="text-xs text-red-600 dark:text-red-300 text-center mt-1">
-                  {excludedFolders.size} carpeta{excludedFolders.size !== 1 ? 's' : ''}
-                </p>
-              </div>
-            </div>
-
-            {/* Folder list */}
-            <div className="space-y-2 border-t pt-3">
-              <p className="text-xs font-semibold text-muted-foreground">Carpetas disponibles:</p>
-              {sortedFolders.map((folder) => {
-                const isSelected = selectedFolders.has(folder.id);
-                const isExcluded = excludedFolders.has(folder.id);
-                
-                return (
-                  <div
-                    key={folder.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, folder.id)}
-                    className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-move ${
-                      draggedFolder === folder.id
-                        ? 'opacity-50 border-blue-400'
-                        : isSelected
-                        ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
-                        : isExcluded
-                        ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700'
-                        : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
-                    data-testid={`folder-item-${folder.id}`}
-                  >
-                    <div className="flex items-center gap-3 flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleFolderSelection(folder.id)}
-                        className="w-4 h-4 rounded"
-                        data-testid={`checkbox-select-${folder.id}`}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{folder.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(folder.size)}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <button
-                      type="button"
-                      onClick={() => toggleFolderExclusion(folder.id)}
-                      className={`px-2 py-1 text-xs rounded transition-colors flex-shrink-0 ${
-                        isExcluded
-                          ? 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          : 'border border-gray-300 text-gray-600 hover:bg-red-50 dark:hover:bg-red-900/20'
-                      }`}
-                      title={isExcluded ? 'Incluir esta carpeta' : 'Excluir esta carpeta'}
-                      data-testid={`button-exclude-folder-${folder.id}`}
-                    >
-                      {isExcluded ? '✗' : '○'}
-                    </button>
-                  </div>
-                );
-              })}
+            <div
+              onDragOver={handleDragOver}
+              onDrop={() => handleDropZone('exclude')}
+              className="p-3 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50"
+            >
+              <p className="text-xs font-semibold text-red-700 text-center">✗ Omitir ({excludedFolders.size})</p>
             </div>
           </div>
-        )}
-
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            data-testid="button-cancel-selective-sync"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving || !taskId}
-            data-testid="button-save-selective-sync"
-          >
+          <div className="space-y-2 border-t pt-3">
+            {sortedFolders.map((folder) => (
+              <div
+                key={folder.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, folder.id)}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-move ${selectedFolders.has(folder.id) ? 'bg-green-50 border-green-300' : excludedFolders.has(folder.id) ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'}`}
+              >
+                <input type="checkbox" checked={selectedFolders.has(folder.id)} onChange={() => toggleFolderSelection(folder.id)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{folder.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(folder.size)}</p>
+                </div>
+                <button type="button" onClick={() => toggleFolderExclusion(folder.id)} className="px-2 py-1 text-xs rounded border border-gray-300">
+                  {excludedFolders.has(folder.id) ? '✓' : '✗'}
+                </button>
+              </div>
+            ))}
+          </div>
+          <Button type="button" onClick={handleSave} disabled={isSaving} className="w-full mt-4">
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Guardar
+            Guardar selección
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </>
+      )}
+    </div>
   );
 }
