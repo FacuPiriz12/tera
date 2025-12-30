@@ -3,17 +3,17 @@ import { supabasePromise } from "@/lib/supabase";
 import { setCachedSession } from "@/lib/supabaseSession";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Github } from "lucide-react";
 import { Link } from "wouter";
+import { SiGoogle } from "react-icons/si";
+import { motion } from "framer-motion";
 import CloneDriveLogo from "@/components/CloneDriveLogo";
-import { queryClient } from "@/lib/queryClient";
 
 interface LoginFormProps {
   onReplitLogin: () => void;
@@ -24,7 +24,6 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Create schema inside component to access translations
   const loginSchema = z.object({
     email: z.string().email({ message: t('validation.invalidEmail') }),
     password: z.string().min(6, { message: t('validation.passwordTooShort') })
@@ -46,46 +45,21 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
     setIsLoading(true);
     try {
       const supabase = await supabasePromise;
-      
-      if (!supabase) {
-        toast({
-          title: t('errors.loginFailed'),
-          description: "Authentication service not configured",
-          variant: "destructive"
-        });
-        return;
-      }
+      if (!supabase) throw new Error("Supabase not configured");
       
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password
       });
 
-      if (error) {
-        toast({
-          title: t('errors.loginFailed'),
-          description: error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Manually update the session cache
+      if (error) throw error;
       setCachedSession(authData.session);
-
-      toast({
-        title: t('login.success'),
-        description: t('login.welcomeBack')
-      });
-      
-      // The onAuthStateChange listener will handle invalidating queries
-      // Just redirect - this prevents race conditions and infinite loops
+      toast({ title: t('login.success') });
       window.location.href = '/';
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
       toast({
         title: t('errors.loginFailed'),
-        description: t('errors.tryAgain'),
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -94,109 +68,116 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
-        <CardHeader className="text-center pb-4">
-          <CloneDriveLogo className="h-16 mx-auto mb-4" />
-          <CardTitle className="text-2xl font-bold">{t('login.title')}</CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {t('login.subtitle')}
-          </CardDescription>
-        </CardHeader>
+    <div className="w-full max-w-md mx-auto space-y-8">
+      <div className="text-center">
+        <CloneDriveLogo className="h-12 w-auto mx-auto mb-6 text-[#0061D5]" />
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Bienvenido a TERA</h1>
+        <p className="text-gray-500 mt-2">Ingresa tus credenciales para continuar</p>
+      </div>
 
-        <CardContent className="space-y-4">
-          {/* Login Form - Using Supabase authentication */}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('login.emailLabel')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type="email"
-                          placeholder={t('login.emailPlaceholder')}
-                          className="pl-10"
-                          data-testid="input-email"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="grid grid-cols-2 gap-4">
+        <Button 
+          variant="outline" 
+          className="h-12 rounded-2xl border-gray-200 hover:bg-gray-50 gap-2 font-semibold"
+          onClick={onReplitLogin}
+        >
+          <SiGoogle className="w-5 h-5" />
+          Google
+        </Button>
+        <Button 
+          variant="outline" 
+          className="h-12 rounded-2xl border-gray-200 hover:bg-gray-50 gap-2 font-semibold"
+        >
+          <Github className="w-5 h-5" />
+          GitHub
+        </Button>
+      </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('login.passwordLabel')}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          {...field}
-                          type={showPassword ? "text" : "password"}
-                          placeholder={t('login.passwordPlaceholder')}
-                          className="pl-10 pr-10"
-                          data-testid="input-password"
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-1 top-1 h-8 w-8 p-0"
-                          onClick={() => setShowPassword(!showPassword)}
-                          data-testid="button-toggle-password"
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4" />
-                          ) : (
-                            <Eye className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-gray-100" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-4 text-gray-400 font-medium">O usa tu email</span>
+        </div>
+      </div>
 
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isLoading}
-                data-testid="button-login-submit"
-              >
-                {isLoading ? t('common:status.loading') : t('login.signInButton')}
-              </Button>
-            </form>
-          </Form>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel className="text-xs font-bold uppercase tracking-wider text-gray-500">Email</FormLabel>
+                <FormControl>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="nombre@ejemplo.com"
+                      className="h-14 pl-12 rounded-2xl border-gray-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all bg-gray-50/30"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
 
-          <div className="text-center space-y-2">
-            <Link href="/forgot-password">
-              <Button variant="link" className="p-0 h-auto font-normal text-sm">
-                {t('login.forgotPassword')}
-              </Button>
-            </Link>
-            
-            <div className="text-sm text-muted-foreground">
-              {t('login.noAccount')}{' '}
-              <Link href="/signup">
-                <Button variant="link" className="p-0 h-auto font-normal text-sm">
-                  {t('login.signUp')}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <FormLabel className="text-xs font-bold uppercase tracking-wider text-gray-500">Contraseña</FormLabel>
+                  <Link href="/forgot-password">
+                    <span className="text-xs font-bold text-blue-600 hover:text-blue-700 cursor-pointer">¿Olvidaste tu contraseña?</span>
+                  </Link>
+                </div>
+                <FormControl>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    <Input
+                      {...field}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      className="h-14 pl-12 pr-12 rounded-2xl border-gray-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5 transition-all bg-gray-50/30"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage className="text-xs" />
+              </FormItem>
+            )}
+          />
+
+          <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+            <Button 
+              type="submit" 
+              className="w-full h-14 rounded-2xl bg-[#0061D5] hover:bg-[#0052B3] text-white text-base font-bold shadow-[0_8px_24px_-8px_rgba(0,97,213,0.4)] transition-all"
+              disabled={isLoading}
+            >
+              {isLoading ? <span className="flex items-center gap-2"><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Cargando...</span> : "Iniciar Sesión"}
+            </Button>
+          </motion.div>
+        </form>
+      </Form>
+
+      <p className="text-center text-sm text-gray-500">
+        ¿No tienes una cuenta?{" "}
+        <Link href="/signup">
+          <span className="font-bold text-blue-600 hover:text-blue-700 cursor-pointer">Regístrate gratis</span>
+        </Link>
+      </p>
     </div>
   );
 }
