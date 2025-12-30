@@ -106,7 +106,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
         onClick={onReplitLogin}
       >
         <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        {t('signup.replitSignup')}
+        {t('signup.continueWithReplit')}
       </Button>
 
       <div className="relative">
