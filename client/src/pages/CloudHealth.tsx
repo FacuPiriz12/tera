@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   ArrowRight,
   TrendingDown,
-  Info
+  Info,
+  Check
 } from "lucide-react";
 import { 
   Card, 
@@ -179,6 +180,7 @@ export default function CloudHealth() {
                       <p className="text-xs text-muted-foreground">Encuentra tus archivos más rápido sin la distracción de versiones antiguas.</p>
                     </div>
                   </div>
+                  {/* Test comment to trigger change */}
                   <div className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                       <Trash2 className="w-4 h-4 text-red-600" />
