@@ -64,6 +64,16 @@ export default function Signup() {
               <SignupForm onReplitLogin={handleReplitLogin} />
             </div>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-12 flex gap-10 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
+          >
+            <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('common:footer.terms')}</Link>
+            <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('common:footer.privacy')}</Link>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     </div>
