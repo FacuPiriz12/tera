@@ -40,23 +40,23 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center bg-[#F9FAFB] p-6 pt-20">
+    <div className="min-h-screen w-full flex flex-col items-center bg-[#F9FAFB] p-6 relative">
+      {/* Logo Section - Top Left */}
+      <div className="absolute top-8 left-8 flex items-center gap-2">
+        <div className="flex gap-0.5">
+          <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
+          <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
+        </div>
+        <span className="text-xl font-bold tracking-tight text-[#111827]">TERA</span>
+      </div>
+
       <AnimatePresence mode="wait">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-[400px] flex flex-col items-center space-y-12"
+          className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
-          {/* Logo Section */}
-          <div className="flex items-center gap-2 self-start mb-4">
-            <div className="flex gap-0.5">
-              <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
-              <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-[#111827]">stellar</span>
-          </div>
-
           <div className="w-full space-y-8">
             <h1 className="text-3xl font-semibold text-center text-[#111827]">Create an account</h1>
             
