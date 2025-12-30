@@ -106,7 +106,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
         onClick={onReplitLogin}
       >
         <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        {t('signup.continueWithReplit')}
+        {t('auth:signup.continueWithReplit')}
       </Button>
 
       <div className="relative">
@@ -237,7 +237,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('common:status.loading') : t('signup.createAccountButton')}
+            {isLoading ? t('common:status.loading') : t('auth:signup.createAccountButton')}
           </Button>
         </form>
       </Form>

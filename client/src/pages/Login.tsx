@@ -58,7 +58,7 @@ export default function Login() {
           className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
           <div className="w-full space-y-8">
-            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('login.title')}</h1>
+            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('auth:login.title')}</h1>
             
             <div className="w-full bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8">
               <LoginForm onReplitLogin={handleReplitLogin} />

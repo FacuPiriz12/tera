@@ -75,7 +75,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         onClick={onReplitLogin}
       >
         <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        {t('login.button')}
+        {t('auth:login.button')}
       </Button>
 
       <div className="relative">
@@ -141,7 +141,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('common:status.loading') : t('login.signInButton')}
+            {isLoading ? t('common:status.loading') : t('auth:login.signInButton')}
           </Button>
         </form>
       </Form>
