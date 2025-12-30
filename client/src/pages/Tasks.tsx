@@ -154,7 +154,9 @@ export default function Tasks() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
   const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
+  const [isVersionTimelineOpen, setIsVersionTimelineOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null);
+  const [selectedTaskForVersions, setSelectedTaskForVersions] = useState<{id: string, name: string} | null>(null);
   const [selectedTaskForStats, setSelectedTaskForStats] = useState<string | null>(null);
   const [formData, setFormData] = useState<TaskFormData>(defaultFormData);
 
@@ -554,6 +556,30 @@ export default function Tasks() {
             data-testid="input-dest-folder-name"
             className="bg-gray-50 dark:bg-gray-800"
           />
+        </div>
+      </div>
+
+      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
+        <h4 className="font-medium text-sm flex items-center justify-between gap-2 text-blue-700 dark:text-blue-300">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Sincronización Selectiva
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs h-7"
+            onClick={() => setIsSelectiveSyncDialogOpen(true)}
+          >
+            Configurar carpetas
+          </Button>
+        </h4>
+        <div className="text-xs text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
+          {formData.selectedFolderIds?.length ? (
+            <p>✓ {formData.selectedFolderIds.length} carpetas seleccionadas</p>
+          ) : (
+            <p>Sincronizando todo el contenido (por defecto)</p>
+          )}
         </div>
       </div>
 

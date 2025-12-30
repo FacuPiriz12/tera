@@ -48,6 +48,12 @@ export default function SyncStatsCard({
   const bytesTransferred = taskRun.bytesTransferred || 0;
   const duration = taskRun.duration || 0;
   
+  // New metrics for cumulative sync
+  const filesNew = (taskRun as any).filesNew || 0;
+  const filesModified = (taskRun as any).filesModified || 0;
+  const filesSkipped = (taskRun as any).filesSkipped || 0;
+  const savingsGB = bytesTransferred > 0 ? (bytesTransferred / (1024 * 1024 * 1024)).toFixed(2) : "0";
+
   const statusColor = taskRun.status === 'completed' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
   const statusTextColor = taskRun.status === 'completed' ? 'text-green-700' : 'text-red-700';
   const statusBadgeColor = taskRun.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
@@ -66,6 +72,23 @@ export default function SyncStatsCard({
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Cumulative Sync Specific Stats */}
+        {syncMode === 'cumulative_sync' && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="bg-white p-3 rounded-lg border border-blue-100">
+              <p className="text-xs text-muted-foreground font-medium">Nuevos / Modificados</p>
+              <p className="text-xl font-bold text-blue-700">{filesNew} / {filesModified}</p>
+            </div>
+            <div className="bg-white p-3 rounded-lg border border-green-100">
+              <p className="text-xs text-muted-foreground font-medium">Ahorro Estimado</p>
+              <div className="flex items-center gap-1">
+                <TrendingDown className="w-4 h-4 text-green-600" />
+                <p className="text-xl font-bold text-green-700">{savingsGB} GB</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Fila 1: Archivos procesados */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1 p-3 bg-white rounded-lg">
@@ -73,13 +96,11 @@ export default function SyncStatsCard({
             <p className="text-2xl font-bold text-blue-600">{filesProcessed}</p>
           </div>
           
-          {filesFailed > 0 && (
-            <div className="space-y-1 p-3 bg-white rounded-lg">
-              <p className="text-xs text-muted-foreground font-medium">Con error</p>
-              <p className="text-2xl font-bold text-red-600">{filesFailed}</p>
-            </div>
-          )}
-          
+          <div className="space-y-1 p-3 bg-white rounded-lg">
+            <p className="text-xs text-muted-foreground font-medium">Omitidos</p>
+            <p className="text-2xl font-bold text-gray-500">{filesSkipped}</p>
+          </div>
+
           <div className="space-y-1 p-3 bg-white rounded-lg">
             <p className="text-xs text-muted-foreground font-medium">Duración</p>
             <p className="text-lg font-bold text-purple-600">{formatDuration(duration)}</p>

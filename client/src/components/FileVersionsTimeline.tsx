@@ -88,12 +88,33 @@ export function FileVersionsTimeline({ fileId, fileName }: FileVersionsTimelineP
                       <Clock className="w-3 h-3" />
                       {new Date(version.createdAt).toLocaleString('es-ES')}
                     </div>
+                    {version.changedBy && (
+                      <div className="text-[10px] text-muted-foreground mt-1">
+                        Editado por: {version.changedBy === 'system' ? 'Sistema' : 'Usuario'}
+                      </div>
+                    )}
                   </div>
-                  {index === 0 && (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-semibold">
-                      Actual
-                    </span>
-                  )}
+                  <div className="flex flex-col gap-2">
+                    {index === 0 ? (
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded font-semibold text-center">
+                        Actual
+                      </span>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-xs h-7"
+                        onClick={() => {
+                          if (confirm("¿Estás seguro de que quieres restaurar esta versión?")) {
+                            // Logic for restore would go here via mutation
+                            alert("Restaurando versión...");
+                          }
+                        }}
+                      >
+                        Restaurar
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 {version.size && (
