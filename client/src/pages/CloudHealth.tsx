@@ -8,21 +8,29 @@ import {
   ArrowRight,
   TrendingDown,
   Info,
-  Check
+  Check,
+  Plus,
+  ArrowRightLeft
 } from "lucide-react";
 import { 
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle, 
-  CardDescription 
+  CardTitle 
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Link } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 
 export default function CloudHealth() {
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
+  const hasConnections = user?.googleId || user?.dropboxId;
+
   // Mock data for health insights
   const healthData = {
     duplicateFiles: 124,
@@ -51,6 +59,34 @@ export default function CloudHealth() {
     ]
   };
 
+  if (!hasConnections) {
+    return (
+      <div className="min-h-screen bg-[#F5F7FA] flex flex-col" data-testid="cloud-health-page">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar />
+          <main className="flex-1 p-8">
+            <div className="max-w-4xl mx-auto text-center py-20">
+              <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <HeartPulse className="w-12 h-12 text-red-500" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground mb-4">No hay nubes conectadas</h1>
+              <p className="text-muted-foreground text-lg mb-8 max-w-lg mx-auto">
+                Para analizar la salud de tu almacenamiento, primero debes conectar al menos una cuenta de Google Drive o Dropbox.
+              </p>
+              <Link href="/integrations">
+                <Button size="lg" className="gap-2">
+                  <Plus className="w-5 h-5" />
+                  Conectar nubes ahora
+                </Button>
+              </Link>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] flex flex-col" data-testid="cloud-health-page">
       <Header />
@@ -73,14 +109,14 @@ export default function CloudHealth() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Puntaje de Salud</p>
                   <p className="text-2xl font-bold text-green-600">{healthData.healthScore}/100</p>
                 </div>
-                <div className="w-12 h-12 rounded-full border-4 border-green-500 border-t-transparent animate-spin-slow flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full border-4 border-green-500 border-t-transparent flex items-center justify-center">
                    <span className="text-xs font-bold text-green-700">72%</span>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="border-l-4 border-l-amber-500 shadow-sm">
+              <Card className="border-l-4 border-l-amber-500 shadow-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <FileWarning className="w-4 h-4 text-amber-500" />
@@ -96,7 +132,7 @@ export default function CloudHealth() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-blue-500 shadow-sm">
+              <Card className="border-l-4 border-l-blue-500 shadow-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Clock className="w-4 h-4 text-blue-500" />
@@ -112,7 +148,7 @@ export default function CloudHealth() {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-green-500 shadow-sm">
+              <Card className="border-l-4 border-l-green-500 shadow-sm overflow-hidden">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <TrendingDown className="w-4 h-4 text-green-500" />
@@ -140,15 +176,15 @@ export default function CloudHealth() {
                             <h4 className="font-semibold text-foreground">{insight.title}</h4>
                             <p className="text-sm text-muted-foreground mt-1">{insight.description}</p>
                           </div>
-                          <Badge variant="outline" className={`${insight.type === 'warning' ? 'text-amber-700 border-amber-200 bg-amber-50' : 'text-blue-700 border-blue-200 bg-blue-50'}`}>
+                          <Badge className={`${insight.type === 'warning' ? 'text-amber-700 border-amber-200 bg-amber-50' : 'text-blue-700 border-blue-200 bg-blue-50'}`}>
                             {insight.impact}
                           </Badge>
                         </div>
                         <div className="mt-4 flex gap-3">
-                          <Button size="sm" className={insight.type === 'warning' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'}>
+                          <Button size="sm" className={insight.type === 'warning' ? 'bg-[#FF8800] hover:bg-[#E67A00] text-white shadow-sm' : 'bg-[#0061D5] hover:bg-[#0052B3] text-white shadow-sm'}>
                             {insight.action}
                           </Button>
-                          <Button size="sm" variant="outline">Ignorar</Button>
+                          <Button size="sm" variant="outline" className="bg-white hover:bg-gray-50 text-gray-700">Ignorar</Button>
                         </div>
                       </div>
                     </div>
@@ -167,7 +203,7 @@ export default function CloudHealth() {
                       <Info className="w-4 h-4 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Reduce Costos</p>
+                      <p className="text-sm font-semibold text-gray-900">Reduce Costos</p>
                       <p className="text-xs text-muted-foreground">Evita pagar planes superiores de almacenamiento eliminando basura.</p>
                     </div>
                   </div>
@@ -176,17 +212,16 @@ export default function CloudHealth() {
                       <Check className="w-4 h-4 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Mejor Organización</p>
+                      <p className="text-sm font-semibold text-gray-900">Mejor Organización</p>
                       <p className="text-xs text-muted-foreground">Encuentra tus archivos más rápido sin la distracción de versiones antiguas.</p>
                     </div>
                   </div>
-                  {/* Test comment to trigger change */}
                   <div className="flex gap-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                       <Trash2 className="w-4 h-4 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold">Seguridad</p>
+                      <p className="text-sm font-semibold text-gray-900">Seguridad</p>
                       <p className="text-xs text-muted-foreground">Elimina copias innecesarias de documentos sensibles.</p>
                     </div>
                   </div>
@@ -203,9 +238,9 @@ export default function CloudHealth() {
   );
 }
 
-function Badge({ children, className, variant = "default" }: { children: React.ReactNode, className?: string, variant?: string }) {
+function Badge({ children, className }: { children: React.ReactNode, className?: string }) {
   return (
-    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${className}`}>
+    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider border ${className}`}>
       {children}
     </span>
   );
