@@ -75,7 +75,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
         onClick={onReplitLogin}
       >
         <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        Sign in with Google
+        {t('login.replitLogin')}
       </Button>
 
       <div className="relative">
@@ -83,7 +83,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
           <span className="w-full border-t border-[#E5E7EB]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-[#9CA3AF]">or</span>
+          <span className="bg-white px-2 text-[#9CA3AF] lowercase">{t('common:or')}</span>
         </div>
       </div>
 
@@ -94,12 +94,12 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Email</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('login.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder="name@company.com"
+                    placeholder={t('login.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -113,13 +113,13 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Password</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('login.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder={t('login.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -141,17 +141,17 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? "Signing in..." : "Log In"}
+            {isLoading ? t('common:status.loading') : t('login.signIn')}
           </Button>
         </form>
       </Form>
 
       <div className="flex items-center justify-between pt-2">
         <Link href="/signup">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">Don't have an account?</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('login.noAccount')}</span>
         </Link>
         <button type="button" className="text-sm text-[#374151] hover:underline">
-          Forgot Password?
+          {t('login.forgotPassword')}
         </button>
       </div>
     </div>

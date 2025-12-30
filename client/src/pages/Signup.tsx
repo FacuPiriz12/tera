@@ -6,7 +6,10 @@ import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 
+import { useTranslation } from "react-i18next";
+
 export default function Signup() {
+  const { t } = useTranslation(['auth', 'common']);
   const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -55,7 +58,7 @@ export default function Signup() {
           className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
           <div className="w-full space-y-8">
-            <h1 className="text-3xl font-semibold text-center text-[#111827]">Create an account</h1>
+            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('signup.title')}</h1>
             
             <div className="w-full bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8">
               <SignupForm onReplitLogin={handleReplitLogin} />

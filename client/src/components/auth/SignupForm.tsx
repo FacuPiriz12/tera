@@ -106,7 +106,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
         onClick={onReplitLogin}
       >
         <SiGoogle className="w-4 h-4 text-[#EA4335]" />
-        Sign up with Google
+        {t('signup.replitSignup')}
       </Button>
 
       <div className="relative">
@@ -114,7 +114,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
           <span className="w-full border-t border-[#E5E7EB]" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-[#9CA3AF]">or</span>
+          <span className="bg-white px-2 text-[#9CA3AF] lowercase">{t('common:or')}</span>
         </div>
       </div>
 
@@ -125,11 +125,11 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="name"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Full Name</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.nameLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Enter your name"
+                    placeholder={t('signup.namePlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -143,12 +143,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Email</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder="name@company.com"
+                    placeholder={t('signup.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -162,13 +162,13 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Password</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
+                      placeholder={t('signup.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -190,12 +190,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">Confirm Password</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('signup.confirmPasswordLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder={t('signup.confirmPasswordPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -218,7 +218,14 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
                 </FormControl>
                 <div className="leading-none">
                   <FormLabel className="text-xs text-[#6B7280] font-normal">
-                    I agree to the <Link href="/terms"><span className="text-[#4F46E5] hover:underline cursor-pointer">Terms</span></Link> and <Link href="/privacy"><span className="text-[#4F46E5] hover:underline cursor-pointer">Privacy Policy</span></Link>
+                    {t('signup.acceptTerms.part1')}{' '}
+                    <Link href="/terms">
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('signup.acceptTerms.termsLink')}</span>
+                    </Link>{' '}
+                    {t('signup.acceptTerms.and')}{' '}
+                    <Link href="/privacy">
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('signup.acceptTerms.privacyLink')}</span>
+                    </Link>
                   </FormLabel>
                 </div>
               </FormItem>
@@ -230,14 +237,14 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? "Creating account..." : "Sign Up"}
+            {isLoading ? t('common:status.loading') : t('signup.createAccountButton')}
           </Button>
         </form>
       </Form>
 
       <div className="text-center pt-2">
         <Link href="/login">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">Already have an account? Log In</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('signup.hasAccount')} {t('signup.signIn')}</span>
         </Link>
       </div>
     </div>
