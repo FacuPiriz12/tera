@@ -58,7 +58,7 @@ export default function Login() {
           className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
           <div className="w-full space-y-8">
-            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('auth:login.title')}</h1>
+            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('login.title', { ns: 'auth' })}</h1>
             
             <div className="w-full bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8">
               <LoginForm onReplitLogin={handleReplitLogin} />
@@ -71,8 +71,8 @@ export default function Login() {
             transition={{ delay: 0.6 }}
             className="mt-12 flex gap-10 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
           >
-            <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('common:footer.terms')}</Link>
-            <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('common:footer.privacy')}</Link>
+            <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('footer.terms', { ns: 'common' })}</Link>
+            <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer">{t('footer.privacy', { ns: 'common' })}</Link>
           </motion.div>
         </motion.div>
       </AnimatePresence>
