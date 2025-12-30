@@ -26,6 +26,7 @@ import AdminOperations from "@/pages/admin/Operations";
 import ShareInbox from "@/pages/ShareInbox";
 import Tasks from "@/pages/Tasks";
 import FileVersions from "@/pages/FileVersions";
+import CloudHealth from "@/pages/CloudHealth";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import NotFound from "@/pages/not-found";
@@ -96,6 +97,9 @@ function Router() {
       </Route>
       <Route path="/tasks">
         {() => isLoggedIn ? <Tasks /> : <Login />}
+      </Route>
+      <Route path="/health">
+        {() => isLoggedIn ? <CloudHealth /> : <Login />}
       </Route>
       
       {/* Admin routes */}
