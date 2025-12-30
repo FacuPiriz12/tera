@@ -1,3 +1,4 @@
+import CloneDriveLogo from "@/components/CloneDriveLogo";
 import LoginForm from "@/components/auth/LoginForm";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
@@ -42,12 +43,8 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-[#F9FAFB] p-6 relative">
       {/* Logo Section - Top Left */}
-      <div className="absolute top-8 left-8 flex items-center gap-2">
-        <div className="flex gap-0.5">
-          <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
-          <div className="w-1.5 h-4 bg-[#4F46E5] rounded-full transform -skew-x-12" />
-        </div>
-        <span className="text-xl font-bold tracking-tight text-[#111827]">TERA</span>
+      <div className="absolute top-8 left-8">
+        <CloneDriveLogo className="h-12" />
       </div>
 
       <AnimatePresence mode="wait">
