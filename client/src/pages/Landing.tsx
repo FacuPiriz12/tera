@@ -59,7 +59,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center space-x-2 group cursor-pointer" onClick={() => setLocation('/')}>
-              <img src={logoUrl} alt="TERA Logo" className="w-[500px] h-[500px] object-contain group-hover:scale-105 transition-transform duration-300" />
+              <img src={logoUrl} alt="TERA Logo" className="h-[8.4rem] w-auto object-contain group-hover:scale-105 transition-transform duration-300" />
             </div>
             
             <div className="hidden md:flex items-center space-x-10">
@@ -350,7 +350,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-4 gap-12 mb-20">
             <div className="col-span-2">
-              <img src={logoUrl} alt="TERA Logo" className="w-[500px] h-[500px] object-contain mb-8" />
+              <img src={logoUrl} alt="TERA Logo" className="h-[8.4rem] w-auto object-contain mb-8" />
               <p className="text-lg text-gray-500 max-w-xs font-medium">Simplificando la gestión de archivos en la nube con inteligencia y seguridad.</p>
             </div>
             <div>
