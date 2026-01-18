@@ -3,6 +3,7 @@ import { Check, X, ArrowRight, Star, Zap, Shield, Zap as ZapIcon, Users, HardDri
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
 import logoUrl from '../assets/logo.png';
+import Footer from '@/components/Footer';
 
 const PricingPage = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
@@ -313,6 +314,7 @@ const PricingPage = () => {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };
