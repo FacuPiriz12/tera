@@ -7,16 +7,16 @@ export default function Footer() {
       <div className="max-w-[1200px] mx-auto px-6 lg:px-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-gradient-to-br from-[#1EA7A1] to-[#0B6A66] flex items-center justify-center text-white font-bold text-lg">T</div>
+            <div className="w-8 h-8 rounded-md bg-[#1EA7A1] flex items-center justify-center text-white font-bold text-lg">T</div>
             <div className="font-bold text-xl text-[#0B1F21]">TERA</div>
           </div>
           <p className="text-[#6B7474] text-sm leading-relaxed max-w-xs">
             El sistema operativo para tus archivos en la nube. Simple, seguro e inteligente.
           </p>
           <div className="flex gap-4 pt-2">
-            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Twitter size={20} /></a>
-            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Instagram size={20} /></a>
-            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Linkedin size={20} /></a>
+            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Twitter size={18} /></a>
+            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Instagram size={18} /></a>
+            <a href="#" className="text-[#6B7474] hover:text-[#1C3F3A] transition-colors"><Linkedin size={18} /></a>
           </div>
         </div>
         

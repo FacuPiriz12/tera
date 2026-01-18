@@ -151,7 +151,7 @@ const PricingPage = () => {
               transition={{ delay: 0.1 }}
               className="text-5xl lg:text-7xl font-black text-gray-900 mb-6 tracking-tight"
             >
-              Elige el plan <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">perfecto para ti</span>
+              Elige el plan <span className="text-blue-600">perfecto para ti</span>
             </motion.h1>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -231,34 +231,18 @@ const PricingPage = () => {
                       /mes
                     </span>
                   </div>
-                  {billingCycle === 'annual' && plan.price.annual !== "0" && (
-                    <p className={`text-sm mt-2 font-bold ${plan.popular ? 'text-blue-100' : 'text-green-600'}`}>
-                      Facturado como ${plan.price.annual} al año
-                    </p>
-                  )}
                 </div>
 
-                <div className="space-y-3 mb-10">
-                  <button className={`w-full py-4 rounded-2xl font-black text-lg transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center group ${
-                    plan.popular
-                      ? 'bg-white text-blue-700 hover:bg-blue-50'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}>
-                    {plan.cta}
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
-
-                <div className="space-y-4 flex-grow">
+                <div className="space-y-4 flex-grow mb-10">
                   {plan.features.map((feature, featureIdx) => {
                     const Icon = feature.icon;
                     return (
                       <div key={featureIdx} className="flex items-center space-x-3">
                         <div className={`p-1 rounded-full ${plan.popular ? (feature.included ? 'bg-white/20' : 'bg-white/10') : (feature.included ? 'bg-blue-50' : 'bg-gray-50')}`}>
                           {feature.included ? (
-                            <Check className={`w-4 h-4 ${plan.popular ? 'text-white' : 'text-blue-600'}`} />
+                            <Check className={`w-3 h-3 ${plan.popular ? 'text-white' : 'text-blue-600'}`} />
                           ) : (
-                            <X className={`w-4 h-4 ${plan.popular ? 'text-white/40' : 'text-gray-300'}`} />
+                            <X className={`w-3 h-3 ${plan.popular ? 'text-white/40' : 'text-gray-300'}`} />
                           )}
                         </div>
                         <div className="flex items-center space-x-2">
@@ -274,6 +258,17 @@ const PricingPage = () => {
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="space-y-3 order-last mt-auto">
+                  <button className={`w-full py-4 rounded-2xl font-black text-lg transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center group ${
+                    plan.popular
+                      ? 'bg-white text-blue-700 hover:bg-blue-50'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}>
+                    {plan.cta}
+                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               </motion.div>
             ))}
