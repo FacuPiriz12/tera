@@ -65,7 +65,12 @@ export default function Home() {
             <div className="hidden md:flex items-center space-x-10">
               <div className="flex items-center space-x-8">
                 <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Productos</a>
-                <a href="#precios" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Precios</a>
+                <button 
+                  onClick={() => setLocation('/pricing')}
+                  className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors"
+                >
+                  Precios
+                </button>
                 <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Seguridad</a>
               </div>
               <div className="h-6 w-px bg-gray-200"></div>
@@ -106,7 +111,12 @@ export default function Home() {
           >
             <div className="flex flex-col space-y-6 px-6 py-10">
               <a href="#productos" className="text-2xl font-bold text-gray-900">Productos</a>
-              <a href="#precios" className="text-2xl font-bold text-gray-900">Precios</a>
+              <button 
+                onClick={() => { setLocation('/pricing'); setIsMenuOpen(false); }}
+                className="text-2xl font-bold text-gray-900 text-left"
+              >
+                Precios
+              </button>
               <a href="#seguridad" className="text-2xl font-bold text-gray-900">Seguridad</a>
               <div className="pt-6 border-t border-gray-100 flex flex-col space-y-4">
                 <button onClick={() => setLocation('/auth')} className="text-lg font-bold text-gray-900 py-2">Iniciar sesión</button>

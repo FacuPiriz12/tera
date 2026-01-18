@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { TransferProvider } from "@/contexts/TransferContext";
 import GlobalTransferIndicator from "@/components/GlobalTransferIndicator";
 import Landing from "@/pages/Landing";
+import Pricing from "@/pages/Pricing";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import SignupSuccess from "@/pages/SignupSuccess";
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/auth/confirm" component={EmailConfirmation} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/pricing" component={Pricing} />
       
       {/* Landing page for non-authenticated users, Home for authenticated */}
       <Route path="/">
