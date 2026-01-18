@@ -27,6 +27,15 @@ import {
 import type { CopyOperation, DriveFile } from "@shared/schema";
 
 export default function Home() {
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState({ code: 'ES', name: 'Español', flag: '🇪🇸' });
+
+  const languages = [
+    { code: 'ES', name: 'Español', flag: '🇪🇸' },
+    { code: 'EN', name: 'English', flag: '🇺🇸' },
+    { code: 'PT', name: 'Português', flag: '🇵🇹' }
+  ];
+
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
