@@ -252,24 +252,25 @@ const PricingPage = () => {
                   {plan.features.map((feature, featureIdx) => {
                     const Icon = feature.icon;
                     return (
-                      <div key={featureIdx} className="flex items-center space-x-3">
-                        <div className={`p-1 rounded-full ${plan.popular ? (feature.included ? 'bg-white/20' : 'bg-white/10') : (feature.included ? 'bg-blue-50' : 'bg-gray-50')}`}>
+                      <div key={featureIdx} className="flex items-start space-x-3">
+                        <div className={`flex-shrink-0 w-5 h-5 mt-0.5 ${
+                          feature.included
+                            ? plan.popular ? 'text-white' : 'text-blue-600'
+                            : 'text-gray-300'
+                        }`}>
                           {feature.included ? (
-                            <Check className={`w-4 h-4 ${plan.popular ? 'text-white' : 'text-blue-600'}`} />
+                            <Check className="w-5 h-5" />
                           ) : (
-                            <X className={`w-4 h-4 ${plan.popular ? 'text-white/40' : 'text-gray-300'}`} />
+                            <X className="w-5 h-5" />
                           )}
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Icon className={`w-4 h-4 ${plan.popular ? 'text-blue-100' : 'text-gray-400'}`} />
-                          <span className={`text-sm font-medium ${
-                            plan.popular 
-                              ? (feature.included ? 'text-white' : 'text-white/50') 
-                              : (feature.included ? 'text-gray-700' : 'text-gray-400')
-                          }`}>
-                            {feature.text}
-                          </span>
-                        </div>
+                        <span className={`text-sm font-bold leading-relaxed ${
+                          feature.included
+                            ? plan.popular ? 'text-white' : 'text-gray-700'
+                            : 'text-gray-400 line-through'
+                        }`}>
+                          {feature.text}
+                        </span>
                       </div>
                     );
                   })}
@@ -278,41 +279,103 @@ const PricingPage = () => {
             ))}
           </div>
 
-          {/* Detailed Comparison */}
-          <div className="mt-20">
-            <h2 className="text-3xl font-black text-gray-900 mb-12 text-center">Comparativa detallada</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b-2 border-gray-100">
-                    <th className="py-6 px-4 text-sm font-black text-gray-400 uppercase tracking-widest">Funcionalidad</th>
-                    <th className="py-6 px-4 text-sm font-black text-gray-900 uppercase tracking-widest">Free</th>
-                    <th className="py-6 px-4 text-sm font-black text-blue-600 uppercase tracking-widest">Pro</th>
-                    <th className="py-6 px-4 text-sm font-black text-purple-600 uppercase tracking-widest">Business</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonFeatures.map((category, catIdx) => (
-                    <React.Fragment key={catIdx}>
-                      <tr className="bg-gray-50">
-                        <td colSpan={4} className="py-4 px-4 text-sm font-black text-gray-900">{category.category}</td>
-                      </tr>
-                      {category.features.map((feature, fIdx) => (
-                        <tr key={fIdx} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                          <td className="py-6 px-4 text-sm font-bold text-gray-600">{feature.name}</td>
-                          <td className="py-6 px-4 text-sm font-bold text-gray-900">{feature.free}</td>
-                          <td className="py-6 px-4 text-sm font-bold text-blue-600">{feature.pro}</td>
-                          <td className="py-6 px-4 text-sm font-bold text-purple-600">{feature.business}</td>
+          {/* Comparison Table */}
+          <div className="mb-32">
+            <div className="text-center mb-16">
+              <span className="text-xs font-black text-blue-600 uppercase tracking-widest">COMPARACIÓN DETALLADA</span>
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 mt-4 mb-6 tracking-tight">
+                Compara todos los planes
+              </h2>
+            </div>
+
+            <div className="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-gray-100">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b-2 border-gray-100">
+                    <tr>
+                      <th className="px-8 py-6 text-left text-sm font-black text-gray-900 uppercase tracking-widest">Beneficio</th>
+                      <th className="px-8 py-6 text-center text-sm font-black text-gray-900 uppercase tracking-widest">Tera Free</th>
+                      <th className="px-8 py-6 text-center text-sm font-black text-blue-700 bg-blue-50/50 uppercase tracking-widest">Tera Pro</th>
+                      <th className="px-8 py-6 text-center text-sm font-black text-gray-900 uppercase tracking-widest">Tera Business</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-50">
+                      <td className="px-8 py-6 font-black text-gray-900">Precio Mensual</td>
+                      <td className="px-8 py-6 text-center font-bold text-gray-700">$0</td>
+                      <td className="px-8 py-6 text-center font-black text-blue-700 bg-blue-50/30">$12.00</td>
+                      <td className="px-8 py-6 text-center font-bold text-gray-700">$25.00</td>
+                    </tr>
+                    {comparisonFeatures.map((category, catIdx) => (
+                      <React.Fragment key={catIdx}>
+                        <tr className="bg-gray-50/50">
+                          <td colSpan={4} className="px-8 py-4 text-xs font-black text-blue-600 uppercase tracking-widest">
+                            {category.category}
+                          </td>
                         </tr>
-                      ))}
-                    </React.Fragment>
-                  ))}
-                </tbody>
-              </table>
+                        {category.features.map((feature, featIdx) => (
+                          <tr key={featIdx} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                            <td className="px-8 py-6 text-gray-700 font-bold">{feature.name}</td>
+                            <td className="px-8 py-6 text-center text-gray-600 font-medium">{feature.free}</td>
+                            <td className="px-8 py-6 text-center text-blue-700 bg-blue-50/30 font-black">{feature.pro}</td>
+                            <td className="px-8 py-6 text-center text-gray-600 font-medium">{feature.business}</td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="max-w-4xl mx-auto mb-32">
+            <div className="text-center mb-16">
+              <span className="text-xs font-black text-blue-600 uppercase tracking-widest">PREGUNTAS FRECUENTES</span>
+              <h2 className="text-4xl font-black text-gray-900 mt-4 mb-6 tracking-tight">¿Tienes preguntas?</h2>
+            </div>
+            <div className="grid gap-6">
+              {[
+                { q: '¿Puedo cambiar de plan en cualquier momento?', a: 'Sí, puedes actualizar o degradar tu plan en cualquier momento. Los cambios se reflejarán en tu próxima facturación.' },
+                { q: '¿Qué métodos de pago aceptan?', a: 'Aceptamos tarjetas de crédito, débito y PayPal. Para planes empresariales también ofrecemos facturación por transferencia.' },
+                { q: '¿Hay cargos por cancelación?', a: 'No, no hay cargos por cancelación. Puedes cancelar tu suscripción en cualquier momento sin penalizaciones.' }
+              ].map((faq, idx) => (
+                <div key={idx} className="bg-white rounded-[2rem] border-2 border-gray-100 p-8 hover:border-blue-200 transition-all shadow-sm">
+                  <h3 className="text-xl font-black text-gray-900 mb-4 tracking-tight">{faq.q}</h3>
+                  <p className="text-gray-600 font-medium leading-relaxed">{faq.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Final CTA */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-blue-600 rounded-[3rem] -rotate-1 scale-105 opacity-10"></div>
+            <div className="bg-white border-2 border-gray-100 rounded-[3rem] p-12 lg:p-20 text-center relative z-10 shadow-xl hover:border-blue-200 transition-all duration-500">
+              <h2 className="text-4xl lg:text-5xl font-black text-gray-900 mb-6 tracking-tight">
+                ¿Listo para simplificar <br className="hidden md:block" />
+                <span className="text-blue-600">tu flujo de trabajo?</span>
+              </h2>
+              <p className="text-lg text-gray-500 mb-10 font-medium max-w-2xl mx-auto leading-relaxed">
+                Prueba TERA sin compromiso durante 14 días. Configura tus nubes, automatiza tus respaldos y siente la verdadera libertad digital.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button className="bg-blue-600 text-white font-black px-10 py-5 rounded-2xl hover:bg-blue-700 transition-all hover:shadow-[0_20px_40px_rgba(59,130,246,0.2)] hover:-translate-y-1 text-lg inline-flex items-center group w-full sm:w-auto">
+                  Comenzar ahora gratis
+                  <ArrowRight className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </main>
+      <footer className="py-20 px-6 lg:px-20 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto text-center">
+          <img src={logoUrl} alt="TERA Logo" className="h-20 w-auto mx-auto mb-8 opacity-50" />
+          <p className="text-gray-400 font-bold tracking-widest uppercase text-xs">© 2026 TERA. Todos los derechos reservados.</p>
+        </div>
+      </footer>
     </div>
   );
 };
