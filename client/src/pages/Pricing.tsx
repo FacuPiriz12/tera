@@ -134,7 +134,6 @@ const PricingPage = () => {
           </div>
         </div>
       </nav>
-
       <main className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="text-center mb-20">
@@ -150,7 +149,7 @@ const PricingPage = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl lg:text-7xl font-black text-gray-900 mb-6 tracking-tight leading-tight"
+              className="text-5xl lg:text-7xl text-gray-900 mb-6 tracking-tight leading-tight font-bold"
             >
               Elige el plan <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">perfecto para ti</span>
@@ -379,7 +378,6 @@ const PricingPage = () => {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
