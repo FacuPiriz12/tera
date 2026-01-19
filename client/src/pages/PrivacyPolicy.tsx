@@ -34,157 +34,206 @@ export default function PrivacyPolicy() {
           </Button>
         </div>
 
-        <div className="prose prose-slate dark:prose-invert max-w-none">
-          <h1>{t('landing.privacy.title')}</h1>
-          <p className="text-muted-foreground">
+        <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-h1:text-4xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900">
+          <h1 className="mb-4">{t('landing.privacy.title')}</h1>
+          <p className="text-muted-foreground mb-12">
             {t('landing.privacy.lastUpdated')}: {new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
-          <h2>{t('landing.privacy.section1.title')}</h2>
-          <p>{t('landing.privacy.section1.content')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section1.title')}</h2>
+            <p className="leading-relaxed">{t('landing.privacy.section1.content')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section2.title')}</h2>
-          
-          <h3>{t('landing.privacy.section2.subsection1.title')}</h3>
-          <ul>
-            <li><strong>{t('landing.privacy.section2.subsection1.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section2.subsection1.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section2.subsection1.item3')}</strong></li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section2.title')}</h2>
+            
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section2.subsection1.title')}</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>{t('landing.privacy.section2.subsection1.item1')}</strong></li>
+                <li><strong>{t('landing.privacy.section2.subsection1.item2')}</strong></li>
+                <li><strong>{t('landing.privacy.section2.subsection1.item3')}</strong></li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section2.subsection2.title')}</h3>
-          <ul>
-            <li><strong>{t('landing.privacy.section2.subsection2.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section2.subsection2.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section2.subsection2.item3')}</strong></li>
-            <li><strong>{t('landing.privacy.section2.subsection2.item4')}</strong></li>
-          </ul>
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section2.subsection2.title')}</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>{t('landing.privacy.section2.subsection2.item1')}</strong></li>
+                <li><strong>{t('landing.privacy.section2.subsection2.item2')}</strong></li>
+                <li><strong>{t('landing.privacy.section2.subsection2.item3')}</strong></li>
+                <li><strong>{t('landing.privacy.section2.subsection2.item4')}</strong></li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section2.subsection3.title')}</h3>
-          <p>{t('landing.privacy.section2.subsection3.intro')}</p>
-          <ul>
-            <li>{t('landing.privacy.section2.subsection3.item1')}</li>
-            <li>{t('landing.privacy.section2.subsection3.item2')}</li>
-            <li>{t('landing.privacy.section2.subsection3.item3')}</li>
-          </ul>
+            <div>
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section2.subsection3.title')}</h3>
+              <p className="mb-4">{t('landing.privacy.section2.subsection3.intro')}</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>{t('landing.privacy.section2.subsection3.item1')}</li>
+                <li>{t('landing.privacy.section2.subsection3.item2')}</li>
+                <li>{t('landing.privacy.section2.subsection3.item3')}</li>
+              </ul>
+            </div>
+          </section>
 
-          <h2>{t('landing.privacy.section3.title')}</h2>
-          <p>{t('landing.privacy.section3.intro')}</p>
-          <ul>
-            <li><strong>{t('landing.privacy.section3.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section3.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section3.item3')}</strong></li>
-            <li><strong>{t('landing.privacy.section3.item4')}</strong></li>
-            <li><strong>{t('landing.privacy.section3.item5')}</strong></li>
-            <li><strong>{t('landing.privacy.section3.item6')}</strong></li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section3.title')}</h2>
+            <p className="mb-4">{t('landing.privacy.section3.intro')}</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>{t('landing.privacy.section3.item1')}</strong></li>
+              <li><strong>{t('landing.privacy.section3.item2')}</strong></li>
+              <li><strong>{t('landing.privacy.section3.item3')}</strong></li>
+              <li><strong>{t('landing.privacy.section3.item4')}</strong></li>
+              <li><strong>{t('landing.privacy.section3.item5')}</strong></li>
+              <li><strong>{t('landing.privacy.section3.item6')}</strong></li>
+            </ul>
+          </section>
 
-          <h2>{t('landing.privacy.section4.title')}</h2>
-          
-          <h3>{t('landing.privacy.section4.subsection1.title')}</h3>
-          <p>{t('landing.privacy.section4.subsection1.intro')}</p>
-          <ul>
-            <li><code>{t('landing.privacy.section4.subsection1.item1')}</code></li>
-            <li><code>{t('landing.privacy.section4.subsection1.item2')}</code></li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section4.title')}</h2>
+            
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section4.subsection1.title')}</h3>
+              <p className="mb-4">{t('landing.privacy.section4.subsection1.intro')}</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><code className="bg-gray-100 px-2 py-0.5 rounded">{t('landing.privacy.section4.subsection1.item1')}</code></li>
+                <li><code className="bg-gray-100 px-2 py-0.5 rounded">{t('landing.privacy.section4.subsection1.item2')}</code></li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section4.subsection2.title')}</h3>
-          <p>{t('landing.privacy.section4.subsection2.intro')}</p>
-          <ul>
-            <li>{t('landing.privacy.section4.subsection2.item1')}</li>
-            <li>{t('landing.privacy.section4.subsection2.item2')}</li>
-            <li>{t('landing.privacy.section4.subsection2.item3')}</li>
-          </ul>
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section4.subsection2.title')}</h3>
+              <p className="mb-4">{t('landing.privacy.section4.subsection2.intro')}</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>{t('landing.privacy.section4.subsection2.item1')}</li>
+                <li>{t('landing.privacy.section4.subsection2.item2')}</li>
+                <li>{t('landing.privacy.section4.subsection2.item3')}</li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section4.subsection3.title')}</h3>
-          <p>{t('landing.privacy.section4.subsection3.content')}</p>
-          <p><strong>{t('landing.privacy.section4.subsection3.intro')}</strong></p>
-          <ul>
-            <li>{t('landing.privacy.section4.subsection3.item1')}</li>
-            <li>{t('landing.privacy.section4.subsection3.item2')}</li>
-            <li>{t('landing.privacy.section4.subsection3.item3')}</li>
-            <li>{t('landing.privacy.section4.subsection3.item4')}</li>
-          </ul>
+            <div>
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section4.subsection3.title')}</h3>
+              <p className="mb-4">{t('landing.privacy.section4.subsection3.content')}</p>
+              <p className="mb-4"><strong>{t('landing.privacy.section4.subsection3.intro')}</strong></p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>{t('landing.privacy.section4.subsection3.item1')}</li>
+                <li>{t('landing.privacy.section4.subsection3.item2')}</li>
+                <li>{t('landing.privacy.section4.subsection3.item3')}</li>
+                <li>{t('landing.privacy.section4.subsection3.item4')}</li>
+              </ul>
+            </div>
+          </section>
 
-          <h2>{t('landing.privacy.section5.title')}</h2>
-          
-          <h3>{t('landing.privacy.section5.subsection1.title')}</h3>
-          <ul>
-            <li><strong>{t('landing.privacy.section5.subsection1.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section5.subsection1.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section5.subsection1.item3')}</strong></li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section5.title')}</h2>
+            
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section5.subsection1.title')}</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>{t('landing.privacy.section5.subsection1.item1')}</strong></li>
+                <li><strong>{t('landing.privacy.section5.subsection1.item2')}</strong></li>
+                <li><strong>{t('landing.privacy.section5.subsection1.item3')}</strong></li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section5.subsection2.title')}</h3>
-          <ul>
-            <li>{t('landing.privacy.section5.subsection2.item1')}</li>
-            <li>{t('landing.privacy.section5.subsection2.item2')}</li>
-            <li>{t('landing.privacy.section5.subsection2.item3')}</li>
-            <li>{t('landing.privacy.section5.subsection2.item4')}</li>
-            <li>{t('landing.privacy.section5.subsection2.item5')}</li>
-          </ul>
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section5.subsection2.title')}</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>{t('landing.privacy.section5.subsection2.item1')}</li>
+                <li>{t('landing.privacy.section5.subsection2.item2')}</li>
+                <li>{t('landing.privacy.section5.subsection2.item3')}</li>
+                <li>{t('landing.privacy.section5.subsection2.item4')}</li>
+                <li>{t('landing.privacy.section5.subsection2.item5')}</li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section5.subsection3.title')}</h3>
-          <p>{t('landing.privacy.section5.subsection3.content')}</p>
+            <div>
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section5.subsection3.title')}</h3>
+              <p>{t('landing.privacy.section5.subsection3.content')}</p>
+            </div>
+          </section>
 
-          <h2>{t('landing.privacy.section6.title')}</h2>
-          <p>{t('landing.privacy.section6.intro')}</p>
-          
-          <h3>{t('landing.privacy.section6.subsection1.title')}</h3>
-          <ul>
-            <li><strong>{t('landing.privacy.section6.subsection1.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section6.subsection1.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section6.subsection1.item3')}</strong></li>
-            <li><strong>{t('landing.privacy.section6.subsection1.item4')}</strong></li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section6.title')}</h2>
+            <p className="mb-6">{t('landing.privacy.section6.intro')}</p>
+            
+            <div className="mb-6">
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section6.subsection1.title')}</h3>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>{t('landing.privacy.section6.subsection1.item1')}</strong></li>
+                <li><strong>{t('landing.privacy.section6.subsection1.item2')}</strong></li>
+                <li><strong>{t('landing.privacy.section6.subsection1.item3')}</strong></li>
+                <li><strong>{t('landing.privacy.section6.subsection1.item4')}</strong></li>
+              </ul>
+            </div>
 
-          <h3>{t('landing.privacy.section6.subsection2.title')}</h3>
-          <p>{t('landing.privacy.section6.subsection2.content')}</p>
+            <div>
+              <h3 className="mb-3 text-blue-600">{t('landing.privacy.section6.subsection2.title')}</h3>
+              <p>{t('landing.privacy.section6.subsection2.content')}</p>
+            </div>
+          </section>
 
-          <h2>{t('landing.privacy.section7.title')}</h2>
-          <p>{t('landing.privacy.section7.intro')}</p>
-          <ul>
-            <li><strong>{t('landing.privacy.section7.item1')}</strong></li>
-            <li><strong>{t('landing.privacy.section7.item2')}</strong></li>
-            <li><strong>{t('landing.privacy.section7.item3')}</strong></li>
-            <li><strong>{t('landing.privacy.section7.item4')}</strong></li>
-            <li><strong>{t('landing.privacy.section7.item5')}</strong></li>
-            <li><strong>{t('landing.privacy.section7.item6')}</strong></li>
-          </ul>
-          <p>{t('landing.privacy.section7.contact')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section7.title')}</h2>
+            <p className="mb-4">{t('landing.privacy.section7.intro')}</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li><strong>{t('landing.privacy.section7.item1')}</strong></li>
+              <li><strong>{t('landing.privacy.section7.item2')}</strong></li>
+              <li><strong>{t('landing.privacy.section7.item3')}</strong></li>
+              <li><strong>{t('landing.privacy.section7.item4')}</strong></li>
+              <li><strong>{t('landing.privacy.section7.item5')}</strong></li>
+              <li><strong>{t('landing.privacy.section7.item6')}</strong></li>
+            </ul>
+            <p className="mt-4">{t('landing.privacy.section7.contact')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section8.title')}</h2>
-          <p>{t('landing.privacy.section8.intro')}</p>
-          <ul>
-            <li>{t('landing.privacy.section8.item1')}</li>
-            <li>{t('landing.privacy.section8.item2')}</li>
-            <li>{t('landing.privacy.section8.item3')}</li>
-          </ul>
-          <p>{t('landing.privacy.section8.note')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section8.title')}</h2>
+            <p className="mb-4">{t('landing.privacy.section8.intro')}</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>{t('landing.privacy.section8.item1')}</li>
+              <li>{t('landing.privacy.section8.item2')}</li>
+              <li>{t('landing.privacy.section8.item3')}</li>
+            </ul>
+            <p className="mt-4 italic">{t('landing.privacy.section8.note')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section9.title')}</h2>
-          <p>{t('landing.privacy.section9.content')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section9.title')}</h2>
+            <p>{t('landing.privacy.section9.content')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section10.title')}</h2>
-          <p>{t('landing.privacy.section10.content')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section10.title')}</h2>
+            <p>{t('landing.privacy.section10.content')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section11.title')}</h2>
-          <p>{t('landing.privacy.section11.content')}</p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section11.title')}</h2>
+            <p>{t('landing.privacy.section11.content')}</p>
+          </section>
 
-          <h2>{t('landing.privacy.section12.title')}</h2>
-          <p>{t('landing.privacy.section12.content')}</p>
-          <p>
-            <strong>Email:</strong> {t('landing.privacy.section12.email')}
-          </p>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section12.title')}</h2>
+            <p className="mb-4">{t('landing.privacy.section12.content')}</p>
+            <p className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+              <strong className="text-blue-900">Email:</strong> <span className="text-blue-600">{t('landing.privacy.section12.email')}</span>
+            </p>
+          </section>
 
-          <h2>{t('landing.privacy.section13.title')}</h2>
-          <p>{t('landing.privacy.section13.intro')}</p>
-          <ul>
-            <li>{t('landing.privacy.section13.item1')}</li>
-            <li>{t('landing.privacy.section13.item2')}</li>
-            <li>{t('landing.privacy.section13.item3')}</li>
-            <li>{t('landing.privacy.section13.item4')}</li>
-          </ul>
+          <section className="mb-12">
+            <h2 className="border-b pb-2 mb-4">{t('landing.privacy.section13.title')}</h2>
+            <p className="mb-4">{t('landing.privacy.section13.intro')}</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>{t('landing.privacy.section13.item1')}</li>
+              <li>{t('landing.privacy.section13.item2')}</li>
+              <li>{t('landing.privacy.section13.item3')}</li>
+              <li>{t('landing.privacy.section13.item4')}</li>
+            </ul>
+          </section>
+        </div>
         </div>
       </div>
     </div>
