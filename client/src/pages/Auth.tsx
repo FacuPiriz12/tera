@@ -74,7 +74,7 @@ export default function AuthPage() {
         lastName,
       }, {
         onSuccess: () => {
-          setLocation("/dashboard");
+          setLocation("/");
         }
       });
     } else {
@@ -84,7 +84,7 @@ export default function AuthPage() {
         email,
       }, {
         onSuccess: () => {
-          setLocation("/dashboard");
+          setLocation("/");
         }
       });
     }

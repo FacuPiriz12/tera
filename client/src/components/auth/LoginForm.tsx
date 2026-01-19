@@ -54,7 +54,7 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
       if (error) throw error;
       setCachedSession(authData.session);
       toast({ title: t('auth.login.success') });
-      window.location.href = '/';
+      window.location.href = '/dashboard';
     } catch (error: any) {
       toast({
         title: t('auth.errors.loginFailed'),
