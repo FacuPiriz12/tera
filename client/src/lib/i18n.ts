@@ -49,6 +49,23 @@ const resources = {
         },
         status: {
           loading: "Cargando..."
+        },
+        dashboard: {
+          noAccountConnected: "No hay cuentas conectadas",
+          integrations: "Integraciones",
+          toStartWorking: "para empezar a trabajar",
+          totalFiles: "Archivos Totales",
+          filesManaged: "Archivos Gestionados",
+          activeOperations: "Operaciones Activas",
+          inProgress: "En Progreso",
+          totalOperations: "Operaciones Totales",
+          operationsPerformed: "Operaciones Realizadas",
+          completedOperations: "Operaciones Completadas",
+          successfully: "Exitosamente",
+          recentFiles: "Archivos Recientes"
+        },
+        actions: {
+          searchPlaceholder: "Buscar archivos o carpetas..."
         }
       },
       landing: {
@@ -472,6 +489,23 @@ const resources = {
         },
         status: {
           loading: "Loading..."
+        },
+        dashboard: {
+          noAccountConnected: "No accounts connected",
+          integrations: "Integrations",
+          toStartWorking: "to start working",
+          totalFiles: "Total Files",
+          filesManaged: "Files Managed",
+          activeOperations: "Active Operations",
+          inProgress: "In Progress",
+          totalOperations: "Total Operations",
+          operationsPerformed: "Operations Performed",
+          completedOperations: "Completed Operations",
+          successfully: "Successfully",
+          recentFiles: "Recent Files"
+        },
+        actions: {
+          searchPlaceholder: "Search files or folders..."
         }
       },
       landing: {

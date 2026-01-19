@@ -33,6 +33,23 @@
     "pending": "Pendiente",
     "inProgress": "En progreso"
   },
+  "dashboard": {
+    "noAccountConnected": "No hay cuentas conectadas",
+    "integrations": "Integraciones",
+    "toStartWorking": "para empezar a trabajar",
+    "totalFiles": "Archivos Totales",
+    "filesManaged": "Archivos Gestionados",
+    "activeOperations": "Operaciones Activas",
+    "inProgress": "En Progreso",
+    "totalOperations": "Operaciones Totales",
+    "operationsPerformed": "Operaciones Realizadas",
+    "completedOperations": "Operaciones Completadas",
+    "successfully": "Exitosamente",
+    "recentFiles": "Archivos Recientes"
+  },
+  "actions": {
+    "searchPlaceholder": "Buscar archivos o carpetas..."
+  },
   "footer": {
     "terms": "Términos de Servicio",
     "privacy": "Política de Privacidad"
