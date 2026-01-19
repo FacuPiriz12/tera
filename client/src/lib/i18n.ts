@@ -20,7 +20,9 @@ const resources = {
         settings: "Configuración",
         profile: "Perfil",
         copyFromUrl: "Copiar desde URL",
-        integrations: "Integraciones"
+        integrations: "Integraciones",
+        pricing: "Precios",
+        security: "Seguridad"
       },
       language: {
         select: "Seleccionar idioma",

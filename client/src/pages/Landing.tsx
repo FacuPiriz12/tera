@@ -68,9 +68,9 @@ export default function Home() {
             
             <div className="hidden md:flex items-center space-x-10">
               <div className="flex items-center space-x-8">
-                <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Productos</a>
-                <Link href="/pricing" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Precios</Link>
-                <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Seguridad</a>
+                <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('landing.features.title')}</a>
+                <Link href="/pricing" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.pricing') || 'Precios'}</Link>
+                <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.security') || 'Seguridad'}</a>
               </div>
               <div className="h-6 w-px bg-gray-200"></div>
               <div className="flex items-center space-x-6">
@@ -78,13 +78,13 @@ export default function Home() {
                   onClick={() => setLocation('/auth')}
                   className="text-sm text-gray-900 font-bold hover:text-blue-600 transition-colors"
                 >
-                  Iniciar sesión
+                  {t('common.auth.login')}
                 </button>
                 <button 
                   onClick={() => setLocation('/auth')}
                   className="bg-blue-600 text-white text-sm font-bold px-7 py-3 rounded-full hover:bg-blue-700 transition-all hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
                 >
-                  Comenzar
+                  {t('landing.hero.ctaButton')}
                 </button>
 
                 <LanguageSelector />
@@ -181,7 +181,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-6xl lg:text-7xl font-black text-gray-900 leading-[1.1] mb-8 tracking-tight"
               >
-                Mueve y protege tus archivos con <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">Inteligencia Real</span>
+                {t('landing.hero.title')} <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600">{t('landing.hero.subtitle')}</span>
               </motion.h1>
               
               <motion.p 
@@ -190,7 +190,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-xl text-gray-600 leading-relaxed mb-12 max-w-2xl font-medium"
               >
-                TERA es el puente entre tus nubes. Transfiere archivos entre plataformas, programa copias de seguridad automáticas y conecta tus herramientas favoritas en segundos.
+                {t('landing.hero.description')}
               </motion.p>
               
               <motion.div 
@@ -204,7 +204,7 @@ export default function Home() {
                   className="bg-blue-600 text-white font-bold px-10 py-5 rounded-2xl hover:bg-blue-700 transition-all hover:shadow-[0_20px_40px_rgba(59,130,246,0.4)] hover:-translate-y-1 flex items-center justify-center group text-lg relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
-                  Empieza gratis hoy
+                  {t('landing.hero.ctaButton')}
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button className="bg-white border-2 border-gray-100 text-gray-900 font-bold px-10 py-5 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all text-lg shadow-sm">
