@@ -225,7 +225,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
 
       <div className="text-center pt-2">
         <Link href="/login">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('signup.hasAccount')} {t('signup.signIn')}</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth.signup.hasAccount')} {t('auth.signup.signIn')}</span>
         </Link>
       </div>
     </div>
