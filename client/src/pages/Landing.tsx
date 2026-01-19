@@ -75,13 +75,13 @@ export default function Home() {
               <div className="h-6 w-px bg-gray-200"></div>
               <div className="flex items-center space-x-6">
                 <button 
-                  onClick={() => setLocation('/auth?mode=login')}
+                  onClick={() => setLocation('/login')}
                   className="text-sm text-gray-900 font-bold hover:text-blue-600 transition-colors"
                 >
                   {t('common.auth.login')}
                 </button>
                 <button 
-                  onClick={() => setLocation('/auth?mode=register')}
+                  onClick={() => setLocation('/signup')}
                   className="bg-blue-600 text-white text-sm font-bold px-7 py-3 rounded-full hover:bg-blue-700 transition-all hover:shadow-xl hover:-translate-y-0.5 active:scale-95"
                 >
                   {t('landing.hero.ctaButton')}
@@ -114,8 +114,8 @@ export default function Home() {
               <Link href="/pricing" className="text-2xl font-bold text-gray-900">{t('common.navigation.pricing')}</Link>
               <a href="#seguridad" className="text-2xl font-bold text-gray-900">{t('common.navigation.security')}</a>
               <div className="pt-6 border-t border-gray-100 flex flex-col space-y-4">
-                <button onClick={() => setLocation('/auth?mode=login')} className="text-lg font-bold text-gray-900 py-2">{t('common.auth.login')}</button>
-                <button onClick={() => setLocation('/auth?mode=register')} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-blue-200">
+                <button onClick={() => setLocation('/login')} className="text-lg font-bold text-gray-900 py-2">{t('common.auth.login')}</button>
+                <button onClick={() => setLocation('/signup')} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-blue-200">
                   {t('landing.hero.ctaButton')}
                 </button>
                 <div className="flex justify-center pt-4">
@@ -200,7 +200,7 @@ export default function Home() {
                 className="flex flex-col sm:flex-row gap-5"
               >
                 <button 
-                  onClick={() => setLocation('/auth?mode=register')}
+                  onClick={() => setLocation('/signup')}
                   className="bg-blue-600 text-white font-bold px-10 py-5 rounded-2xl hover:bg-blue-700 transition-all hover:shadow-[0_20px_40px_rgba(59,130,246,0.4)] hover:-translate-y-1 flex items-center justify-center group text-lg relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-shimmer" />
@@ -583,7 +583,7 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <button 
-                onClick={() => setLocation('/auth')}
+                onClick={() => setLocation('/signup')}
                 className="bg-white text-blue-600 font-black px-12 py-6 rounded-2xl hover:bg-blue-50 transition-all shadow-2xl hover:-translate-y-1 text-lg"
               >
                 {t('landing.cta.createAccount')}
