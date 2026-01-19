@@ -14,11 +14,11 @@ export default function Home() {
   const { t } = useTranslation();
 
   const chatSuggestions = [
-    "Mueve mis archivos de Dropbox a Google Drive",
-    "Crea una copia de seguridad de mis fotos en OneDrive",
-    "¿Qué nubes tengo integradas actualmente?",
-    "Transfiere la carpeta 'Proyectos' a mi cuenta de Box",
-    "Sincroniza mi carpeta de Notion con mi Drive"
+    t('landing.ai.suggestions.suggestion1'),
+    t('landing.ai.suggestions.suggestion2'),
+    t('landing.ai.suggestions.suggestion3'),
+    t('landing.ai.suggestions.suggestion4'),
+    t('landing.ai.suggestions.suggestion5')
   ];
 
   const cloudProviders = [
@@ -31,29 +31,29 @@ export default function Home() {
   const features = [
     {
       icon: RefreshCw,
-      title: "Transferencias Multi-nube",
-      description: "Mueve gigabytes entre Dropbox, Drive y OneDrive con un solo clic. Sin descargar nada a tu equipo.",
+      title: t('landing.benefits.feature1.title'),
+      description: t('landing.benefits.feature1.description'),
       color: "blue"
     },
     {
       icon: Layers,
-      title: "Copias de Seguridad Inteligentes",
-      description: "Programa respaldos automáticos entre nubes para que tus archivos más importantes siempre tengan un espejo.",
+      title: t('landing.benefits.feature2.title'),
+      description: t('landing.benefits.feature2.description'),
       color: "purple"
     },
     {
       icon: Database,
-      title: "+50 Integraciones Nativas",
-      description: "Conecta Slack, Teams, Notion y todas tus herramientas de trabajo para centralizar tu ecosistema digital.",
+      title: t('landing.benefits.feature3.title'),
+      description: t('landing.benefits.feature3.description'),
       color: "pink"
     }
   ];
 
   const securityFeatures = [
-    { icon: Shield, text: "Cifrado de grado bancario para todas tus nubes" },
-    { icon: Lock, text: "Misma seguridad que tu banco online" },
-    { icon: Search, text: "Tus datos nunca se comparten con terceros" },
-    { icon: Layers, text: "Criptografía de punta a punta en cada transferencia" }
+    { icon: Shield, text: t('landing.security.aesDesc') },
+    { icon: Lock, text: t('landing.security.zeroKnowledgeDesc') },
+    { icon: Search, text: t('landing.security.auditDesc') },
+    { icon: Layers, text: t('landing.security.syncDesc') }
   ];
 
   return (
@@ -168,7 +168,7 @@ export default function Home() {
                   ))}
                 </div>
                 <span className="text-sm font-black text-gray-900 tracking-tight">
-                  <span className="text-blue-600">Nuevo:</span> Automatización Multi-Nube
+                  <span className="text-blue-600">{t('common.buttons.next')}:</span> {t('landing.hero.syncBadge')}
                 </span>
                 <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">
                   PRO
@@ -258,7 +258,7 @@ export default function Home() {
                 {/* Floating Badge */}
                 <div className="absolute -top-6 -right-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-2xl flex items-center space-x-2 animate-bounce">
                   <RefreshCw className="w-4 h-4 animate-spin-slow" />
-                  <span>Auto-Sincronización</span>
+                  <span>{t('landing.hero.syncBadge')}</span>
                 </div>
 
                 <div className="space-y-8">
@@ -278,8 +278,8 @@ export default function Home() {
                   <div className="bg-gray-50 rounded-3xl p-6 space-y-6">
                       <div className="space-y-2">
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        <span>Transferencia: Dropbox → Drive</span>
-                        <span className="text-blue-600">85% Completado</span>
+                        <span>{t('landing.hero.transferLabel')}: Dropbox → Drive</span>
+                        <span className="text-blue-600">85% {t('landing.hero.completed')}</span>
                       </div>
                       <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                         <motion.div 
@@ -293,8 +293,8 @@ export default function Home() {
 
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        <span>Backup: Servidor → OneDrive</span>
-                        <span className="text-purple-600">42% Escaneando</span>
+                        <span>{t('landing.hero.backupLabel')}: Servidor → OneDrive</span>
+                        <span className="text-purple-600">42% {t('landing.hero.scanning')}</span>
                       </div>
                       <div className="h-3 w-full bg-gray-200 rounded-full overflow-hidden">
                         <motion.div 
@@ -309,11 +309,11 @@ export default function Home() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-                      <p className="text-xs font-bold text-blue-600 uppercase mb-1">Liberado</p>
+                      <p className="text-xs font-bold text-blue-600 uppercase mb-1">{t('landing.hero.freedLabel')}</p>
                       <p className="text-2xl font-black text-blue-900 leading-none">12.4 GB</p>
                     </div>
                     <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                      <p className="text-xs font-bold text-green-600 uppercase mb-1">Duplicados</p>
+                      <p className="text-xs font-bold text-green-600 uppercase mb-1">{t('landing.hero.duplicatesLabel')}</p>
                       <p className="text-2xl font-black text-green-900 leading-none">1,240</p>
                     </div>
                   </div>
@@ -331,8 +331,8 @@ export default function Home() {
                   <CheckCircle2 className="w-7 h-7 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-gray-900 leading-tight">Seguridad Activa</p>
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">Cifrado de 256 bits</p>
+                  <p className="text-sm font-black text-gray-900 leading-tight">{t('landing.hero.securityBadge')}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-tighter">{t('landing.hero.encryptionLabel')}</p>
                 </div>
               </motion.div>
             </div>
@@ -344,10 +344,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center">
             {[
-              { label: "Archivos Movidos", value: "450M+" },
-              { label: "Usuarios Activos", value: "85k+" },
-              { label: "Uptime Garantizado", value: "99.9%" },
-              { label: "Seguridad Bancaria", value: "256-bit" }
+              { label: t('landing.stats.filesMoved'), value: "450M+" },
+              { label: t('landing.stats.activeUsers'), value: "85k+" },
+              { label: t('landing.stats.guaranteedUptime'), value: "99.9%" },
+              { label: t('landing.stats.bankingSecurity'), value: "256-bit" }
             ].map((stat, i) => (
               <motion.div
                 key={i}
@@ -367,10 +367,10 @@ export default function Home() {
       <section className="py-32 px-6 lg:px-20 bg-gray-50/50" id="productos">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
-            <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">¿Por qué elegir TERA?</h2>
-            <h3 className="text-5xl lg:text-6xl font-black text-gray-900 mb-8 tracking-tight">Todo tu contenido, conectado</h3>
+            <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">{t('landing.benefits.badge')}</h2>
+            <h3 className="text-5xl lg:text-6xl font-black text-gray-900 mb-8 tracking-tight">{t('landing.benefits.title')}</h3>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-              Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.
+              {t('landing.benefits.description')}
             </p>
           </div>
 
@@ -394,7 +394,7 @@ export default function Home() {
                   <p className="text-gray-600 leading-relaxed font-medium">{feature.description}</p>
                   <div className="mt-8 pt-8 border-t border-gray-50 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button className="text-sm font-bold text-blue-600 flex items-center">
-                      Saber más <ArrowRight className="w-4 h-4 ml-2" />
+                      {t('landing.benefits.learnMore')} <ArrowRight className="w-4 h-4 ml-2" />
                     </button>
                   </div>
                 </motion.div>
@@ -426,11 +426,11 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-20 items-center">
             <div>
               <h2 className="text-4xl lg:text-5xl font-black text-white mb-8 leading-tight">
-                Tú define las reglas,<br />
-                <span className="text-blue-400">TERA las ejecuta por ti.</span>
+                {t('landing.ai.title')}<br />
+                <span className="text-blue-400">{t('landing.ai.subtitle')}</span>
               </h2>
               <p className="text-xl text-gray-400 mb-12 font-medium">
-                Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 y realiza las tareas repetitivas para que tú no tengas que hacerlo.
+                {t('landing.ai.description')}
               </p>
               
               <div className="space-y-4">
@@ -460,8 +460,8 @@ export default function Home() {
                       <img src={logoUrl} alt="TERA Automation" className="w-10 h-auto" />
                     </div>
                     <div>
-                      <h5 className="text-white font-black">Panel de Automatización</h5>
-                      <p className="text-xs font-bold text-blue-400 tracking-widest uppercase">Sistema Inteligente Activo</p>
+                      <h5 className="text-white font-black">{t('landing.ai.panelTitle')}</h5>
+                      <p className="text-xs font-bold text-blue-400 tracking-widest uppercase">{t('landing.ai.panelStatus')}</p>
                     </div>
                   </div>
 
@@ -472,7 +472,7 @@ export default function Home() {
                       </div>
                       <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
                         <p className="text-sm text-gray-300 leading-relaxed font-medium">
-                          "He detectado 150 archivos nuevos en tu Dropbox. ¿Deseas que inicie la migración automática a tu carpeta de Proyectos 2024 en Google Drive?"
+                          {t('landing.ai.aiMessage')}
                         </p>
                       </div>
                     </div>
@@ -483,14 +483,14 @@ export default function Home() {
                       </div>
                       <div className="bg-blue-600 rounded-2xl p-4 shadow-lg">
                         <p className="text-sm text-white font-bold italic">
-                          "Sí, por favor. Y elimina los duplicados de más de 6 meses."
+                          {t('landing.ai.userResponse')}
                         </p>
                       </div>
                     </div>
 
                     <div className="pt-6">
                       <div className="flex justify-between text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
-                        <span>Migración en curso</span>
+                        <span>{t('landing.ai.progressLabel')}</span>
                         <span className="text-blue-400">72%</span>
                       </div>
                       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
@@ -518,35 +518,35 @@ export default function Home() {
                 <div className="space-y-6 pt-12">
                   <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500">
                     <Shield className="w-10 h-10 text-blue-600 mb-6" />
-                    <h5 className="text-xl font-black text-gray-900 mb-3">AES-256</h5>
-                    <p className="text-sm text-gray-600 font-medium leading-relaxed">Encriptación de nivel militar para cada bit de información.</p>
+                    <h5 className="text-xl font-black text-gray-900 mb-3">{t('landing.security.aesTitle')}</h5>
+                    <p className="text-sm text-gray-600 font-medium leading-relaxed">{t('landing.security.aesDesc')}</p>
                   </div>
                   <div className="bg-blue-600 rounded-[2rem] p-8 text-white shadow-2xl shadow-blue-500/20">
                     <Lock className="w-10 h-10 mb-6" />
-                    <h5 className="text-xl font-black mb-3">Zero Knowledge</h5>
-                    <p className="text-sm text-blue-100 font-medium leading-relaxed">Tus claves son solo tuyas. Ni siquiera nosotros podemos ver tus archivos.</p>
+                    <h5 className="text-xl font-black mb-3">{t('landing.security.zeroKnowledgeTitle')}</h5>
+                    <p className="text-sm text-blue-100 font-medium leading-relaxed">{t('landing.security.zeroKnowledgeDesc')}</p>
                   </div>
                 </div>
                 <div className="space-y-6">
                   <div className="bg-gray-900 rounded-[2rem] p-8 text-white">
                     <Search className="w-10 h-10 text-blue-400 mb-6" />
-                    <h5 className="text-xl font-black mb-3">Auditoría Real</h5>
-                    <p className="text-sm text-gray-400 font-medium leading-relaxed">Registros detallados de cada movimiento para tu control total.</p>
+                    <h5 className="text-xl font-black mb-3">{t('landing.security.auditTitle')}</h5>
+                    <p className="text-sm text-gray-400 font-medium leading-relaxed">{t('landing.security.auditDesc')}</p>
                   </div>
                   <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500">
                     <RefreshCw className="w-10 h-10 text-purple-600 mb-6" />
-                    <h5 className="text-xl font-black text-gray-900 mb-3">Sincronización</h5>
-                    <p className="text-sm text-gray-600 font-medium leading-relaxed">Tus nubes siempre en armonía, protegidas por nuestro firewall inteligente.</p>
+                    <h5 className="text-xl font-black text-gray-900 mb-3">{t('landing.security.syncTitle')}</h5>
+                    <p className="text-sm text-gray-600 font-medium leading-relaxed">{t('landing.security.syncDesc')}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             <div>
-              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">Seguridad sin Compromisos</h2>
-              <h3 className="text-5xl font-black text-gray-900 mb-8 leading-tight">Dormir tranquilo es parte del plan</h3>
+              <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">{t('landing.security.badge')}</h2>
+              <h3 className="text-5xl font-black text-gray-900 mb-8 leading-tight">{t('landing.security.title')}</h3>
               <p className="text-xl text-gray-600 mb-10 font-medium leading-relaxed">
-                No escatimamos en seguridad. TERA utiliza los mismos protocolos que las instituciones financieras globales para garantizar que tus datos nunca caigan en manos equivocadas.
+                {t('landing.security.description')}
               </p>
               
               <ul className="space-y-6">
@@ -562,7 +562,7 @@ export default function Home() {
 
               <div className="mt-12">
                 <button className="bg-gray-900 text-white font-bold px-10 py-5 rounded-2xl hover:bg-black transition-all shadow-xl hover:-translate-y-1">
-                  Lee nuestro Whitepaper de Seguridad
+                  {t('landing.security.whitepaperButton')}
                 </button>
               </div>
             </div>
@@ -576,20 +576,20 @@ export default function Home() {
           
           <div className="relative z-10">
             <h2 className="text-5xl lg:text-7xl font-black text-white mb-8 tracking-tighter">
-              El futuro de tus archivos<br />comienza hoy.
+              {t('landing.cta.title', { interpolation: { escapeValue: false } })}
             </h2>
             <p className="text-xl text-blue-100 mb-12 max-w-2xl mx-auto font-medium leading-relaxed">
-              Únete a más de 85,000 profesionales que ya han optimizado su ecosistema digital con TERA. Sin tarjetas, sin complicaciones.
+              {t('landing.cta.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <button 
                 onClick={() => setLocation('/auth')}
                 className="bg-white text-blue-600 font-black px-12 py-6 rounded-2xl hover:bg-blue-50 transition-all shadow-2xl hover:-translate-y-1 text-lg"
               >
-                Crear mi cuenta gratis
+                {t('landing.cta.createAccount')}
               </button>
               <button className="bg-blue-700/30 backdrop-blur-md text-white border-2 border-white/20 font-black px-12 py-6 rounded-2xl hover:bg-blue-700/50 transition-all text-lg">
-                Hablar con ventas
+                {t('landing.cta.talkToSales')}
               </button>
             </div>
           </div>
@@ -605,7 +605,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-12 mb-20">
             <div className="col-span-2">
               <img src={logoUrl} alt="TERA Logo" className="h-[8.4rem] w-auto object-contain mb-8" />
-              <p className="text-lg text-gray-500 max-w-xs font-medium leading-relaxed">Elevando la gestión de archivos a una nueva dimensión de inteligencia y seguridad.</p>
+              <p className="text-lg text-gray-500 max-w-xs font-medium leading-relaxed">{t('landing.footer.description')}</p>
               
             <div className="flex items-center space-x-5 mt-10">
                 <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
@@ -623,30 +623,30 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8">Plataforma</h4>
+              <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8">{t('landing.footer.platform')}</h4>
               <ul className="space-y-4">
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Características</a></li>
-                <li><a href="/pricing" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Precios</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Seguridad</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Integraciones</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.features.title')}</a></li>
+                <li><a href="/pricing" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.pricing')}</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.security')}</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.integrations')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8">Legal</h4>
+              <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8">{t('landing.footer.legal')}</h4>
               <ul className="space-y-4">
-                <li><Link href="/privacy" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Privacidad</Link></li>
-                <li><Link href="/terms" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Términos</Link></li>
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Cookies</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">Cumplimiento</a></li>
+                <li><Link href="/privacy" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.footer.privacy')}</Link></li>
+                <li><Link href="/terms" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.footer.terms')}</Link></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.footer.cookies')}</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.footer.compliance')}</a></li>
               </ul>
             </div>
           </div>
           <div className="pt-10 border-t border-gray-100 flex flex-col md:row items-center justify-between">
-            <p className="text-gray-400 font-bold">© {new Date().getFullYear()} TERA Cloud Technologies Inc.</p>
+            <p className="text-gray-400 font-bold">{t('landing.footer.rights', { year: new Date().getFullYear() })}</p>
             <div className="flex items-center space-x-8 mt-6 md:mt-0">
               <span className="flex items-center text-xs font-bold text-gray-400">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
-                Sistemas Operativos
+                {t('landing.footer.status')}
               </span>
             </div>
           </div>

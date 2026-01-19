@@ -76,17 +76,36 @@ const resources = {
           badge: "¿Por qué elegir TERA?",
           title: "Todo tu contenido, conectado",
           description: "Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.",
-          learnMore: "Saber más"
+          learnMore: "Saber más",
+          feature1: {
+            title: "Transferencias Multi-nube",
+            description: "Mueve gigabytes entre Dropbox, Drive y OneDrive con un solo clic. Sin descargar nada a tu equipo."
+          },
+          feature2: {
+            title: "Copias de Seguridad Inteligentes",
+            description: "Programa respaldos automáticos entre nubes para que tus archivos más importantes siempre tengan un espejo."
+          },
+          feature3: {
+            title: "+50 Integraciones Nativas",
+            description: "Conecta Slack, Teams, Notion y todas tus herramientas de trabajo para centralizar tu ecosistema digital."
+          }
         },
         ai: {
           title: "Tú define las reglas,",
           subtitle: "TERA las ejecuta por ti.",
-          description: "Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 y realiza las tareas repetitivas para que tú no tengas que hacerlo.",
+          description: "Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 and realiza las tareas repetitivas para que tú no tengas que hacerlo.",
           panelTitle: "Panel de Automatización",
           panelStatus: "Sistema Inteligente Activo",
           aiMessage: "\"He detectado 150 archivos nuevos en tu Dropbox. ¿Deseas que inicie la migración automática a tu carpeta de Proyectos 2024 en Google Drive?\"",
           userResponse: "\"Sí, por favor. Y elimina los duplicados de más de 6 meses.\"",
-          progressLabel: "Migración en curso"
+          progressLabel: "Migración en curso",
+          suggestions: {
+            suggestion1: "Mueve mis archivos de Dropbox a Google Drive",
+            suggestion2: "Crea una copia de seguridad de mis fotos en OneDrive",
+            suggestion3: "¿Qué nubes tengo integradas actualmente?",
+            suggestion4: "Transfiere la carpeta 'Proyectos' a mi cuenta de Box",
+            suggestion5: "Sincroniza mi carpeta de Notion con mi Drive"
+          }
         },
         security: {
           badge: "Seguridad sin Compromisos",
@@ -195,7 +214,19 @@ const resources = {
           badge: "Why choose TERA?",
           title: "All your content, connected",
           description: "We simplify the complex. We automate the tedious. We protect what matters.",
-          learnMore: "Learn more"
+          learnMore: "Learn more",
+          feature1: {
+            title: "Multi-cloud Transfers",
+            description: "Move gigabytes between Dropbox, Drive and OneDrive with a single click. Without downloading anything to your computer."
+          },
+          feature2: {
+            title: "Smart Backups",
+            description: "Schedule automatic backups between clouds so your most important files always have a mirror."
+          },
+          feature3: {
+            title: "+50 Native Integrations",
+            description: "Connect Slack, Teams, Notion and all your work tools to centralize your digital ecosystem."
+          }
         },
         ai: {
           title: "You define the rules,",
@@ -205,7 +236,14 @@ const resources = {
           panelStatus: "Active Intelligent System",
           aiMessage: "\"I have detected 150 new files in your Dropbox. Do you want me to start the automatic migration to your 2024 Projects folder in Google Drive?\"",
           userResponse: "\"Yes, please. And delete duplicates older than 6 months.\"",
-          progressLabel: "Migration in progress"
+          progressLabel: "Migration in progress",
+          suggestions: {
+            suggestion1: "Move my files from Dropbox to Google Drive",
+            suggestion2: "Create a backup of my photos in OneDrive",
+            suggestion3: "What clouds do I currently have integrated?",
+            suggestion4: "Transfer the 'Projects' folder to my Box account",
+            suggestion5: "Sync my Notion folder with my Drive"
+          }
         },
         security: {
           badge: "Security without Compromise",
@@ -313,8 +351,20 @@ const resources = {
         benefits: {
           badge: "Por que escolher a TERA?",
           title: "Todo o seu conteúdo, conectado",
-          description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos o que importa.",
-          learnMore: "Saiba mais"
+          description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos lo que importa.",
+          learnMore: "Saiba mais",
+          feature1: {
+            title: "Transferências Multi-nuvem",
+            description: "Mova gigabytes entre Dropbox, Drive e OneDrive com um único clique. Sem baixar nada para o seu computador."
+          },
+          feature2: {
+            title: "Backups Inteligentes",
+            description: "Agende backups automáticos entre nuvens para que seus arquivos mais importantes sempre tenham um espelho."
+          },
+          feature3: {
+            title: "+50 Integrações Nativas",
+            description: "Conecte Slack, Teams, Notion e todas as suas ferramentas de trabalho para centralizar seu ecossistema digital."
+          }
         },
         ai: {
           title: "Você define as regras,",
@@ -324,7 +374,14 @@ const resources = {
           panelStatus: "Sistema Inteligente Ativo",
           aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Deseja que eu inicie a migração automática para sua pasta Projetos 2024 no Google Drive?\"",
           userResponse: "\"Sim, por favor. E exclua duplicatas com mais de 6 meses.\"",
-          progressLabel: "Migração em curso"
+          progressLabel: "Migração em curso",
+          suggestions: {
+            suggestion1: "Mova meus arquivos do Dropbox para o Google Drive",
+            suggestion2: "Crie um backup das minhas fotos no OneDrive",
+            suggestion3: "Quais nuvens eu tenho integradas atualmente?",
+            suggestion4: "Transfira a pasta 'Projetos' para minha conta do Box",
+            suggestion5: "Sincronize minha pasta do Notion com meu Drive"
+          }
         },
         security: {
           badge: "Segurança sem Compromisso",
