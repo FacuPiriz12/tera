@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
 
 import logoUrl from '../assets/logo.png';
+import LanguageSelector from '../components/LanguageSelector';
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,6 +88,9 @@ export default function Home() {
                 >
                   Comenzar
                 </button>
+                <div className="z-[10000]">
+                  <LanguageSelector />
+                </div>
               </div>
             </div>
 
@@ -123,6 +127,9 @@ export default function Home() {
                 <button onClick={() => setLocation('/auth')} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-blue-200">
                   Comenzar ahora
                 </button>
+                <div className="flex justify-center pt-4">
+                  <LanguageSelector />
+                </div>
               </div>
             </div>
           </motion.div>
