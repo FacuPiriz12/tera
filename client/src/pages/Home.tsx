@@ -81,9 +81,16 @@ export default function Home() {
   const hasDropboxConnected = dropboxStatus?.connected && dropboxStatus?.hasValidToken;
   const hasAnyAccountConnected = hasGoogleConnected || hasDropboxConnected;
 
-  // Early return if not authenticated - App.tsx will handle routing
-  if (!isAuthenticated) {
+  if (!isAuthenticated && !isLoading) {
     return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   // Calculate statistics
