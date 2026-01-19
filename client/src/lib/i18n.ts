@@ -42,6 +42,14 @@ const resources = {
           successTitle: "Correo enviado",
           successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."
         },
+        resetPassword: {
+          title: "Nueva Contraseña",
+          description: "Elige una contraseña segura para proteger tu cuenta.",
+          submitButton: "Actualizar Contraseña",
+          successTitle: "Contraseña actualizada",
+          successDesc: "Tu contraseña ha sido restablecida con éxito.",
+          successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave."
+        },
         buttons: {
           cancel: "Cancelar",
           confirm: "Confirmar",
@@ -487,6 +495,14 @@ const resources = {
           submitButton: "Send instructions",
           successTitle: "Email sent",
           successDesc: "If the account exists, you will receive instructions to reset your password."
+        },
+        resetPassword: {
+          title: "New Password",
+          description: "Choose a secure password to protect your account.",
+          submitButton: "Update Password",
+          successTitle: "Password updated",
+          successDesc: "Your password has been successfully reset.",
+          successLongDesc: "Your password has been updated. You can now log in with your new password."
         },
         buttons: {
           cancel: "Cancel",
