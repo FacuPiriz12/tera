@@ -1,16 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const languages = [
-  { code: 'ES', name: 'Español', flag: '🇪🇸' },
-  { code: 'EN', name: 'English', flag: '🇺🇸' },
-  { code: 'PT', name: 'Português', flag: '🇵🇹' }
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'pt', name: 'Português', flag: '🇵🇹' }
 ];
 
 export default function LanguageSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState(languages[0]);
+  const { i18n } = useTranslation();
+  
+  const [currentLang, setCurrentLang] = useState(() => {
+    const code = i18n.language.split('-')[0].toLowerCase();
+    return languages.find(l => l.code === code) || languages[0];
+  });
+
+  useEffect(() => {
+    const code = i18n.language.split('-')[0].toLowerCase();
+    const lang = languages.find(l => l.code === code);
+    if (lang) setCurrentLang(lang);
+  }, [i18n.language]);
+
+  const changeLanguage = (lang: typeof languages[0]) => {
+    i18n.changeLanguage(lang.code);
+    setCurrentLang(lang);
+    setIsOpen(false);
+  };
 
   return (
     <div className="relative inline-block">
@@ -36,10 +54,7 @@ export default function LanguageSelector() {
             {languages.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => {
-                  setCurrentLang(lang);
-                  setIsOpen(false);
-                }}
+                onClick={() => changeLanguage(lang)}
                 className={`w-full flex items-center justify-between px-4 py-3 text-sm font-bold transition-all duration-200 text-left ${
                   currentLang.code === lang.code 
                     ? 'bg-blue-50 text-blue-600' 
