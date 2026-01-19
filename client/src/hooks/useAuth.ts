@@ -256,6 +256,16 @@ export function useAuth() {
   
   const loginMutation = useMutation({
     mutationFn: async (credentials: any) => {
+      const supabase = await supabasePromise;
+      if (supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: credentials.username,
+          password: credentials.password,
+        });
+        if (error) throw error;
+        return data.user;
+      }
+
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -281,6 +291,22 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: any) => {
+      const supabase = await supabasePromise;
+      if (supabase) {
+        const { data, error } = await supabase.auth.signUp({
+          email: credentials.email,
+          password: credentials.password,
+          options: {
+            data: {
+              first_name: credentials.firstName,
+              last_name: credentials.lastName,
+            }
+          }
+        });
+        if (error) throw error;
+        return data.user;
+      }
+
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
