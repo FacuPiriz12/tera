@@ -142,7 +142,8 @@ const resources = {
           cookies: "Cookies",
           compliance: "Cumplimiento",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
-          status: "Sistemas Operativos"
+          status: "Sistemas Operativos",
+          back: "Volver"
         },
         auth: {
           login: {
@@ -560,7 +561,8 @@ const resources = {
           cookies: "Cookies",
           compliance: "Compliance",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
-          status: "Operating Systems"
+          status: "Operating Systems",
+          back: "Back"
         },
         auth: {
           login: {

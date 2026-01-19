@@ -21,7 +21,7 @@ export default function TermsOfService() {
           <Link href="/">
             <Button variant="ghost" data-testid="button-back">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              {t('terms.back')}
+              {t('landing.footer.back')}
             </Button>
           </Link>
           <Button 
@@ -35,89 +35,89 @@ export default function TermsOfService() {
         </div>
 
         <div className="prose prose-slate dark:prose-invert max-w-none">
-          <h1>{t('terms.title')}</h1>
+          <h1>{t('landing.terms.title')}</h1>
           <p className="text-muted-foreground">
-            {t('terms.lastUpdated')}: {new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
+            {t('landing.terms.lastUpdated')}: {new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
-          <h2>{t('terms.section1.title')}</h2>
-          <p>{t('terms.section1.content')}</p>
+          <h2>{t('landing.terms.section1.title')}</h2>
+          <p>{t('landing.terms.section1.content')}</p>
 
-          <h2>{t('terms.section2.title')}</h2>
-          <p>{t('terms.section2.content')}</p>
+          <h2>{t('landing.terms.section2.title')}</h2>
+          <p>{t('landing.terms.section2.content')}</p>
 
-          <h2>{t('terms.section3.title')}</h2>
-          <p>{t('terms.section3.intro')}</p>
+          <h2>{t('landing.terms.section3.title')}</h2>
+          <p>{t('landing.terms.section3.intro')}</p>
           <ul>
-            <li>{t('terms.section3.item1')}</li>
-            <li>{t('terms.section3.item2')}</li>
-            <li>{t('terms.section3.item3')}</li>
-            <li>{t('terms.section3.item4')}</li>
+            <li>{t('landing.terms.section3.item1')}</li>
+            <li>{t('landing.terms.section3.item2')}</li>
+            <li>{t('landing.terms.section3.item3')}</li>
+            <li>{t('landing.terms.section3.item4')}</li>
           </ul>
 
-          <h2>{t('terms.section4.title')}</h2>
-          <p>{t('terms.section4.intro')}</p>
+          <h2>{t('landing.terms.section4.title')}</h2>
+          <p>{t('landing.terms.section4.intro')}</p>
           <ul>
-            <li>{t('terms.section4.item1')}</li>
-            <li>{t('terms.section4.item2')}</li>
-            <li>{t('terms.section4.item3')}</li>
-            <li>{t('terms.section4.item4')}</li>
-            <li>{t('terms.section4.item5')}</li>
-            <li>{t('terms.section4.item6')}</li>
+            <li>{t('landing.terms.section4.item1')}</li>
+            <li>{t('landing.terms.section4.item2')}</li>
+            <li>{t('landing.terms.section4.item3')}</li>
+            <li>{t('landing.terms.section4.item4')}</li>
+            <li>{t('landing.terms.section4.item5')}</li>
+            <li>{t('landing.terms.section4.item6')}</li>
           </ul>
 
-          <h2>{t('terms.section5.title')}</h2>
-          <p>{t('terms.section5.intro')}</p>
+          <h2>{t('landing.terms.section5.title')}</h2>
+          <p>{t('landing.terms.section5.intro')}</p>
           <ul>
-            <li>{t('terms.section5.item1')}</li>
-            <li>{t('terms.section5.item2')}</li>
-            <li>{t('terms.section5.item3')}</li>
+            <li>{t('landing.terms.section5.item1')}</li>
+            <li>{t('landing.terms.section5.item2')}</li>
+            <li>{t('landing.terms.section5.item3')}</li>
           </ul>
-          <p>{t('terms.section5.note')}</p>
+          <p>{t('landing.terms.section5.note')}</p>
 
-          <h2>{t('terms.section6.title')}</h2>
-          <p>{t('terms.section6.intro')}</p>
+          <h2>{t('landing.terms.section6.title')}</h2>
+          <p>{t('landing.terms.section6.intro')}</p>
           <ul>
-            <li>{t('terms.section6.item1')}</li>
-            <li>{t('terms.section6.item2')}</li>
-            <li>{t('terms.section6.item3')}</li>
-            <li>{t('terms.section6.item4')}</li>
+            <li>{t('landing.terms.section6.item1')}</li>
+            <li>{t('landing.terms.section6.item2')}</li>
+            <li>{t('landing.terms.section6.item3')}</li>
+            <li>{t('landing.terms.section6.item4')}</li>
           </ul>
-          <p>{t('terms.section6.note')}</p>
+          <p>{t('landing.terms.section6.note')}</p>
 
-          <h2>{t('terms.section7.title')}</h2>
-          <p>{t('terms.section7.content')}</p>
+          <h2>{t('landing.terms.section7.title')}</h2>
+          <p>{t('landing.terms.section7.content')}</p>
 
-          <h2>{t('terms.section8.title')}</h2>
-          <p>{t('terms.section8.content')}</p>
+          <h2>{t('landing.terms.section8.title')}</h2>
+          <p>{t('landing.terms.section8.content')}</p>
 
-          <h2>{t('terms.section9.title')}</h2>
-          <p>{t('terms.section9.intro')}</p>
+          <h2>{t('landing.terms.section9.title')}</h2>
+          <p>{t('landing.terms.section9.intro')}</p>
           <ul>
-            <li>{t('terms.section9.item1')}</li>
-            <li>{t('terms.section9.item2')}</li>
-            <li>{t('terms.section9.item3')}</li>
-            <li>{t('terms.section9.item4')}</li>
-            <li>{t('terms.section9.item5')}</li>
+            <li>{t('landing.terms.section9.item1')}</li>
+            <li>{t('landing.terms.section9.item2')}</li>
+            <li>{t('landing.terms.section9.item3')}</li>
+            <li>{t('landing.terms.section9.item4')}</li>
+            <li>{t('landing.terms.section9.item5')}</li>
           </ul>
-          <p>{t('terms.section9.note')}</p>
+          <p>{t('landing.terms.section9.note')}</p>
 
-          <h2>{t('terms.section10.title')}</h2>
-          <p>{t('terms.section10.content')}</p>
+          <h2>{t('landing.terms.section10.title')}</h2>
+          <p>{t('landing.terms.section10.content')}</p>
 
-          <h2>{t('terms.section11.title')}</h2>
-          <p>{t('terms.section11.content')}</p>
+          <h2>{t('landing.terms.section11.title')}</h2>
+          <p>{t('landing.terms.section11.content')}</p>
 
-          <h2>{t('terms.section12.title')}</h2>
-          <p>{t('terms.section12.content')}</p>
+          <h2>{t('landing.terms.section12.title')}</h2>
+          <p>{t('landing.terms.section12.content')}</p>
 
-          <h2>{t('terms.section13.title')}</h2>
-          <p>{t('terms.section13.content')}</p>
+          <h2>{t('landing.terms.section13.title')}</h2>
+          <p>{t('landing.terms.section13.content')}</p>
 
-          <h2>{t('terms.section14.title')}</h2>
-          <p>{t('terms.section14.content')}</p>
+          <h2>{t('landing.terms.section14.title')}</h2>
+          <p>{t('landing.terms.section14.content')}</p>
           <p>
-            <strong>Email:</strong> {t('terms.section14.email')}
+            <strong>Email:</strong> {t('landing.terms.section14.email')}
           </p>
         </div>
       </div>
