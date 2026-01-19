@@ -368,7 +368,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-4">¿Por qué elegir TERA?</h2>
-            <h3 className="text-5xl lg:text-6xl font-black text-gray-900 mb-8 tracking-tight">El estándar del mañana hoy</h3>
+            <h3 className="text-5xl lg:text-6xl font-black text-gray-900 mb-8 tracking-tight">Todo tu contenido, conectado</h3>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
               Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.
             </p>
@@ -509,7 +509,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* Security Detailed Section */}
       <section className="py-32 px-6 lg:px-20 bg-white" id="seguridad">
         <div className="max-w-7xl mx-auto">
@@ -570,7 +569,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-32 px-6 lg:px-20 relative overflow-hidden">
         <div className="max-w-7xl mx-auto bg-blue-600 rounded-[3rem] p-16 lg:p-24 text-center relative overflow-hidden shadow-2xl shadow-blue-500/40">
@@ -601,7 +599,6 @@ export default function Home() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full translate-x-1/2 translate-y-1/2 blur-3xl" />
         </div>
       </section>
-
       {/* Footer */}
       <footer className="py-20 px-6 lg:px-20 border-t border-gray-100 bg-white">
         <div className="max-w-7xl mx-auto">
