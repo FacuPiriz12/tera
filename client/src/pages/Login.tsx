@@ -59,7 +59,9 @@ export default function Login() {
     <div className="min-h-screen w-full flex flex-col items-center bg-[#F9FAFB] p-6 relative">
       {/* Logo Section - Top Left */}
       <div className="absolute top-8 left-8">
-        <CloneDriveLogo className="h-12" />
+        <Link href="/">
+          <img src="/src/assets/logo.png" alt="TERA Logo" className="h-12 w-auto cursor-pointer" />
+        </Link>
       </div>
 
       <AnimatePresence mode="wait">
@@ -84,10 +86,10 @@ export default function Login() {
             className="mt-12 flex gap-10 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
           >
             <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">
-              {i18n.language === 'es' ? 'Términos de Servicio' : 'Terms of Service'}
+              {t('auth:signup.acceptTerms.termsLink')}
             </Link>
             <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">
-              {i18n.language === 'es' ? 'Política de Privacidad' : 'Privacy Policy'}
+              {t('auth:signup.acceptTerms.privacyLink')}
             </Link>
           </motion.div>
         </motion.div>

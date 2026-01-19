@@ -46,6 +46,9 @@ const resources = {
           next: "Siguiente",
           change: "Cambiar",
           select: "Seleccionar"
+        },
+        status: {
+          loading: "Cargando..."
         }
       },
       landing: {
@@ -107,7 +110,7 @@ const resources = {
             suggestion2: "Crea una copia de seguridad de mis fotos en OneDrive",
             suggestion3: "¿Qué nubes tengo integradas actualmente?",
             suggestion4: "Transfiere la carpeta 'Proyectos' a mi cuenta de Box",
-            suggestion5: "Sincroniza mi carpeta de Notion con mi Drive"
+            suggestion5: "Sincronize minha pasta do Notion com meu Drive"
           }
         },
         security: {
@@ -140,6 +143,51 @@ const resources = {
           compliance: "Cumplimiento",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
           status: "Sistemas Operativos"
+        },
+        auth: {
+          login: {
+            title: "¡Bienvenido de nuevo!",
+            welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
+            emailLabel: "Correo electrónico",
+            emailPlaceholder: "tu@email.com",
+            passwordLabel: "Contraseña",
+            passwordPlaceholder: "Tu contraseña",
+            signInButton: "Iniciar Sesión",
+            noAccount: "¿No tienes cuenta? Regístrate",
+            forgotPassword: "¿Olvidaste tu contraseña?"
+          },
+          signup: {
+            title: "Crea tu cuenta",
+            nameLabel: "Nombre completo",
+            namePlaceholder: "Tu nombre",
+            emailLabel: "Correo electrónico",
+            emailPlaceholder: "tu@email.com",
+            passwordLabel: "Contraseña",
+            passwordPlaceholder: "Crea una contraseña",
+            confirmPasswordLabel: "Confirmar contraseña",
+            confirmPasswordPlaceholder: "Repite tu contraseña",
+            createAccountButton: "Crear Cuenta",
+            hasAccount: "¿Ya tienes cuenta?",
+            signIn: "Inicia sesión",
+            acceptTerms: {
+              part1: "Acepto los",
+              termsLink: "Términos de Servicio",
+              and: "y la",
+              privacyLink: "Política de Privacidad"
+            }
+          },
+          validation: {
+            invalidEmail: "Correo electrónico inválido",
+            passwordTooShort: "La contraseña debe tener al menos 6 caracteres",
+            nameRequired: "El nombre es obligatorio",
+            acceptTermsRequired: "Debes aceptar los términos",
+            passwordsDoNotMatch: "Las contraseñas no coinciden"
+          }
+        },
+        errors: {
+          loginFailed: "Error al iniciar sesión",
+          signupFailed: "Error al crear cuenta",
+          tryAgain: "Por favor, inténtalo de nuevo"
         }
       }
     }
@@ -187,6 +235,9 @@ const resources = {
           next: "Next",
           change: "Change",
           select: "Select"
+        },
+        status: {
+          loading: "Loading..."
         }
       },
       landing: {
@@ -281,6 +332,51 @@ const resources = {
           compliance: "Compliance",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
           status: "Operating Systems"
+        },
+        auth: {
+          login: {
+            title: "Welcome back!",
+            welcomeMessages: ["Welcome back!", "Hello again!", "Great to see you"],
+            emailLabel: "Email address",
+            emailPlaceholder: "you@email.com",
+            passwordLabel: "Password",
+            passwordPlaceholder: "Your password",
+            signInButton: "Sign In",
+            noAccount: "Don't have an account? Sign up",
+            forgotPassword: "Forgot password?"
+          },
+          signup: {
+            title: "Create your account",
+            nameLabel: "Full Name",
+            namePlaceholder: "Your name",
+            emailLabel: "Email address",
+            emailPlaceholder: "you@email.com",
+            passwordLabel: "Password",
+            passwordPlaceholder: "Create a password",
+            confirmPasswordLabel: "Confirm Password",
+            confirmPasswordPlaceholder: "Repeat your password",
+            createAccountButton: "Create Account",
+            hasAccount: "Already have an account?",
+            signIn: "Log in",
+            acceptTerms: {
+              part1: "I accept the",
+              termsLink: "Terms of Service",
+              and: "and the",
+              privacyLink: "Privacy Policy"
+            }
+          },
+          validation: {
+            invalidEmail: "Invalid email address",
+            passwordTooShort: "Password must be at least 6 characters",
+            nameRequired: "Name is required",
+            acceptTermsRequired: "You must accept the terms",
+            passwordsDoNotMatch: "Passwords do not match"
+          }
+        },
+        errors: {
+          loginFailed: "Login failed",
+          signupFailed: "Signup failed",
+          tryAgain: "Please try again"
         }
       }
     }
@@ -328,6 +424,9 @@ const resources = {
           next: "Próximo",
           change: "Alterar",
           select: "Selecionar"
+        },
+        status: {
+          loading: "Carregando..."
         }
       },
       landing: {
@@ -377,7 +476,7 @@ const resources = {
           subtitle: "TERA as executa para você.",
           description: "Configure fluxos de trabalho potentes em segundos. A TERA monitora seus arquivos 24 horas por dia, 7 dias por semana e realiza as tarefas repetitivas para que você não precise fazer.",
           panelTitle: "Painel de Automação",
-          panelStatus: "Sistema Inteligente Ativo",
+          panelStatus: "Sistema Inteligente Activo",
           aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Deseja que eu inicie a migração automática para sua pasta Projetos 2024 no Google Drive?\"",
           userResponse: "\"Sim, por favor. E exclua duplicatas com mais de 6 meses.\"",
           progressLabel: "Migração em curso",
@@ -410,7 +509,7 @@ const resources = {
           talkToSales: "Falar com vendas"
         },
         footer: {
-          description: "Elevando a gestão de arquivos a uma nova dimensão de inteligência e segurança.",
+          description: "Elevando a gestão de arquivos a una nova dimensão de inteligência e seguridad.",
           platform: "Plataforma",
           legal: "Legal",
           privacy: "Privacidade",
@@ -419,6 +518,51 @@ const resources = {
           compliance: "Conformidade",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
           status: "Sistemas Operacionais"
+        },
+        auth: {
+          login: {
+            title: "Bem-vindo de volta!",
+            welcomeMessages: ["Bem-vindo de volta!", "Olá de novo!", "Bom ver você"],
+            emailLabel: "Endereço de e-mail",
+            emailPlaceholder: "seu@email.com",
+            passwordLabel: "Senha",
+            passwordPlaceholder: "Sua senha",
+            signInButton: "Entrar",
+            noAccount: "Não tem uma conta? Cadastre-se",
+            forgotPassword: "Esqueceu a senha?"
+          },
+          signup: {
+            title: "Crie sua conta",
+            nameLabel: "Nome completo",
+            namePlaceholder: "Seu nome",
+            emailLabel: "Endereço de e-mail",
+            emailPlaceholder: "seu@email.com",
+            passwordLabel: "Senha",
+            passwordPlaceholder: "Crie uma senha",
+            confirmPasswordLabel: "Confirmar senha",
+            confirmPasswordPlaceholder: "Repita sua senha",
+            createAccountButton: "Criar Conta",
+            hasAccount: "Já tem uma conta?",
+            signIn: "Entrar",
+            acceptTerms: {
+              part1: "Eu aceito os",
+              termsLink: "Termos de Serviço",
+              and: "e a",
+              privacyLink: "Política de Privacidade"
+            }
+          },
+          validation: {
+            invalidEmail: "Endereço de e-mail inválido",
+            passwordTooShort: "A senha deve ter pelo menos 6 caracteres",
+            nameRequired: "Nome é obrigatório",
+            acceptTermsRequired: "Você deve aceitar os termos",
+            passwordsDoNotMatch: "As senhas não coincidem"
+          }
+        },
+        errors: {
+          loginFailed: "Falha ao entrar",
+          signupFailed: "Falha ao cadastrar",
+          tryAgain: "Por favor, tente novamente"
         }
       }
     }
