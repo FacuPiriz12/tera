@@ -261,5 +261,13 @@ export function useAuth() {
     error,
     signOut: signOutMutation.mutate,
     isSigningOut: signOutMutation.isPending,
+    loginMutation: {
+      mutate: (data: any) => console.log("Login not implemented in hook", data),
+      isPending: false
+    },
+    registerMutation: {
+      mutate: (data: any) => console.log("Register not implemented in hook", data),
+      isPending: false
+    }
   };
 }
