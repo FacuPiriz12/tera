@@ -320,7 +320,7 @@ export default function AuthPage() {
                   required
                 />
                 <span className="ml-2 text-xs text-gray-600">
-                  Acepto los <Link href="/terms" className="text-blue-600 font-bold">Términos</Link> y la <Link href="/privacy" className="text-blue-600 font-bold">Privacidad</Link>
+                  Acepto los <Link href="/terms" className="text-blue-600 font-bold hover:underline">Términos</Link> y la <Link href="/privacy" className="text-blue-600 font-bold hover:underline">Privacidad</Link>
                 </span>
               </div>
 
