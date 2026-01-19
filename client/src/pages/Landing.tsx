@@ -168,7 +168,7 @@ export default function Home() {
                   ))}
                 </div>
                 <span className="text-sm font-black text-gray-900 tracking-tight">
-                  <span className="text-blue-600">{t('common.buttons.next')}:</span> {t('landing.hero.syncBadge')}
+                  <span className="text-blue-600">Nuevo:</span> {t('landing.hero.syncBadge')}
                 </span>
                 <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">
                   PRO
@@ -644,8 +644,8 @@ export default function Home() {
           <div className="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between font-sans">
             <p className="text-[12px] font-normal text-[#6a7282]">Copyright © 2026 TERA. Todos los derechos reservados.</p>
             <div className="flex items-center space-x-8 mt-6 md:mt-0">
-              <span className="flex items-center text-xs font-bold text-gray-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+              <span className="flex items-center text-sm font-black text-gray-500">
+                <div className="w-3 h-3 bg-green-500 rounded-full mr-3 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                 {t('landing.footer.status')}
               </span>
             </div>
