@@ -641,7 +641,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <div className="pt-10 border-t border-gray-100 flex flex-col md:row items-center justify-between">
+          <div className="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between font-sans">
             <p className="text-gray-400 font-bold">{t('landing.footer.rights', { year: new Date().getFullYear() })}</p>
             <div className="flex items-center space-x-8 mt-6 md:mt-0">
               <span className="flex items-center text-xs font-bold text-gray-400">
