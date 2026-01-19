@@ -642,7 +642,7 @@ export default function Home() {
             </div>
           </div>
           <div className="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between font-sans">
-            <p className="text-[12px] font-normal text-[#6a7282]">{t('landing.footer.rights', { year: new Date().getFullYear() })}</p>
+            <p className="text-[12px] font-normal text-[#6a7282]">Copyright © 2026 TERA. Todos los derechos reservados.</p>
             <div className="flex items-center space-x-8 mt-6 md:mt-0">
               <span className="flex items-center text-xs font-bold text-gray-400">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
