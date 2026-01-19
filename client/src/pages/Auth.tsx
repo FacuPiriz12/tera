@@ -13,9 +13,7 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [, setLocation] = useLocation();
-  const auth = useAuth();
-  const loginMutation = auth?.loginMutation || { isPending: false, mutate: () => {} };
-  const registerMutation = auth?.registerMutation || { isPending: false, mutate: () => {} };
+  const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
 
   const [floatingIcons, setFloatingIcons] = useState<any[]>([]);

@@ -254,6 +254,64 @@ export function useAuth() {
   const user = backendUser;
   const isAuthenticated = !!(user && !isError);
   
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: any) => {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Login failed");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+      toast({
+        title: "Éxito",
+        description: "Sesión iniciada correctamente",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async (credentials: any) => {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Registration failed");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      queryClient.setQueryData(["/api/auth/user"], user);
+      toast({
+        title: "Éxito",
+        description: "Cuenta creada correctamente",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return {
     user,
     isLoading,
@@ -261,13 +319,7 @@ export function useAuth() {
     error,
     signOut: signOutMutation.mutate,
     isSigningOut: signOutMutation.isPending,
-    loginMutation: {
-      mutate: (data: any) => console.log("Login not implemented in hook", data),
-      isPending: false
-    },
-    registerMutation: {
-      mutate: (data: any) => console.log("Register not implemented in hook", data),
-      isPending: false
-    }
+    loginMutation,
+    registerMutation,
   };
 }
