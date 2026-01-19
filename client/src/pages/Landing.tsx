@@ -69,8 +69,8 @@ export default function Home() {
             <div className="hidden md:flex items-center space-x-10">
               <div className="flex items-center space-x-8">
                 <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('landing.features.title')}</a>
-                <Link href="/pricing" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.pricing') || 'Precios'}</Link>
-                <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.security') || 'Seguridad'}</a>
+                <Link href="/pricing" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.pricing')}</Link>
+                <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.security')}</a>
               </div>
               <div className="h-6 w-px bg-gray-200"></div>
               <div className="flex items-center space-x-6">
