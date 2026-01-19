@@ -358,60 +358,101 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* Right Panel - Branding/Marketing */}
-      <div className="hidden lg:flex w-1/2 bg-blue-600 relative overflow-hidden flex-col items-center justify-center p-16 text-white">
-        {/* Animated Background Elements */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[600px] h-[600px] bg-blue-500 rounded-full blur-3xl opacity-50 animate-blob"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[500px] h-[500px] bg-indigo-500 rounded-full blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-blue-400 rounded-full blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-
-        <div className="relative z-10 text-center max-w-lg">
-          <div className="mb-12 inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20 animate-float">
-            <Database className="w-16 h-16 text-white" />
-          </div>
-          
-          <h2 className="text-5xl font-black mb-8 leading-tight tracking-tight">
-            Tus archivos en <span className="text-blue-200">Perfecta Armonía</span>
-          </h2>
-          
-          <p className="text-xl text-blue-100 font-medium leading-relaxed mb-12">
-            La plataforma más avanzada para la gestión inteligente de tus archivos en la nube. Seguridad, velocidad y simplicidad.
-          </p>
-
-          <div className="grid grid-cols-3 gap-6">
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition-all cursor-default">
-              <Zap className="w-8 h-8 mb-4 text-blue-200 mx-auto" />
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-100">Velocidad</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition-all cursor-default">
-              <Users className="w-8 h-8 mb-4 text-blue-200 mx-auto" />
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-100">Equipo</p>
-            </div>
-            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 hover:bg-white/20 transition-all cursor-default">
-              <Lock className="w-8 h-8 mb-4 text-blue-200 mx-auto" />
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-100">Seguridad</p>
+      {/* Right Panel - Feature Showcase */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 relative overflow-hidden">
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 -left-4 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob"></div>
+          <div className="absolute top-0 -right-4 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000"></div>
+          <div className="absolute -bottom-8 left-20 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-4000"></div>
+        </div>
+        {/* Floating Icons Animation */}
+        <div className="absolute inset-0">
+          {floatingIcons.map((item, idx) => {
+            const Icon = item.Icon;
+            return (
+              <div
+                key={idx}
+                className="absolute text-white/10"
+                style={{
+                  left: `${15 + (idx * 15)}%`,
+                  top: `${10 + (idx * 12)}%`,
+                  animation: `float ${item.duration}s ease-in-out infinite`,
+                  animationDelay: `${item.delay}s`
+                }}
+              >
+                <Icon className="w-12 h-12" />
+              </div>
+            );
+          })}
+        </div>
+        {/* Content */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-16 text-white text-center">
+          <div className="max-w-xl">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-6 leading-tight">
+              Gestiona sin esfuerzo tu equipo y operaciones
+            </h2>
+            <p className="text-blue-100 text-lg mb-12">
+              Inicia sesión para acceder a tu panel CRM y gestionar tus archivos de manera eficiente.
+            </p>
+            {/* Dashboard Mockup Preview */}
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/20 shadow-2xl transform hover:scale-[1.02] transition-all duration-500 overflow-hidden">
+              <div className="w-full aspect-[4/3] bg-white rounded-xl overflow-hidden shadow-inner">
+                {/* Simplified Mockup UI */}
+                <div className="h-full w-full flex flex-col bg-gray-50 text-left">
+                  <div className="h-10 border-b border-gray-100 flex items-center px-4 gap-1.5 bg-white">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
+                    <div className="ml-4 h-5 w-32 bg-gray-100 rounded-md" />
+                  </div>
+                  <div className="flex-1 p-4 grid grid-cols-4 gap-4">
+                    {/* Sidebar mockup */}
+                    <div className="col-span-1 space-y-3">
+                      <div className="h-4 w-full bg-blue-100 rounded" />
+                      <div className="h-4 w-4/5 bg-gray-100 rounded" />
+                      <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                      <div className="h-4 w-5/6 bg-gray-100 rounded" />
+                      <div className="pt-4 space-y-2">
+                        <div className="h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-lg border border-blue-50" />
+                      </div>
+                    </div>
+                    {/* Main content mockup */}
+                    <div className="col-span-3 space-y-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="h-20 bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col p-3">
+                          <div className="h-2 w-1/2 bg-gray-100 rounded mb-2" />
+                          <div className="h-4 w-3/4 bg-blue-200 rounded" />
+                        </div>
+                        <div className="h-20 bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col p-3">
+                          <div className="h-2 w-1/2 bg-gray-100 rounded mb-2" />
+                          <div className="h-4 w-3/4 bg-blue-200 rounded" />
+                        </div>
+                        <div className="h-20 bg-white border border-gray-100 rounded-xl shadow-sm flex flex-col p-3">
+                          <div className="h-2 w-1/2 bg-gray-100 rounded mb-2" />
+                          <div className="h-4 w-3/4 bg-blue-200 rounded" />
+                        </div>
+                      </div>
+                      <div className="h-40 bg-white border border-gray-100 rounded-xl shadow-sm p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <div className="h-3 w-24 bg-gray-100 rounded" />
+                          <div className="h-3 w-12 bg-blue-100 rounded" />
+                        </div>
+                        <div className="flex items-end gap-2 h-20">
+                          <div className="flex-1 bg-blue-200 rounded-t h-1/2" />
+                          <div className="flex-1 bg-blue-400 rounded-t h-3/4" />
+                          <div className="flex-1 bg-blue-300 rounded-t h-2/3" />
+                          <div className="flex-1 bg-blue-500 rounded-t h-full" />
+                          <div className="flex-1 bg-blue-100 rounded-t h-1/3" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Floating Background Icons */}
-        {floatingIcons.map((item, idx) => {
-          const { Icon, delay, duration } = item;
-          return (
-            <div
-              key={idx}
-              className="absolute text-white/10 animate-float"
-              style={{
-                top: `${Math.random() * 100}%`,
-                left: `${Math.random() * 100}%`,
-                animationDelay: `${delay}s`,
-                animationDuration: `${duration}s`
-              }}
-            >
-              <Icon size={48} />
-            </div>
-          );
-        })}
       </div>
     </div>
   );
