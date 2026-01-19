@@ -1,0 +1,60 @@
+🔑 No session found, using cookie auth
+2index-Cj64q_vJ.js:592 Supabase auth state changed: INITIAL_SESSION No session
+index-Cj64q_vJ.js:48  GET https://tera-j7oc.onrender.com/api/auth/user 401 (Unauthorized)
+(anonymous) @ index-Cj64q_vJ.js:48
+await in (anonymous)
+s @ index-Cj64q_vJ.js:48
+g @ index-Cj64q_vJ.js:48
+start @ index-Cj64q_vJ.js:48
+fetch @ index-Cj64q_vJ.js:48
+Zf @ index-Cj64q_vJ.js:48
+setOptions @ index-Cj64q_vJ.js:48
+(anonymous) @ index-Cj64q_vJ.js:48
+Kx @ index-Cj64q_vJ.js:40
+vu @ index-Cj64q_vJ.js:40
+(anonymous) @ index-Cj64q_vJ.js:40
+j @ index-Cj64q_vJ.js:25
+O @ index-Cj64q_vJ.js:25Understand this error
+index-Cj64q_vJ.js:40 ReferenceError: floatingIcons is not defined
+    at _r (index-Cj64q_vJ.js:605:93268)
+    at c2 (index-Cj64q_vJ.js:38:17018)
+    at r5 (index-Cj64q_vJ.js:40:44058)
+    at JL (index-Cj64q_vJ.js:40:39790)
+    at bG (index-Cj64q_vJ.js:40:39718)
+    at Gv (index-Cj64q_vJ.js:40:39570)
+    at Cj (index-Cj64q_vJ.js:40:35934)
+    at iE (index-Cj64q_vJ.js:40:36738)
+    at Do (index-Cj64q_vJ.js:38:3279)
+    at index-Cj64q_vJ.js:40:34263
+gj @ index-Cj64q_vJ.js:40
+ML.r.callback @ index-Cj64q_vJ.js:40
+FT @ index-Cj64q_vJ.js:38
+tE @ index-Cj64q_vJ.js:40
+YL @ index-Cj64q_vJ.js:40
+vG @ index-Cj64q_vJ.js:40
+jG @ index-Cj64q_vJ.js:40
+Qo @ index-Cj64q_vJ.js:40
+iE @ index-Cj64q_vJ.js:40
+Do @ index-Cj64q_vJ.js:38
+(anonymous) @ index-Cj64q_vJ.js:40Understand this error
+index-Cj64q_vJ.js:605 Uncaught ReferenceError: floatingIcons is not defined
+    at _r (index-Cj64q_vJ.js:605:93268)
+    at c2 (index-Cj64q_vJ.js:38:17018)
+    at r5 (index-Cj64q_vJ.js:40:44058)
+    at JL (index-Cj64q_vJ.js:40:39790)
+    at bG (index-Cj64q_vJ.js:40:39718)
+    at Gv (index-Cj64q_vJ.js:40:39570)
+    at Cj (index-Cj64q_vJ.js:40:35934)
+    at iE (index-Cj64q_vJ.js:40:36738)
+    at Do (index-Cj64q_vJ.js:38:3279)
+    at index-Cj64q_vJ.js:40:34263
+_r @ index-Cj64q_vJ.js:605
+c2 @ index-Cj64q_vJ.js:38
+r5 @ index-Cj64q_vJ.js:40
+JL @ index-Cj64q_vJ.js:40
+bG @ index-Cj64q_vJ.js:40
+Gv @ index-Cj64q_vJ.js:40
+Cj @ index-Cj64q_vJ.js:40
+iE @ index-Cj64q_vJ.js:40
+Do @ index-Cj64q_vJ.js:38
+(anonymous) @ index-Cj64q_vJ.js:40Understand this error

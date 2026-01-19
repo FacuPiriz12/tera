@@ -18,6 +18,20 @@ export default function AuthPage() {
   const registerMutation = auth?.registerMutation || { isPending: false, mutate: () => {} };
   const { toast } = useToast();
 
+  const [floatingIcons, setFloatingIcons] = useState<any[]>([]);
+
+  useEffect(() => {
+    const icons = [
+      { Icon: Database, delay: 0, duration: 20 },
+      { Icon: Zap, delay: 2, duration: 25 },
+      { Icon: FileText, delay: 4, duration: 22 },
+      { Icon: BarChart3, delay: 6, duration: 24 },
+      { Icon: Users, delay: 8, duration: 23 },
+      { Icon: TrendingUp, delay: 10, duration: 21 }
+    ];
+    setFloatingIcons(icons);
+  }, []);
+
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
