@@ -58,16 +58,24 @@ export default function AuthPage() {
       const firstName = names[0];
       const lastName = names.slice(1).join(' ');
 
-      registerMutation?.mutate({
+      registerMutation.mutate({
         email,
         password,
         firstName,
         lastName,
+      }, {
+        onSuccess: () => {
+          setLocation("/home");
+        }
       });
     } else {
-      loginMutation?.mutate({
+      loginMutation.mutate({
         username: email,
         password,
+      }, {
+        onSuccess: () => {
+          setLocation("/home");
+        }
       });
     }
   };

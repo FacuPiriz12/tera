@@ -269,10 +269,6 @@ export function useAuth() {
     },
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
-      toast({
-        title: "Éxito",
-        description: "Sesión iniciada correctamente",
-      });
     },
     onError: (error: Error) => {
       toast({
@@ -298,10 +294,6 @@ export function useAuth() {
     },
     onSuccess: (user) => {
       queryClient.setQueryData(["/api/auth/user"], user);
-      toast({
-        title: "Éxito",
-        description: "Cuenta creada correctamente",
-      });
     },
     onError: (error: Error) => {
       toast({
