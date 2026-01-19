@@ -146,7 +146,7 @@ export default function TermsOfService() {
             <p className="bg-blue-50 p-4 rounded-xl border border-blue-100">
               <strong className="text-blue-900">Email:</strong> <span className="text-blue-600">{t('landing.terms.section14.email')}</span>
             </p>
-          </div>
+          </section>
         </div>
       </div>
     </div>
