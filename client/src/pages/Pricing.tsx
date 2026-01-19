@@ -4,17 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
 import logoUrl from '../assets/logo.png';
 import Footer from '../components/Footer';
+import LanguageSelector from '../components/LanguageSelector';
 
 const PricingPage = () => {
-  const [isLangOpen, setIsLangOpen] = useState(false);
-  const [currentLang, setCurrentLang] = useState({ code: 'ES', name: 'Español', flag: '🇪🇸' });
-
-  const languages = [
-    { code: 'ES', name: 'Español', flag: '🇪🇸' },
-    { code: 'EN', name: 'English', flag: '🇺🇸' },
-    { code: 'PT', name: 'Português', flag: '🇵🇹' }
-  ];
-
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   const plans = [
@@ -125,53 +117,6 @@ const PricingPage = () => {
             </Link>
 
             <div className="hidden md:flex items-center space-x-10">
-              {/* Language Selector */}
-              <div className="relative">
-                <button 
-                  onClick={() => setIsLangOpen(!isLangOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors group"
-                >
-                  <span className="text-xl">{currentLang.flag}</span>
-                  <span className="text-sm font-bold text-gray-700">{currentLang.code}</span>
-                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isLangOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {isLangOpen && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={() => setIsLangOpen(false)}
-                      ></div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 z-20 overflow-hidden"
-                      >
-                        {languages.map((lang) => (
-                          <button
-                            key={lang.code}
-                            onClick={() => {
-                              setCurrentLang(lang);
-                              setIsLangOpen(false);
-                            }}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-colors ${
-                              currentLang.code === lang.code 
-                                ? 'bg-blue-50 text-blue-600' 
-                                : 'text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            <span className="text-xl">{lang.flag}</span>
-                            <span className="text-sm font-bold">{lang.name}</span>
-                          </button>
-                        ))}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-
               <div className="flex items-center space-x-8">
                 <Link href="/#productos" className="text-sm font-bold text-gray-600 hover:text-blue-600 transition-colors">Productos</Link>
                 <Link href="/pricing" className="text-sm font-bold text-blue-600 transition-colors">Precios</Link>
@@ -185,6 +130,7 @@ const PricingPage = () => {
                 <button className="bg-blue-600 text-white text-sm font-bold px-7 py-3 rounded-full hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-0.5 active:scale-95 tracking-tight">
                   Comenzar
                 </button>
+                <LanguageSelector />
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import CloneDriveLogo from "./CloneDriveLogo";
-import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LanguageSelector from "./LanguageSelector";
 import SearchFilters from "@/components/SearchFilters";
 import { Search, LogOut, Settings, User, Bell, Copy, FolderSync, CheckCircle, AlertCircle, ClipboardList, FileText, ExternalLink, CheckSquare } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -153,7 +153,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {user && (
             <>
-              <LanguageSwitcher variant="icon" />
+              <LanguageSelector />
               
               {/* Notifications Dropdown */}
               <DropdownMenu>
