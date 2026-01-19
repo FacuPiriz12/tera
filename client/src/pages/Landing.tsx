@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, Zap, Copy, CheckCircle2, ArrowRight, Menu, X, Cloud, Shield, Lock, Search, RefreshCw, Layers, Globe } from 'lucide-react';
+import { Database, Zap, Copy, CheckCircle2, ArrowRight, Menu, X, Cloud, Shield, Lock, Search, RefreshCw, Layers, Globe, Twitter, Linkedin, Github } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
@@ -610,15 +610,15 @@ export default function Home() {
             <div className="flex items-center space-x-5 mt-10">
                 <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
                   <span className="sr-only">Twitter</span>
-                  <div className="w-5 h-5 bg-current rounded-sm" />
+                  <Twitter className="w-5 h-5" />
                 </a>
                 <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
                   <span className="sr-only">LinkedIn</span>
-                  <div className="w-5 h-5 bg-current rounded-sm" />
+                  <Linkedin className="w-5 h-5" />
                 </a>
                 <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
                   <span className="sr-only">GitHub</span>
-                  <div className="w-5 h-5 bg-current rounded-sm" />
+                  <Github className="w-5 h-5" />
                 </a>
               </div>
             </div>
