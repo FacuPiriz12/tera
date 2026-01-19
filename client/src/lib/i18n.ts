@@ -53,10 +53,71 @@ const resources = {
           title: "Mueve y protege tus archivos con",
           subtitle: "Inteligencia Real",
           description: "TERA es el puente entre tus nubes. Transfiere archivos entre plataformas, programa copias de seguridad automáticas y conecta tus herramientas favoritas en segundos.",
-          ctaButton: "Empieza gratis hoy"
+          ctaButton: "Empieza gratis hoy",
+          demoButton: "Ver demostración",
+          integrationsLabel: "Mejores Integraciones",
+          syncBadge: "Auto-Sincronización",
+          transferLabel: "Transferencia",
+          backupLabel: "Backup",
+          completed: "Completado",
+          scanning: "Escaneando",
+          freedLabel: "Liberado",
+          duplicatesLabel: "Duplicados",
+          securityBadge: "Seguridad Activa",
+          encryptionLabel: "Cifrado de 256 bits"
         },
-        features: {
-          title: "Productos"
+        stats: {
+          filesMoved: "Archivos Movidos",
+          activeUsers: "Usuarios Activos",
+          guaranteedUptime: "Uptime Garantizado",
+          bankingSecurity: "Seguridad Bancaria"
+        },
+        benefits: {
+          badge: "¿Por qué elegir TERA?",
+          title: "Todo tu contenido, conectado",
+          description: "Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.",
+          learnMore: "Saber más"
+        },
+        ai: {
+          title: "Tú define las reglas,",
+          subtitle: "TERA las ejecuta por ti.",
+          description: "Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 y realiza las tareas repetitivas para que tú no tengas que hacerlo.",
+          panelTitle: "Panel de Automatización",
+          panelStatus: "Sistema Inteligente Activo",
+          aiMessage: "\"He detectado 150 archivos nuevos en tu Dropbox. ¿Deseas que inicie la migración automática a tu carpeta de Proyectos 2024 en Google Drive?\"",
+          userResponse: "\"Sí, por favor. Y elimina los duplicados de más de 6 meses.\"",
+          progressLabel: "Migración en curso"
+        },
+        security: {
+          badge: "Seguridad sin Compromisos",
+          title: "Dormir tranquilo es parte del plan",
+          description: "No escatimamos en seguridad. TERA utiliza los mismos protocolos que las instituciones financieras globales para garantizar que tus datos nunca caigan en manos equivocadas.",
+          whitepaperButton: "Lee nuestro Whitepaper de Seguridad",
+          aesTitle: "AES-256",
+          aesDesc: "Encriptación de nivel militar para cada bit de información.",
+          zeroKnowledgeTitle: "Zero Knowledge",
+          zeroKnowledgeDesc: "Tus claves son solo tuyas. Ni siquiera nosotros podemos ver tus archivos.",
+          auditTitle: "Auditoría Real",
+          auditDesc: "Registros detallados de cada movimiento para tu control total.",
+          syncTitle: "Sincronización",
+          syncDesc: "Tus nubes siempre en armonía, protegidas por nuestro firewall inteligente."
+        },
+        cta: {
+          title: "El futuro de tus archivos comienza hoy.",
+          description: "Únete a más de 85,000 profesionales que ya han optimizado su ecosistema digital con TERA. Sin tarjetas, sin complicaciones.",
+          createAccount: "Crear mi cuenta gratis",
+          talkToSales: "Hablar con ventas"
+        },
+        footer: {
+          description: "Elevando la gestión de archivos a una nueva dimensión de inteligencia y seguridad.",
+          platform: "Plataforma",
+          legal: "Legal",
+          privacy: "Privacidad",
+          terms: "Términos",
+          cookies: "Cookies",
+          compliance: "Cumplimiento",
+          rights: "© {{year}} TERA Cloud Technologies Inc.",
+          status: "Sistemas Operativos"
         }
       }
     }
@@ -111,10 +172,71 @@ const resources = {
           title: "Move and protect your files with",
           subtitle: "Real Intelligence",
           description: "TERA is the bridge between your clouds. Transfer files between platforms, schedule automatic backups, and connect your favorite tools in seconds.",
-          ctaButton: "Start for free today"
+          ctaButton: "Start for free today",
+          demoButton: "See demo",
+          integrationsLabel: "Top Integrations",
+          syncBadge: "Auto-Sync",
+          transferLabel: "Transfer",
+          backupLabel: "Backup",
+          completed: "Completed",
+          scanning: "Scanning",
+          freedLabel: "Freed",
+          duplicatesLabel: "Duplicates",
+          securityBadge: "Active Security",
+          encryptionLabel: "256-bit encryption"
         },
-        features: {
-          title: "Products"
+        stats: {
+          filesMoved: "Files Moved",
+          activeUsers: "Active Users",
+          guaranteedUptime: "Guaranteed Uptime",
+          bankingSecurity: "Banking Security"
+        },
+        benefits: {
+          badge: "Why choose TERA?",
+          title: "All your content, connected",
+          description: "We simplify the complex. We automate the tedious. We protect what matters.",
+          learnMore: "Learn more"
+        },
+        ai: {
+          title: "You define the rules,",
+          subtitle: "TERA executes them for you.",
+          description: "Set up powerful workflows in seconds. TERA monitors your files 24/7 and performs repetitive tasks so you don't have to.",
+          panelTitle: "Automation Panel",
+          panelStatus: "Active Intelligent System",
+          aiMessage: "\"I have detected 150 new files in your Dropbox. Do you want me to start the automatic migration to your 2024 Projects folder in Google Drive?\"",
+          userResponse: "\"Yes, please. And delete duplicates older than 6 months.\"",
+          progressLabel: "Migration in progress"
+        },
+        security: {
+          badge: "Security without Compromise",
+          title: "Sleeping soundly is part of the plan",
+          description: "We don't skimp on security. TERA uses the same protocols as global financial institutions to ensure your data never falls into the wrong hands.",
+          whitepaperButton: "Read our Security Whitepaper",
+          aesTitle: "AES-256",
+          aesDesc: "Military-grade encryption for every bit of information.",
+          zeroKnowledgeTitle: "Zero Knowledge",
+          zeroKnowledgeDesc: "Your keys are yours alone. Not even we can see your files.",
+          auditTitle: "Real Audit",
+          auditDesc: "Detailed logs of every movement for your total control.",
+          syncTitle: "Synchronization",
+          syncDesc: "Your clouds always in harmony, protected by our intelligent firewall."
+        },
+        cta: {
+          title: "The future of your files starts today.",
+          description: "Join over 85,000 professionals who have already optimized their digital ecosystem with TERA. No cards, no complications.",
+          createAccount: "Create my free account",
+          talkToSales: "Talk to sales"
+        },
+        footer: {
+          description: "Elevating file management to a new dimension of intelligence and security.",
+          platform: "Platform",
+          legal: "Legal",
+          privacy: "Privacy",
+          terms: "Terms",
+          cookies: "Cookies",
+          compliance: "Compliance",
+          rights: "© {{year}} TERA Cloud Technologies Inc.",
+          status: "Operating Systems"
         }
       }
     }
@@ -169,10 +291,71 @@ const resources = {
           title: "Mova e proteja seus arquivos com",
           subtitle: "Inteligencia Real",
           description: "TERA é a ponte entre suas nuvens. Transfira arquivos entre plataformas, agende backups automáticos e conecte suas ferramentas favoritas em segundos.",
-          ctaButton: "Comece grátis hoje"
+          ctaButton: "Comece grátis hoje",
+          demoButton: "Ver demonstração",
+          integrationsLabel: "Melhores Integrações",
+          syncBadge: "Auto-Sincronização",
+          transferLabel: "Transferência",
+          backupLabel: "Backup",
+          completed: "Concluído",
+          scanning: "Escaneando",
+          freedLabel: "Liberado",
+          duplicatesLabel: "Duplicados",
+          securityBadge: "Segurança Ativa",
+          encryptionLabel: "Criptografia de 256 bits"
         },
-        features: {
-          title: "Productos"
+        stats: {
+          filesMoved: "Arquivos Movidos",
+          activeUsers: "Usuários Ativos",
+          guaranteedUptime: "Tempo de Atividade Garantido",
+          bankingSecurity: "Segurança Bancária"
+        },
+        benefits: {
+          badge: "Por que escolher a TERA?",
+          title: "Todo o seu conteúdo, conectado",
+          description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos o que importa.",
+          learnMore: "Saiba mais"
+        },
+        ai: {
+          title: "Você define as regras,",
+          subtitle: "TERA as executa para você.",
+          description: "Configure fluxos de trabalho potentes em segundos. A TERA monitora seus arquivos 24 horas por dia, 7 dias por semana e realiza as tarefas repetitivas para que você não precise fazer.",
+          panelTitle: "Painel de Automação",
+          panelStatus: "Sistema Inteligente Ativo",
+          aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Deseja que eu inicie a migração automática para sua pasta Projetos 2024 no Google Drive?\"",
+          userResponse: "\"Sim, por favor. E exclua duplicatas com mais de 6 meses.\"",
+          progressLabel: "Migração em curso"
+        },
+        security: {
+          badge: "Segurança sem Compromisso",
+          title: "Dormir tranquilo faz parte do plano",
+          description: "Não economizamos na segurança. A TERA usa os mesmos protocolos que as instituições financeiras globais para garantir que seus dados nunca caiam em mãos erradas.",
+          whitepaperButton: "Leia nosso Whitepaper de Segurança",
+          aesTitle: "AES-256",
+          aesDesc: "Criptografia de nível militar para cada bit de informação.",
+          zeroKnowledgeTitle: "Zero Knowledge",
+          zeroKnowledgeDesc: "Suas chaves são apenas suas. Nem nós podemos ver seus arquivos.",
+          auditTitle: "Auditoria Real",
+          auditDesc: "Registros detalhados de cada movimento para seu controle total.",
+          syncTitle: "Sincronização",
+          syncDesc: "Suas nuvens sempre em harmonia, protegidas por nosso firewall inteligente."
+        },
+        cta: {
+          title: "O futuro dos seus arquivos começa hoje.",
+          description: "Junte-se a mais de 85.000 profissionais que já otimizaram seu ecossistema digital com a TERA. Sem cartões, sem complicações.",
+          createAccount: "Criar minha conta grátis",
+          talkToSales: "Falar com vendas"
+        },
+        footer: {
+          description: "Elevando a gestão de arquivos a uma nova dimensão de inteligência e segurança.",
+          platform: "Plataforma",
+          legal: "Legal",
+          privacy: "Privacidade",
+          terms: "Termos",
+          cookies: "Cookies",
+          compliance: "Conformidade",
+          rights: "© {{year}} TERA Cloud Technologies Inc.",
+          status: "Sistemas Operacionais"
         }
       }
     }
