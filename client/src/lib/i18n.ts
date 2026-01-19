@@ -1127,6 +1127,87 @@ const resources = {
         tryAgain: "Try signing up again"
       }
     }
+  },
+  pt: {
+    common: {
+      app: {
+        title: "TERA",
+        description: "Gestão de arquivos do Google Drive"
+      },
+      navigation: {
+        home: "Início",
+        files: "Arquivos",
+        operations: "Operações",
+        myFiles: "Meus Arquivos",
+        sharedDrives: "Drives Compartilhados",
+        analytics: "Análises",
+        settings: "Configurações",
+        profile: "Perfil",
+        copyFromUrl: "Copiar de URL",
+        integrations: "Integrações"
+      },
+      language: {
+        select: "Selecionar idioma",
+        spanish: "Espanhol",
+        english: "Inglês",
+        portuguese: "Português",
+        switchLanguage: "Mudar idioma"
+      },
+      auth: {
+        login: "Entrar",
+        logout: "Sair",
+        loggingOut: "Saindo..."
+      },
+      actions: {
+        new: "Novo",
+        search: "Buscar",
+        searchPlaceholder: "Buscar em seus arquivos...",
+        upload: "Carregar",
+        download: "Baixar",
+        copy: "Copiar",
+        delete: "Excluir",
+        edit: "Editar",
+        view: "Ver"
+      },
+      buttons: {
+        cancel: "Cancelar",
+        confirm: "Confirmar",
+        save: "Salvar",
+        close: "Fechar",
+        retry: "Repetir",
+        back: "Voltar",
+        next: "Próximo"
+      },
+      status: {
+        loading: "Carregando...",
+        success: "Sucesso",
+        error: "Erro",
+        completed: "Concluído",
+        pending: "Pendente",
+        inProgress: "Em progresso"
+      }
+    },
+    landing: {
+      hero: {
+        title: "Copie arquivos do Google Drive",
+        subtitle: "de forma inteligente",
+        description: "TERA permite copiar arquivos e pastas de drives compartilhados para seu Google Drive pessoal apenas colando um URL. Simples, rápido e seguro.",
+        ctaButton: "Começar Agora"
+      },
+      features: {
+        title: "Por que escolher TERA?",
+        subtitle: "Projetado para tornar a cópia de arquivos do Google Drive tão simples quanto colar um URL"
+      }
+    },
+    auth: {
+      login: {
+        title: "Entrar",
+        subtitle: "Acesse sua conta TERA",
+        signInButton: "Entrar",
+        noAccount: "Não tem uma conta?",
+        signUp: "Cadastre-se"
+      }
+    }
   }
 };
 
@@ -1150,11 +1231,14 @@ if (!i18n.isInitialized) {
         lookupLocalStorage: 'i18nextLng',
         // Convertir idiomas detectados al formato correcto
         convertDetectedLanguage: (lng: string) => {
+          const base = lng.toLowerCase().split('-')[0];
           // Si el idioma detectado es español (cualquier variante), usar 'es'
-          if (spanishLocales.some(locale => lng.toLowerCase().startsWith(locale.toLowerCase().split('-')[0]))) {
-            if (lng.toLowerCase().startsWith('es')) {
-              return 'es';
-            }
+          if (spanishLocales.some(locale => base === locale.toLowerCase().split('-')[0])) {
+            return 'es';
+          }
+          // Si es portugués
+          if (base === 'pt') {
+            return 'pt';
           }
           // Para cualquier otro idioma, usar inglés
           return 'en';
@@ -1166,7 +1250,7 @@ if (!i18n.isInitialized) {
       debug: import.meta.env.DEV,
       
       // Idiomas soportados
-      supportedLngs: ['es', 'en'],
+      supportedLngs: ['es', 'en', 'pt'],
       
       // Solo cargar el idioma base (sin variantes regionales)
       load: 'languageOnly',
