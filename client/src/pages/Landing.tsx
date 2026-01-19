@@ -57,7 +57,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-white selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-white selection:bg-blue-100 selection:text-blue-900 font-sans">
       {/* Navigation */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 lg:px-20">
@@ -641,7 +641,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <div className="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between font-inter">
+          <div className="pt-10 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between font-sans">
             <p className="text-gray-400 font-bold">{t('landing.footer.rights', { year: new Date().getFullYear() })}</p>
             <div className="flex items-center space-x-8 mt-6 md:mt-0">
               <span className="flex items-center text-xs font-bold text-gray-400">
