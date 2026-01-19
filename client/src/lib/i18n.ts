@@ -36,6 +36,12 @@ const resources = {
           logout: "Cerrar Sesión",
           loggingOut: "Cerrando sesión..."
         },
+        forgotPassword: {
+          description: "Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.",
+          submitButton: "Enviar instrucciones",
+          successTitle: "Correo enviado",
+          successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."
+        },
         buttons: {
           cancel: "Cancelar",
           confirm: "Confirmar",
@@ -475,6 +481,12 @@ const resources = {
           login: "Log In",
           logout: "Log Out",
           loggingOut: "Logging out..."
+        },
+        forgotPassword: {
+          description: "Enter your email address and we'll send you instructions to reset your password.",
+          submitButton: "Send instructions",
+          successTitle: "Email sent",
+          successDesc: "If the account exists, you will receive instructions to reset your password."
         },
         buttons: {
           cancel: "Cancel",

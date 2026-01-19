@@ -255,9 +255,11 @@ export default function AuthPage() {
                       {t('landing.auth.login.rememberMe', 'Recordarme')}
                     </span>
                   </label>
-                  <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                    {t('landing.auth.login.forgotPassword')}
-                  </a>
+                  <Link href="/forgot-password">
+                    <span className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer">
+                      {t('landing.auth.login.forgotPassword')}
+                    </span>
+                  </Link>
                 </div>
               )}
 

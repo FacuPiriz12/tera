@@ -29,6 +29,7 @@ import FileVersions from "@/pages/FileVersions";
 import CloudHealth from "@/pages/CloudHealth";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -58,6 +59,7 @@ function Router() {
       <Route path="/auth/confirm" component={EmailConfirmation} />
       <Route path="/terms" component={TermsOfService} />
       <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/pricing" component={Pricing} />
       
       {/* Landing page for non-authenticated users, Dashboard for authenticated */}
