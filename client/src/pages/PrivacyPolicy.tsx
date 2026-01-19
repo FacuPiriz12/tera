@@ -234,7 +234,6 @@ export default function PrivacyPolicy() {
             </ul>
           </section>
         </div>
-        </div>
       </div>
     </div>
   );
