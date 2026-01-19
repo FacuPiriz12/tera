@@ -44,21 +44,21 @@ export default function AuthPage() {
       const firstName = names[0];
       const lastName = names.slice(1).join(' ');
 
-      registerMutation.mutate({
+      registerMutation?.mutate({
         email,
         password,
         firstName,
         lastName,
       });
     } else {
-      loginMutation.mutate({
+      loginMutation?.mutate({
         username: email,
         password,
       });
     }
   };
 
-  const isLoading = loginMutation.isPending || registerMutation.isPending;
+  const isLoading = loginMutation?.isPending || registerMutation?.isPending;
 
   return (
     <div className="min-h-screen bg-gray-50 flex overflow-hidden">
