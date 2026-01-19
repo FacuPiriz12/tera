@@ -184,6 +184,235 @@ const resources = {
             passwordsDoNotMatch: "Las contraseñas no coinciden"
           }
         },
+        privacy: {
+          title: "Política de Privacidad",
+          back: "Volver",
+          lastUpdated: "Última actualización",
+          section1: {
+            title: "1. Introducción",
+            content: "En TERA, nos tomamos muy en serio tu privacidad. Esta política explica cómo recopilamos, usamos y protegemos tu información personal."
+          },
+          section2: {
+            title: "2. Información que Recopilamos",
+            subsection1: {
+              title: "Información de la Cuenta",
+              item1: "Nombre y dirección de correo electrónico",
+              item2: "Preferencias de configuración",
+              item3: "Información de facturación"
+            },
+            subsection2: {
+              title: "Información de Uso",
+              item1: "Dirección IP y tipo de dispositivo",
+              item2: "Logs de actividad del sistema",
+              item3: "Estadísticas de transferencia",
+              item4: "Metadatos de archivos (sin acceder al contenido)"
+            },
+            subsection3: {
+              title: "Integraciones de Terceros",
+              intro: "Al conectar servicios como Google Drive o Dropbox, recopilamos:",
+              item1: "Tokens de acceso (encriptados)",
+              item2: "Lista de archivos y carpetas",
+              item3: "ID de usuario del servicio externo"
+            }
+          },
+          section3: {
+            title: "3. Cómo Utilizamos tu Información",
+            intro: "Utilizamos los datos recopilados para:",
+            item1: "Proporcionar y mantener el servicio",
+            item2: "Procesar tus transferencias de archivos",
+            item3: "Mejorar la seguridad de la plataforma",
+            item4: "Enviar notificaciones importantes",
+            item5: "Personalizar tu experiencia",
+            item6: "Cumplir con obligaciones legales"
+          },
+          section4: {
+            title: "4. Almacenamiento y Seguridad",
+            subsection1: {
+              title: "Seguridad de los Datos",
+              intro: "Utilizamos protocolos de seguridad de nivel industrial:",
+              item1: "Encriptación AES-256 para datos en reposo",
+              item2: "Protocolos TLS para datos en tránsito"
+            },
+            subsection2: {
+              title: "Retención de Datos",
+              intro: "Mantenemos tu información solo el tiempo necesario:",
+              item1: "Datos de cuenta: Mientras la cuenta esté activa",
+              item2: "Logs: Hasta 12 meses para propósitos de auditoría",
+              item3: "Caché de archivos: Temporal hasta completar la operación"
+            },
+            subsection3: {
+              title: "Localización de Servidores",
+              content: "Nuestros servicios se alojan principalmente en infraestructuras seguras en la nube con redundancia global.",
+              intro: "Garantizamos:",
+              item1: "Alta disponibilidad",
+              item2: "Copias de seguridad diarias",
+              item3: "Aislamiento de datos por usuario",
+              item4: "Cumplimiento de normativas regionales"
+            }
+          },
+          section5: {
+            title: "5. Tus Derechos",
+            subsection1: {
+              title: "Control sobre tus datos",
+              item1: "Derecho de acceso",
+              item2: "Derecho de rectificación",
+              item3: "Derecho de eliminación (olvido)"
+            },
+            subsection2: {
+              title: "Otras facultades",
+              item1: "Portabilidad de datos",
+              item2: "Restricción del procesamiento",
+              item3: "Oposición al marketing directo",
+              item4: "Retirada de consentimiento",
+              item5: "Presentación de reclamaciones"
+            },
+            subsection3: {
+              title: "Cómo ejercer tus derechos",
+              content: "Puedes gestionar la mayoría de estas opciones desde tu panel de configuración o contactando con nuestro soporte."
+            }
+          },
+          section6: {
+            title: "6. Compartir Información",
+            intro: "Nunca vendemos tus datos personales. Solo compartimos información con:",
+            subsection1: {
+              title: "Terceros autorizados",
+              item1: "Procesadores de pago (Stripe)",
+              item2: "Servicios de infraestructura (AWS/Google Cloud)",
+              item3: "Herramientas de análisis anónimo",
+              item4: "Autoridades legales si es requerido"
+            },
+            subsection2: {
+              title: "Políticas de terceros",
+              content: "Los servicios integrados (Drive, Dropbox, etc.) se rigen por sus propias políticas de privacidad."
+            }
+          },
+          section7: {
+            title: "7. Cookies y Tecnologías Similares",
+            intro: "Utilizamos cookies para:",
+            item1: "Mantener tu sesión activa",
+            item2: "Recordar tus preferencias",
+            item3: "Analizar el rendimiento",
+            item4: "Prevenir fraudes",
+            item5: "Seguridad de la navegación",
+            item6: "Mejorar la interfaz"
+          },
+          section8: {
+            title: "8. Privacidad de Menores",
+            intro: "Nuestro servicio no está dirigido a menores de 13 años. Si detectamos datos de menores sin consentimiento parental:",
+            item1: "Procederemos a su eliminación inmediata",
+            item2: "Notificaremos a los tutores si es posible",
+            item3: "Bloquearemos el acceso a la cuenta"
+          },
+          section9: {
+            title: "9. Cambios en la Política",
+            content: "Podemos actualizar esta política periódicamente. Te notificaremos cualquier cambio sustancial vía email."
+          },
+          section10: {
+            title: "10. Contacto",
+            content: "Si tienes dudas sobre tu privacidad, escríbenos a support@tera.cloud"
+          },
+          section11: {
+            title: "11. Jurisdicción",
+            content: "Esta política se rige por las leyes internacionales de protección de datos."
+          },
+          section12: {
+            title: "12. Soporte",
+            content: "Nuestro equipo de privacidad está disponible para resolver tus inquietudes.",
+            email: "privacy@tera.cloud"
+          },
+          section13: {
+            title: "13. Resumen de Seguridad",
+            intro: "En resumen, TERA garantiza:",
+            item1: "Transparencia total",
+            item2: "Seguridad técnica avanzada",
+            item3: "Control total del usuario",
+            item4: "Cumplimiento normativo"
+          }
+        },
+        terms: {
+          title: "Términos de Servicio",
+          back: "Volver",
+          lastUpdated: "Última actualización",
+          section1: {
+            title: "1. Aceptación de los Términos",
+            content: "Al acceder a TERA, aceptas cumplir con estos términos de servicio. Si no estás de acuerdo, por favor no utilices la plataforma."
+          },
+          section2: {
+            title: "2. Descripción del Servicio",
+            content: "TERA es una plataforma de gestión y transferencia de archivos entre servicios de almacenamiento en la nube."
+          },
+          section3: {
+            title: "3. Responsabilidades del Usuario",
+            intro: "Como usuario de TERA, te comprometes a:",
+            item1: "Proporcionar información veraz",
+            item2: "Mantener la seguridad de tu cuenta",
+            item3: "No usar el servicio para fines ilegales",
+            item4: "Respetar los derechos de autor de los archivos"
+          },
+          section4: {
+            title: "4. Propiedad Intelectual",
+            intro: "Nuestra política sobre propiedad intelectual incluye:",
+            item1: "TERA es dueño de la plataforma y su código",
+            item2: "Tú mantienes la propiedad total de tus archivos",
+            item3: "No reclamamos derechos sobre tu contenido",
+            item4: "Respetamos las marcas registradas de terceros",
+            item5: "Protección de logotipos y diseño",
+            item6: "Licencias de software de código abierto"
+          },
+          section5: {
+            title: "5. Limitación de Responsabilidad",
+            intro: "TERA no se hace responsable por:",
+            item1: "Pérdida de datos por fallos de terceros",
+            item2: "Interrupciones del servicio fuera de nuestro control",
+            item3: "Uso indebido de la cuenta por parte del usuario"
+          },
+          section6: {
+            title: "6. Suspensión y Terminación",
+            intro: "Podemos suspender tu cuenta si:",
+            item1: "Infriges estos términos",
+            item2: "Realizas actividades sospechosas",
+            item3: "Lo requiere una autoridad legal",
+            item4: "Hay falta de pago en planes premium"
+          },
+          section7: {
+            title: "7. Tarifas y Pagos",
+            content: "Los planes premium se facturan mensual o anualmente. No hay reembolsos parciales a menos que la ley lo exija."
+          },
+          section8: {
+            title: "8. Modificaciones del Servicio",
+            content: "Nos reservamos el derecho de modificar o discontinuar cualquier parte del servicio con previo aviso."
+          },
+          section9: {
+            title: "9. Uso de la API",
+            intro: "El uso de nuestras integraciones implica:",
+            item1: "Cumplimiento de las cuotas de los proveedores",
+            item2: "No realizar ingeniería inversa",
+            item3: "Uso responsable de los recursos",
+            item4: "Respeto a los tokens de autenticación",
+            item5: "Seguridad en las llamadas a la API"
+          },
+          section10: {
+            title: "10. Privacidad",
+            content: "El uso del servicio también se rige por nuestra Política de Privacidad."
+          },
+          section11: {
+            title: "11. Fuerza Mayor",
+            content: "No seremos responsables por fallos debidos a causas fuera de nuestro control razonable."
+          },
+          section12: {
+            title: "12. Divisibilidad",
+            content: "Si alguna parte de estos términos es inválida, el resto seguirá siendo vigente."
+          },
+          section13: {
+            title: "13. Ley Aplicable",
+            content: "Estos términos se rigen por las leyes internacionales de comercio electrónico."
+          },
+          section14: {
+            title: "14. Contacto",
+            content: "Para dudas legales, contáctanos.",
+            email: "legal@tera.cloud"
+          }
+        },
         errors: {
           loginFailed: "Error al iniciar sesión",
           signupFailed: "Error al crear cuenta",
@@ -371,6 +600,235 @@ const resources = {
             nameRequired: "Name is required",
             acceptTermsRequired: "You must accept the terms",
             passwordsDoNotMatch: "Passwords do not match"
+          }
+        },
+        privacy: {
+          title: "Privacy Policy",
+          back: "Back",
+          lastUpdated: "Last updated",
+          section1: {
+            title: "1. Introduction",
+            content: "At TERA, we take your privacy very seriously. This policy explains how we collect, use, and protect your personal information."
+          },
+          section2: {
+            title: "2. Information We Collect",
+            subsection1: {
+              title: "Account Information",
+              item1: "Name and email address",
+              item2: "Setting preferences",
+              item3: "Billing information"
+            },
+            subsection2: {
+              title: "Usage Information",
+              item1: "IP address and device type",
+              item2: "System activity logs",
+              item3: "Transfer statistics",
+              item4: "File metadata (without accessing content)"
+            },
+            subsection3: {
+              title: "Third-Party Integrations",
+              intro: "When connecting services like Google Drive or Dropbox, we collect:",
+              item1: "Access tokens (encrypted)",
+              item2: "List of files and folders",
+              item3: "Service user ID"
+            }
+          },
+          section3: {
+            title: "3. How We Use Your Information",
+            intro: "We use collected data to:",
+            item1: "Provide and maintain the service",
+            item2: "Process your file transfers",
+            item3: "Improve platform security",
+            item4: "Send important notifications",
+            item5: "Personalize your experience",
+            item6: "Comply with legal obligations"
+          },
+          section4: {
+            title: "4. Storage and Security",
+            subsection1: {
+              title: "Data Security",
+              intro: "We use industry-standard security protocols:",
+              item1: "AES-256 encryption for data at rest",
+              item2: "TLS protocols for data in transit"
+            },
+            subsection2: {
+              title: "Data Retention",
+              intro: "We keep your information only as long as necessary:",
+              item1: "Account data: While account is active",
+              item2: "Logs: Up to 12 months for audit purposes",
+              item3: "File cache: Temporary until operation completion"
+            },
+            subsection3: {
+              title: "Server Location",
+              content: "Our services are primarily hosted on secure cloud infrastructures with global redundancy.",
+              intro: "We guarantee:",
+              item1: "High availability",
+              item2: "Daily backups",
+              item3: "Data isolation per user",
+              item4: "Regional compliance"
+            }
+          },
+          section5: {
+            title: "5. Your Rights",
+            subsection1: {
+              title: "Control over your data",
+              item1: "Right of access",
+              item2: "Right of rectification",
+              item3: "Right of erasure (to be forgotten)"
+            },
+            subsection2: {
+              title: "Other powers",
+              item1: "Data portability",
+              item2: "Restriction of processing",
+              item3: "Opposition to direct marketing",
+              item4: "Withdrawal of consent",
+              item5: "Complaint filing"
+            },
+            subsection3: {
+              title: "How to exercise your rights",
+              content: "You can manage most of these options from your settings panel or by contacting our support."
+            }
+          },
+          section6: {
+            title: "6. Information Sharing",
+            intro: "We never sell your personal data. We only share information with:",
+            subsection1: {
+              title: "Authorized third parties",
+              item1: "Payment processors (Stripe)",
+              item2: "Infrastructure services (AWS/Google Cloud)",
+              item3: "Anonymous analytics tools",
+              item4: "Legal authorities if required"
+            },
+            subsection2: {
+              title: "Third-party policies",
+              content: "Integrated services (Drive, Dropbox, etc.) are governed by their own privacy policies."
+            }
+          },
+          section7: {
+            title: "7. Cookies and Similar Technologies",
+            intro: "We use cookies to:",
+            item1: "Keep your session active",
+            item2: "Remember your preferences",
+            item3: "Analyze performance",
+            item4: "Prevent fraud",
+            item5: "Browsing security",
+            item6: "Improve interface"
+          },
+          section8: {
+            title: "8. Children's Privacy",
+            intro: "Our service is not directed to children under 13. If we detect data from minors without parental consent:",
+            item1: "We will proceed to immediate deletion",
+            item2: "We will notify guardians if possible",
+            item3: "We will block account access"
+          },
+          section9: {
+            title: "9. Policy Changes",
+            content: "We may update this policy periodically. We will notify you of any substantial changes via email."
+          },
+          section10: {
+            title: "10. Contact",
+            content: "If you have questions about your privacy, write to us at support@tera.cloud"
+          },
+          section11: {
+            title: "11. Jurisdiction",
+            content: "This policy is governed by international data protection laws."
+          },
+          section12: {
+            title: "12. Support",
+            content: "Our privacy team is available to resolve your concerns.",
+            email: "privacy@tera.cloud"
+          },
+          section13: {
+            title: "13. Security Summary",
+            intro: "In summary, TERA guarantees:",
+            item1: "Total transparency",
+            item2: "Advanced technical security",
+            item3: "Total user control",
+            item4: "Regulatory compliance"
+          }
+        },
+        terms: {
+          title: "Terms of Service",
+          back: "Back",
+          lastUpdated: "Last updated",
+          section1: {
+            title: "1. Acceptance of Terms",
+            content: "By accessing TERA, you agree to comply with these terms of service. If you do not agree, please do not use the platform."
+          },
+          section2: {
+            title: "2. Service Description",
+            content: "TERA is a platform for managing and transferring files between cloud storage services."
+          },
+          section3: {
+            title: "3. User Responsibilities",
+            intro: "As a TERA user, you commit to:",
+            item1: "Provide truthful information",
+            item2: "Maintain account security",
+            item3: "Not use the service for illegal purposes",
+            item4: "Respect file copyrights"
+          },
+          section4: {
+            title: "4. Intellectual Property",
+            intro: "Our policy on intellectual property includes:",
+            item1: "TERA owns the platform and its code",
+            item2: "You maintain total ownership of your files",
+            item3: "We do not claim rights over your content",
+            item4: "We respect third-party trademarks",
+            item5: "Logo and design protection",
+            item6: "Open source software licenses"
+          },
+          section5: {
+            title: "5. Limitation of Liability",
+            intro: "TERA is not responsible for:",
+            item1: "Data loss due to third-party failures",
+            item2: "Service interruptions beyond our control",
+            item3: "Improper account use by the user"
+          },
+          section6: {
+            title: "6. Suspension and Termination",
+            intro: "We may suspend your account if:",
+            item1: "You violate these terms",
+            item2: "You perform suspicious activities",
+            item3: "Required by a legal authority",
+            item4: "Lack of payment in premium plans"
+          },
+          section7: {
+            title: "7. Fees and Payments",
+            content: "Premium plans are billed monthly or annually. No partial refunds unless required by law."
+          },
+          section8: {
+            title: "8. Service Modifications",
+            content: "We reserve the right to modify or discontinue any part of the service with prior notice."
+          },
+          section9: {
+            title: "9. API Use",
+            intro: "The use of our integrations implies:",
+            item1: "Compliance with provider quotas",
+            item2: "No reverse engineering",
+            item3: "Responsible resource use",
+            item4: "Respect for authentication tokens",
+            item5: "Security in API calls"
+          },
+          section10: {
+            title: "10. Privacy",
+            content: "Use of the service is also governed by our Privacy Policy."
+          },
+          section11: {
+            title: "11. Force Majeure",
+            content: "We will not be liable for failures due to causes beyond our reasonable control."
+          },
+          section12: {
+            title: "12. Severability",
+            content: "If any part of these terms is invalid, the rest will remain in effect."
+          },
+          section13: {
+            title: "13. Governing Law",
+            content: "These terms are governed by international electronic commerce laws."
+          },
+          section14: {
+            title: "14. Contact",
+            content: "For legal questions, contact us.",
+            email: "legal@tera.cloud"
           }
         },
         errors: {

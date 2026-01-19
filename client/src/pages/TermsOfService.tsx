@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 
 export default function TermsOfService() {
-  const { t, i18n } = useTranslation('pages');
+  const { t, i18n } = useTranslation();
   const currentLang = i18n.language;
   
   const dateLocale = currentLang === 'es' ? 'es-ES' : 'en-US';
