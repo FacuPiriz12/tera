@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Database, Zap, TrendingUp, Users, FileText, BarChart3 } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Database, Zap, TrendingUp, Users, FileText, BarChart3, Globe } from 'lucide-react';
 import { useLocation, Link } from "wouter";
 import logoUrl from "@/assets/logo.png";
 import "@/auth-animations.css";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function AuthPage() {
+  const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,16 +74,17 @@ export default function AuthPage() {
         lastName,
       }, {
         onSuccess: () => {
-          setLocation("/home");
+          setLocation("/dashboard");
         }
       });
     } else {
       loginMutation.mutate({
         username: email,
         password,
+        email,
       }, {
         onSuccess: () => {
-          setLocation("/home");
+          setLocation("/dashboard");
         }
       });
     }
@@ -83,7 +93,30 @@ export default function AuthPage() {
   const isLoading = loginMutation?.isPending || registerMutation?.isPending;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex overflow-hidden">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row overflow-hidden relative">
+      {/* Language Selector Overlay */}
+      <div className="absolute top-4 right-4 z-50">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="bg-white/50 backdrop-blur-sm border border-gray-200">
+              <Globe className="w-4 h-4 mr-2" />
+              <span className="uppercase">{i18n.language.split('-')[0]}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('es')}>
+              Español
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('en')}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('pt')}>
+              Português
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Left Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 perspective-1000">
         <div className={`w-full max-w-md flip-card-inner ${isRegistering ? 'flip-card-flipped' : ''}`}>
@@ -99,19 +132,44 @@ export default function AuthPage() {
             {/* Welcome Text */}
             <div className="mb-10 text-center">
               <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                Bienvenido de Vuelta
+                {isRegistering ? t('landing.auth.signup.title') : t('landing.auth.login.title')}
               </h1>
               <p className="text-gray-600">
-                Ingresa tu email y contraseña para acceder a tu cuenta.
+                {isRegistering 
+                  ? t('landing.auth.signup.subtitle', 'Regístrate para empezar a gestionar tus archivos.') 
+                  : t('landing.auth.login.description', 'Ingresa tu email y contraseña para acceder a tu cuenta.')}
               </p>
             </div>
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Name Field (only for register) */}
+              {isRegistering && (
+                <div>
+                  <label htmlFor="name-register" className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('landing.auth.signup.nameLabel')}
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Users className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    </div>
+                    <input
+                      id="name-register"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t('landing.auth.signup.namePlaceholder')}
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Email Field */}
               <div>
                 <label htmlFor="email-login" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Correo electrónico
+                  {t('landing.auth.login.emailLabel')}
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -122,7 +180,7 @@ export default function AuthPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@email.com"
+                    placeholder={t('landing.auth.login.emailPlaceholder')}
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
                   />
@@ -132,7 +190,7 @@ export default function AuthPage() {
               {/* Password Field */}
               <div>
                 <label htmlFor="password-login" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Contraseña
+                  {t('landing.auth.login.passwordLabel')}
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -161,22 +219,62 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
-                <label className="flex items-center cursor-pointer group">
+              {/* Confirm Password Field (only for register) */}
+              {isRegistering && (
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t('landing.auth.signup.confirmPasswordLabel')}
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
+                    </div>
+                    <input
+                      id="confirm-password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!isRegistering && (
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                    />
+                    <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
+                      {t('landing.auth.login.rememberMe', 'Recordarme')}
+                    </span>
+                  </label>
+                  <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                    {t('landing.auth.login.forgotPassword')}
+                  </a>
+                </div>
+              )}
+
+              {isRegistering && (
+                <div className="flex items-center mt-4">
                   <input
                     type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                    required
                   />
-                  <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                    Recordarme
+                  <span className="ml-2 text-xs text-gray-600">
+                    {t('landing.auth.signup.acceptTerms.part1')} <Link href="/terms" className="text-blue-600 font-bold hover:underline">{t('landing.auth.signup.acceptTerms.termsLink')}</Link> {t('landing.auth.signup.acceptTerms.and')} <Link href="/privacy" className="text-blue-600 font-bold hover:underline">{t('landing.auth.signup.acceptTerms.privacyLink')}</Link>
                   </span>
-                </label>
-                <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                  ¿Olvidaste tu contraseña?
-                </a>
-              </div>
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -189,11 +287,11 @@ export default function AuthPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Iniciando sesión...
+                    {isRegistering ? t('landing.auth.signup.createAccountButton') : t('landing.auth.login.signInButton')}
                   </>
                 ) : (
                   <>
-                    <span className="relative z-10">Iniciar Sesión</span>
+                    <span className="relative z-10">{isRegistering ? t('landing.auth.signup.createAccountButton') : t('landing.auth.login.signInButton')}</span>
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform relative z-10" />
                     <div className="absolute inset-0 bg-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                   </>
@@ -206,7 +304,7 @@ export default function AuthPage() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-50 text-gray-500">O Inicia Con</span>
+                <span className="px-4 bg-gray-50 text-gray-500">{t('landing.auth.login.orContinueWith', 'O Inicia Con')}</span>
               </div>
             </div>
 
@@ -230,30 +328,30 @@ export default function AuthPage() {
             </div>
 
             <p className="mt-8 text-center text-gray-600">
-              ¿No tienes una cuenta?{' '}
+              {isRegistering ? t('landing.auth.signup.hasAccount') : t('landing.auth.login.noAccount')}{' '}
               <button 
                 type="button"
-                onClick={() => setIsRegistering(true)}
+                onClick={() => setIsRegistering(!isRegistering)}
                 className="font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
               >
-                Regístrate Ahora
+                {isRegistering ? t('landing.auth.signup.signIn') : t('landing.auth.login.signUpNow', 'Regístrate Ahora')}
               </button>
             </p>
 
             {/* Footer Copyright */}
             <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center justify-center">
-              <p className="text-[12px] font-normal text-[#6a7282]">Copyright © 2026 TERA. Todos los derechos reservados.</p>
+              <p className="text-[12px] font-normal text-[#6a7282]">{t('landing.footer.rights', { year: 2026 })}</p>
               <div className="flex items-center mt-4">
                 <span className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                  Sistemas Operativos
+                  {t('landing.footer.status')}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Back Face - Register */}
-          <div className="backface-hidden w-full rotate-y-180 absolute top-0 left-0">
+          <div className="backface-hidden w-full rotate-y-180 absolute top-0 left-0 hidden">
             {/* Logo */}
             <Link href="/">
               <div className="flex items-center justify-center mb-8 cursor-pointer group">

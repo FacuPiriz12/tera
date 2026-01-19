@@ -414,6 +414,10 @@ const resources = {
             email: "legal@tera.cloud"
           }
         },
+        notFound: {
+          title: "Página no encontrada",
+          description: "Lo sentimos, la página que estás buscando no existe."
+        },
         errors: {
           loginFailed: "Error al iniciar sesión",
           signupFailed: "Error al crear cuenta",
@@ -832,6 +836,10 @@ const resources = {
             content: "For legal questions, contact us.",
             email: "legal@tera.cloud"
           }
+        },
+        notFound: {
+          title: "Page Not Found",
+          description: "Sorry, the page you are looking for does not exist."
         },
         errors: {
           loginFailed: "Login failed",

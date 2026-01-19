@@ -60,9 +60,17 @@ function Router() {
       <Route path="/privacy" component={PrivacyPolicy} />
       <Route path="/pricing" component={Pricing} />
       
-      {/* Landing page for non-authenticated users, Home for authenticated */}
+      {/* Landing page for non-authenticated users, Dashboard for authenticated */}
       <Route path="/">
         {() => isLoggedIn ? <Home /> : <Landing />}
+      </Route>
+
+      <Route path="/dashboard">
+        {() => isLoggedIn ? <Home /> : <AuthPage />}
+      </Route>
+      
+      <Route path="/home">
+        {() => <Redirect to="/dashboard" />}
       </Route>
       
       {/* Protected routes - show Auth page if not authenticated */}
