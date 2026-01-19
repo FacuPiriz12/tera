@@ -137,7 +137,7 @@ export default function Header() {
             <Search className="w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder={t('actions.searchPlaceholder')}
+              placeholder={t('common.actions.searchPlaceholder')}
               className="ml-2 w-full border-none bg-transparent text-[0.95rem] focus:outline-none focus:ring-0 shadow-none"
               data-testid="input-search"
             />

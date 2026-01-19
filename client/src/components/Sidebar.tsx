@@ -56,16 +56,16 @@ export default function Sidebar() {
     .slice(0, 3);
 
   const navItems = [
-    { path: "/", icon: Home, label: t('navigation.home') },
-    { path: "/shared-drives", icon: Cloud, label: t('navigation.sharedDrives') },
-    { path: "/operations", icon: Copy, label: t('navigation.operations') },
+    { path: "/", icon: Home, label: t('common.navigation.home') },
+    { path: "/shared-drives", icon: Cloud, label: t('common.navigation.sharedDrives') },
+    { path: "/operations", icon: Copy, label: t('common.navigation.operations') },
     { path: "/tasks", icon: CalendarClock, label: "Tareas Programadas" },
     { path: "/health", icon: HeartPulse, label: "Salud de la Nube" },
-    { path: "/integrations", icon: Settings, label: t('navigation.integrations') },
+    { path: "/integrations", icon: Settings, label: t('common.navigation.integrations') },
     { path: "/cloud-explorer", icon: ArrowRightLeft, label: "Explorador Multi-nube" },
-    { path: "/my-files", icon: Folder, label: t('navigation.myFiles') },
+    { path: "/my-files", icon: Folder, label: t('common.navigation.myFiles') },
     { path: "/shared", icon: Share2, label: "Compartidos" },
-    { path: "/analytics", icon: BarChart3, label: t('navigation.analytics') },
+    { path: "/analytics", icon: BarChart3, label: t('common.navigation.analytics') },
   ];
 
   // Admin-only navigation - only show if user is loaded and is admin
