@@ -3,27 +3,18 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight, Database, Zap, TrendingUp, Users, 
 import { useLocation, Link } from "wouter";
 import logoUrl from "@/assets/logo.png";
 import "@/auth-animations.css";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [floatingIcons, setFloatingIcons] = useState<any[]>([]);
   const [, setLocation] = useLocation();
-
-  useEffect(() => {
-    const icons = [
-      { Icon: Database, delay: 0, duration: 20 },
-      { Icon: Zap, delay: 2, duration: 25 },
-      { Icon: FileText, delay: 4, duration: 22 },
-      { Icon: BarChart3, delay: 6, duration: 24 },
-      { Icon: Users, delay: 8, duration: 23 },
-      { Icon: TrendingUp, delay: 10, duration: 21 }
-    ];
-    setFloatingIcons(icons);
-  }, []);
+  const { loginMutation, registerMutation } = useAuth();
+  const { toast } = useToast();
 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -38,15 +29,36 @@ export default function AuthPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isRegistering && password !== confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
+    
+    if (isRegistering) {
+      if (password !== confirmPassword) {
+        toast({
+          title: "Error",
+          description: "Las contraseñas no coinciden",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const names = name.split(' ');
+      const firstName = names[0];
+      const lastName = names.slice(1).join(' ');
+
+      registerMutation.mutate({
+        email,
+        password,
+        firstName,
+        lastName,
+      });
+    } else {
+      loginMutation.mutate({
+        username: email,
+        password,
+      });
     }
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setLocation("/home");
   };
+
+  const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   return (
     <div className="min-h-screen bg-gray-50 flex overflow-hidden">
@@ -250,6 +262,8 @@ export default function AuthPage() {
                   <input
                     id="name-register"
                     type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     placeholder="Tu nombre"
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
@@ -268,6 +282,8 @@ export default function AuthPage() {
                   <input
                     id="email-register"
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="tu@email.com"
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
@@ -286,6 +302,8 @@ export default function AuthPage() {
                   <input
                     id="password-register"
                     type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
@@ -304,6 +322,8 @@ export default function AuthPage() {
                   <input
                     id="confirm-password"
                     type={showPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
                     className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
