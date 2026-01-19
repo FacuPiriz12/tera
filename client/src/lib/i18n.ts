@@ -76,7 +76,7 @@ const resources = {
           bankingSecurity: "Seguridad Bancaria"
         },
         benefits: {
-          badge: "¿Por qué elegir TERA?",
+          badge: "Productos",
           title: "Todo tu contenido, conectado",
           description: "Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.",
           learnMore: "Saber más",
@@ -217,7 +217,7 @@ const resources = {
           bankingSecurity: "Banking Security"
         },
         benefits: {
-          badge: "Why choose TERA?",
+          badge: "Products",
           title: "All your content, connected",
           description: "We simplify the complex. We automate the tedious. We protect what matters.",
           learnMore: "Learn more",
@@ -355,7 +355,7 @@ const resources = {
           bankingSecurity: "Segurança Bancária"
         },
         benefits: {
-          badge: "Por que escolher a TERA?",
+          badge: "Produtos",
           title: "Todo o seu conteúdo, conectado",
           description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos lo que importa.",
           learnMore: "Saiba mais",
