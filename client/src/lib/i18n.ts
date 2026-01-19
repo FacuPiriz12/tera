@@ -424,13 +424,13 @@ const resources = {
     },
     landing: {
       hero: {
-        title: "Copia archivos de Google Drive",
-        subtitle: "de forma inteligente",
-        description: "TERA te permite copiar archivos y carpetas desde drives compartidos a tu Google Drive personal con solo pegar una URL. Simple, rápido y seguro.",
-        ctaButton: "Comenzar Ahora"
+        title: "Mueve y protege tus archivos con",
+        subtitle: "Inteligencia Real",
+        description: "TERA es el puente entre tus nubes. Transfiere archivos entre plataformas, programa copias de seguridad automáticas y conecta tus herramientas favoritas en segundos.",
+        ctaButton: "Empieza gratis hoy"
       },
       features: {
-        title: "¿Por qué elegir TERA?",
+        title: "Productos",
         subtitle: "Diseñado para hacer que copiar archivos de Google Drive sea tan simple como pegar una URL",
         smartCopy: {
           title: "Copia Inteligente",
@@ -584,7 +584,9 @@ const resources = {
         settings: "Settings",
         profile: "Profile",
         copyFromUrl: "Copy from URL",
-        integrations: "Integrations"
+        integrations: "Integrations",
+        pricing: "Pricing",
+        security: "Security"
       },
       language: {
         select: "Select language",
@@ -660,343 +662,19 @@ const resources = {
         toStartWorking: "to start working."
       }
     },
-    copy: {
-      quickCopy: {
-        title: "Quick Copy",
-        urlLabel: "Shared URL",
-        urlPlaceholder: "Enter a URL from Google Drive or Dropbox",
-        destinationLabel: "Destination folder",
-        includeSubfolders: "Include subfolders",
-        preview: "Preview",
-        starting: "Starting..."
-      },
-      preview: {
-        title: "Copy Preview",
-        analyzing: "Analyzing files and folders...",
-        destination: "Copy destination",
-        destinationMessage: "Files will be copied to this folder",
-        confirmCopy: "Confirm and Copy",
-        initiating: "Starting copy..."
-      },
-      folderBrowser: {
-        title: "Select Destination Folder",
-        loading: "Loading folders...",
-        noFolders: "No subfolders in this location", 
-        selectCurrent: "Select this folder",
-        goBack: "Go back",
-        myDrive: "My Drive"
-      },
-      operations: {
-        started: "Copy started",
-        startedMessage: "The copy operation has started. You can see the progress in the sidebar."
-      }
-    },
-    pages: {
-      myFiles: {
-        title: "My Files",
-        description: "Files and folders copied from Google Drive",
-        searchPlaceholder: "Search files...",
-        noFilesFound: "No files found",
-        noFilesCopied: "No files copied", 
-        tryDifferentSearch: "Try a different search term",
-        filesWillAppearHere: "Files you copy from Google Drive will appear here",
-        copied: "Copied",
-        showing: "Showing",
-        to: "to",
-        of: "of",
-        files: "files",
-        previous: "Previous",
-        next: "Next"
-      },
-      operations: {
-        title: "Operations",
-        description: "Complete history of all copy operations performed",
-        noOperations: "No operations recorded",
-        operationsWillAppear: "When you perform file copies, they will appear here with all the details",
-        copyOperation: "Copy Operation",
-        date: "Date",
-        duration: "Duration",
-        state: "State",
-        successful: "Successful",
-        inProgress: "In progress",
-        error: "Error",
-        pending: "Pending",
-        sourceUrl: "Source URL:",
-        copyCompletedSuccessfully: "Copy completed successfully",
-        copiedFile: "Copied file:",
-        linkToCopiedFolder: "Link to copied folder in your Drive:",
-        openInGoogleDrive: "Open in Google Drive"
-      },
-      notFound: {
-        title: "404 Page Not Found",
-        description: "Did you forget to add the page to the router?"
-      },
-      analytics: {
-        title: "Analytics",
-        description: "Detailed statistics of your copy operations",
-        totalOperations: "Total Operations",
-        filesCopied: "Files Copied",
-        successRate: "Success Rate",
-        averageTime: "Average Time",
-        inProgress: "in progress",
-        totalFilesProcessed: "Total files processed",
-        perCompletedOperation: "Per completed operation",
-        operationStatus: "Operation Status",
-        completed: "Completed",
-        failed: "Failed",
-        inProgressStatus: "In Progress",
-        activityLast7Days: "Activity Last 7 Days",
-        noDataTitle: "No data to analyze",
-        noDataMessage: "Perform some copy operations to see detailed statistics here"
-      },
-      terms: {
-        title: "Terms of Service",
-        lastUpdated: "Last updated",
-        back: "Back",
-        section1: {
-          title: "1. Acceptance of Terms",
-          content: "By accessing and using TERA (\"the Service\"), you agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you must not use our service."
-        },
-        section2: {
-          title: "2. Service Description",
-          content: "TERA is a web application that allows users to copy files and folders from shared Google Drive and Dropbox links to their own cloud storage account. The service acts as an intermediary to facilitate file transfers between storage accounts."
-        },
-        section3: {
-          title: "3. Account Requirements",
-          intro: "To use the Service, you must:",
-          item1: "Be at least 13 years of age",
-          item2: "Provide accurate and complete registration information",
-          item3: "Maintain the security of your account and password",
-          item4: "Notify us immediately of any unauthorized use of your account"
-        },
-        section4: {
-          title: "4. Acceptable Use",
-          intro: "You agree NOT to use the Service to:",
-          item1: "Copy, store, or distribute content that violates copyright, trademarks, or other intellectual property rights",
-          item2: "Distribute malware, viruses, or any malicious code",
-          item3: "Engage in illegal or fraudulent activities",
-          item4: "Attempt to gain unauthorized access to our systems or other users' accounts",
-          item5: "Overload or interfere with the Service infrastructure",
-          item6: "Copy files to which you do not have legitimate access permission"
-        },
-        section5: {
-          title: "5. Google Drive and Dropbox Authorization",
-          intro: "By connecting your Google Drive or Dropbox account, you authorize us to:",
-          item1: "Access files and folders shared with you",
-          item2: "Create copies of files in your personal storage",
-          item3: "Read file metadata (name, size, type)",
-          note: "You can revoke this access at any time from your Google or Dropbox account settings."
-        },
-        section6: {
-          title: "6. Service Limits",
-          intro: "The Service may have limits on:",
-          item1: "Number of copy operations per day",
-          item2: "Maximum file size that can be copied",
-          item3: "Total storage amount used",
-          item4: "Number of concurrent operations",
-          note: "These limits may vary according to your membership plan and may change without prior notice."
-        },
-        section7: {
-          title: "7. Intellectual Property",
-          content: "The Service and its original content (excluding user-provided content) are owned by TERA and are protected by copyright, trademark, and other laws."
-        },
-        section8: {
-          title: "8. User Responsibility for Content",
-          content: "You are solely responsible for all content you copy, store, or share through the Service. You warrant that you have all necessary rights to the content you process through our service."
-        },
-        section9: {
-          title: "9. Limitation of Liability",
-          intro: "TO THE MAXIMUM EXTENT PERMITTED BY LAW, TERA SHALL NOT BE LIABLE FOR:",
-          item1: "Loss of data, files, or information",
-          item2: "Service interruptions or technical errors",
-          item3: "Indirect, incidental, or consequential damages",
-          item4: "Unauthorized use of your account",
-          item5: "Copied content that violates third-party rights",
-          note: "THE SERVICE IS PROVIDED \"AS IS\" WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS OR IMPLIED."
-        },
-        section10: {
-          title: "10. Service Modifications",
-          content: "We reserve the right to modify, suspend, or discontinue the Service (or any part thereof) at any time, with or without prior notice. We will not be liable to you or any third party for any modification, suspension, or discontinuation of the Service."
-        },
-        section11: {
-          title: "11. Termination",
-          content: "We may terminate or suspend your access to the Service immediately, without prior notice, for any reason, including, without limitation, if you breach these Terms of Service."
-        },
-        section12: {
-          title: "12. Changes to Terms",
-          content: "We reserve the right to update these Terms at any time. We will notify you of significant changes by posting the new terms on this page and updating the \"Last Updated\" date."
-        },
-        section13: {
-          title: "13. Governing Law",
-          content: "These Terms shall be governed and construed in accordance with the laws of your local jurisdiction, without giving effect to any principles of conflicts of laws."
-        },
-        section14: {
-          title: "14. Contact",
-          content: "If you have questions about these Terms of Service, you can contact us at:",
-          email: "facupiriz87@gmail.com"
-        }
-      },
-      privacy: {
-        title: "Privacy Policy",
-        lastUpdated: "Last updated",
-        back: "Back",
-        section1: {
-          title: "1. Introduction",
-          content: "TERA (\"we\", \"our\", or \"the Service\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our cloud storage file copying service."
-        },
-        section2: {
-          title: "2. Information We Collect",
-          subsection1: {
-            title: "2.1 Information You Provide Directly",
-            item1: "Account information: name, surname, email address",
-            item2: "Authentication credentials: OAuth access tokens for Google Drive and Dropbox",
-            item3: "Profile information: profile picture (optional)"
-          },
-          subsection2: {
-            title: "2.2 Information Collected Automatically",
-            item1: "Usage data: URLs of copied files, file names, sizes, operation dates",
-            item2: "File metadata: file type, storage provider (Google Drive/Dropbox)",
-            item3: "Technical information: IP address, browser type, operating system",
-            item4: "Cookies and similar technologies: to maintain your session and preferences"
-          },
-          subsection3: {
-            title: "2.3 Information from Storage Providers",
-            intro: "When you connect your Google Drive or Dropbox account, we receive:",
-            item1: "Basic profile information (name, email, photo)",
-            item2: "Access tokens to perform operations on your behalf",
-            item3: "List of files and folders you have access to"
-          }
-        },
-        section3: {
-          title: "3. How We Use Your Information",
-          intro: "We use the collected information to:",
-          item1: "Provide the Service: copy files between cloud storage accounts",
-          item2: "Manage your account: authentication, access, and personal settings",
-          item3: "Improve the Service: usage analysis, bug fixes, new feature development",
-          item4: "Communicate with you: service notifications, important updates",
-          item5: "Security: detect and prevent fraud, abuse, or unauthorized activities",
-          item6: "Legal compliance: respond to legal requests and enforce our terms"
-        },
-        section4: {
-          title: "4. Google Drive and Dropbox Access",
-          subsection1: {
-            title: "4.1 Google Drive Scopes",
-            intro: "We request the following Google permissions:",
-            item1: "https://www.googleapis.com/auth/drive - Full access to Google Drive for copying files",
-            item2: "https://www.googleapis.com/auth/drive.file - Access to files created by the application"
-          },
-          subsection2: {
-            title: "4.2 Dropbox Scopes",
-            intro: "We request the following Dropbox permissions:",
-            item1: "File read and write",
-            item2: "Shared link access",
-            item3: "Folder creation"
-          },
-          subsection3: {
-            title: "4.3 Limited Use",
-            content: "TERA's use of information received from Google and Dropbox APIs complies with Google API Services User Data Policies, including Limited Use requirements.",
-            intro: "We do NOT transfer, sell, or use Google Drive or Dropbox data for:",
-            item1: "Personalized advertising",
-            item2: "User behavior profiling",
-            item3: "Training artificial intelligence models",
-            item4: "Any purpose not directly related to file copying functionality"
-          }
-        },
-        section5: {
-          title: "5. Data Storage and Security",
-          subsection1: {
-            title: "5.1 Where We Store Your Data",
-            item1: "Database: Cloud-hosted PostgreSQL",
-            item2: "Authentication tokens: Encrypted in the database",
-            item3: "Files: We do NOT store the content of your files; only metadata"
-          },
-          subsection2: {
-            title: "5.2 Security Measures",
-            item1: "Encrypted HTTPS/TLS connections",
-            item2: "Securely stored OAuth tokens",
-            item3: "Email verification authentication",
-            item4: "Secure session management",
-            item5: "Limited server data access"
-          },
-          subsection3: {
-            title: "5.3 Data Retention",
-            content: "We retain your information while your account is active. You can request account deletion at any time, and we will delete your data within 30 days."
-          }
-        },
-        section6: {
-          title: "6. Sharing Information with Third Parties",
-          intro: "We do NOT sell, rent, or share your personal information with third parties, except in the following cases:",
-          subsection1: {
-            title: "6.1 Service Providers",
-            item1: "User authentication",
-            item2: "Database storage",
-            item3: "Hosting and deployment",
-            item4: "Cloud storage APIs (Google/Dropbox)"
-          },
-          subsection2: {
-            title: "6.2 Legal Requirements",
-            content: "We may disclose your information if required by law, court order, legal process, or government request."
-          }
-        },
-        section7: {
-          title: "7. Your Rights and Choices",
-          intro: "You have the right to:",
-          item1: "Access: Request a copy of your personal information",
-          item2: "Rectify: Correct inaccurate or incomplete information",
-          item3: "Delete: Request deletion of your account and associated data",
-          item4: "Revoke access: Disconnect Google Drive or Dropbox at any time",
-          item5: "Portability: Export your data in a readable format",
-          item6: "Object: Reject certain uses of your information",
-          contact: "To exercise these rights, contact us at: facupiriz87@gmail.com"
-        },
-        section8: {
-          title: "8. Cookies and Tracking Technologies",
-          intro: "We use cookies to:",
-          item1: "Keep your user session logged in",
-          item2: "Remember your language and theme preferences",
-          item3: "Analyze service usage (optional analytics cookies)",
-          note: "You can configure your browser to reject cookies, but this may affect service functionality."
-        },
-        section9: {
-          title: "9. Children's Privacy",
-          content: "Our service is not directed to children under 13 years of age. We do not knowingly collect personal information from children under 13. If we discover we have collected information from a minor without parental consent, we will take steps to delete that information."
-        },
-        section10: {
-          title: "10. International Data Transfers",
-          content: "Your data may be transferred and processed on servers located outside your country of residence. We take measures to ensure your data receives an adequate level of protection."
-        },
-        section11: {
-          title: "11. Changes to This Privacy Policy",
-          content: "We may update this Privacy Policy periodically. We will notify you of significant changes by posting the new policy on this page and updating the \"Last Updated\" date."
-        },
-        section12: {
-          title: "12. Contact",
-          content: "If you have questions, concerns, or requests about this Privacy Policy or the handling of your data, contact us at:",
-          email: "facupiriz87@gmail.com"
-        },
-        section13: {
-          title: "13. GDPR Compliance (EU Users)",
-          intro: "If you reside in the European Union, you have additional rights under the General Data Protection Regulation (GDPR):",
-          item1: "Legal basis for processing: consent and contract execution",
-          item2: "Right to file a complaint with a supervisory authority",
-          item3: "Right to data portability in structured format",
-          item4: "Right to withdraw consent at any time"
-        }
-      }
-    },
     landing: {
       hero: {
-        title: "Copy Google Drive files",
-        subtitle: "intelligently",
-        description: "TERA allows you to copy files and folders from shared drives to your personal Google Drive by just pasting a URL. Simple, fast and secure.",
-        ctaButton: "Get Started"
+        title: "Move and protect your files with",
+        subtitle: "Real Intelligence",
+        description: "TERA is the bridge between your clouds. Transfer files between platforms, schedule automatic backups, and connect your favorite tools in seconds.",
+        ctaButton: "Start for free today"
       },
       features: {
-        title: "Why choose TERA?",
-        subtitle: "Designed to make copying Google Drive files as simple as pasting a URL",
+        title: "Products",
+        subtitle: "Designed to make copying files from Google Drive as simple as pasting a URL",
         smartCopy: {
           title: "Smart Copy",
-          description: "Copy complete files and folders while maintaining the original structure"
+          description: "Copy files and entire folders while maintaining the original structure"
         },
         driveCompatible: {
           title: "Drive Compatible",
@@ -1008,7 +686,7 @@ const resources = {
         },
         secure: {
           title: "100% Secure",
-          description: "Uses official Google authentication. Your data always protected"
+          description: "Uses official Google authentication. Your data is always protected"
         }
       },
       howItWorks: {
@@ -1024,7 +702,7 @@ const resources = {
         },
         step3: {
           title: "Done!",
-          description: "Files are copied automatically. You can see the progress in real-time"
+          description: "Files are copied automatically. You can see the progress in real time"
         }
       },
       cta: {
@@ -1035,110 +713,17 @@ const resources = {
       footer: {
         tagline: "Smart File Manager - Made with ❤️ for the community"
       }
-    },
-    errors: {
-      validation: {
-        urlRequired: "URL required",
-        invalidUrl: "Please enter a valid Google Drive URL",
-        invalidEmail: "Please enter a valid email",
-        passwordTooShort: "Password must be at least 6 characters",
-        nameRequired: "Name is required",
-        acceptTermsRequired: "You must accept the terms and conditions",
-        passwordsDoNotMatch: "Passwords do not match"
-      },
-      loginFailed: "Login failed",
-      signupFailed: "Account creation failed",
-      tryAgain: "Please try again"
-    },
-    auth: {
-      login: {
-        title: "Sign In",
-        subtitle: "Access your TERA account",
-        continueWithReplit: "Continue with Replit",
-        orContinueWith: "or continue with",
-        emailLabel: "Email address",
-        emailPlaceholder: "your@email.com",
-        passwordLabel: "Password",
-        passwordPlaceholder: "Your password",
-        signInButton: "Sign In",
-        forgotPassword: "Forgot your password?",
-        noAccount: "Don't have an account?",
-        signUp: "Sign up",
-        success: "Login successful",
-        welcomeBack: "Welcome back"
-      },
-      signup: {
-        title: "Create Account",
-        subtitle: "Join TERA and start managing your files",
-        continueWithReplit: "Sign up with Replit",
-        orCreateAccountWith: "or create account with",
-        nameLabel: "Full name",
-        namePlaceholder: "Your full name",
-        emailLabel: "Email address",
-        emailPlaceholder: "your@email.com",
-        passwordLabel: "Password",
-        passwordPlaceholder: "At least 6 characters",
-        confirmPasswordLabel: "Confirm password",
-        confirmPasswordPlaceholder: "Confirm your password",
-        acceptTerms: {
-          part1: "I accept the",
-          termsLink: "terms of service",
-          and: "and",
-          privacyLink: "privacy policy"
-        },
-        createAccountButton: "Create Account",
-        hasAccount: "Already have an account?",
-        signIn: "Sign in",
-        success: "Registration successful",
-        checkEmail: "Check your email to verify your account"
-      },
-      emailConfirmation: {
-        verifying: "Verifying your email",
-        confirmed: "Email confirmed!",
-        failed: "Verification failed",
-        verifyingDescription: "We're verifying your email address...",
-        confirmedDescription: "Your account has been successfully verified",
-        failedDescription: "We couldn't verify your email address",
-        success: "Your account has been verified successfully",
-        error: "There was a problem verifying your account",
-        invalidLink: "The verification link is invalid or has expired",
-        redirecting: "You'll be automatically redirected in a few seconds...",
-        continueToApp: "Go to app",
-        signupAgain: "Sign up again",
-        tryLogin: "Try logging in"
-      },
-      validation: {
-        invalidEmail: "Please enter a valid email",
-        passwordTooShort: "Password must be at least 6 characters",
-        nameRequired: "Name is required",
-        acceptTermsRequired: "You must accept the terms and conditions",
-        passwordsDoNotMatch: "Passwords do not match"
-      },
-      signupSuccess: {
-        title: "Registration Successful!",
-        subtitle: "Your account has been created successfully",
-        checkEmailTitle: "Check your email",
-        checkEmailDescription: "We've sent you a verification email. Click the link to activate your account.",
-        nextStepsTitle: "Next steps:",
-        step1: "Open your email inbox",
-        step2: "Look for the verification email from TERA",
-        step3: "Click the verification link",
-        continueToLogin: "Go to Login",
-        backToHome: "Back to Home",
-        noEmail: "Didn't receive the email?",
-        tryAgain: "Try signing up again"
-      }
     }
   },
   pt: {
     common: {
       app: {
         title: "TERA",
-        description: "Gestão de arquivos do Google Drive"
+        description: "Gerenciamento de arquivos do Google Drive"
       },
       navigation: {
         home: "Início",
-        files: "Arquivos",
+        files: "Arquivos", 
         operations: "Operações",
         myFiles: "Meus Arquivos",
         sharedDrives: "Drives Compartilhados",
@@ -1146,14 +731,16 @@ const resources = {
         settings: "Configurações",
         profile: "Perfil",
         copyFromUrl: "Copiar de URL",
-        integrations: "Integrações"
+        integrations: "Integrações",
+        pricing: "Preços",
+        security: "Segurança"
       },
       language: {
         select: "Selecionar idioma",
-        spanish: "Espanhol",
-        english: "Inglês",
+        spanish: "Español",
+        english: "English",
         portuguese: "Português",
-        switchLanguage: "Mudar idioma"
+        switchLanguage: "Alterar idioma"
       },
       auth: {
         login: "Entrar",
@@ -1164,12 +751,18 @@ const resources = {
         new: "Novo",
         search: "Buscar",
         searchPlaceholder: "Buscar em seus arquivos...",
-        upload: "Carregar",
+        upload: "Fazer upload",
         download: "Baixar",
         copy: "Copiar",
         delete: "Excluir",
         edit: "Editar",
         view: "Ver"
+      },
+      user: {
+        fallbackName: "Usuário",
+        myAccount: "Minha Conta",
+        profile: "Perfil",
+        settings: "Configurações"
       },
       buttons: {
         cancel: "Cancelar",
@@ -1178,7 +771,9 @@ const resources = {
         close: "Fechar",
         retry: "Repetir",
         back: "Voltar",
-        next: "Próximo"
+        next: "Próximo",
+        change: "Alterar",
+        select: "Selecionar"
       },
       status: {
         loading: "Carregando...",
@@ -1187,89 +782,39 @@ const resources = {
         completed: "Concluído",
         pending: "Pendente",
         inProgress: "Em progresso"
+      },
+      footer: {
+        copyright: "© 2025 TERA. Todos os direitos reservados."
       }
     },
     landing: {
       hero: {
-        title: "Copie arquivos do Google Drive",
-        subtitle: "de forma inteligente",
-        description: "TERA permite copiar arquivos e pastas de drives compartilhados para seu Google Drive pessoal apenas colando um URL. Simples, rápido e seguro.",
-        ctaButton: "Começar Agora"
+        title: "Mova e proteja seus arquivos com",
+        subtitle: "Inteligência Real",
+        description: "TERA é a ponte entre suas nuvens. Transfira arquivos entre plataformas, agende backups automáticos e conecte suas ferramentas favoritas em segundos.",
+        ctaButton: "Comece grátis hoje"
       },
       features: {
-        title: "Por que escolher TERA?",
-        subtitle: "Projetado para tornar a cópia de arquivos do Google Drive tão simples quanto colar um URL"
-      }
-    },
-    auth: {
-      login: {
-        title: "Entrar",
-        subtitle: "Acesse sua conta TERA",
-        signInButton: "Entrar",
-        noAccount: "Não tem uma conta?",
-        signUp: "Cadastre-se"
+        title: "Produtos"
       }
     }
   }
 };
 
-// Lista de países hispanohablantes (códigos de idioma del navegador)
-const spanishLocales = [
-  'es', 'es-ES', 'es-MX', 'es-AR', 'es-CO', 'es-CL', 'es-PE', 'es-VE', 
-  'es-EC', 'es-GT', 'es-CU', 'es-BO', 'es-DO', 'es-HN', 'es-PY', 'es-SV',
-  'es-NI', 'es-CR', 'es-PA', 'es-UY', 'es-PR', 'es-419'
-];
-
-// Evitar inicialización duplicada durante HMR
-if (!i18n.isInitialized) {
-  i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      // Configuración de detección de idioma
-      detection: {
-        order: ['localStorage', 'navigator', 'htmlTag'],
-        caches: ['localStorage'],
-        lookupLocalStorage: 'i18nextLng',
-        // Convertir idiomas detectados al formato correcto
-        convertDetectedLanguage: (lng: string) => {
-          const base = lng.toLowerCase().split('-')[0];
-          // Si el idioma detectado es español (cualquier variante), usar 'es'
-          if (spanishLocales.some(locale => base === locale.toLowerCase().split('-')[0])) {
-            return 'es';
-          }
-          // Si es portugués
-          if (base === 'pt') {
-            return 'pt';
-          }
-          // Para cualquier otro idioma, usar inglés
-          return 'en';
-        },
-      },
-      
-      resources,
-      fallbackLng: 'en', // Inglés por defecto para países no hispanohablantes
-      debug: import.meta.env.DEV,
-      
-      // Idiomas soportados
-      supportedLngs: ['es', 'en', 'pt'],
-      
-      // Solo cargar el idioma base (sin variantes regionales)
-      load: 'languageOnly',
-      
-      // Espacios de nombres
-      ns: ['common', 'copy', 'errors', 'landing', 'pages', 'auth'],
-      defaultNS: 'common',
-      
-      interpolation: {
-        escapeValue: false, // React ya escapa los valores
-      },
-      
-      // Opciones específicas de React
-      react: {
-        useSuspense: false, // Desactivar suspense para mejor control
-      },
-    });
-}
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    fallbackLng: 'en',
+    supportedLngs: ['es', 'en', 'pt'],
+    interpolation: {
+      escapeValue: false,
+    },
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage'],
+    }
+  });
 
 export default i18n;

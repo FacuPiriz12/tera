@@ -607,13 +607,19 @@ export default function Home() {
               <img src={logoUrl} alt="TERA Logo" className="h-[8.4rem] w-auto object-contain mb-8" />
               <p className="text-lg text-gray-500 max-w-xs font-medium leading-relaxed">Elevando la gestión de archivos a una nueva dimensión de inteligencia y seguridad.</p>
               
-              <div className="flex items-center space-x-5 mt-10">
-                {['Twitter', 'LinkedIn', 'GitHub'].map((social) => (
-                  <a key={social} href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
-                    <span className="sr-only">{social}</span>
-                    <div className="w-5 h-5 bg-current rounded-sm" />
-                  </a>
-                ))}
+            <div className="flex items-center space-x-5 mt-10">
+                <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
+                  <span className="sr-only">Twitter</span>
+                  <div className="w-5 h-5 bg-current rounded-sm" />
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
+                  <span className="sr-only">LinkedIn</span>
+                  <div className="w-5 h-5 bg-current rounded-sm" />
+                </a>
+                <a href="#" className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
+                  <span className="sr-only">GitHub</span>
+                  <div className="w-5 h-5 bg-current rounded-sm" />
+                </a>
               </div>
             </div>
             <div>
