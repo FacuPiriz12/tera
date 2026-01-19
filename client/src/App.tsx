@@ -8,11 +8,7 @@ import { TransferProvider } from "@/contexts/TransferContext";
 import GlobalTransferIndicator from "@/components/GlobalTransferIndicator";
 import Landing from "@/pages/Landing";
 import Pricing from "@/pages/Pricing";
-import Login from "@/pages/Login";
-import Signup from "@/pages/Signup";
-import SignupSuccess from "@/pages/SignupSuccess";
-import EmailVerification from "@/pages/EmailVerification";
-import EmailConfirmation from "@/pages/EmailConfirmation";
+import AuthPage from "@/pages/Auth";
 import Home from "@/pages/Home";
 import Operations from "@/pages/Operations";
 import Integrations from "@/pages/Integrations";
@@ -52,8 +48,8 @@ function Router() {
   return (
     <Switch>
       {/* Public routes - available to all users */}
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={Signup} />
+      <Route path="/login" component={AuthPage} />
+      <Route path="/signup" component={AuthPage} />
       <Route path="/signup/success" component={SignupSuccess} />
       <Route path="/auth/verify" component={EmailVerification} />
       <Route path="/auth/confirm" component={EmailConfirmation} />
@@ -66,62 +62,62 @@ function Router() {
         {() => isLoggedIn ? <Home /> : <Landing />}
       </Route>
       
-      {/* Protected routes - show Login page if not authenticated */}
+      {/* Protected routes - show Auth page if not authenticated */}
       <Route path="/shared-drives">
-        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <Login />}
+        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <AuthPage />}
       </Route>
       <Route path="/operations">
-        {() => isLoggedIn ? <Operations /> : <Login />}
+        {() => isLoggedIn ? <Operations /> : <AuthPage />}
       </Route>
       <Route path="/integrations">
-        {() => isLoggedIn ? <Integrations /> : <Login />}
+        {() => isLoggedIn ? <Integrations /> : <AuthPage />}
       </Route>
       <Route path="/cloud-explorer">
-        {() => isLoggedIn ? <CloudExplorer /> : <Login />}
+        {() => isLoggedIn ? <CloudExplorer /> : <AuthPage />}
       </Route>
       <Route path="/my-files">
-        {() => isLoggedIn ? <MyFiles /> : <Login />}
+        {() => isLoggedIn ? <MyFiles /> : <AuthPage />}
       </Route>
       <Route path="/shared">
-        {() => isLoggedIn ? <ShareInbox /> : <Login />}
+        {() => isLoggedIn ? <ShareInbox /> : <AuthPage />}
       </Route>
       <Route path="/analytics">
-        {() => isLoggedIn ? <Analytics /> : <Login />}
+        {() => isLoggedIn ? <Analytics /> : <AuthPage />}
       </Route>
       <Route path="/files/versions">
-        {() => isLoggedIn ? <FileVersions /> : <Login />}
+        {() => isLoggedIn ? <FileVersions /> : <AuthPage />}
       </Route>
       <Route path="/settings">
-        {() => isLoggedIn ? <Settings /> : <Login />}
+        {() => isLoggedIn ? <Settings /> : <AuthPage />}
       </Route>
       <Route path="/profile">
-        {() => isLoggedIn ? <Profile /> : <Login />}
+        {() => isLoggedIn ? <Profile /> : <AuthPage />}
       </Route>
       <Route path="/tasks">
-        {() => isLoggedIn ? <Tasks /> : <Login />}
+        {() => isLoggedIn ? <Tasks /> : <AuthPage />}
       </Route>
       <Route path="/health">
-        {() => isLoggedIn ? <CloudHealth /> : <Login />}
+        {() => isLoggedIn ? <CloudHealth /> : <AuthPage />}
       </Route>
       
       {/* Admin routes */}
       <Route path="/admin">
         {() => {
-          if (!isLoggedIn) return <Login />;
+          if (!isLoggedIn) return <AuthPage />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminDashboard />;
         }}
       </Route>
       <Route path="/admin/users">
         {() => {
-          if (!isLoggedIn) return <Login />;
+          if (!isLoggedIn) return <AuthPage />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminUsers />;
         }}
       </Route>
       <Route path="/admin/operations">
         {() => {
-          if (!isLoggedIn) return <Login />;
+          if (!isLoggedIn) return <AuthPage />;
           if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
           return <AdminOperations />;
         }}
