@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Footer from "@/components/Footer";
@@ -27,12 +28,53 @@ import {
 import type { CopyOperation, DriveFile } from "@shared/schema";
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [quickCopyOpen, setQuickCopyOpen] = useState(false);
   const [progressModalOpen, setProgressModalOpen] = useState(false);
   const [activeOperationId, setActiveOperationId] = useState<string>();
+  const [runTutorial, setRunTutorial] = useState(false);
+
+  useEffect(() => {
+    const hasSeenTutorial = localStorage.getItem(`tutorial_seen_${user?.id}`);
+    if (isAuthenticated && !hasSeenTutorial) {
+      setRunTutorial(true);
+    }
+  }, [isAuthenticated, user?.id]);
+
+  const handleTutorialCallback = (data: CallBackProps) => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
+      setRunTutorial(false);
+      localStorage.setItem(`tutorial_seen_${user?.id}`, "true");
+    }
+  };
+
+  const steps: Step[] = [
+    {
+      target: "[data-testid='page-home']",
+      content: "¡Bienvenido a TERA! Esta guía te ayudará a conocer las funciones principales.",
+      placement: "center",
+      disableBeacon: true,
+    },
+    {
+      target: "[data-testid='link-nav-home']",
+      content: "Este es tu Panel de Control, donde verás el resumen de tus archivos y operaciones.",
+    },
+    {
+      target: "[data-testid='link-nav-cloud-explorer']",
+      content: "En el Explorador Multi-nube puedes gestionar tus archivos de Google Drive y Dropbox en un solo lugar.",
+    },
+    {
+      target: "[data-testid='link-nav-integrations']",
+      content: "Configura tus cuentas de almacenamiento aquí para empezar a transferir archivos.",
+    },
+    {
+      target: ".grid-cols-1",
+      content: "Aquí tienes estadísticas en tiempo real sobre tus archivos y transferencias.",
+    }
+  ];
 
   // Fetch data for dashboard only if authenticated
   const { data: operations = [] } = useQuery({
@@ -108,6 +150,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="page-home">
+      <Joyride
+        steps={steps}
+        run={runTutorial}
+        continuous
+        showProgress
+        showSkipButton
+        callback={handleTutorialCallback}
+        locale={{
+          back: "Atrás",
+          close: "Cerrar",
+          last: "Finalizar",
+          next: "Siguiente",
+          skip: "Saltar tutorial",
+        }}
+        styles={{
+          options: {
+            primaryColor: "#0061D5",
+            zIndex: 1000,
+          },
+        }}
+      />
       <Header />
       
       
