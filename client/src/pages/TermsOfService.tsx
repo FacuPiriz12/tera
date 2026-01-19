@@ -1,7 +1,8 @@
 import { Link } from "wouter";
-import { ArrowLeft, Globe } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
+import LanguageSelector from "@/components/LanguageSelector";
 
 export default function TermsOfService() {
   const { t, i18n } = useTranslation();
@@ -9,11 +10,6 @@ export default function TermsOfService() {
   
   const dateLocale = currentLang === 'es' ? 'es-ES' : 'en-US';
 
-  const toggleLanguage = () => {
-    const newLang = currentLang === 'es' ? 'en' : 'es';
-    i18n.changeLanguage(newLang);
-  };
-  
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto px-4 py-8">
@@ -24,14 +20,7 @@ export default function TermsOfService() {
               {t('landing.footer.back')}
             </Button>
           </Link>
-          <Button 
-            variant="outline" 
-            onClick={toggleLanguage}
-            data-testid="button-language-toggle"
-          >
-            <Globe className="mr-2 h-4 w-4" />
-            {currentLang === 'es' ? 'English' : 'Español'}
-          </Button>
+          <LanguageSelector />
         </div>
 
         <div className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-h1:text-4xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-gray-600 prose-li:text-gray-600 prose-strong:text-gray-900">

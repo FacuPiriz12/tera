@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -11,22 +11,15 @@ const languages = [
 
 export default function LanguageSelector() {
   const [isOpen, setIsOpen] = useState(false);
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   
-  const [currentLang, setCurrentLang] = useState(() => {
+  const currentLang = useMemo(() => {
     const code = i18n.language.split('-')[0].toLowerCase();
     return languages.find(l => l.code === code) || languages[0];
-  });
-
-  useEffect(() => {
-    const code = i18n.language.split('-')[0].toLowerCase();
-    const lang = languages.find(l => l.code === code);
-    if (lang) setCurrentLang(lang);
   }, [i18n.language]);
 
   const changeLanguage = (lang: typeof languages[0]) => {
     i18n.changeLanguage(lang.code);
-    setCurrentLang(lang);
     setIsOpen(false);
   };
 
