@@ -19,13 +19,13 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onReplitLogin }: LoginFormProps) {
-  const { t } = useTranslation(['auth', 'common', 'errors']);
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const loginSchema = z.object({
-    email: z.string().email({ message: t('validation.invalidEmail') }),
-    password: z.string().min(6, { message: t('validation.passwordTooShort') })
+    email: z.string().email({ message: t('auth.validation.invalidEmail') }),
+    password: z.string().min(6, { message: t('auth.validation.passwordTooShort') })
   });
 
   type LoginFormData = z.infer<typeof loginSchema>;
@@ -53,11 +53,11 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
 
       if (error) throw error;
       setCachedSession(authData.session);
-      toast({ title: t('login.success') });
+      toast({ title: t('auth.login.success') });
       window.location.href = '/';
     } catch (error: any) {
       toast({
-        title: t('errors.loginFailed'),
+        title: t('auth.errors.loginFailed'),
         description: error.message,
         variant: "destructive"
       });
@@ -75,12 +75,12 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:login.emailLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.login.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder={t('auth:login.emailPlaceholder')}
+                    placeholder={t('auth.login.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -94,13 +94,13 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:login.passwordLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.login.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder={t('auth:login.passwordPlaceholder')}
+                      placeholder={t('auth.login.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -122,17 +122,17 @@ export default function LoginForm({ onReplitLogin }: LoginFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('common:status.loading') : t('auth:login.signInButton')}
+            {isLoading ? t('common.status.loading') : t('auth.login.signInButton')}
           </Button>
         </form>
       </Form>
 
       <div className="flex items-center justify-between pt-2">
         <Link href="/signup">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth:login.noAccount')}</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth.login.noAccount')}</span>
         </Link>
         <button type="button" className="text-sm text-[#374151] hover:underline">
-          {t('auth:login.forgotPassword') || 'Forgot Password?'}
+          {t('auth.login.forgotPassword')}
         </button>
       </div>
     </div>

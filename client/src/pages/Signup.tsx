@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 
 export default function Signup() {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation();
   const { isAuthenticated, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -61,7 +61,7 @@ export default function Signup() {
           className="w-full max-w-[400px] flex flex-col items-center mt-20"
         >
           <div className="w-full space-y-8">
-            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('auth:signup.title')}</h1>
+            <h1 className="text-3xl font-semibold text-center text-[#111827]">{t('auth.signup.title')}</h1>
             
             <div className="w-full bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8">
               <SignupForm onReplitLogin={handleReplitLogin} />
@@ -75,10 +75,10 @@ export default function Signup() {
             className="mt-12 flex gap-10 text-[13px] text-gray-400 font-bold uppercase tracking-widest"
           >
             <Link href="/terms" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">
-              {t('auth:signup.acceptTerms.termsLink')}
+              {t('auth.signup.acceptTerms.termsLink')}
             </Link>
             <Link href="/privacy" className="hover:text-[#4F46E5] transition-colors cursor-pointer whitespace-nowrap">
-              {t('auth:signup.acceptTerms.privacyLink')}
+              {t('auth.signup.acceptTerms.privacyLink')}
             </Link>
           </motion.div>
         </motion.div>

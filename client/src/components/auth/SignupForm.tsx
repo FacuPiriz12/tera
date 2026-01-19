@@ -18,21 +18,21 @@ interface SignupFormProps {
 }
 
 export default function SignupForm({ onReplitLogin }: SignupFormProps) {
-  const { t } = useTranslation(['auth', 'common', 'errors']);
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const signupSchema = z.object({
-    name: z.string().min(2, { message: t('validation.nameRequired') }),
-    email: z.string().email({ message: t('validation.invalidEmail') }),
-    password: z.string().min(6, { message: t('validation.passwordTooShort') }),
-    confirmPassword: z.string().min(6, { message: t('validation.passwordTooShort') }),
+    name: z.string().min(2, { message: t('auth.validation.nameRequired') }),
+    email: z.string().email({ message: t('auth.validation.invalidEmail') }),
+    password: z.string().min(6, { message: t('auth.validation.passwordTooShort') }),
+    confirmPassword: z.string().min(6, { message: t('auth.validation.passwordTooShort') }),
     acceptTerms: z.boolean().refine(val => val === true, {
-      message: t('validation.acceptTermsRequired')
+      message: t('auth.validation.acceptTermsRequired')
     })
   }).refine((data) => data.password === data.confirmPassword, {
-    message: t('validation.passwordsDoNotMatch'),
+    message: t('auth.validation.passwordsDoNotMatch'),
     path: ["confirmPassword"]
   });
 
@@ -70,7 +70,7 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
 
       if (error) {
         toast({
-          title: t('errors.signupFailed'),
+          title: t('auth.errors.signupFailed'),
           description: error.message,
           variant: "destructive"
         });
@@ -78,8 +78,8 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
       }
 
       toast({
-        title: t('signup.success'),
-        description: t('signup.checkEmail')
+        title: t('auth.signup.success'),
+        description: t('auth.signup.checkEmail')
       });
       
       setTimeout(() => {
@@ -88,8 +88,8 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
     } catch (error) {
       console.error('Signup error:', error);
       toast({
-        title: t('errors.signupFailed'),
-        description: t('errors.tryAgain'),
+        title: t('auth.errors.signupFailed'),
+        description: t('auth.errors.tryAgain'),
         variant: "destructive"
       });
     } finally {
@@ -106,11 +106,11 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="name"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.nameLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.signup.nameLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder={t('auth:signup.namePlaceholder')}
+                    placeholder={t('auth.signup.namePlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -124,12 +124,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.emailLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.signup.emailLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="email"
-                    placeholder={t('auth:signup.emailPlaceholder')}
+                    placeholder={t('auth.signup.emailPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -143,13 +143,13 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.passwordLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.signup.passwordLabel')}</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input
                       {...field}
                       type={showPassword ? "text" : "password"}
-                      placeholder={t('auth:signup.passwordPlaceholder')}
+                      placeholder={t('auth.signup.passwordPlaceholder')}
                       className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                     />
                     <button
@@ -171,12 +171,12 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem className="space-y-1">
-                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth:signup.confirmPasswordLabel')}</FormLabel>
+                <FormLabel className="text-sm font-medium text-[#374151]">{t('auth.signup.confirmPasswordLabel')}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     type="password"
-                    placeholder={t('auth:signup.confirmPasswordPlaceholder')}
+                    placeholder={t('auth.signup.confirmPasswordPlaceholder')}
                     className="h-11 border-[#D1D5DB] rounded-md focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1]"
                   />
                 </FormControl>
@@ -199,13 +199,13 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
                 </FormControl>
                 <div className="leading-none">
                   <FormLabel className="text-xs text-[#6B7280] font-normal">
-                    {t('auth:signup.acceptTerms.part1')}{' '}
+                    {t('auth.signup.acceptTerms.part1')}{' '}
                     <Link href="/terms">
-                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth:signup.acceptTerms.termsLink')}</span>
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth.signup.acceptTerms.termsLink')}</span>
                     </Link>{' '}
-                    {t('auth:signup.acceptTerms.and')}{' '}
+                    {t('auth.signup.acceptTerms.and')}{' '}
                     <Link href="/privacy">
-                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth:signup.acceptTerms.privacyLink')}</span>
+                      <span className="text-[#4F46E5] hover:underline cursor-pointer">{t('auth.signup.acceptTerms.privacyLink')}</span>
                     </Link>
                   </FormLabel>
                 </div>
@@ -218,14 +218,14 @@ export default function SignupForm({ onReplitLogin }: SignupFormProps) {
             className="w-full h-11 bg-[#4F46E5] hover:bg-[#4338CA] text-white font-medium rounded-md shadow-sm"
             disabled={isLoading}
           >
-            {isLoading ? t('common:status.loading') : t('auth:signup.createAccountButton')}
+            {isLoading ? t('common.status.loading') : t('auth.signup.createAccountButton')}
           </Button>
         </form>
       </Form>
 
       <div className="text-center pt-2">
         <Link href="/login">
-          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('auth:signup.hasAccount')} {t('auth:signup.signIn')}</span>
+          <span className="text-sm text-[#374151] hover:underline cursor-pointer">{t('signup.hasAccount')} {t('signup.signIn')}</span>
         </Link>
       </div>
     </div>
