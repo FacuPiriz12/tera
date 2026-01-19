@@ -151,7 +151,9 @@ export default function Header() {
         </div>
         
         <div className="flex items-center gap-3">
-          <LanguageSelector />
+          <div className="z-[10000]">
+            <LanguageSelector />
+          </div>
           {user && (
             <>
               {/* Notifications Dropdown */}

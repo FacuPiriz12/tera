@@ -13,10 +13,10 @@ export default function LanguageSelector() {
   const [currentLang, setCurrentLang] = useState(languages[0]);
 
   return (
-    <div className="relative">
+    <div className="relative inline-block">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 active:scale-95"
+        className="flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 active:scale-95 bg-white shadow-sm border border-gray-100"
         title="Cambiar idioma"
       >
         <Globe className="w-5 h-5 flex-shrink-0" />
