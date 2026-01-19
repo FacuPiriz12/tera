@@ -68,7 +68,7 @@ export default function Home() {
             
             <div className="hidden md:flex items-center space-x-10">
               <div className="flex items-center space-x-8">
-                <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('landing.features.title')}</a>
+                <a href="#productos" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('landing.benefits.badge')}</a>
                 <Link href="/pricing" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.pricing')}</Link>
                 <a href="#seguridad" className="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">{t('common.navigation.security')}</a>
               </div>
@@ -110,13 +110,13 @@ export default function Home() {
             className="fixed inset-0 z-40 bg-white pt-20 md:hidden"
           >
             <div className="flex flex-col space-y-6 px-6 py-10">
-              <a href="#productos" className="text-2xl font-bold text-gray-900">Productos</a>
-              <Link href="/pricing" className="text-2xl font-bold text-gray-900">Precios</Link>
-              <a href="#seguridad" className="text-2xl font-bold text-gray-900">Seguridad</a>
+              <a href="#productos" className="text-2xl font-bold text-gray-900">{t('landing.benefits.badge')}</a>
+              <Link href="/pricing" className="text-2xl font-bold text-gray-900">{t('common.navigation.pricing')}</Link>
+              <a href="#seguridad" className="text-2xl font-bold text-gray-900">{t('common.navigation.security')}</a>
               <div className="pt-6 border-t border-gray-100 flex flex-col space-y-4">
-                <button onClick={() => setLocation('/auth')} className="text-lg font-bold text-gray-900 py-2">Iniciar sesión</button>
+                <button onClick={() => setLocation('/auth')} className="text-lg font-bold text-gray-900 py-2">{t('common.auth.login')}</button>
                 <button onClick={() => setLocation('/auth')} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-blue-200">
-                  Comenzar ahora
+                  {t('landing.hero.ctaButton')}
                 </button>
                 <div className="flex justify-center pt-4">
                   <LanguageSelector />
@@ -208,7 +208,7 @@ export default function Home() {
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button className="bg-white border-2 border-gray-100 text-gray-900 font-bold px-10 py-5 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all text-lg shadow-sm">
-                  Ver demostración
+                  {t('landing.hero.demoButton')}
                 </button>
               </motion.div>
               
@@ -218,7 +218,7 @@ export default function Home() {
                 transition={{ duration: 1, delay: 0.5 }}
                 className="mt-16 pt-10 border-t border-gray-100"
               >
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 text-center lg:text-left">Mejores Integraciones</p>
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-8 text-center lg:text-left">{t('landing.hero.integrationsLabel')}</p>
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-12 gap-y-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
                   <div className="flex items-center space-x-3 group cursor-default">
                     <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
@@ -625,7 +625,7 @@ export default function Home() {
             <div>
               <h4 className="text-sm font-black text-gray-900 uppercase tracking-[0.2em] mb-8">{t('landing.footer.platform')}</h4>
               <ul className="space-y-4">
-                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.features.title')}</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('landing.benefits.badge')}</a></li>
                 <li><a href="/pricing" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.pricing')}</a></li>
                 <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.security')}</a></li>
                 <li><a href="#" className="text-gray-500 hover:text-blue-600 font-bold transition-colors">{t('common.navigation.integrations')}</a></li>

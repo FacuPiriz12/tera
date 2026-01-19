@@ -66,6 +66,9 @@ const resources = {
           securityBadge: "Seguridad Activa",
           encryptionLabel: "Cifrado de 256 bits"
         },
+        features: {
+          title: "Productos"
+        },
         stats: {
           filesMoved: "Archivos Movidos",
           activeUsers: "Usuarios Activos",
@@ -203,6 +206,9 @@ const resources = {
           duplicatesLabel: "Duplicates",
           securityBadge: "Active Security",
           encryptionLabel: "256-bit encryption"
+        },
+        features: {
+          title: "Products"
         },
         stats: {
           filesMoved: "Files Moved",
