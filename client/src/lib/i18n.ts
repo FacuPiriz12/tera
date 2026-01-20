@@ -1,4 +1,9 @@
 import i18n from 'i18next';
+// Note: Add the following translation keys to the Spanish (es) translations:
+// 'auth.resetPassword.newPasswordLabel': 'Nueva contraseña'
+// 
+// And for English (en) translations:
+// 'auth.resetPassword.newPasswordLabel': 'New password'
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
