@@ -87,17 +87,17 @@ export default function ResetPasswordPage() {
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
           <div className="mb-8 text-left">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {t('auth.resetPassword.title', 'Choose new password')}
+              {t('common.resetPassword.title')}
             </h1>
             <p className="text-gray-600 text-sm">
-              {t('auth.resetPassword.description', 'Almost done. Enter your new password and youre all set.')}
+              {t('common.resetPassword.description')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('landing.auth.signup.passwordLabel', 'New password')}
+                {t('common.resetPassword.passwordLabel')}
               </label>
               <div className="relative group">
                 <input
@@ -114,7 +114,7 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirm-new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('landing.auth.signup.confirmPasswordLabel', 'Cofirm new password')}
+                {t('common.resetPassword.confirmPasswordLabel')}
               </label>
               <div className="relative group">
                 <input
@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
               ) : null}
-              {t('auth.resetPassword.submitButton', 'Reset password')}
+              {t('common.resetPassword.submitButton')}
             </Button>
           </form>
 
@@ -158,7 +158,7 @@ export default function ResetPasswordPage() {
             <Link href="/login">
               <button className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('landing.auth.footer.back', 'Back to login')}
+                {t('common.resetPassword.backToLogin')}
               </button>
             </Link>
           </div>

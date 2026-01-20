@@ -42,17 +42,17 @@ export default function ForgotPasswordPage() {
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('landing.auth.login.forgotPassword')}
+              {t('common.forgotPassword.title')}
             </h1>
             <p className="text-gray-600">
-              {t('auth.forgotPassword.description', 'Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.')}
+              {t('common.forgotPassword.description')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email-forgot" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('landing.auth.login.emailLabel')}
+                {t('common.forgotPassword.emailLabel')}
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t('landing.auth.login.emailPlaceholder')}
+                  placeholder={t('common.forgotPassword.emailPlaceholder')}
                   className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                   required
                 />
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
               ) : (
                 <Send className="w-5 h-5 mr-2 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               )}
-              {t('auth.forgotPassword.submitButton', 'Enviar instrucciones')}
+              {t('common.forgotPassword.submitButton')}
             </Button>
           </form>
 
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
             <Link href="/login">
               <button className="w-full flex items-center justify-center text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('landing.auth.footer.back', 'Volver al inicio de sesión')}
+                {t('common.forgotPassword.backToLogin')}
               </button>
             </Link>
           </div>

@@ -42,24 +42,31 @@ const resources = {
           loggingOut: "Cerrando sesión..."
         },
         forgotPassword: {
+          title: "Olvidé mi contraseña",
           description: "Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.",
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
           submitButton: "Enviar instrucciones",
           successTitle: "Correo enviado",
-          successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."
+          successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña.",
+          backToLogin: "Volver al inicio de sesión"
         },
         resetPassword: {
-          title: "Choose new password",
-          description: "Almost done. Enter your new password and youre all set.",
-          submitButton: "Reset password",
+          title: "Elige una nueva contraseña",
+          description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
+          passwordLabel: "Nueva contraseña",
+          confirmPasswordLabel: "Confirmar nueva contraseña",
+          submitButton: "Restablecer contraseña",
           successTitle: "Contraseña actualizada",
           successDesc: "Tu contraseña ha sido restablecida con éxito.",
           successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
+          backToLogin: "Volver al inicio de sesión",
           req: {
-            lowercase: "one lowercase character",
-            special: "one special character",
-            uppercase: "one uppercase character",
-            minimum: "8 character minimum",
-            number: "one number"
+            lowercase: "una minúscula",
+            special: "un carácter especial",
+            uppercase: "una mayúscula",
+            minimum: "mínimo 8 caracteres",
+            number: "un número"
           }
         },
         buttons: {
@@ -503,18 +510,25 @@ const resources = {
           loggingOut: "Logging out..."
         },
         forgotPassword: {
+          title: "Forgot password",
           description: "Enter your email address and we'll send you instructions to reset your password.",
+          emailLabel: "Email address",
+          emailPlaceholder: "you@email.com",
           submitButton: "Send instructions",
           successTitle: "Email sent",
-          successDesc: "If the account exists, you will receive instructions to reset your password."
+          successDesc: "If the account exists, you will receive instructions to reset your password.",
+          backToLogin: "Back to login"
         },
         resetPassword: {
           title: "Choose new password",
-          description: "Almost done. Enter your new password and youre all set.",
+          description: "Almost done. Enter your new password and you're all set.",
+          passwordLabel: "New password",
+          confirmPasswordLabel: "Confirm new password",
           submitButton: "Reset password",
           successTitle: "Password updated",
           successDesc: "Your password has been successfully reset.",
           successLongDesc: "Your password has been updated. You can now log in with your new password.",
+          backToLogin: "Back to login",
           req: {
             lowercase: "one lowercase character",
             special: "one special character",
