@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { supabasePromise } from "@/lib/supabase";
 import { setCachedSession } from "@/lib/supabaseSession";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
-import CloneDriveLogo from "@/components/CloneDriveLogo";
+import { CheckCircle2, AlertCircle, Loader2, Mail, ShieldCheck, UserPlus, ArrowRight } from "lucide-react";
+import logoUrl from "@/assets/logo.png";
 import { queryClient } from "@/lib/queryClient";
+import "@/auth-animations.css";
 
 export default function EmailConfirmation() {
   const { t } = useTranslation(['auth', 'common']);
@@ -37,13 +36,10 @@ export default function EmailConfirmation() {
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token') || searchParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token') || searchParams.get('refresh_token');
-        const hashType = hashParams.get('type');
-        const hashError = hashParams.get('error');
-        const hashErrorDescription = hashParams.get('error_description');
         
         // Handle errors from either source
-        const finalError = error || hashError;
-        const finalErrorDescription = errorDescription || hashErrorDescription;
+        const finalError = error || hashParams.get('error');
+        const finalErrorDescription = errorDescription || hashParams.get('error_description');
         
         if (finalError) {
           console.error('Email confirmation error from URL:', { 
@@ -67,7 +63,6 @@ export default function EmailConfirmation() {
         
         // Method 1: If we have a token_hash (most common with default Supabase email template)
         if (tokenHash && type) {
-          console.log('Verifying with token_hash method');
           const { data, error: verifyError } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type: type as any
@@ -81,19 +76,11 @@ export default function EmailConfirmation() {
           }
 
           if (data.session) {
-            // Update the session cache manually
             setCachedSession(data.session);
-            
-            // Invalidate auth query to force refetch with new session
             await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-            
             setStatus('success');
             setMessage(t('emailConfirmation.success'));
-            
-            // Redirect to home after 2 seconds using navigation (not full reload)
-            setTimeout(() => {
-              setLocation('/');
-            }, 2000);
+            setTimeout(() => setLocation('/'), 3000);
           } else {
             setStatus('error');
             setMessage(t('emailConfirmation.error'));
@@ -103,7 +90,6 @@ export default function EmailConfirmation() {
         
         // Method 2: If we have access_token and refresh_token (hash-based method)
         if (accessToken && refreshToken) {
-          console.log('Verifying with session method');
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken
@@ -116,23 +102,14 @@ export default function EmailConfirmation() {
             return;
           }
 
-          // Update the session cache manually
           setCachedSession(sessionData.session);
-          
-          // Invalidate auth query to force refetch with new session
           await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-
           setStatus('success');
           setMessage(t('emailConfirmation.success'));
-          
-          // Redirect to home after 2 seconds using navigation (not full reload)
-          setTimeout(() => {
-            setLocation('/');
-          }, 2000);
+          setTimeout(() => setLocation('/'), 3000);
           return;
         }
         
-        // No valid tokens found
         setStatus('error');
         setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o está incompleto.'));
         
@@ -144,87 +121,109 @@ export default function EmailConfirmation() {
     };
 
     confirmEmail();
-  }, [t]);
+  }, [t, setLocation]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-0 bg-card/95 backdrop-blur-sm">
-        <CardHeader className="text-center pb-4">
-          <div className="flex items-center justify-center mx-auto mb-4">
-            <CloneDriveLogo className="h-14" />
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
+      <div className="mb-12">
+        <Link href="/">
+          <img src={logoUrl} alt="Logo" className="h-12 w-auto cursor-pointer" />
+        </Link>
+      </div>
+
+      <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-10 lg:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 text-center space-y-8 animate-in fade-in zoom-in duration-700">
+        <div className="relative inline-block mx-auto">
+          <div className="absolute inset-0 bg-blue-400 blur-3xl opacity-20 rounded-full animate-pulse"></div>
+          <div className="relative w-32 h-32 bg-gradient-to-br from-blue-50 to-white rounded-full flex items-center justify-center shadow-2xl border border-blue-50 overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-50/30 to-white opacity-50"></div>
+             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg flex items-center justify-center transform -rotate-6">
+                {status === 'loading' && <Mail className="w-10 h-10 text-white" />}
+                {status === 'success' && <CheckCircle2 className="w-10 h-10 text-white" />}
+                {status === 'error' && <AlertCircle className="w-10 h-10 text-white" />}
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-blue-400 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
+                  <ShieldCheck className="w-4 h-4 text-white" />
+                </div>
+             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">
+        </div>
+
+        <div className="space-y-4">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
             {status === 'loading' && t('emailConfirmation.verifying')}
             {status === 'success' && t('emailConfirmation.confirmed')}
             {status === 'error' && t('emailConfirmation.failed')}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground">
-            {status === 'loading' && t('emailConfirmation.verifyingDescription')}
-            {status === 'success' && t('emailConfirmation.confirmedDescription')}
-            {status === 'error' && t('emailConfirmation.failedDescription')}
-          </CardDescription>
-        </CardHeader>
+          </h1>
+          <p className="text-gray-500 font-medium leading-relaxed">
+            {message || t('emailConfirmation.verifyingDescription')}
+          </p>
+        </div>
 
-        <CardContent className="space-y-6">
-          <div className="flex justify-center">
-            {status === 'loading' && (
-              <Loader2 className="h-16 w-16 text-blue-500 animate-spin" data-testid="icon-loading" />
-            )}
-            {status === 'success' && (
-              <CheckCircle2 className="h-16 w-16 text-green-500" data-testid="icon-success" />
-            )}
-            {status === 'error' && (
-              <AlertCircle className="h-16 w-16 text-red-500" data-testid="icon-error" />
-            )}
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground" data-testid="text-message">
-              {message}
+        {status === 'loading' && (
+          <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 text-center animate-in slide-in-from-bottom-2 duration-500">
+            <Loader2 className="h-8 w-8 text-blue-500 animate-spin mx-auto mb-2" />
+            <p className="text-blue-800 font-semibold text-sm leading-relaxed">
+              Confirmando tu dirección de correo electrónico...
             </p>
           </div>
+        )}
 
-          {status === 'success' && (
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                {t('emailConfirmation.redirecting')}
-              </p>
-              <Button 
-                onClick={() => setLocation('/')}
-                className="w-full"
-                data-testid="button-continue"
-              >
-                {t('emailConfirmation.continueToApp')}
-              </Button>
-            </div>
-          )}
+        {status === 'success' && (
+          <div className="bg-green-50/50 rounded-2xl p-6 border border-green-100 text-center animate-in slide-in-from-bottom-2 duration-500">
+            <p className="text-green-800 font-semibold text-sm leading-relaxed">
+              {t('emailConfirmation.confirmedDescription')}
+            </p>
+          </div>
+        )}
 
-          {status === 'error' && (
+        {status === 'error' && (
+          <div className="bg-red-50/50 rounded-2xl p-6 border border-red-100 text-center animate-in slide-in-from-bottom-2 duration-500">
+            <p className="text-red-800 font-semibold text-sm leading-relaxed">
+              {t('emailConfirmation.failedDescription')}
+            </p>
+          </div>
+        )}
+
+        <div className="space-y-6">
+          {status === 'success' ? (
+            <button 
+              onClick={() => setLocation('/')}
+              className="w-full bg-blue-600 py-4 rounded-2xl font-bold text-white hover:bg-blue-700 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
+            >
+              {t('emailConfirmation.continueToApp')}
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </button>
+          ) : status === 'error' ? (
             <div className="space-y-3">
-              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
-                <p className="text-sm text-amber-900 dark:text-amber-100">
-                  {t('emailConfirmation.troubleshooting', 'Consejo: Si el enlace sigue sin funcionar, asegúrate de hacer clic directamente desde tu correo en lugar de copiar y pegar la URL.')}
-                </p>
-              </div>
-              <Button 
+              <button 
                 onClick={() => setLocation('/signup')}
-                className="w-full"
-                data-testid="button-signup-again"
+                className="w-full bg-white border-2 border-gray-100 py-4 rounded-2xl font-bold text-blue-600 hover:border-blue-600 hover:bg-blue-50/30 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
               >
                 {t('emailConfirmation.signupAgain', 'Registrarse nuevamente')}
-              </Button>
-              <Button 
+              </button>
+              <button 
                 onClick={() => setLocation('/login')}
-                variant="outline"
-                className="w-full"
-                data-testid="button-login"
+                className="w-full bg-white border-2 border-gray-100 py-4 rounded-2xl font-bold text-gray-600 hover:border-gray-400 hover:bg-gray-50/30 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
               >
                 {t('emailConfirmation.tryLogin', 'Intentar iniciar sesión')}
-              </Button>
+              </button>
             </div>
+          ) : (
+            <p className="text-[11px] text-gray-400 font-medium leading-tight px-4">
+              {t('common.emailVerification.securityNote')}
+            </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+
+        <div className="border-t border-gray-100 pt-8">
+          <p className="text-gray-400 text-sm font-bold mb-4">¿No eres tú?</p>
+          <Link href="/auth">
+            <button className="inline-flex items-center text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors group">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Registrarse con otro correo
+            </button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
