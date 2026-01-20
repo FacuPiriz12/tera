@@ -47,8 +47,8 @@ const resources = {
           emailLabel: "Correo electrónico",
           emailPlaceholder: "tu@email.com",
           submitButton: "Enviar instrucciones",
-          successTitle: "Correo enviado",
-          successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña.",
+          successTitle: "¡Pronto!",
+          successDesc: "Hemos enviado un email a {{email}} para confirmar.",
           backToLogin: "Volver al inicio de sesión"
         },
         resetPassword: {
@@ -515,8 +515,8 @@ const resources = {
           emailLabel: "Email address",
           emailPlaceholder: "you@email.com",
           submitButton: "Send instructions",
-          successTitle: "Email sent",
-          successDesc: "If the account exists, you will receive instructions to reset your password.",
+          successTitle: "Ready!",
+          successDesc: "We've sent an email to {{email}} to confirm.",
           backToLogin: "Back to login"
         },
         resetPassword: {
