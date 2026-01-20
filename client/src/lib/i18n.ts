@@ -79,20 +79,21 @@ const resources = {
           loggingOut: "Cerrando sesión...",
           resetPassword: {
             title: "Elige una nueva contraseña",
-          description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
-          passwordLabel: "Nueva contraseña",
-          confirmPasswordLabel: "Confirmar nueva contraseña",
-          submitButton: "Restablecer contraseña",
-          successTitle: "Contraseña actualizada",
-          successDesc: "Tu contraseña ha sido restablecida con éxito.",
-          successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
-          backToLogin: "Volver al inicio de sesión",
-          req: {
-            lowercase: "una minúscula",
-            special: "un carácter especial",
-            uppercase: "una mayúscula",
-            minimum: "mínimo 8 caracteres",
-            number: "un número"
+            description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
+            passwordLabel: "Nueva contraseña",
+            confirmPasswordLabel: "Confirmar nueva contraseña",
+            submitButton: "Restablecer contraseña",
+            successTitle: "Contraseña actualizada",
+            successDesc: "Tu contraseña ha sido restablecida con éxito.",
+            successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
+            backToLogin: "Volver al inicio de sesión",
+            req: {
+              lowercase: "una minúscula",
+              special: "un carácter especial",
+              uppercase: "una mayúscula",
+              minimum: "mínimo 8 caracteres",
+              number: "un número"
+            }
           }
         },
         buttons: {
