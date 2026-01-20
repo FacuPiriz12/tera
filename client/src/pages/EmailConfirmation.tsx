@@ -9,7 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 import "@/auth-animations.css";
 
 export default function EmailConfirmation() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -21,7 +21,7 @@ export default function EmailConfirmation() {
         
         if (!supabase) {
           setStatus('error');
-          setMessage(t('emailConfirmation.error'));
+          setMessage(t('emailConfirmationError'));
           return;
         }
 
@@ -50,13 +50,13 @@ export default function EmailConfirmation() {
           
           // Show user-friendly message based on error
           if (finalErrorDescription?.includes('expired')) {
-            setMessage(t('emailConfirmation.linkExpired', 'El enlace de verificación ha expirado. Por favor, solicita un nuevo correo de verificación.'));
+            setMessage(t('emailConfirmationLinkExpired', 'El enlace de verificación ha expirado. Por favor, solicita un nuevo correo de verificación.'));
           } else if (finalError === 'access_denied') {
-            setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o ya fue usado.'));
+            setMessage(t('emailConfirmationInvalidLink', 'El enlace de verificación no es válido o ya fue usado.'));
           } else if (finalErrorDescription?.includes('already been verified')) {
-            setMessage(t('emailConfirmation.alreadyVerified', 'Este correo ya ha sido verificado. Intenta iniciar sesión.'));
+            setMessage(t('emailConfirmationAlreadyVerified', 'Este correo ya ha sido verificado. Intenta iniciar sesión.'));
           } else {
-            setMessage(finalErrorDescription || t('emailConfirmation.error', 'Ocurrió un error al verificar tu correo.'));
+            setMessage(finalErrorDescription || t('emailConfirmationError', 'Ocurrió un error al verificar tu correo.'));
           }
           return;
         }
@@ -79,11 +79,11 @@ export default function EmailConfirmation() {
             setCachedSession(data.session);
             await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
             setStatus('success');
-            setMessage(t('emailConfirmation.success'));
+            setMessage(t('emailConfirmationSuccess'));
             setTimeout(() => setLocation('/'), 3000);
           } else {
             setStatus('error');
-            setMessage(t('emailConfirmation.error'));
+            setMessage(t('emailConfirmationError'));
           }
           return;
         }
@@ -105,18 +105,18 @@ export default function EmailConfirmation() {
           setCachedSession(sessionData.session);
           await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
           setStatus('success');
-          setMessage(t('emailConfirmation.success'));
+          setMessage(t('emailConfirmationSuccess'));
           setTimeout(() => setLocation('/'), 3000);
           return;
         }
         
         setStatus('error');
-        setMessage(t('emailConfirmation.invalidLink', 'El enlace de verificación no es válido o está incompleto.'));
+        setMessage(t('emailConfirmationInvalidLink', 'El enlace de verificación no es válido o está incompleto.'));
         
       } catch (error) {
         console.error('Email confirmation error:', error);
         setStatus('error');
-        setMessage(t('emailConfirmation.error'));
+        setMessage(t('emailConfirmationError'));
       }
     };
 
@@ -149,12 +149,12 @@ export default function EmailConfirmation() {
 
         <div className="space-y-4">
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-            {status === 'loading' && t('emailConfirmation.verifying')}
-            {status === 'success' && t('emailConfirmation.confirmed')}
-            {status === 'error' && t('emailConfirmation.failed')}
+            {status === 'loading' && t('emailConfirmationVerifying')}
+            {status === 'success' && t('emailConfirmationConfirmed')}
+            {status === 'error' && t('emailConfirmationFailed')}
           </h1>
           <p className="text-gray-500 font-medium leading-relaxed">
-            {message || t('emailConfirmation.verifyingDescription')}
+            {message || t('emailConfirmationVerifyingDescription')}
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export default function EmailConfirmation() {
         {status === 'success' && (
           <div className="bg-green-50/50 rounded-2xl p-6 border border-green-100 text-center animate-in slide-in-from-bottom-2 duration-500">
             <p className="text-green-800 font-semibold text-sm leading-relaxed">
-              {t('emailConfirmation.confirmedDescription')}
+              {t('emailConfirmationConfirmedDescription')}
             </p>
           </div>
         )}
@@ -178,7 +178,7 @@ export default function EmailConfirmation() {
         {status === 'error' && (
           <div className="bg-red-50/50 rounded-2xl p-6 border border-red-100 text-center animate-in slide-in-from-bottom-2 duration-500">
             <p className="text-red-800 font-semibold text-sm leading-relaxed">
-              {t('emailConfirmation.failedDescription')}
+              {t('emailConfirmationFailedDescription')}
             </p>
           </div>
         )}
@@ -189,7 +189,7 @@ export default function EmailConfirmation() {
               onClick={() => setLocation('/')}
               className="w-full bg-blue-600 py-4 rounded-2xl font-bold text-white hover:bg-blue-700 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
             >
-              {t('emailConfirmation.continueToApp')}
+              {t('emailConfirmationContinueToApp')}
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           ) : status === 'error' ? (
@@ -198,18 +198,18 @@ export default function EmailConfirmation() {
                 onClick={() => setLocation('/signup')}
                 className="w-full bg-white border-2 border-gray-100 py-4 rounded-2xl font-bold text-blue-600 hover:border-blue-600 hover:bg-blue-50/30 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
               >
-                {t('emailConfirmation.signupAgain', 'Registrarse nuevamente')}
+                {t('emailConfirmationSignupAgain')}
               </button>
               <button 
                 onClick={() => setLocation('/login')}
                 className="w-full bg-white border-2 border-gray-100 py-4 rounded-2xl font-bold text-gray-600 hover:border-gray-400 hover:bg-gray-50/30 transition-all flex items-center justify-center group shadow-sm hover:shadow-md"
               >
-                {t('emailConfirmation.tryLogin', 'Intentar iniciar sesión')}
+                {t('emailConfirmationTryLogin')}
               </button>
             </div>
           ) : (
             <p className="text-[11px] text-gray-400 font-medium leading-tight px-4">
-              {t('common.emailVerification.securityNote')}
+              {t('emailVerificationSecurityNote')}
             </p>
           )}
         </div>

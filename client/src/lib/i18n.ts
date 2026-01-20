@@ -10,34 +10,30 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   es: {
     translation: {
+      emailVerificationTitle: "Verifica tu correo",
+      emailVerificationDescription: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
+      emailVerificationInfo: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
+      emailVerificationConfirmButton: "Confirmar mi correo",
+      emailVerificationSecurityNote: "Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas.",
+      emailVerificationWrongEmail: "¿No eres tú?",
+      emailVerificationSignupDifferent: "Registrarse con otro correo",
+      emailConfirmationVerifying: "Verificando tu correo",
+      emailConfirmationVerifyingDescription: "Estamos validando tu enlace de verificación.",
+      emailConfirmationConfirmed: "¡Correo verificado!",
+      emailConfirmationConfirmedDescription: "Tu dirección de correo ha sido verificada con éxito.",
+      emailConfirmationFailed: "Error de Verificación",
+      emailConfirmationFailedDescription: "No pudimos validar tu enlace de verificación.",
+      emailConfirmationSuccess: "Tu correo ha sido verificado correctamente.",
+      emailConfirmationError: "Ocurrió un error al confirmar tu correo.",
+      emailConfirmationLinkExpired: "El enlace ha expirado. Por favor, solicita uno nuevo.",
+      emailConfirmationInvalidLink: "Enlace inválido o ya utilizado.",
+      emailConfirmationAlreadyVerified: "Este correo ya está verificado.",
+      emailConfirmationRedirecting: "Redirigiéndote al panel principal...",
+      emailConfirmationContinueToApp: "Ir a la Aplicación",
+      emailConfirmationSignupAgain: "Registrarse de nuevo",
+      emailConfirmationTryLogin: "Iniciar Sesión",
+      emailConfirmationTroubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email.",
       common: {
-        emailVerification: {
-          title: "Verifica tu correo",
-          description: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
-          info: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
-          confirmButton: "Confirmar mi correo",
-          securityNote: "Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas.",
-          wrongEmail: "¿No eres tú?",
-          signupDifferent: "Registrarse con otro correo"
-        },
-        emailConfirmation: {
-          verifying: "Verificando tu correo",
-          verifyingDescription: "Estamos validando tu enlace de verificación.",
-          confirmed: "¡Correo verificado!",
-          confirmedDescription: "Tu dirección de correo ha sido verificada con éxito.",
-          failed: "Error de Verificación",
-          failedDescription: "No pudimos validar tu enlace de verificación.",
-          success: "Tu correo ha sido verificado correctamente.",
-          error: "Ocurrió un error al confirmar tu correo.",
-          linkExpired: "El enlace ha expirado. Por favor, solicita uno nuevo.",
-          invalidLink: "Enlace inválido o ya utilizado.",
-          alreadyVerified: "Este correo ya está verificado.",
-          redirecting: "Redirigiéndote al panel principal...",
-          continueToApp: "Ir a la Aplicación",
-          signupAgain: "Registrarse de nuevo",
-          tryLogin: "Iniciar Sesión",
-          troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
-        },
         app: {
           title: "TERA",
           description: "Gestión de archivos de Google Drive"

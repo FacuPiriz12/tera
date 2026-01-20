@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import "@/auth-animations.css";
 
 export default function EmailVerification() {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
 
@@ -71,16 +71,16 @@ export default function EmailVerification() {
 
         <div className="space-y-4">
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">
-            {t('common.emailVerification.title')}
+            {t('emailVerificationTitle')}
           </h1>
           <p className="text-gray-500 font-medium leading-relaxed">
-            {t('common.emailVerification.description')}
+            {t('emailVerificationDescription')}
           </p>
         </div>
 
         <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 text-center animate-in slide-in-from-bottom-2 duration-500">
           <p className="text-blue-800 font-semibold text-sm leading-relaxed">
-            {t('common.emailVerification.info')}
+            {t('emailVerificationInfo')}
           </p>
         </div>
 
@@ -96,26 +96,26 @@ export default function EmailVerification() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                {t('common.status.loading')}
+                Cargando...
               </span>
             ) : (
               <>
-                {t('common.emailVerification.confirmButton')}
+                {t('emailVerificationConfirmButton')}
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
           <p className="text-[11px] text-gray-400 font-medium leading-tight px-4">
-            {t('common.emailVerification.securityNote')}
+            {t('emailVerificationSecurityNote')}
           </p>
         </div>
 
         <div className="border-t border-gray-100 pt-8">
-          <p className="text-gray-400 text-sm font-bold mb-4">{t('common.emailVerification.wrongEmail')}</p>
+          <p className="text-gray-400 text-sm font-bold mb-4">{t('emailVerificationWrongEmail')}</p>
           <Link href="/signup">
             <button className="inline-flex items-center text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors group">
               <UserPlus className="w-4 h-4 mr-2" />
-              {t('common.emailVerification.signupDifferent')}
+              {t('emailVerificationSignupDifferent')}
             </button>
           </Link>
         </div>
