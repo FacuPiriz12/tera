@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
+import { apiRequest } from "@/lib/queryClient";
+
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
   const [password, setPassword] = useState('');
@@ -18,11 +20,11 @@ export default function ResetPasswordPage() {
   const { toast } = useToast();
 
   const passwordRequirements = [
-    { label: t('auth.resetPassword.req.lowercase', 'one lowercase character'), met: /[a-z]/.test(password) },
-    { label: t('auth.resetPassword.req.special', 'one special character'), met: /[^A-Za-z0-9]/.test(password) },
-    { label: t('auth.resetPassword.req.uppercase', 'one uppercase character'), met: /[A-Z]/.test(password) },
-    { label: t('auth.resetPassword.req.minimum', '8 character minimum'), met: password.length >= 8 },
-    { label: t('auth.resetPassword.req.number', 'one number'), met: /[0-9]/.test(password) },
+    { label: t('common.resetPassword.req.lowercase'), met: /[a-z]/.test(password) },
+    { label: t('common.resetPassword.req.special'), met: /[^A-Za-z0-9]/.test(password) },
+    { label: t('common.resetPassword.req.uppercase'), met: /[A-Z]/.test(password) },
+    { label: t('common.resetPassword.req.minimum'), met: password.length >= 8 },
+    { label: t('common.resetPassword.req.number'), met: /[0-9]/.test(password) },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +33,16 @@ export default function ResetPasswordPage() {
     if (password !== confirmPassword) {
       toast({
         title: "Error",
-        description: t('auth.signup.validation.passwordsDoNotMatch', 'Las contraseñas no coinciden'),
+        description: t('auth.signup.validation.passwordsDoNotMatch'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (passwordRequirements.some(req => !req.met)) {
+      toast({
+        title: "Error",
+        description: "Password does not meet requirements",
         variant: "destructive",
       });
       return;
@@ -39,15 +50,26 @@ export default function ResetPasswordPage() {
 
     setIsSubmitting(true);
     
-    // Simulate API call for password reset
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await apiRequest("POST", "/api/auth/reset-password", { 
+        token: new URLSearchParams(window.location.search).get("token"),
+        password 
+      });
+      
       setIsSuccess(true);
       toast({
-        title: t('auth.resetPassword.successTitle', 'Contraseña actualizada'),
-        description: t('auth.resetPassword.successDesc', 'Tu contraseña ha sido restablecida con éxito.'),
+        title: t('common.resetPassword.successTitle'),
+        description: t('common.resetPassword.successDesc'),
       });
-    }, 1500);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {

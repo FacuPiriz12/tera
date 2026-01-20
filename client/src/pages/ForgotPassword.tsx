@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
+import { apiRequest } from "@/lib/queryClient";
+
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -18,15 +20,26 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call for password reset
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await apiRequest("POST", "/api/auth/forgot-password", { email });
+      
       toast({
-        title: t('auth.forgotPassword.successTitle', 'Correo enviado'),
-        description: t('auth.forgotPassword.successDesc', 'Si el correo existe, recibirás instrucciones para restablecer tu contraseña.'),
+        title: t('common.forgotPassword.successTitle'),
+        description: t('common.forgotPassword.successDesc'),
       });
-      setLocation("/login");
-    }, 1500);
+      
+      // En un flujo real, aquí el usuario iría a revisar su correo.
+      // Pero para la demo, lo llevamos al login después de un momento.
+      setTimeout(() => setLocation("/login"), 3000);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reset email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
