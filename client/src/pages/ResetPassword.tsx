@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lock, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
+import { Link } from "@/components/ui/Link";
 import logoUrl from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";

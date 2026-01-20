@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { getQueryFn } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertCircle } from "lucide-react";
-import { Link } from "wouter";
+import { Link } from "@/components/ui/Link";
 
 export default function ConnectionWarningBanner() {
   const { t } = useTranslation();
