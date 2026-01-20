@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import "@/auth-animations.css";
 
 export default function EmailVerification() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('common');
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
 

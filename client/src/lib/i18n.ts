@@ -11,6 +11,33 @@ const resources = {
   es: {
     translation: {
       common: {
+        emailVerification: {
+          title: "Verifica tu correo",
+          description: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
+          info: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
+          confirmButton: "Confirmar mi correo",
+          securityNote: "Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas.",
+          wrongEmail: "¿No eres tú?",
+          signupDifferent: "Registrarse con otro correo"
+        },
+        emailConfirmation: {
+          verifying: "Verificando tu correo",
+          verifyingDescription: "Estamos validando tu enlace de verificación.",
+          confirmed: "¡Correo verificado!",
+          confirmedDescription: "Tu dirección de correo ha sido verificada con éxito.",
+          failed: "Error de Verificación",
+          failedDescription: "No pudimos validar tu enlace de verificación.",
+          success: "Tu correo ha sido verificado correctamente.",
+          error: "Ocurrió un error al confirmar tu correo.",
+          linkExpired: "El enlace ha expirado. Por favor, solicita uno nuevo.",
+          invalidLink: "Enlace inválido o ya utilizado.",
+          alreadyVerified: "Este correo ya está verificado.",
+          redirecting: "Redirigiéndote al panel principal...",
+          continueToApp: "Ir a la Aplicación",
+          signupAgain: "Registrarse de nuevo",
+          tryLogin: "Iniciar Sesión",
+          troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
+        },
         app: {
           title: "TERA",
           description: "Gestión de archivos de Google Drive"
