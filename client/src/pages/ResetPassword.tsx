@@ -17,6 +17,14 @@ export default function ResetPasswordPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  const passwordRequirements = [
+    { label: t('auth.resetPassword.req.lowercase', 'one lowercase character'), met: /[a-z]/.test(password) },
+    { label: t('auth.resetPassword.req.special', 'one special character'), met: /[^A-Za-z0-9]/.test(password) },
+    { label: t('auth.resetPassword.req.uppercase', 'one uppercase character'), met: /[A-Z]/.test(password) },
+    { label: t('auth.resetPassword.req.minimum', '8 character minimum'), met: password.length >= 8 },
+    { label: t('auth.resetPassword.req.number', 'one number'), met: /[0-9]/.test(password) },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -77,62 +85,61 @@ export default function ResetPasswordPage() {
         </Link>
 
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {t('auth.resetPassword.title', 'Nueva Contraseña')}
+          <div className="mb-8 text-left">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {t('auth.resetPassword.title', 'Choose new password')}
             </h1>
-            <p className="text-gray-600">
-              {t('auth.resetPassword.description', 'Elige una contraseña segura para proteger tu cuenta.')}
+            <p className="text-gray-600 text-sm">
+              {t('auth.resetPassword.description', 'Almost done. Enter your new password and youre all set.')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('landing.auth.signup.passwordLabel', 'Nueva Contraseña')}
+                {t('landing.auth.signup.passwordLabel', 'New password')}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                </div>
                 <input
                   id="new-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-12 pr-12 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                  placeholder="myemailaddress@gmail.com"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-all"
                   required
-                  minLength={6}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
               </div>
             </div>
 
             <div>
               <label htmlFor="confirm-new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('landing.auth.signup.confirmPasswordLabel', 'Confirmar Contraseña')}
+                {t('landing.auth.signup.confirmPasswordLabel', 'Cofirm new password')}
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
-                </div>
                 <input
                   id="confirm-new-password"
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-all"
                   required
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-2">
+              {passwordRequirements.map((req, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center ${req.met ? 'bg-green-600' : 'bg-gray-200'}`}>
+                    <CheckCircle2 className="w-3 h-3 text-white" />
+                  </div>
+                  <span className={`text-xs ${req.met ? 'text-green-700' : 'text-gray-500'}`}>
+                    {req.label}
+                  </span>
+                </div>
+              ))}
             </div>
 
             <Button
@@ -143,15 +150,15 @@ export default function ResetPasswordPage() {
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
               ) : null}
-              {t('auth.resetPassword.submitButton', 'Actualizar Contraseña')}
+              {t('auth.resetPassword.submitButton', 'Reset password')}
             </Button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-gray-100">
+          <div className="mt-6">
             <Link href="/login">
-              <button className="w-full flex items-center justify-center text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">
+              <button className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('landing.auth.footer.back', 'Volver al inicio de sesión')}
+                {t('landing.auth.footer.back', 'Back to login')}
               </button>
             </Link>
           </div>

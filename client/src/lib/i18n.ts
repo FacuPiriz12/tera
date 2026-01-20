@@ -43,12 +43,19 @@ const resources = {
           successDesc: "Si el correo existe, recibirás instrucciones para restablecer tu contraseña."
         },
         resetPassword: {
-          title: "Nueva Contraseña",
-          description: "Elige una contraseña segura para proteger tu cuenta.",
-          submitButton: "Actualizar Contraseña",
+          title: "Choose new password",
+          description: "Almost done. Enter your new password and youre all set.",
+          submitButton: "Reset password",
           successTitle: "Contraseña actualizada",
           successDesc: "Tu contraseña ha sido restablecida con éxito.",
-          successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave."
+          successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
+          req: {
+            lowercase: "one lowercase character",
+            special: "one special character",
+            uppercase: "one uppercase character",
+            minimum: "8 character minimum",
+            number: "one number"
+          }
         },
         buttons: {
           cancel: "Cancelar",
@@ -497,12 +504,19 @@ const resources = {
           successDesc: "If the account exists, you will receive instructions to reset your password."
         },
         resetPassword: {
-          title: "New Password",
-          description: "Choose a secure password to protect your account.",
-          submitButton: "Update Password",
+          title: "Choose new password",
+          description: "Almost done. Enter your new password and youre all set.",
+          submitButton: "Reset password",
           successTitle: "Password updated",
           successDesc: "Your password has been successfully reset.",
-          successLongDesc: "Your password has been updated. You can now log in with your new password."
+          successLongDesc: "Your password has been updated. You can now log in with your new password.",
+          req: {
+            lowercase: "one lowercase character",
+            special: "one special character",
+            uppercase: "one uppercase character",
+            minimum: "8 character minimum",
+            number: "one number"
+          }
         },
         buttons: {
           cancel: "Cancel",
