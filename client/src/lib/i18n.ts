@@ -73,7 +73,11 @@ const resources = {
           tryLogin: "Iniciar Sesión",
           troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
         },
-        resetPassword: {
+        auth: {
+          login: "Iniciar Sesión",
+          logout: "Cerrar Sesión",
+          loggingOut: "Cerrando sesión...",
+          resetPassword: {
           title: "Elige una nueva contraseña",
           description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
           passwordLabel: "Nueva contraseña",

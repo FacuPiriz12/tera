@@ -9,7 +9,7 @@ import { queryClient } from "@/lib/queryClient";
 import "@/auth-animations.css";
 
 export default function EmailConfirmation() {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation(['common']);
   const [, setLocation] = useLocation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
