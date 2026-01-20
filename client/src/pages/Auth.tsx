@@ -74,7 +74,7 @@ export default function AuthPage() {
         lastName,
       }, {
         onSuccess: () => {
-          setLocation("/");
+          setLocation("/signup/success");
         }
       });
     } else {
