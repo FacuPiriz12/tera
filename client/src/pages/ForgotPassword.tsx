@@ -13,7 +13,6 @@ export default function ForgotPasswordPage() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSent, setIsSent] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -24,7 +23,7 @@ export default function ForgotPasswordPage() {
     try {
       await apiRequest("POST", "/api/auth/forgot-password", { email });
       
-      setIsSent(true);
+      setLocation(`/email-sent?email=${encodeURIComponent(email)}`);
       toast({
         title: t('common.forgotPassword.successTitle'),
         description: t('common.forgotPassword.successDesc', { email }),
@@ -39,43 +38,6 @@ export default function ForgotPasswordPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (isSent) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-full max-w-md">
-          <Link href="/">
-            <div className="flex items-center justify-center mb-12 cursor-pointer group">
-              <img src={logoUrl} alt="TERA Logo" className="h-20 w-auto group-hover:scale-105 transition-transform duration-300" />
-            </div>
-          </Link>
-
-          <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-            <div className="mb-8">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Send className="w-10 h-10 text-green-600" />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                {t('common.forgotPassword.successTitle')}
-              </h1>
-              <p className="text-gray-600 text-lg">
-                {t('common.forgotPassword.successDesc', { email })}
-              </p>
-            </div>
-
-            <div className="pt-6 border-t border-gray-100">
-              <Link href="/login">
-                <button className="w-full flex items-center justify-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {t('common.forgotPassword.backToLogin')}
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
