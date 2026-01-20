@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Lock, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
 import { useLocation } from "wouter";
 import { Link } from "@/components/ui/Link";
 import logoUrl from "@/assets/logo.png";
@@ -123,10 +123,24 @@ export default function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none transition-all"
+                  className={`w-full px-4 py-3 bg-white border rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none transition-all ${
+                    confirmPassword && password !== confirmPassword 
+                      ? 'border-red-500 focus:border-red-500' 
+                      : 'border-gray-200 focus:border-blue-500'
+                  }`}
                   required
                 />
+                {confirmPassword && password !== confirmPassword && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <XCircle className="h-5 w-5 text-red-500" />
+                  </div>
+                )}
               </div>
+              {confirmPassword && password !== confirmPassword && (
+                <p className="mt-1 text-xs text-red-500 font-medium">
+                  {t('auth.signup.validation.passwordsDoNotMatch', 'Las contraseñas no coinciden')}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-2 py-2">
