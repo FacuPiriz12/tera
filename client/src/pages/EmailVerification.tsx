@@ -7,7 +7,7 @@ import { Mail, ArrowRight } from "lucide-react";
 import CloneDriveLogo from "@/components/CloneDriveLogo";
 
 export default function EmailVerification() {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -56,10 +56,10 @@ export default function EmailVerification() {
             <CloneDriveLogo className="h-14" />
           </div>
           <CardTitle className="text-2xl font-bold">
-            {t('emailVerification.title', 'Verifica tu correo')}
+            {t('common.emailVerification.title')}
           </CardTitle>
           <CardDescription className="text-muted-foreground">
-            {t('emailVerification.description', 'Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico')}
+            {t('common.emailVerification.description')}
           </CardDescription>
         </CardHeader>
 
@@ -73,7 +73,7 @@ export default function EmailVerification() {
           <div className="space-y-4">
             <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <p className="text-sm text-blue-900 dark:text-blue-100 text-center">
-                {t('emailVerification.info', 'Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.')}
+                {t('common.emailVerification.info')}
               </p>
             </div>
 
@@ -84,10 +84,10 @@ export default function EmailVerification() {
               data-testid="button-confirm-email"
             >
               {isConfirming ? (
-                t('common:status.loading', 'Cargando...')
+                t('common.status.loading')
               ) : (
                 <>
-                  {t('emailVerification.confirmButton', 'Confirmar mi correo')}
+                  {t('common.emailVerification.confirmButton')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -95,7 +95,7 @@ export default function EmailVerification() {
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                {t('emailVerification.securityNote', 'Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas')}
+                {t('common.emailVerification.securityNote')}
               </p>
             </div>
           </div>
@@ -103,7 +103,7 @@ export default function EmailVerification() {
           <div className="pt-4 border-t">
             <div className="text-center space-y-2">
               <p className="text-sm text-muted-foreground">
-                {t('emailVerification.wrongEmail', '¿No eres tú?')}
+                {t('common.emailVerification.wrongEmail')}
               </p>
               <Button 
                 onClick={() => setLocation('/signup')}
@@ -111,7 +111,7 @@ export default function EmailVerification() {
                 size="sm"
                 data-testid="button-signup-different"
               >
-                {t('emailVerification.signupDifferent', 'Registrarse con otro correo')}
+                {t('common.emailVerification.signupDifferent')}
               </Button>
             </div>
           </div>

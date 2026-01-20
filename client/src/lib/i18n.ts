@@ -41,15 +41,28 @@ const resources = {
           logout: "Cerrar Sesión",
           loggingOut: "Cerrando sesión..."
         },
-        forgotPassword: {
-          title: "Olvidé mi contraseña",
-          description: "Introduce tu correo electrónico y te enviaremos las instrucciones para restablecer tu contraseña.",
-          emailLabel: "Correo electrónico",
-          emailPlaceholder: "tu@email.com",
-          submitButton: "Enviar instrucciones",
-          successTitle: "¡Pronto!",
-          successDesc: "Hemos enviado un email a {{email}} para confirmar.",
-          backToLogin: "Volver al inicio de sesión"
+        signupSuccess: {
+          title: "¡Registro Exitoso!",
+          subtitle: "Tu cuenta ha sido creada correctamente.",
+          checkEmailTitle: "Verifica tu bandeja de entrada",
+          checkEmailDescription: "Hemos enviado un enlace de confirmación a tu correo electrónico.",
+          nextStepsTitle: "Próximos pasos:",
+          step1: "Abre el email de confirmación.",
+          step2: "Haz clic en el enlace para verificar tu cuenta.",
+          step3: "Inicia sesión y comienza a usar TERA.",
+          continueToLogin: "Continuar al Inicio de Sesión",
+          backToHome: "Volver al Inicio",
+          noEmail: "¿No recibiste el correo?",
+          tryAgain: "Intentar de nuevo"
+        },
+        emailVerification: {
+          title: "Verifica tu correo",
+          description: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
+          info: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
+          confirmButton: "Confirmar mi correo",
+          securityNote: "Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas.",
+          wrongEmail: "¿No eres tú?",
+          signupDifferent: "Registrarse con otro correo"
         },
         resetPassword: {
           title: "Elige una nueva contraseña",
@@ -509,15 +522,28 @@ const resources = {
           logout: "Log Out",
           loggingOut: "Logging out..."
         },
-        forgotPassword: {
-          title: "Forgot password",
-          description: "Enter your email address and we'll send you instructions to reset your password.",
-          emailLabel: "Email address",
-          emailPlaceholder: "you@email.com",
-          submitButton: "Send instructions",
-          successTitle: "Ready!",
-          successDesc: "We've sent an email to {{email}} to confirm.",
-          backToLogin: "Back to login"
+        signupSuccess: {
+          title: "Signup Successful!",
+          subtitle: "Your account has been created successfully.",
+          checkEmailTitle: "Check your inbox",
+          checkEmailDescription: "We've sent a confirmation link to your email address.",
+          nextStepsTitle: "Next steps:",
+          step1: "Open the confirmation email.",
+          step2: "Click the link to verify your account.",
+          step3: "Log in and start using TERA.",
+          continueToLogin: "Continue to Login",
+          backToHome: "Back to Home",
+          noEmail: "Didn't receive the email?",
+          tryAgain: "Try again"
+        },
+        emailVerification: {
+          title: "Verify your email",
+          description: "Click the button below to confirm your email address.",
+          info: "You're one step away from completing your registration. Confirm your email to activate your account.",
+          confirmButton: "Confirm my email",
+          securityNote: "This additional step protects your account against unauthorized automatic verifications.",
+          wrongEmail: "Not you?",
+          signupDifferent: "Sign up with a different email"
         },
         resetPassword: {
           title: "Choose new password",
