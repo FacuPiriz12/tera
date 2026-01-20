@@ -55,14 +55,23 @@ const resources = {
           noEmail: "¿No recibiste el correo?",
           tryAgain: "Intentar de nuevo"
         },
-        emailVerification: {
-          title: "Verifica tu correo",
-          description: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
-          info: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
-          confirmButton: "Confirmar mi correo",
-          securityNote: "Este paso adicional protege tu cuenta contra verificaciones automáticas no autorizadas.",
-          wrongEmail: "¿No eres tú?",
-          signupDifferent: "Registrarse con otro correo"
+        emailConfirmation: {
+          verifying: "Verificando...",
+          verifyingDescription: "Estamos validando tu enlace de verificación.",
+          confirmed: "¡Correo Confirmado!",
+          confirmedDescription: "Tu dirección de correo ha sido verificada con éxito.",
+          failed: "Error de Verificación",
+          failedDescription: "No pudimos validar tu enlace de verificación.",
+          success: "Tu correo ha sido verificado correctamente.",
+          error: "Ocurrió un error al confirmar tu correo.",
+          linkExpired: "El enlace ha expirado. Por favor, solicita uno nuevo.",
+          invalidLink: "Enlace inválido o ya utilizado.",
+          alreadyVerified: "Este correo ya está verificado.",
+          redirecting: "Redirigiéndote al panel principal...",
+          continueToApp: "Ir a la Aplicación",
+          signupAgain: "Registrarse de nuevo",
+          tryLogin: "Iniciar Sesión",
+          troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
         },
         resetPassword: {
           title: "Elige una nueva contraseña",
@@ -536,14 +545,23 @@ const resources = {
           noEmail: "Didn't receive the email?",
           tryAgain: "Try again"
         },
-        emailVerification: {
-          title: "Verify your email",
-          description: "Click the button below to confirm your email address.",
-          info: "You're one step away from completing your registration. Confirm your email to activate your account.",
-          confirmButton: "Confirm my email",
-          securityNote: "This additional step protects your account against unauthorized automatic verifications.",
-          wrongEmail: "Not you?",
-          signupDifferent: "Sign up with a different email"
+        emailConfirmation: {
+          verifying: "Verifying...",
+          verifyingDescription: "We are validating your verification link.",
+          confirmed: "Email Confirmed!",
+          confirmedDescription: "Your email address has been successfully verified.",
+          failed: "Verification Failed",
+          failedDescription: "We couldn't validate your verification link.",
+          success: "Your email has been verified successfully.",
+          error: "An error occurred while confirming your email.",
+          linkExpired: "Link expired. Please request a new one.",
+          invalidLink: "Invalid link or already used.",
+          alreadyVerified: "This email is already verified.",
+          redirecting: "Redirecting to dashboard...",
+          continueToApp: "Go to App",
+          signupAgain: "Sign up again",
+          tryLogin: "Log In",
+          troubleshooting: "If the link doesn't work, ensure you click directly from the email."
         },
         resetPassword: {
           title: "Choose new password",
