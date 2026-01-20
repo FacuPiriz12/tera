@@ -78,7 +78,7 @@ const resources = {
           logout: "Cerrar Sesión",
           loggingOut: "Cerrando sesión...",
           resetPassword: {
-          title: "Elige una nueva contraseña",
+            title: "Elige una nueva contraseña",
           description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
           passwordLabel: "Nueva contraseña",
           confirmPasswordLabel: "Confirmar nueva contraseña",
