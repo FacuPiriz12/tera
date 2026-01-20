@@ -1,0 +1,65 @@
+import React from 'react';
+import { ArrowLeft, Mail, ExternalLink, Clock } from 'lucide-react';
+import { Link } from "wouter";
+// Nota: logoUrl debe apuntar a tu logo
+import logoUrl from "@/assets/logo.png";
+import "@/auth-animations.css";
+
+export default function SignupSuccess() {
+  return (
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6">
+      <div className="mb-12">
+        <Link href="/">
+          <img src={logoUrl} alt="Logo" className="h-12 w-auto cursor-pointer" />
+        </Link>
+      </div>
+
+      <div className="w-full max-w-lg bg-white rounded-[2.5rem] p-10 lg:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100 text-center space-y-8 animate-in fade-in zoom-in duration-700">
+        <div className="relative inline-block">
+          <div className="absolute inset-0 bg-blue-400 blur-3xl opacity-20 rounded-full animate-pulse"></div>
+          <div className="relative w-32 h-32 bg-gradient-to-br from-blue-50 to-white rounded-full flex items-center justify-center shadow-2xl border border-blue-50 overflow-hidden">
+             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-50/30 to-white opacity-50"></div>
+             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-lg flex items-center justify-center transform -rotate-6">
+                <Mail className="w-10 h-10 text-white" />
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-orange-500 rounded-full border-4 border-white flex items-center justify-center shadow-sm animate-spin-slow">
+                  <Clock className="w-4 h-4 text-white" />
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h1 className="text-4xl font-black text-gray-900 tracking-tight">¡Registro Exitoso!</h1>
+          <p className="text-gray-500 font-medium">
+            Tu cuenta ha sido creada correctamente. <br />
+            Por favor, revisa tu email para comenzar.
+          </p>
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 text-left space-y-4 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.04)] mx-auto w-full">
+          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4">Próximos pasos:</h3>
+          <div className="flex items-start space-x-4">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">1</span>
+            <p className="text-gray-700 font-medium">Abre el email de confirmación.</p>
+          </div>
+          <div className="flex items-start space-x-4">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">2</span>
+            <p className="text-gray-700 font-medium">Haz clic en el enlace para verificar tu cuenta.</p>
+          </div>
+          <div className="flex items-start space-x-4">
+            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">3</span>
+            <p className="text-gray-700 font-medium">Inicia sesión y comienza a usar la plataforma.</p>
+          </div>
+        </div>
+
+        <div className="space-y-4 pt-4">
+          <Link href="/auth">
+            <button className="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+              Continuar al Inicio de Sesión
+            </button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
