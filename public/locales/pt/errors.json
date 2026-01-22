@@ -1,0 +1,23 @@
+{
+  "auth": {
+    "unauthorized": "Não autorizado",
+    "loginRedirect": "Fazendo login novamente...",
+    "sessionExpired": "Sessão expirada"
+  },
+  "validation": {
+    "urlRequired": "URL obrigatória",
+    "invalidUrl": "Por favor, insira uma URL válida do Google Drive",
+    "fieldRequired": "Este campo é obrigatório"
+  },
+  "api": {
+    "copyFailed": "Não foi possível iniciar a operação de cópia. Verifique a URL do Drive.",
+    "loadFolders": "Erro ao carregar pastas",
+    "loadPreview": "Erro ao obter visualização",
+    "networkError": "Erro de rede",
+    "unknownError": "Erro desconhecido"
+  },
+  "folders": {
+    "loadError": "Erro ao carregar pastas",
+    "pathError": "Erro ao obter o caminho da pasta"
+  }
+}

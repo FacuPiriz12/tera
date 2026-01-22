@@ -2,6 +2,45 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
+// Spanish speaking countries ISO codes
+const spanishSpeakingCountries = [
+  'AR', 'BO', 'CL', 'CO', 'CR', 'CU', 'DO', 'EC', 'SV', 'GQ', 
+  'GT', 'HN', 'MX', 'NI', 'PA', 'PY', 'PE', 'PR', 'ES', 'UY', 'VE'
+];
+
+const customDetector = {
+  name: 'locationLanguageDetector',
+  lookup() {
+    // 1. Check localStorage first (user preference)
+    const saved = localStorage.getItem('i18nextLng');
+    if (saved) return saved;
+
+    // 2. Try to detect by browser language/location
+    const browserLang = navigator.language.split('-')[0].toLowerCase();
+    const browserRegion = navigator.language.split('-')[1]?.toUpperCase();
+
+    // Portuguese rule: Brazil (BR) or Portugal (PT)
+    if (browserRegion === 'BR' || browserRegion === 'PT') {
+      return 'pt';
+    }
+
+    // Spanish rule: Any Spanish speaking country
+    if (spanishSpeakingCountries.includes(browserRegion || '')) {
+      return 'es';
+    }
+
+    // Default to browser language if it's one of ours
+    if (['es', 'en', 'pt'].includes(browserLang)) {
+      return browserLang;
+    }
+
+    return 'en';
+  },
+  cacheUserLanguage(lng: string) {
+    localStorage.setItem('i18nextLng', lng);
+  }
+};
+
 const resources = {
   es: {
     translation: {
