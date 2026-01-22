@@ -66,6 +66,7 @@
   "actions": {
     "searchPlaceholder": "Search files or folders..."
   },
+  "new": "New",
   "footer": {
     "terms": "Terms of Service",
     "privacy": "Privacy Policy"

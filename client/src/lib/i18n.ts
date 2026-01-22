@@ -1243,7 +1243,8 @@ const resources = {
         },
         actions: {
           searchPlaceholder: "Buscar arquivos ou pastas..."
-        }
+        },
+        new: "Novo"
       },
       landing: {
         hero: {

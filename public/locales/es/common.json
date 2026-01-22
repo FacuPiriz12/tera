@@ -66,6 +66,7 @@
   "actions": {
     "searchPlaceholder": "Buscar archivos o carpetas..."
   },
+  "new": "Nuevo",
   "footer": {
     "terms": "Términos de Servicio",
     "privacy": "Política de Privacidad"

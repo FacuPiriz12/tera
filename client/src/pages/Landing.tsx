@@ -168,7 +168,7 @@ export default function Home() {
                   ))}
                 </div>
                 <span className="text-sm font-black text-gray-900 tracking-tight">
-                  <span className="text-blue-600">Nuevo:</span> {t('landing.hero.syncBadge')}
+                  <span className="text-blue-600">{t('common.new', { defaultValue: 'Nuevo' })}:</span> {t('landing.hero.syncBadge')}
                 </span>
                 <div className="bg-blue-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse">
                   PRO
