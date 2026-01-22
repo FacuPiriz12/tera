@@ -45,7 +45,23 @@
     "operationsPerformed": "Operaciones Realizadas",
     "completedOperations": "Operaciones Completadas",
     "successfully": "Exitosamente",
-    "recentFiles": "Archivos Recientes"
+    "recentFiles": "Archivos Recientes",
+    "noRecentFiles": "No hay archivos recientes",
+    "addedOn": "Agregado el"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No hay notificaciones",
+    "emptyDescription": "Las notificaciones de tus transferencias aparecerán aquí.",
+    "viewAll": "Ver todas las operaciones",
+    "copyOperation": "Operación de copia",
+    "files": "archivos"
+  },
+  "tasks": {
+    "title": "Tareas",
+    "empty": "Ya estás al día",
+    "emptyDescription": "Las tareas que te asignen aparecerán aquí. Vuelve más tarde para empezar a trabajar.",
+    "viewAll": "Ver todas las tareas"
   },
   "actions": {
     "searchPlaceholder": "Buscar archivos o carpetas..."

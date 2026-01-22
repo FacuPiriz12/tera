@@ -5,7 +5,7 @@
   },
   "navigation": {
     "home": "Home",
-    "files": "Files", 
+    "files": "Files",
     "operations": "Operations"
   },
   "language": {
@@ -45,7 +45,23 @@
     "operationsPerformed": "Operations Performed",
     "completedOperations": "Completed Operations",
     "successfully": "Successfully",
-    "recentFiles": "Recent Files"
+    "recentFiles": "Recent Files",
+    "noRecentFiles": "No recent files",
+    "addedOn": "Added on"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "emptyDescription": "Notifications for your transfers will appear here.",
+    "viewAll": "View all operations",
+    "copyOperation": "Copy operation",
+    "files": "files"
+  },
+  "tasks": {
+    "title": "Tasks",
+    "empty": "You're all caught up",
+    "emptyDescription": "Assigned tasks will appear here. Check back later to start working.",
+    "viewAll": "View all tasks"
   },
   "actions": {
     "searchPlaceholder": "Search files or folders..."

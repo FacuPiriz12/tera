@@ -179,7 +179,7 @@ export default function Header() {
                   className="w-[340px] p-0 bg-card border border-border shadow-xl rounded-lg overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-border">
-                    <h3 className="font-semibold text-foreground">Notificaciones</h3>
+                    <h3 className="font-semibold text-foreground">{t('common.notifications.title')}</h3>
                   </div>
                   
                   <div className="max-h-[320px] overflow-y-auto">
@@ -196,10 +196,10 @@ export default function Header() {
                               <div className="mt-0.5">{getStatusIcon(op.status)}</div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-sm truncate">
-                                  {op.sourceName || t('pages.operations.copyOperation')}
+                                  {op.sourceName || t('common.notifications.copyOperation')}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                  {getStatusText(op.status)} - {op.copiedFiles}/{op.totalFiles} {t('pages.myFiles.files')}
+                                  {getStatusText(op.status)} - {op.copiedFiles}/{op.totalFiles} {t('common.notifications.files')}
                                 </p>
                                 <p className="text-xs text-muted-foreground mt-0.5">
                                   {formatDate(op.createdAt!)}
@@ -214,9 +214,9 @@ export default function Header() {
                         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                           <Bell className="w-7 h-7 text-muted-foreground" />
                         </div>
-                        <p className="font-medium text-foreground text-sm mb-1">No hay notificaciones</p>
+                        <p className="font-medium text-foreground text-sm mb-1">{t('common.notifications.empty')}</p>
                         <p className="text-xs text-muted-foreground text-center">
-                          Las notificaciones de tus transferencias aparecerán aquí.
+                          {t('common.notifications.emptyDescription')}
                         </p>
                       </div>
                     )}
@@ -229,7 +229,7 @@ export default function Header() {
                       className="w-full text-center text-sm text-primary hover:text-primary/80 py-2 font-medium transition-colors"
                       data-testid="link-all-operations"
                     >
-                      Ver todas las operaciones
+                      {t('common.notifications.viewAll')}
                     </button>
                   </div>
                 </DropdownMenuContent>
@@ -253,7 +253,7 @@ export default function Header() {
                   className="w-[340px] p-0 bg-card border border-border shadow-xl rounded-lg overflow-hidden"
                 >
                   <div className="px-4 py-3 border-b border-border">
-                    <h3 className="font-semibold text-foreground">Tareas</h3>
+                    <h3 className="font-semibold text-foreground">{t('common.tasks.title')}</h3>
                   </div>
                   
                   <div className="max-h-[320px] overflow-y-auto">
@@ -265,9 +265,9 @@ export default function Header() {
                           <CheckCircle className="w-4 h-4 text-green-500 absolute -right-1 -bottom-0.5" />
                         </div>
                       </div>
-                      <p className="font-medium text-foreground text-sm mb-1">Ya estás al día</p>
+                      <p className="font-medium text-foreground text-sm mb-1">{t('common.tasks.empty')}</p>
                       <p className="text-xs text-muted-foreground text-center">
-                        Las tareas que te asignen aparecerán aquí. Vuelve más tarde para empezar a trabajar.
+                        {t('common.tasks.emptyDescription')}
                       </p>
                     </div>
                   </div>
@@ -279,7 +279,7 @@ export default function Header() {
                       className="w-full text-center text-sm text-primary hover:text-primary/80 py-2 font-medium transition-colors"
                       data-testid="link-all-tasks"
                     >
-                      Ver todas las tareas
+                      {t('common.tasks.viewAll')}
                     </button>
                   </div>
                 </DropdownMenuContent>

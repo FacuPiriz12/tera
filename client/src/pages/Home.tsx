@@ -315,7 +315,7 @@ export default function Home() {
                           {file.name}
                         </div>
                         <div className="text-[0.8rem] text-muted-foreground">
-                          Agregado el {new Date(file.createdAt!).toLocaleDateString()}
+                          {t('common.dashboard.addedOn')} {new Date(file.createdAt!).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="flex gap-3 opacity-0 hover:opacity-100 transition-opacity">
@@ -331,7 +331,7 @@ export default function Home() {
                 ) : (
                   <div className="text-center py-12">
                     <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No hay archivos recientes</p>
+                    <p className="text-muted-foreground">{t('common.dashboard.noRecentFiles')}</p>
                   </div>
                 )}
               </div>

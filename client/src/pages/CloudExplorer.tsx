@@ -459,10 +459,10 @@ export default function CloudExplorer() {
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
               <ArrowRightLeft className="w-8 h-8 text-primary" />
-              <h1 className="text-3xl font-bold text-gray-900">Explorador Multi-nube</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{t('pages.cloudExplorer.title', { defaultValue: 'Explorador Multi-nube' })}</h1>
             </div>
             <p className="text-gray-600">
-              Transfiere archivos entre tus servicios de nube de forma rápida y sencilla.
+              {t('pages.cloudExplorer.subtitle', { defaultValue: 'Transfiere archivos entre tus servicios de nube de forma rápida y sencilla.' })}
             </p>
           </div>
 
