@@ -1,9 +1,4 @@
 import i18n from 'i18next';
-// Note: Add the following translation keys to the Spanish (es) translations:
-// 'auth.resetPassword.newPasswordLabel': 'Nueva contraseña'
-// 
-// And for English (en) translations:
-// 'auth.resetPassword.newPasswordLabel': 'New password'
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
@@ -33,6 +28,12 @@ const resources = {
       emailConfirmationSignupAgain: "Registrarse de nuevo",
       emailConfirmationTryLogin: "Iniciar Sesión",
       emailConfirmationTroubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email.",
+      forgotPasswordTitle: "Recuperar contraseña",
+      forgotPasswordDescription: "Introduce tu correo electrónico y te enviaremos las instrucciones.",
+      forgotPasswordEmailLabel: "Correo electrónico",
+      forgotPasswordEmailPlaceholder: "tu@email.com",
+      forgotPasswordSubmitButton: "Enviar enlace",
+      forgotPasswordBackToLogin: "Volver al inicio de sesión",
       common: {
         app: {
           title: "TERA",
@@ -502,40 +503,51 @@ const resources = {
           },
           section12: {
             title: "12. Divisibilidad",
-            content: "Si alguna parte de estos términos es inválida, el resto seguirá siendo vigente."
-          },
-          section13: {
-            title: "13. Ley Aplicable",
-            content: "Estos términos se rigen por las leyes internacionales de comercio electrónico."
-          },
-          section14: {
-            title: "14. Contacto",
-            content: "Para dudas legales, contáctanos.",
-            email: "legal@tera.cloud"
+            content: "Si alguna disposición de estos términos es declarada inválida, las demás seguirán vigentes."
           }
-        },
-        notFound: {
-          title: "Página no encontrada",
-          description: "Lo sentimos, la página que estás buscando no existe."
-        },
-        errors: {
-          loginFailed: "Error al iniciar sesión",
-          signupFailed: "Error al crear cuenta",
-          tryAgain: "Por favor, inténtalo de nuevo"
         }
       }
     }
   },
   en: {
     translation: {
+      emailVerificationTitle: "Verify your email",
+      emailVerificationDescription: "Click the button below to confirm your email address.",
+      emailVerificationInfo: "You're one step away from completing your registration. Confirm your email to activate your account.",
+      emailVerificationConfirmButton: "Confirm my email",
+      emailVerificationSecurityNote: "This additional step protects your account against unauthorized automatic verifications.",
+      emailVerificationWrongEmail: "Not you?",
+      emailVerificationSignupDifferent: "Sign up with a different email",
+      emailConfirmationVerifying: "Verifying your email",
+      emailConfirmationVerifyingDescription: "We are validating your verification link.",
+      emailConfirmationConfirmed: "Email verified!",
+      emailConfirmationConfirmedDescription: "Your email address has been successfully verified.",
+      emailConfirmationFailed: "Verification Error",
+      emailConfirmationFailedDescription: "We couldn't validate your verification link.",
+      emailConfirmationSuccess: "Your email has been successfully verified.",
+      emailConfirmationError: "An error occurred while confirming your email.",
+      emailConfirmationLinkExpired: "The link has expired. Please request a new one.",
+      emailConfirmationInvalidLink: "Invalid or already used link.",
+      emailConfirmationAlreadyVerified: "This email is already verified.",
+      emailConfirmationRedirecting: "Redirecting you to the main dashboard...",
+      emailConfirmationContinueToApp: "Go to App",
+      emailConfirmationSignupAgain: "Sign up again",
+      emailConfirmationTryLogin: "Log In",
+      emailConfirmationTroubleshooting: "If the link doesn't work, make sure to click it directly from the email.",
+      forgotPasswordTitle: "Recover Password",
+      forgotPasswordDescription: "Enter your email address and we'll send you instructions.",
+      forgotPasswordEmailLabel: "Email address",
+      forgotPasswordEmailPlaceholder: "you@email.com",
+      forgotPasswordSubmitButton: "Send link",
+      forgotPasswordBackToLogin: "Back to login",
       common: {
         app: {
           title: "TERA",
-          description: "Google Drive file management"
+          description: "Google Drive File Management"
         },
         navigation: {
           home: "Home",
-          files: "Files", 
+          files: "Files",
           operations: "Operations",
           myFiles: "My Files",
           sharedDrives: "Shared Drives",
@@ -551,7 +563,7 @@ const resources = {
           select: "Select language",
           spanish: "Español",
           english: "English",
-          portuguese: "Portuguese",
+          portuguese: "Português",
           switchLanguage: "Switch language"
         },
         auth: {
@@ -578,35 +590,40 @@ const resources = {
           verifyingDescription: "We are validating your verification link.",
           confirmed: "Email Confirmed!",
           confirmedDescription: "Your email address has been successfully verified.",
-          failed: "Verification Failed",
+          failed: "Verification Error",
           failedDescription: "We couldn't validate your verification link.",
-          success: "Your email has been verified successfully.",
+          success: "Your email has been successfully verified.",
           error: "An error occurred while confirming your email.",
-          linkExpired: "Link expired. Please request a new one.",
-          invalidLink: "Invalid link or already used.",
+          linkExpired: "The link has expired. Please request a new one.",
+          invalidLink: "Invalid or already used link.",
           alreadyVerified: "This email is already verified.",
-          redirecting: "Redirecting to dashboard...",
+          redirecting: "Redirecting you to the main dashboard...",
           continueToApp: "Go to App",
           signupAgain: "Sign up again",
           tryLogin: "Log In",
-          troubleshooting: "If the link doesn't work, ensure you click directly from the email."
+          troubleshooting: "If the link doesn't work, make sure to click it directly from the email."
         },
-        resetPassword: {
-          title: "Choose new password",
-          description: "Almost done. Enter your new password and you're all set.",
-          passwordLabel: "New password",
-          confirmPasswordLabel: "Confirm new password",
-          submitButton: "Reset password",
-          successTitle: "Password updated",
-          successDesc: "Your password has been successfully reset.",
-          successLongDesc: "Your password has been updated. You can now log in with your new password.",
-          backToLogin: "Back to login",
-          req: {
-            lowercase: "one lowercase character",
-            special: "one special character",
-            uppercase: "one uppercase character",
-            minimum: "8 character minimum",
-            number: "one number"
+        auth: {
+          login: "Log In",
+          logout: "Log Out",
+          loggingOut: "Logging out...",
+          resetPassword: {
+            title: "Choose a new password",
+            description: "Almost ready. Enter your new password and you'll be set.",
+            passwordLabel: "New password",
+            confirmPasswordLabel: "Confirm new password",
+            submitButton: "Reset password",
+            successTitle: "Password updated",
+            successDesc: "Your password has been successfully reset.",
+            successLongDesc: "Your password has been updated. You can now log in with your new key.",
+            backToLogin: "Back to login",
+            req: {
+              lowercase: "one lowercase",
+              special: "one special character",
+              uppercase: "one uppercase",
+              minimum: "minimum 8 characters",
+              number: "one number"
+            }
           }
         },
         buttons: {
@@ -647,8 +664,8 @@ const resources = {
           subtitle: "Real Intelligence",
           description: "TERA is the bridge between your clouds. Transfer files between platforms, schedule automatic backups, and connect your favorite tools in seconds.",
           ctaButton: "Start for free today",
-          demoButton: "See demo",
-          integrationsLabel: "Top Integrations",
+          demoButton: "Watch demo",
+          integrationsLabel: "Best Integrations",
           syncBadge: "Auto-Sync",
           transferLabel: "Transfer",
           backupLabel: "Backup",
@@ -657,7 +674,7 @@ const resources = {
           freedLabel: "Freed",
           duplicatesLabel: "Duplicates",
           securityBadge: "Active Security",
-          encryptionLabel: "256-bit encryption"
+          encryptionLabel: "256-bit Encryption"
         },
         features: {
           title: "Products"
@@ -675,7 +692,7 @@ const resources = {
           learnMore: "Learn more",
           feature1: {
             title: "Multi-cloud Transfers",
-            description: "Move gigabytes between Dropbox, Drive and OneDrive with a single click. Without downloading anything to your computer."
+            description: "Move gigabytes between Dropbox, Drive, and OneDrive with a single click. No downloads to your machine."
           },
           feature2: {
             title: "Smart Backups",
@@ -683,7 +700,7 @@ const resources = {
           },
           feature3: {
             title: "+50 Native Integrations",
-            description: "Connect Slack, Teams, Notion and all your work tools to centralize your digital ecosystem."
+            description: "Connect Slack, Teams, Notion, and all your work tools to centralize your digital ecosystem."
           }
         },
         ai: {
@@ -691,20 +708,20 @@ const resources = {
           subtitle: "TERA executes them for you.",
           description: "Set up powerful workflows in seconds. TERA monitors your files 24/7 and performs repetitive tasks so you don't have to.",
           panelTitle: "Automation Panel",
-          panelStatus: "Active Intelligent System",
-          aiMessage: "\"I have detected 150 new files in your Dropbox. Do you want me to start the automatic migration to your 2024 Projects folder in Google Drive?\"",
+          panelStatus: "Smart System Active",
+          aiMessage: "\"I've detected 150 new files in your Dropbox. Would you like me to start the automatic migration to your Projects 2024 folder in Google Drive?\"",
           userResponse: "\"Yes, please. And delete duplicates older than 6 months.\"",
           progressLabel: "Migration in progress",
           suggestions: {
             suggestion1: "Move my files from Dropbox to Google Drive",
-            suggestion2: "Create a backup of my photos in OneDrive",
-            suggestion3: "What clouds do I currently have integrated?",
+            suggestion2: "Back up my photos to OneDrive",
+            suggestion3: "What clouds do I have currently integrated?",
             suggestion4: "Transfer the 'Projects' folder to my Box account",
-            suggestion5: "Sync my Notion folder with my Drive"
+            suggestion5: "Synchronize my Notion folder with my Drive"
           }
         },
         security: {
-          badge: "Security without Compromise",
+          badge: "No Compromise Security",
           title: "Sleeping soundly is part of the plan",
           description: "We don't skimp on security. TERA uses the same protocols as global financial institutions to ensure your data never falls into the wrong hands.",
           whitepaperButton: "Read our Security Whitepaper",
@@ -713,13 +730,13 @@ const resources = {
           zeroKnowledgeTitle: "Zero Knowledge",
           zeroKnowledgeDesc: "Your keys are yours alone. Not even we can see your files.",
           auditTitle: "Real Audit",
-          auditDesc: "Detailed logs of every movement for your total control.",
+          auditDesc: "Detailed logs of every move for your total control.",
           syncTitle: "Synchronization",
-          syncDesc: "Your clouds always in harmony, protected by our intelligent firewall."
+          syncDesc: "Your clouds always in harmony, protected by our smart firewall."
         },
         cta: {
-          title: "The future of your files starts today.",
-          description: "Join over 85,000 professionals who have already optimized their digital ecosystem with TERA. No cards, no complications.",
+          title: "The future of your files begins today.",
+          description: "Join more than 85,000 professionals who have already optimized their digital ecosystem with TERA. No cards, no complications.",
           createAccount: "Create my free account",
           talkToSales: "Talk to sales"
         },
@@ -732,30 +749,30 @@ const resources = {
           cookies: "Cookies",
           compliance: "Compliance",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
-          status: "Operating Systems",
+          status: "Systems Operational",
           back: "Back"
         },
         auth: {
           login: {
             title: "Welcome back!",
-            welcomeMessages: ["Welcome back!", "Hello again!", "Great to see you"],
+            welcomeMessages: ["Welcome back!", "Hello again!", "Good to see you"],
             emailLabel: "Email address",
             emailPlaceholder: "you@email.com",
             passwordLabel: "Password",
             passwordPlaceholder: "Your password",
-            signInButton: "Sign In",
+            signInButton: "Log In",
             noAccount: "Don't have an account? Sign up",
-            forgotPassword: "Forgot password?"
+            forgotPassword: "Forgot your password?"
           },
           signup: {
             title: "Create your account",
-            nameLabel: "Full Name",
+            nameLabel: "Full name",
             namePlaceholder: "Your name",
             emailLabel: "Email address",
             emailPlaceholder: "you@email.com",
             passwordLabel: "Password",
             passwordPlaceholder: "Create a password",
-            confirmPasswordLabel: "Confirm Password",
+            confirmPasswordLabel: "Confirm password",
             confirmPasswordPlaceholder: "Repeat your password",
             createAccountButton: "Create Account",
             hasAccount: "Already have an account?",
@@ -788,7 +805,7 @@ const resources = {
             subsection1: {
               title: "Account Information",
               item1: "Name and email address",
-              item2: "Setting preferences",
+              item2: "Configuration preferences",
               item3: "Billing information"
             },
             subsection2: {
@@ -799,16 +816,16 @@ const resources = {
               item4: "File metadata (without accessing content)"
             },
             subsection3: {
-              title: "Third-Party Integrations",
-              intro: "When connecting services like Google Drive or Dropbox, we collect:",
+              title: "Third-party Integrations",
+              intro: "By connecting services like Google Drive or Dropbox, we collect:",
               item1: "Access tokens (encrypted)",
               item2: "List of files and folders",
-              item3: "Service user ID"
+              item3: "External service user ID"
             }
           },
           section3: {
             title: "3. How We Use Your Information",
-            intro: "We use collected data to:",
+            intro: "We use the collected data to:",
             item1: "Provide and maintain the service",
             item2: "Process your file transfers",
             item3: "Improve platform security",
@@ -829,7 +846,7 @@ const resources = {
               intro: "We keep your information only as long as necessary:",
               item1: "Account data: While account is active",
               item2: "Logs: Up to 12 months for audit purposes",
-              item3: "File cache: Temporary until operation completion"
+              item3: "File cache: Temporary until operation complete"
             },
             subsection3: {
               title: "Server Location",
@@ -837,7 +854,7 @@ const resources = {
               intro: "We guarantee:",
               item1: "High availability",
               item2: "Daily backups",
-              item3: "Data isolation per user",
+              item3: "User data isolation",
               item4: "Regional compliance"
             }
           },
@@ -847,15 +864,15 @@ const resources = {
               title: "Control over your data",
               item1: "Right of access",
               item2: "Right of rectification",
-              item3: "Right of erasure (to be forgotten)"
+              item3: "Right of erasure (forgetting)"
             },
             subsection2: {
               title: "Other powers",
               item1: "Data portability",
               item2: "Restriction of processing",
-              item3: "Opposition to direct marketing",
+              item3: "Objection to direct marketing",
               item4: "Withdrawal of consent",
-              item5: "Complaint filing"
+              item5: "Filing complaints"
             },
             subsection3: {
               title: "How to exercise your rights",
@@ -863,13 +880,13 @@ const resources = {
             }
           },
           section6: {
-            title: "6. Information Sharing",
+            title: "6. Sharing Information",
             intro: "We never sell your personal data. We only share information with:",
             subsection1: {
               title: "Authorized third parties",
               item1: "Payment processors (Stripe)",
               item2: "Infrastructure services (AWS/Google Cloud)",
-              item3: "Anonymous analytics tools",
+              item3: "Anonymous analysis tools",
               item4: "Legal authorities if required"
             },
             subsection2: {
@@ -884,13 +901,13 @@ const resources = {
             item2: "Remember your preferences",
             item3: "Analyze performance",
             item4: "Prevent fraud",
-            item5: "Browsing security",
+            item5: "Navigation security",
             item6: "Improve interface"
           },
           section8: {
-            title: "8. Children's Privacy",
-            intro: "Our service is not directed to children under 13. If we detect data from minors without parental consent:",
-            item1: "We will proceed to immediate deletion",
+            title: "8. Minor Privacy",
+            intro: "Our service is not directed at minors under 13. If we detect data of minors without parental consent:",
+            item1: "We will proceed to immediate removal",
             item2: "We will notify guardians if possible",
             item3: "We will block account access"
           },
@@ -934,7 +951,7 @@ const resources = {
           },
           section3: {
             title: "3. User Responsibilities",
-            intro: "As a TERA user, you commit to:",
+            intro: "As a TERA user, you agree to:",
             item1: "Provide truthful information",
             item2: "Maintain account security",
             item3: "Not use the service for illegal purposes",
@@ -942,7 +959,7 @@ const resources = {
           },
           section4: {
             title: "4. Intellectual Property",
-            intro: "Our policy on intellectual property includes:",
+            intro: "Our intellectual property policy includes:",
             item1: "TERA owns the platform and its code",
             item2: "You maintain total ownership of your files",
             item3: "We do not claim rights over your content",
@@ -954,78 +971,89 @@ const resources = {
             title: "5. Limitation of Liability",
             intro: "TERA is not responsible for:",
             item1: "Data loss due to third-party failures",
-            item2: "Service interruptions beyond our control",
-            item3: "Improper account use by the user"
+            item2: "Service interruptions beyond our reasonable control",
+            item3: "Misuse of account by the user"
           },
           section6: {
             title: "6. Suspension and Termination",
             intro: "We may suspend your account if:",
             item1: "You violate these terms",
-            item2: "You perform suspicious activities",
+            item2: "Suspicious activities are performed",
             item3: "Required by a legal authority",
-            item4: "Lack of payment in premium plans"
+            item4: "There is non-payment for premium plans"
           },
           section7: {
             title: "7. Fees and Payments",
-            content: "Premium plans are billed monthly or annually. No partial refunds unless required by law."
+            content: "Premium plans are billed monthly or annually. There are no partial refunds unless required by law."
           },
           section8: {
             title: "8. Service Modifications",
             content: "We reserve the right to modify or discontinue any part of the service with prior notice."
           },
           section9: {
-            title: "9. API Use",
+            title: "9. API Usage",
             intro: "The use of our integrations implies:",
             item1: "Compliance with provider quotas",
             item2: "No reverse engineering",
-            item3: "Responsible resource use",
+            item3: "Responsible use of resources",
             item4: "Respect for authentication tokens",
             item5: "Security in API calls"
           },
           section10: {
             title: "10. Privacy",
-            content: "Use of the service is also governed by our Privacy Policy."
+            content: "Service usage is also governed by our Privacy Policy."
           },
           section11: {
             title: "11. Force Majeure",
-            content: "We will not be liable for failures due to causes beyond our reasonable control."
+            content: "We will not be responsible for failures due to causes beyond our reasonable control."
           },
           section12: {
             title: "12. Severability",
-            content: "If any part of these terms is invalid, the rest will remain in effect."
-          },
-          section13: {
-            title: "13. Governing Law",
-            content: "These terms are governed by international electronic commerce laws."
-          },
-          section14: {
-            title: "14. Contact",
-            content: "For legal questions, contact us.",
-            email: "legal@tera.cloud"
+            content: "If any provision of these terms is declared invalid, the rest will remain in force."
           }
-        },
-        notFound: {
-          title: "Page Not Found",
-          description: "Sorry, the page you are looking for does not exist."
-        },
-        errors: {
-          loginFailed: "Login failed",
-          signupFailed: "Signup failed",
-          tryAgain: "Please try again"
         }
       }
     }
   },
   pt: {
     translation: {
+      emailVerificationTitle: "Verifique seu e-mail",
+      emailVerificationDescription: "Clique no botão abaixo para confirmar seu endereço de e-mail.",
+      emailVerificationInfo: "Você está a um passo de concluir seu cadastro. Confirme seu e-mail para ativar sua conta.",
+      emailVerificationConfirmButton: "Confirmar meu e-mail",
+      emailVerificationSecurityNote: "Esta etapa adicional protege sua conta contra verificações automáticas não autorizadas.",
+      emailVerificationWrongEmail: "Não é você?",
+      emailVerificationSignupDifferent: "Cadastrar com outro e-mail",
+      emailConfirmationVerifying: "Verificando seu e-mail",
+      emailConfirmationVerifyingDescription: "Estamos validando seu link de verificação.",
+      emailConfirmationConfirmed: "E-mail verificado!",
+      emailConfirmationConfirmedDescription: "Seu endereço de e-mail foi verificado com sucesso.",
+      emailConfirmationFailed: "Erro de Verificação",
+      emailConfirmationFailedDescription: "Não pudemos validar seu link de verificação.",
+      emailConfirmationSuccess: "Seu e-mail foi verificado com sucesso.",
+      emailConfirmationError: "Ocorreu um erro ao confirmar seu e-mail.",
+      emailConfirmationLinkExpired: "O link expirou. Por favor, solicite um novo.",
+      emailConfirmationInvalidLink: "Link inválido ou já utilizado.",
+      emailConfirmationAlreadyVerified: "Este e-mail já está verificado.",
+      emailConfirmationRedirecting: "Redirecionando para o painel principal...",
+      emailConfirmationContinueToApp: "Ir para a Aplicação",
+      emailConfirmationSignupAgain: "Cadastrar novamente",
+      emailConfirmationTryLogin: "Iniciar Sessão",
+      emailConfirmationTroubleshooting: "Se o link não funcionar, certifique-se de clicar diretamente do e-mail.",
+      forgotPasswordTitle: "Recuperar senha",
+      forgotPasswordDescription: "Digite seu endereço de e-mail e enviaremos as instruções.",
+      forgotPasswordEmailLabel: "Endereço de e-mail",
+      forgotPasswordEmailPlaceholder: "voce@email.com",
+      forgotPasswordSubmitButton: "Enviar link",
+      forgotPasswordBackToLogin: "Voltar para o login",
       common: {
         app: {
           title: "TERA",
-          description: "Gerenciamento de arquivos do Google Drive"
+          description: "Gestão de arquivos do Google Drive"
         },
         navigation: {
           home: "Início",
-          files: "Arquivos", 
+          files: "Arquivos",
           operations: "Operações",
           myFiles: "Meus Arquivos",
           sharedDrives: "Drives Compartilhados",
@@ -1042,12 +1070,67 @@ const resources = {
           spanish: "Español",
           english: "English",
           portuguese: "Português",
-          switchLanguage: "Alterar idioma"
+          switchLanguage: "Mudar idioma"
         },
         auth: {
-          login: "Entrar",
+          login: "Iniciar Sessão",
           logout: "Sair",
           loggingOut: "Saindo..."
+        },
+        signupSuccess: {
+          title: "Cadastro com Sucesso!",
+          subtitle: "Sua conta foi criada corretamente.",
+          checkEmailTitle: "Verifique sua caixa de entrada",
+          checkEmailDescription: "Enviamos un link de confirmação para seu e-mail.",
+          nextStepsTitle: "Próximos passos:",
+          step1: "Abra o e-mail de confirmação.",
+          step2: "Clique no link para verificar sua conta.",
+          step3: "Inicie sessão e comece a usar o TERA.",
+          continueToLogin: "Continuar para o Login",
+          backToHome: "Voltar para o Início",
+          noEmail: "Não recebeu o e-mail?",
+          tryAgain: "Tentar novamente"
+        },
+        emailConfirmation: {
+          verifying: "Verificando...",
+          verifyingDescription: "Estamos validando seu link de verificação.",
+          confirmed: "E-mail Confirmado!",
+          confirmedDescription: "Seu endereço de e-mail foi verificado com sucesso.",
+          failed: "Erro de Verificação",
+          failedDescription: "Não pudemos validar seu link de verificação.",
+          success: "Seu e-mail foi verificado com sucesso.",
+          error: "Ocorreu um erro ao confirmar seu e-mail.",
+          linkExpired: "O link expirou. Por favor, solicite um novo.",
+          invalidLink: "Link inválido ou já utilizado.",
+          alreadyVerified: "Este e-mail já está verificado.",
+          redirecting: "Redirecionando para o painel principal...",
+          continueToApp: "Ir para a Aplicação",
+          signupAgain: "Cadastrar novamente",
+          tryLogin: "Iniciar Sessão",
+          troubleshooting: "Se o link não funcionar, certifique-se de clicar diretamente do e-mail."
+        },
+        auth: {
+          login: "Iniciar Sessão",
+          logout: "Sair",
+          loggingOut: "Saindo...",
+          resetPassword: {
+            title: "Escolha uma nova senha",
+            description: "Quase pronto. Digite sua nova senha e você estará preparado.",
+            passwordLabel: "Nova senha",
+            confirmPasswordLabel: "Confirmar nova senha",
+            submitButton: "Redefinir senha",
+            successTitle: "Senha atualizada",
+            successDesc: "Sua senha foi redefinida com sucesso.",
+            successLongDesc: "Sua senha foi atualizada. Agora você pode iniciar sessão com sua nova chave.",
+            backToLogin: "Voltar para o login",
+            req: {
+              lowercase: "uma minúscula",
+              special: "um caractere especial",
+              uppercase: "uma maiúscula",
+              minimum: "mínimo 8 caracteres",
+              number: "um número"
+            }
+          }
         },
         buttons: {
           cancel: "Cancelar",
@@ -1057,17 +1140,34 @@ const resources = {
           retry: "Repetir",
           back: "Voltar",
           next: "Próximo",
-          change: "Alterar",
+          change: "Mudar",
           select: "Selecionar"
         },
         status: {
           loading: "Carregando..."
+        },
+        dashboard: {
+          noAccountConnected: "Nenhuma conta conectada",
+          integrations: "Integrações",
+          toStartWorking: "para começar a trabalhar",
+          totalFiles: "Arquivos Totais",
+          filesManaged: "Arquivos Gerenciados",
+          activeOperations: "Operações Ativas",
+          inProgress: "Em Progresso",
+          totalOperations: "Operações Totais",
+          operationsPerformed: "Operações Realizadas",
+          completedOperations: "Operações Concluídas",
+          successfully: "Com Sucesso",
+          recentFiles: "Arquivos Recentes"
+        },
+        actions: {
+          searchPlaceholder: "Buscar arquivos ou pastas..."
         }
       },
       landing: {
         hero: {
           title: "Mova e proteja seus arquivos com",
-          subtitle: "Inteligencia Real",
+          subtitle: "Inteligência Real",
           description: "TERA é a ponte entre suas nuvens. Transfira arquivos entre plataformas, agende backups automáticos e conecte suas ferramentas favoritas em segundos.",
           ctaButton: "Comece grátis hoje",
           demoButton: "Ver demonstração",
@@ -1082,20 +1182,23 @@ const resources = {
           securityBadge: "Segurança Ativa",
           encryptionLabel: "Criptografia de 256 bits"
         },
+        features: {
+          title: "Produtos"
+        },
         stats: {
           filesMoved: "Arquivos Movidos",
           activeUsers: "Usuários Ativos",
-          guaranteedUptime: "Tempo de Atividade Garantido",
+          guaranteedUptime: "Uptime Garantido",
           bankingSecurity: "Segurança Bancária"
         },
         benefits: {
           badge: "Produtos",
-          title: "Todo o seu conteúdo, conectado",
-          description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos lo que importa.",
-          learnMore: "Saiba mais",
+          title: "Todo seu conteúdo, conectado",
+          description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos o que importa.",
+          learnMore: "Saber mais",
           feature1: {
             title: "Transferências Multi-nuvem",
-            description: "Mova gigabytes entre Dropbox, Drive e OneDrive com um único clique. Sem baixar nada para o seu computador."
+            description: "Mova gigabytes entre Dropbox, Drive e OneDrive com um único clique. Sem baixar nada para seu computador."
           },
           feature2: {
             title: "Backups Inteligentes",
@@ -1108,30 +1211,30 @@ const resources = {
         },
         ai: {
           title: "Você define as regras,",
-          subtitle: "TERA as executa para você.",
-          description: "Configure fluxos de trabalho potentes em segundos. A TERA monitora seus arquivos 24 horas por dia, 7 dias por semana e realiza as tarefas repetitivas para que você não precise fazer.",
+          subtitle: "o TERA as executa para você.",
+          description: "Configure fluxos de trabalho potentes em segundos. O TERA monitora seus arquivos 24 horas por dia, 7 días por semana e realiza as tarefas repetitivas para que você não precise fazer.",
           panelTitle: "Painel de Automação",
-          panelStatus: "Sistema Inteligente Activo",
-          aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Deseja que eu inicie a migração automática para sua pasta Projetos 2024 no Google Drive?\"",
-          userResponse: "\"Sim, por favor. E exclua duplicatas com mais de 6 meses.\"",
+          panelStatus: "Sistema Inteligente Ativo",
+          aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Você gostaria que eu iniciasse a migração automática para sua pasta de Projetos 2024 no Google Drive?\"",
+          userResponse: "\"Sim, por favor. E remova os duplicados com mais de 6 meses.\"",
           progressLabel: "Migração em curso",
           suggestions: {
             suggestion1: "Mova meus arquivos do Dropbox para o Google Drive",
             suggestion2: "Crie um backup das minhas fotos no OneDrive",
-            suggestion3: "Quais nuvens eu tenho integradas atualmente?",
+            suggestion3: "Quais nuvens tenho integradas atualmente?",
             suggestion4: "Transfira a pasta 'Projetos' para minha conta do Box",
             suggestion5: "Sincronize minha pasta do Notion com meu Drive"
           }
         },
         security: {
-          badge: "Segurança sem Compromisso",
+          badge: "Segurança sem Compromissos",
           title: "Dormir tranquilo faz parte do plano",
-          description: "Não economizamos na segurança. A TERA usa os mesmos protocolos que as instituições financeiras globais para garantir que seus dados nunca caiam em mãos erradas.",
+          description: "Não economizamos em segurança. O TERA usa os mesmos protocolos que as instituições financeiras globais para garantir que seus dados nunca caiam em mãos erradas.",
           whitepaperButton: "Leia nosso Whitepaper de Segurança",
           aesTitle: "AES-256",
           aesDesc: "Criptografia de nível militar para cada bit de informação.",
           zeroKnowledgeTitle: "Zero Knowledge",
-          zeroKnowledgeDesc: "Suas chaves são apenas suas. Nem nós podemos ver seus arquivos.",
+          zeroKnowledgeDesc: "Suas chaves são apenas suas. Nem mesmo nós podemos ver seus arquivos.",
           auditTitle: "Auditoria Real",
           auditDesc: "Registros detalhados de cada movimento para seu controle total.",
           syncTitle: "Sincronização",
@@ -1139,12 +1242,12 @@ const resources = {
         },
         cta: {
           title: "O futuro dos seus arquivos começa hoje.",
-          description: "Junte-se a mais de 85.000 profissionais que já otimizaram seu ecossistema digital com a TERA. Sem cartões, sem complicações.",
+          description: "Junte-se a mais de 85.000 profissionais que já otimizaram seu ecossistema digital com o TERA. Sem cartões, sem complicações.",
           createAccount: "Criar minha conta grátis",
           talkToSales: "Falar com vendas"
         },
         footer: {
-          description: "Elevando a gestão de arquivos a una nova dimensão de inteligência e seguridad.",
+          description: "Elevando a gestão de arquivos a uma nova dimensão de inteligência e segurança.",
           platform: "Plataforma",
           legal: "Legal",
           privacy: "Privacidade",
@@ -1152,35 +1255,36 @@ const resources = {
           cookies: "Cookies",
           compliance: "Conformidade",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
-          status: "Sistemas Operacionais"
+          status: "Sistemas Operacionais",
+          back: "Volver"
         },
         auth: {
           login: {
             title: "Bem-vindo de volta!",
-            welcomeMessages: ["Bem-vindo de volta!", "Olá de novo!", "Bom ver você"],
+            welcomeMessages: ["Bem-vindo de volta!", "Olá novamente!", "Que bom ver você"],
             emailLabel: "Endereço de e-mail",
-            emailPlaceholder: "seu@email.com",
+            emailPlaceholder: "voce@email.com",
             passwordLabel: "Senha",
             passwordPlaceholder: "Sua senha",
             signInButton: "Entrar",
-            noAccount: "Não tem uma conta? Cadastre-se",
-            forgotPassword: "Esqueceu a senha?"
+            noAccount: "Não tem conta? Cadastre-se",
+            forgotPassword: "Esqueceu sua senha?"
           },
           signup: {
             title: "Crie sua conta",
             nameLabel: "Nome completo",
             namePlaceholder: "Seu nome",
             emailLabel: "Endereço de e-mail",
-            emailPlaceholder: "seu@email.com",
+            emailPlaceholder: "voce@email.com",
             passwordLabel: "Senha",
             passwordPlaceholder: "Crie uma senha",
             confirmPasswordLabel: "Confirmar senha",
             confirmPasswordPlaceholder: "Repita sua senha",
             createAccountButton: "Criar Conta",
-            hasAccount: "Já tem uma conta?",
+            hasAccount: "Já tem conta?",
             signIn: "Entrar",
             acceptTerms: {
-              part1: "Eu aceito os",
+              part1: "Aceito os",
               termsLink: "Termos de Serviço",
               and: "e a",
               privacyLink: "Política de Privacidade"
@@ -1189,15 +1293,230 @@ const resources = {
           validation: {
             invalidEmail: "Endereço de e-mail inválido",
             passwordTooShort: "A senha deve ter pelo menos 6 caracteres",
-            nameRequired: "Nome é obrigatório",
-            acceptTermsRequired: "Você deve aceitar os termos",
+            nameRequired: "O nome é obrigatório",
+            acceptTermsRequired: "Você deve aceitar los termos",
             passwordsDoNotMatch: "As senhas não coincidem"
           }
         },
-        errors: {
-          loginFailed: "Falha ao entrar",
-          signupFailed: "Falha ao cadastrar",
-          tryAgain: "Por favor, tente novamente"
+        privacy: {
+          title: "Política de Privacidade",
+          back: "Voltar",
+          lastUpdated: "Última atualização",
+          section1: {
+            title: "1. Introdução",
+            content: "No TERA, levamos sua privacidade muito a sério. Esta política explica como coletamos, usamos e protegemos suas informações pessoais."
+          },
+          section2: {
+            title: "2. Informações que Coletamos",
+            subsection1: {
+              title: "Informações da Conta",
+              item1: "Nome e endereço de e-mail",
+              item2: "Preferências de configuração",
+              item3: "Informações de faturamento"
+            },
+            subsection2: {
+              title: "Informações de Uso",
+              item1: "Endereço IP e tipo de dispositivo",
+              item2: "Logs de atividade do sistema",
+              item3: "Estatísticas de transferência",
+              item4: "Metadados de arquivos (sem acessar o conteúdo)"
+            },
+            subsection3: {
+              title: "Integrações de Terceiros",
+              intro: "Ao conectar serviços como Google Drive ou Dropbox, coletamos:",
+              item1: "Tokens de acesso (criptografados)",
+              item2: "Lista de arquivos e pastas",
+              item3: "ID de usuário do serviço externo"
+            }
+          },
+          section3: {
+            title: "3. Como Utilizamos sua Informação",
+            intro: "Utilizamos os dados coletados para:",
+            item1: "Fornecer e manter o serviço",
+            item2: "Processar suas transferências de arquivos",
+            item3: "Melhorar a segurança da plataforma",
+            item4: "Enviar notificações importantes",
+            item5: "Personalizar sua experiência",
+            item6: "Cumprir obrigações legais"
+          },
+          section4: {
+            title: "4. Armazenamento e Segurança",
+            subsection1: {
+              title: "Segurança dos Dados",
+              intro: "Utilizamos protocolos de segurança de nível industrial:",
+              item1: "Criptografia AES-256 para dados em repouso",
+              item2: "Protocolos TLS para dados em trânsito"
+            },
+            subsection2: {
+              title: "Retenção de Dados",
+              intro: "Mantemos sua informação apenas pelo tempo necessário:",
+              item1: "Dados da conta: Enquanto a conta estiver ativa",
+              item2: "Logs: Até 12 meses para fins de auditoria",
+              item3: "Cache de arquivos: Temporário até concluir a operação"
+            },
+            subsection3: {
+              title: "Localização de Servidores",
+              content: "Nossos serviços estão hospedados principalmente em infraestruturas seguras na nuvem com redundância global.",
+              intro: "Garantimos:",
+              item1: "Alta disponibilidade",
+              item2: "Backups diários",
+              item3: "Isolamento de dados por usuário",
+              item4: "Conformidade normativa regional"
+            }
+          },
+          section5: {
+            title: "5. Seus Direitos",
+            subsection1: {
+              title: "Controle sobre seus dados",
+              item1: "Direito de acesso",
+              item2: "Direito de retificação",
+              item3: "Direito de exclusão (esquecimento)"
+            },
+            subsection2: {
+              title: "Outras faculdades",
+              item1: "Portabilidade de dados",
+              item2: "Restrição de processamento",
+              item3: "Oposição ao marketing direto",
+              item4: "Retirada de consentimento",
+              item5: "Apresentação de reclamações"
+            },
+            subsection3: {
+              title: "Como exercer seus direitos",
+              content: "Você pode gerenciar a maioria dessas opções no seu painel de configurações ou entrando em contato com nosso suporte."
+            }
+          },
+          section6: {
+            title: "6. Compartilhamento de Informações",
+            intro: "Nunca vendemos seus dados pessoais. Apenas compartilhamos informações com:",
+            subsection1: {
+              title: "Terceiros autorizados",
+              item1: "Processadores de pagamento (Stripe)",
+              item2: "Serviços de infraestrutura (AWS/Google Cloud)",
+              item3: "Ferramentas de análise anônima",
+              item4: "Autoridades legais se exigido"
+            },
+            subsection2: {
+              title: "Políticas de terceiros",
+              content: "Os serviços integrados (Drive, Dropbox, etc.) são regidos por suas próprias políticas de privacidade."
+            }
+          },
+          section7: {
+            title: "7. Cookies e Tecnologias Semelhantes",
+            intro: "Utilizamos cookies para:",
+            item1: "Manter sua sessão ativa",
+            item2: "Lembrar suas preferências",
+            item3: "Analisar o desempenho",
+            item4: "Prevenir fraudes",
+            item5: "Segurança da navegação",
+            item6: "Melhorar a interface"
+          },
+          section8: {
+            title: "8. Privacidade de Menores",
+            intro: "Nosso serviço não é direcionado a menores de 13 anos. Se detectarmos dados de menores sem consentimento parental:",
+            item1: "Procederemos à exclusão imediata",
+            item2: "Notificaremos os tutores se possível",
+            item3: "Bloquearemos o acesso à conta"
+          },
+          section9: {
+            title: "9. Alterações na Política",
+            content: "Podemos atualizar esta política periodicamente. Notificaremos você sobre qualquer alteração substancial via e-mail."
+          },
+          section10: {
+            title: "10. Contato",
+            content: "Se você tiver dúvidas sobre sua privacidade, escreva para support@tera.cloud"
+          },
+          section11: {
+            title: "11. Jurisdição",
+            content: "Esta política é regida pelas leis internacionais de proteção de dados."
+          },
+          section12: {
+            title: "12. Suporte",
+            content: "Nossa equipe de privacidade está disponível para tirar suas dúvidas.",
+            email: "privacy@tera.cloud"
+          },
+          section13: {
+            title: "13. Resumo de Segurança",
+            intro: "Em resumo, o TERA garante:",
+            item1: "Transparência total",
+            item2: "Segurança técnica avançada",
+            item3: "Controle total do usuário",
+            item4: "Conformidade normativa"
+          }
+        },
+        terms: {
+          title: "Termos de Serviço",
+          back: "Voltar",
+          lastUpdated: "Última atualização",
+          section1: {
+            title: "1. Aceitação dos Termos",
+            content: "Ao acessar o TERA, você concorda em cumprir estes termos de serviço. Se você não concordar, por favor não use a plataforma."
+          },
+          section2: {
+            title: "2. Descrição do Serviço",
+            content: "O TERA é uma plataforma de gestão e transferência de arquivos entre serviços de armazenamento na nuvem."
+          },
+          section3: {
+            title: "3. Responsabilidades do Usuário",
+            intro: "Como usuário do TERA, você concorda em:",
+            item1: "Fornecer informações verdadeiras",
+            item2: "Manter a segurança de sua conta",
+            item3: "Não usar o serviço para fins ilegais",
+            item4: "Respeitar os direitos autorais dos arquivos"
+          },
+          section4: {
+            title: "4. Propriedade Intelectual",
+            intro: "Nossa política sobre propriedade intelectual inclui:",
+            item1: "O TERA é proprietário da plataforma e de seu código",
+            item2: "Você mantém a propriedade total de seus arquivos",
+            item3: "Não reivindicamos direitos sobre seu conteúdo",
+            item4: "Respeitamos as marcas registradas de terceiros",
+            item5: "Proteção de logotipos e design",
+            item6: "Licenças de software de código aberto"
+          },
+          section5: {
+            title: "5. Limitação de Responsabilidade",
+            intro: "O TERA não é responsável por:",
+            item1: "Perda de dados por falhas de terceiros",
+            item2: "Interrupções de serviço fora de nosso controle razoável",
+            item3: "Uso indevido da conta pelo usuário"
+          },
+          section6: {
+            title: "6. Suspensão e Rescisão",
+            intro: "Podemos suspender sua conta se:",
+            item1: "Você violar estes termos",
+            item2: "Atividades suspeitas forem realizadas",
+            item3: "Exigido por uma autoridade legal",
+            item4: "Houver falta de pagamento em planos premium"
+          },
+          section7: {
+            title: "7. Taxas e Pagamentos",
+            content: "Os planos premium são faturados mensal ou anualmente. Não há reembolsos parciais, a menos que exigido por lei."
+          },
+          section8: {
+            title: "8. Modificações do Serviço",
+            content: "Reservamo-nos o direito de modificar ou descontinuar qualquer parte do serviço com aviso prévio."
+          },
+          section9: {
+            title: "9. Uso da API",
+            intro: "O uso de nossas integrações implica:",
+            item1: "Conformidade com as cotas dos provedores",
+            item2: "Não realizar engenharia reversa",
+            item3: "Uso responsável dos recursos",
+            item4: "Respeito aos tokens de autenticação",
+            item5: "Segurança nas chamadas à API"
+          },
+          section10: {
+            title: "10. Privacidade",
+            content: "O uso do serviço também é regido por nossa Política de Privacidade."
+          },
+          section11: {
+            title: "11. Força Maior",
+            content: "Não seremos responsáveis por falhas devido a causas além do nosso controle razoável."
+          },
+          section12: {
+            title: "12. Divisibilidade",
+            content: "Se qualquer disposição destes termos for declarada inválida, as demais permanecerão em vigor."
+          }
         }
       }
     }
@@ -1209,16 +1528,10 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'en',
-    supportedLngs: ['es', 'en', 'pt'],
-    defaultNS: 'translation',
+    fallbackLng: 'es',
     interpolation: {
       escapeValue: false,
     },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-    }
   });
 
 export default i18n;
