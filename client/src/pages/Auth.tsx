@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Database, Zap, TrendingUp, Users, FileText, BarChart3, Globe } from 'lucide-react';
 import { useLocation, Link } from "wouter";
 import logoUrl from "@/assets/logo.png";
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation();
@@ -26,6 +27,16 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   const [floatingIcons, setFloatingIcons] = useState<any[]>([]);
+
+  // Get a random welcome message based on the current language
+  const welcomeMessage = useMemo(() => {
+    const messages = t('welcomeMessages', { returnObjects: true });
+    if (Array.isArray(messages) && messages.length > 0) {
+      const randomIndex = Math.floor(Math.random() * messages.length);
+      return messages[randomIndex];
+    }
+    return t('landing.auth.login.title'); // Fallback
+  }, [t, i18n.language]);
 
   useEffect(() => {
     const icons = [
@@ -131,9 +142,18 @@ export default function AuthPage() {
 
             {/* Welcome Text */}
             <div className="mb-10 text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                {isRegistering ? t('landing.auth.signup.title') : t('landing.auth.login.title')}
-              </h1>
+              <AnimatePresence mode="wait">
+                <motion.h1 
+                  key={isRegistering ? 'register' : welcomeMessage}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-4xl font-bold text-gray-900 mb-3 tracking-tight"
+                >
+                  {isRegistering ? t('landing.auth.signup.title') : welcomeMessage}
+                </motion.h1>
+              </AnimatePresence>
               <p className="text-gray-600">
                 {isRegistering 
                   ? t('landing.auth.signup.subtitle', 'Regístrate para empezar a gestionar tus archivos.') 
