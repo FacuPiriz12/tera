@@ -17,8 +17,7 @@ import {
   CalendarClock,
   HeartPulse
 } from "lucide-react";
-import { useLocation } from "wouter";
-import { Link } from "@/components/ui/Link";
+import { useLocation, Link } from "wouter";
 import { Progress } from "@/components/ui/progress";
 import { useTranslation } from "react-i18next";
 import type { CopyOperation, User } from "@shared/schema";

@@ -1,4 +1,4 @@
-import { Link } from "@/components/ui/Link";
+import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
