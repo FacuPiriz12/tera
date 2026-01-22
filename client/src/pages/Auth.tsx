@@ -129,8 +129,8 @@ export default function AuthPage() {
       </div>
 
       {/* Left Panel - Forms Container */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 perspective-1000">
-        <div className={`w-full max-w-md flip-card-inner preserve-3d h-[600px] ${isRegistering ? 'flip-card-flipped' : ''}`}>
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 perspective-1000 min-h-screen overflow-y-auto">
+        <div className={`w-full max-w-md flip-card-inner preserve-3d min-h-[700px] my-12 ${isRegistering ? 'flip-card-flipped' : ''}`}>
           {/* Front Face - Login */}
           <div className="backface-hidden w-full h-full absolute inset-0">
             {/* Logo */}
