@@ -326,7 +326,7 @@ export default function AuthPage() {
                 <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-50 text-gray-500">{t('landing.auth.login.orContinueWith', 'O Inicia Con')}</span>
+                <span className="px-4 bg-gray-50 text-gray-500">{t('auth.login.orContinueWith', 'O Inicia Con')}</span>
               </div>
             </div>
 
@@ -350,13 +350,13 @@ export default function AuthPage() {
             </div>
 
             <p className="mt-8 text-center text-gray-600">
-              {isRegistering ? t('auth.signup.hasAccount') : t('auth.login.noAccount')}{' '}
+              {isRegistering ? t('landing.auth.signup.hasAccount') : t('landing.auth.login.noAccount')}{' '}
               <button 
                 type="button"
                 onClick={() => setIsRegistering(!isRegistering)}
                 className="font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
               >
-                {isRegistering ? t('auth.signup.signIn') : t('auth.login.signUpNow')}
+                {isRegistering ? t('landing.auth.signup.signIn') : t('landing.auth.login.signUpNow')}
               </button>
             </p>
 
