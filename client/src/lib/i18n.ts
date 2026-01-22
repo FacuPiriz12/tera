@@ -235,7 +235,8 @@ const resources = {
           passwordLabel: "Contraseña",
           passwordPlaceholder: "Tu contraseña",
           signInButton: "Iniciar Sesión",
-          noAccount: "¿No tienes cuenta? Regístrate",
+          noAccount: "¿No tienes cuenta?",
+          signUpNow: "Regístrate Ahora",
           forgotPassword: "¿Olvidaste tu contraseña?",
           description: "Ingresa tu email y contraseña para acceder a tu cuenta."
         },
@@ -270,98 +271,46 @@ const resources = {
         }
       },
       landing: {
-        hero: {
-          title: "Mueve y protege tus archivos con",
-          subtitle: "Inteligencia Real",
-          description: "TERA es el puente entre tus nubes. Transfiere archivos entre plataformas, programa copias de seguridad automáticas y conecta tus herramientas favoritas en segundos.",
-          ctaButton: "Empieza gratis hoy",
-          demoButton: "Ver demostración",
-          integrationsLabel: "Mejores Integraciones",
-          syncBadge: "Auto-Sincronización",
-          transferLabel: "Transferencia",
-          backupLabel: "Backup",
-          completed: "Completado",
-          scanning: "Escaneando",
-          freedLabel: "Liberado",
-          duplicatesLabel: "Duplicados",
-          securityBadge: "Seguridad Activa",
-          encryptionLabel: "Cifrado de 256 bits"
-        },
-        features: {
-          title: "Productos"
-        },
-        stats: {
-          filesMoved: "Archivos Movidos",
-          activeUsers: "Usuarios Activos",
-          guaranteedUptime: "Uptime Garantizado",
-          bankingSecurity: "Seguridad Bancaria"
-        },
-        benefits: {
-          badge: "Productos",
-          title: "Todo tu contenido, conectado",
-          description: "Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.",
-          learnMore: "Saber más",
-          feature1: {
-            title: "Transferencias Multi-nube",
-            description: "Mueve gigabytes entre Dropbox, Drive y OneDrive con un solo clic. Sin descargar nada a tu equipo."
+        auth: {
+          login: {
+            title: "¡Bienvenido de nuevo!",
+            subtitle: "Ingresa con tus datos",
+            welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
+            emailLabel: "Correo electrónico",
+            emailPlaceholder: "tu@email.com",
+            passwordLabel: "Contraseña",
+            passwordPlaceholder: "Tu contraseña",
+            signInButton: "Iniciar Sesión",
+            noAccount: "¿No tienes cuenta?",
+            signUpNow: "Regístrate Ahora",
+            forgotPassword: "¿Olvidaste tu contraseña?",
+            description: "Ingresa tu email y contraseña para acceder a tu cuenta."
           },
-          feature2: {
-            title: "Copias de Seguridad Inteligentes",
-            description: "Programa respaldos automáticos entre nubes para que tus archivos más importantes siempre tengan un espejo."
-          },
-          feature3: {
-            title: "+50 Integraciones Nativas",
-            description: "Conecta Slack, Teams, Notion y todas tus herramientas de trabajo para centralizar tu ecosistema digital."
+          signup: {
+            title: "Crea tu cuenta",
+            subtitle: "Regístrate para empezar a gestionar tus archivos.",
+            nameLabel: "Nombre completo",
+            namePlaceholder: "Tu nombre",
+            emailLabel: "Correo electrónico",
+            emailPlaceholder: "tu@email.com",
+            passwordLabel: "Contraseña",
+            passwordPlaceholder: "Crea una contraseña",
+            confirmPasswordLabel: "Confirmar contraseña",
+            confirmPasswordPlaceholder: "Repite tu contraseña",
+            createAccountButton: "Crear Cuenta",
+            hasAccount: "¿Ya tienes cuenta?",
+            signIn: "Inicia sesión",
+            acceptTerms: {
+              part1: "Acepto los",
+              termsLink: "Términos de Servicio",
+              and: "y la",
+              privacyLink: "Política de Privacidad"
+            }
           }
-        },
-        ai: {
-          title: "Tú define las reglas,",
-          subtitle: "TERA las ejecuta por ti.",
-          description: "Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 and realiza las tareas repetitivas para que tú no tengas que hacerlo.",
-          panelTitle: "Panel de Automatización",
-          panelStatus: "Sistema Inteligente Activo",
-          aiMessage: "\"He detectado 150 archivos nuevos en tu Dropbox. ¿Deseas que inicie la migración automática a tu carpeta de Proyectos 2024 en Google Drive?\"",
-          userResponse: "\"Sí, por favor. Y elimina los duplicados de más de 6 meses.\"",
-          progressLabel: "Migración en curso",
-          suggestions: {
-            suggestion1: "Mueve mis archivos de Dropbox a Google Drive",
-            suggestion2: "Crea una copia de seguridad de mis fotos en OneDrive",
-            suggestion3: "¿Qué nubes tengo integradas actualmente?",
-            suggestion4: "Transfiere la carpeta 'Proyectos' a mi cuenta de Box",
-            suggestion5: "Sincronize minha pasta do Notion com meu Drive"
-          }
-        },
-        security: {
-          badge: "Seguridad sin Compromisos",
-          title: "Dormir tranquilo es parte del plan",
-          description: "No escatimamos en seguridad. TERA utiliza los mismos protocolos que las instituciones financieras globales para garantizar que tus datos nunca caigan en manos equivocadas.",
-          whitepaperButton: "Lee nuestro Whitepaper de Seguridad",
-          aesTitle: "AES-256",
-          aesDesc: "Encriptación de nivel militar para cada bit de información.",
-          zeroKnowledgeTitle: "Zero Knowledge",
-          zeroKnowledgeDesc: "Tus claves son solo tuyas. Ni siquiera nosotros podemos ver tus archivos.",
-          auditTitle: "Auditoría Real",
-          auditDesc: "Registros detallados de cada movimiento para tu control total.",
-          syncTitle: "Sincronización",
-          syncDesc: "Tus nubes siempre en armonía, protegidas por nuestro firewall inteligente."
-        },
-        cta: {
-          title: "El futuro de tus archivos comienza hoy.",
-          description: "Únete a más de 85,000 profesionales que ya han optimizado su ecosistema digital con TERA. Sin tarjetas, sin complicaciones.",
-          createAccount: "Crear mi cuenta gratis",
-          talkToSales: "Hablar con ventas"
         },
         footer: {
-          description: "Elevando la gestión de archivos a una nueva dimensión de inteligencia y seguridad.",
-          platform: "Plataforma",
-          legal: "Legal",
-          privacy: "Privacidad",
-          terms: "Términos",
-          cookies: "Cookies",
-          compliance: "Cumplimiento",
           rights: "© {{year}} TERA Cloud Technologies Inc.",
-          status: "Sistemas Operativos",
-          back: "Volver"
+          status: "Sistemas Operativos"
         }
       }
     }

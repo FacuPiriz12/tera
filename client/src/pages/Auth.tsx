@@ -350,13 +350,13 @@ export default function AuthPage() {
             </div>
 
             <p className="mt-8 text-center text-gray-600">
-              {isRegistering ? t('landing.auth.signup.hasAccount') : t('landing.auth.login.noAccount')}{' '}
+              {isRegistering ? t('auth.signup.hasAccount') : t('auth.login.noAccount')}{' '}
               <button 
                 type="button"
                 onClick={() => setIsRegistering(!isRegistering)}
                 className="font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
               >
-                {isRegistering ? t('landing.auth.signup.signIn') : t('landing.auth.login.signUpNow', 'Regístrate Ahora')}
+                {isRegistering ? t('auth.signup.signIn') : t('auth.login.signUpNow')}
               </button>
             </p>
 
