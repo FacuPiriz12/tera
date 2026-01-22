@@ -104,7 +104,36 @@ const resources = {
           copyFromUrl: "Copiar desde URL",
           integrations: "Integraciones",
           pricing: "Precios",
-          security: "Seguridad"
+          security: "Seguridad",
+          tasks: "Tareas Programadas",
+          health: "Salud de la Nube",
+          cloudExplorer: "Explorador Multi-nube",
+          shared: "Compartidos"
+        },
+        sidebar: {
+          storage: "Almacenamiento",
+          storageUsed: "Utilizado: {{used}} de {{total}}"
+        },
+        dashboard: {
+          noAccountConnected: "No hay cuentas conectadas",
+          integrations: "Integraciones",
+          toStartWorking: "para empezar a trabajar",
+          totalFiles: "Archivos Totales",
+          filesManaged: "Archivos Gestionados",
+          activeOperations: "Operaciones Activas",
+          inProgress: "En Progreso",
+          totalOperations: "Operaciones Totales",
+          operationsPerformed: "Operaciones Realizadas",
+          completedOperations: "Operaciones Completadas",
+          successfully: "Exitosamente",
+          recentFiles: "Archivos Recientes",
+          noRecentFiles: "No hay archivos recientes",
+          addedOn: "Agregado el",
+          connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos."
+        },
+        user: {
+          profile: "Perfil",
+          settings: "Configuración"
         },
         language: {
           select: "Seleccionar idioma",
@@ -151,22 +180,11 @@ const resources = {
           tryAgain: "Intentar de nuevo"
         },
         emailConfirmation: {
-          verifying: "Verificando...",
-          verifyingDescription: "Estamos validando tu enlace de verificación.",
-          confirmed: "¡Correo Confirmado!",
-          confirmedDescription: "Tu dirección de correo ha sido verificada con éxito.",
-          failed: "Error de Verificación",
-          failedDescription: "No pudimos validar tu enlace de verificación.",
-          success: "Tu correo ha sido verificado correctamente.",
-          error: "Ocurrió un error al confirmar tu correo.",
-          linkExpired: "El enlace ha expirado. Por favor, solicita uno nuevo.",
-          invalidLink: "Enlace inválido o ya utilizado.",
-          alreadyVerified: "Este correo ya está verificado.",
-          redirecting: "Redirigiéndote al panel principal...",
-          continueToApp: "Ir a la Aplicación",
-          signupAgain: "Registrarse de nuevo",
-          tryLogin: "Iniciar Sesión",
-          troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
+          title: "¡Cuenta Verificada!",
+          description: "Gracias por verificar tu correo electrónico. Tu cuenta ya está activa.",
+          backToLogin: "Ir al Login",
+          tryLogin: "Intentar Iniciar Sesión",
+          troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el correo."
         },
         buttons: {
           cancel: "Cancelar",
@@ -198,6 +216,192 @@ const resources = {
         },
         actions: {
           searchPlaceholder: "Buscar archivos o carpetas..."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "No accounts connected",
+        integrations: "Integrations",
+        toStartWorking: "to start working",
+        totalFiles: "Total Files",
+        filesManaged: "Files Managed",
+        activeOperations: "Active Operations",
+        inProgress: "In Progress",
+        totalOperations: "Total Operations",
+        operationsPerformed: "Operations Performed",
+        completedOperations: "Completed Operations",
+        successfully: "Successfully",
+        recentFiles: "Recent Files",
+        noRecentFiles: "No recent files",
+        addedOn: "Added on",
+        connectInstruction: "Connect an account to start managing your files."
+      },
+      user: {
+        profile: "Profile",
+        settings: "Settings"
+      },
+      auth: {
+        login: {
+          title: "Welcome back!",
+          subtitle: "Log in with your credentials",
+          welcomeMessages: ["Welcome back!", "Hello again!", "Nice to see you"],
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Your password",
+          signInButton: "Sign In",
+          noAccount: "Don't have an account? Sign up",
+          forgotPassword: "Forgot your password?",
+          description: "Enter your email and password to access your account."
+        },
+        signup: {
+          title: "Create your account",
+          subtitle: "Sign up to start managing your files.",
+          nameLabel: "Full name",
+          namePlaceholder: "Your name",
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Create a password",
+          confirmPasswordLabel: "Confirm password",
+          confirmPasswordPlaceholder: "Repeat your password",
+          createAccountButton: "Create Account",
+          hasAccount: "Already have an account?",
+          signIn: "Log in",
+          acceptTerms: {
+            part1: "I accept the",
+            termsLink: "Terms of Service",
+            and: "and the",
+            privacyLink: "Privacy Policy"
+          }
+        },
+        logout: "Log Out",
+        showcase: {
+          title: "Effortlessly manage your team and operations",
+          description: "Log in to access your CRM dashboard and manage your files efficiently."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "Nenhuma conta conectada",
+        integrations: "Integrações",
+        toStartWorking: "para começar a trabalhar",
+        totalFiles: "Total de Arquivos",
+        filesManaged: "Arquivos Gerenciados",
+        activeOperations: "Operações Ativas",
+        inProgress: "Em Progresso",
+        totalOperations: "Total de Operações",
+        operationsPerformed: "Operações Realizadas",
+        completedOperations: "Operações Concluídas",
+        successfully: "Com Sucesso",
+        recentFiles: "Arquivos Recentes",
+        noRecentFiles: "Nenhum arquivo recente",
+        addedOn: "Adicionado em",
+        connectInstruction: "Conecte uma conta para começar a gerenciar seus arquivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configurações"
+      },
+      auth: {
+        login: {
+          title: "Bem-vindo de volta!",
+          subtitle: "Faça login com suas credenciais",
+          welcomeMessages: ["Bem-vindo de volta!", "Olá novamente!", "Bom te ver"],
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Sua senha",
+          signInButton: "Entrar",
+          noAccount: "Não tem uma conta? Cadastre-se",
+          forgotPassword: "Esqueceu sua senha?",
+          description: "Insira seu e-mail e senha para acessar sua conta."
+        },
+        signup: {
+          title: "Crie sua conta",
+          subtitle: "Cadastre-se para começar a gerenciar seus arquivos.",
+          nameLabel: "Nome completo",
+          namePlaceholder: "Seu nome",
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Crie uma senha",
+          confirmPasswordLabel: "Confirmar senha",
+          confirmPasswordPlaceholder: "Repita sua senha",
+          createAccountButton: "Criar Conta",
+          hasAccount: "Já tem uma conta?",
+          signIn: "Faça login",
+          acceptTerms: {
+            part1: "Eu aceito os",
+            termsLink: "Termos de Serviço",
+            and: "e a",
+            privacyLink: "Política de Privacidade"
+          }
+        },
+        logout: "Sair",
+        showcase: {
+          title: "Gerencie sua equipe e operações sem esforço",
+          description: "Faça login para acessar seu painel CRM e gerenciar seus arquivos com eficiência."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "No hay cuentas conectadas",
+        integrations: "Integraciones",
+        toStartWorking: "para empezar a trabajar",
+        totalFiles: "Archivos Totales",
+        filesManaged: "Archivos Gestionados",
+        activeOperations: "Operaciones Activas",
+        inProgress: "En Progreso",
+        totalOperations: "Operaciones Totales",
+        operationsPerformed: "Operaciones Realizadas",
+        completedOperations: "Operaciones Completadas",
+        successfully: "Exitosamente",
+        recentFiles: "Archivos Recientes",
+        noRecentFiles: "No hay archivos recientes",
+        addedOn: "Agregado el",
+        connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configuración"
+      },
+      auth: {
+        login: {
+          title: "¡Bienvenido de nuevo!",
+          subtitle: "Ingresa con tus datos",
+          welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Tu contraseña",
+          signInButton: "Iniciar Sesión",
+          noAccount: "¿No tienes cuenta? Regístrate",
+          forgotPassword: "¿Olvidaste tu contraseña?",
+          description: "Ingresa tu email y contraseña para acceder a tu cuenta."
+        },
+        signup: {
+          title: "Crea tu cuenta",
+          subtitle: "Regístrate para empezar a gestionar tus archivos.",
+          nameLabel: "Nombre completo",
+          namePlaceholder: "Tu nombre",
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Crea una contraseña",
+          confirmPasswordLabel: "Confirmar contraseña",
+          confirmPasswordPlaceholder: "Repite tu contraseña",
+          createAccountButton: "Crear Cuenta",
+          hasAccount: "¿Ya tienes cuenta?",
+          signIn: "Inicia sesión",
+          acceptTerms: {
+            part1: "Acepto los",
+            termsLink: "Términos de Servicio",
+            and: "y la",
+            privacyLink: "Política de Privacidad"
+          }
+        },
+        logout: "Cerrar Sesión",
+        showcase: {
+          title: "Gestiona sin esfuerzo tu equipo y operaciones",
+          description: "Inicia sesión para acceder a tu panel CRM y gestionar tus archivos de manera eficiente."
         }
       },
       landing: {
@@ -626,7 +830,15 @@ const resources = {
           copyFromUrl: "Copy from URL",
           integrations: "Integrations",
           pricing: "Pricing",
-          security: "Security"
+          security: "Security",
+          tasks: "Scheduled Tasks",
+          health: "Cloud Health",
+          cloudExplorer: "Multi-cloud Explorer",
+          shared: "Shared"
+        },
+        sidebar: {
+          storage: "Storage",
+          storageUsed: "Used: {{used}} of {{total}}"
         },
         language: {
           select: "Select language",
@@ -720,6 +932,192 @@ const resources = {
         },
         actions: {
           searchPlaceholder: "Search files or folders..."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "No accounts connected",
+        integrations: "Integrations",
+        toStartWorking: "to start working",
+        totalFiles: "Total Files",
+        filesManaged: "Files Managed",
+        activeOperations: "Active Operations",
+        inProgress: "In Progress",
+        totalOperations: "Total Operations",
+        operationsPerformed: "Operations Performed",
+        completedOperations: "Completed Operations",
+        successfully: "Successfully",
+        recentFiles: "Recent Files",
+        noRecentFiles: "No recent files",
+        addedOn: "Added on",
+        connectInstruction: "Connect an account to start managing your files."
+      },
+      user: {
+        profile: "Profile",
+        settings: "Settings"
+      },
+      auth: {
+        login: {
+          title: "Welcome back!",
+          subtitle: "Log in with your credentials",
+          welcomeMessages: ["Welcome back!", "Hello again!", "Nice to see you"],
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Your password",
+          signInButton: "Sign In",
+          noAccount: "Don't have an account? Sign up",
+          forgotPassword: "Forgot your password?",
+          description: "Enter your email and password to access your account."
+        },
+        signup: {
+          title: "Create your account",
+          subtitle: "Sign up to start managing your files.",
+          nameLabel: "Full name",
+          namePlaceholder: "Your name",
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Create a password",
+          confirmPasswordLabel: "Confirm password",
+          confirmPasswordPlaceholder: "Repeat your password",
+          createAccountButton: "Create Account",
+          hasAccount: "Already have an account?",
+          signIn: "Log in",
+          acceptTerms: {
+            part1: "I accept the",
+            termsLink: "Terms of Service",
+            and: "and the",
+            privacyLink: "Privacy Policy"
+          }
+        },
+        logout: "Log Out",
+        showcase: {
+          title: "Effortlessly manage your team and operations",
+          description: "Log in to access your CRM dashboard and manage your files efficiently."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "Nenhuma conta conectada",
+        integrations: "Integrações",
+        toStartWorking: "para começar a trabalhar",
+        totalFiles: "Total de Arquivos",
+        filesManaged: "Arquivos Gerenciados",
+        activeOperations: "Operações Ativas",
+        inProgress: "Em Progresso",
+        totalOperations: "Total de Operações",
+        operationsPerformed: "Operações Realizadas",
+        completedOperations: "Operações Concluídas",
+        successfully: "Com Sucesso",
+        recentFiles: "Arquivos Recentes",
+        noRecentFiles: "Nenhum arquivo recente",
+        addedOn: "Adicionado em",
+        connectInstruction: "Conecte uma conta para começar a gerenciar seus arquivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configurações"
+      },
+      auth: {
+        login: {
+          title: "Bem-vindo de volta!",
+          subtitle: "Faça login com suas credenciais",
+          welcomeMessages: ["Bem-vindo de volta!", "Olá novamente!", "Bom te ver"],
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Sua senha",
+          signInButton: "Entrar",
+          noAccount: "Não tem uma conta? Cadastre-se",
+          forgotPassword: "Esqueceu sua senha?",
+          description: "Insira seu e-mail e senha para acessar sua conta."
+        },
+        signup: {
+          title: "Crie sua conta",
+          subtitle: "Cadastre-se para começar a gerenciar seus arquivos.",
+          nameLabel: "Nome completo",
+          namePlaceholder: "Seu nome",
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Crie uma senha",
+          confirmPasswordLabel: "Confirmar senha",
+          confirmPasswordPlaceholder: "Repita sua senha",
+          createAccountButton: "Criar Conta",
+          hasAccount: "Já tem uma conta?",
+          signIn: "Faça login",
+          acceptTerms: {
+            part1: "Eu aceito os",
+            termsLink: "Termos de Serviço",
+            and: "e a",
+            privacyLink: "Política de Privacidade"
+          }
+        },
+        logout: "Sair",
+        showcase: {
+          title: "Gerencie sua equipe e operações sem esforço",
+          description: "Faça login para acessar seu painel CRM e gerenciar seus arquivos com eficiência."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "No hay cuentas conectadas",
+        integrations: "Integraciones",
+        toStartWorking: "para empezar a trabajar",
+        totalFiles: "Archivos Totales",
+        filesManaged: "Archivos Gestionados",
+        activeOperations: "Operaciones Activas",
+        inProgress: "En Progreso",
+        totalOperations: "Operaciones Totales",
+        operationsPerformed: "Operaciones Realizadas",
+        completedOperations: "Operaciones Completadas",
+        successfully: "Exitosamente",
+        recentFiles: "Archivos Recientes",
+        noRecentFiles: "No hay archivos recientes",
+        addedOn: "Agregado el",
+        connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configuración"
+      },
+      auth: {
+        login: {
+          title: "¡Bienvenido de nuevo!",
+          subtitle: "Ingresa con tus datos",
+          welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Tu contraseña",
+          signInButton: "Iniciar Sesión",
+          noAccount: "¿No tienes cuenta? Regístrate",
+          forgotPassword: "¿Olvidaste tu contraseña?",
+          description: "Ingresa tu email y contraseña para acceder a tu cuenta."
+        },
+        signup: {
+          title: "Crea tu cuenta",
+          subtitle: "Regístrate para empezar a gestionar tus archivos.",
+          nameLabel: "Nombre completo",
+          namePlaceholder: "Tu nombre",
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Crea una contraseña",
+          confirmPasswordLabel: "Confirmar contraseña",
+          confirmPasswordPlaceholder: "Repite tu contraseña",
+          createAccountButton: "Crear Cuenta",
+          hasAccount: "¿Ya tienes cuenta?",
+          signIn: "Inicia sesión",
+          acceptTerms: {
+            part1: "Acepto los",
+            termsLink: "Términos de Servicio",
+            and: "y la",
+            privacyLink: "Política de Privacidad"
+          }
+        },
+        logout: "Cerrar Sesión",
+        showcase: {
+          title: "Gestiona sin esfuerzo tu equipo y operaciones",
+          description: "Inicia sesión para acceder a tu panel CRM y gestionar tus archivos de manera eficiente."
         }
       },
       landing: {
@@ -1287,6 +1685,192 @@ const resources = {
           searchPlaceholder: "Buscar arquivos ou pastas..."
         },
         new: "Novo"
+      },
+      dashboard: {
+        noAccountConnected: "No accounts connected",
+        integrations: "Integrations",
+        toStartWorking: "to start working",
+        totalFiles: "Total Files",
+        filesManaged: "Files Managed",
+        activeOperations: "Active Operations",
+        inProgress: "In Progress",
+        totalOperations: "Total Operations",
+        operationsPerformed: "Operations Performed",
+        completedOperations: "Completed Operations",
+        successfully: "Successfully",
+        recentFiles: "Recent Files",
+        noRecentFiles: "No recent files",
+        addedOn: "Added on",
+        connectInstruction: "Connect an account to start managing your files."
+      },
+      user: {
+        profile: "Profile",
+        settings: "Settings"
+      },
+      auth: {
+        login: {
+          title: "Welcome back!",
+          subtitle: "Log in with your credentials",
+          welcomeMessages: ["Welcome back!", "Hello again!", "Nice to see you"],
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Your password",
+          signInButton: "Sign In",
+          noAccount: "Don't have an account? Sign up",
+          forgotPassword: "Forgot your password?",
+          description: "Enter your email and password to access your account."
+        },
+        signup: {
+          title: "Create your account",
+          subtitle: "Sign up to start managing your files.",
+          nameLabel: "Full name",
+          namePlaceholder: "Your name",
+          emailLabel: "Email address",
+          emailPlaceholder: "your@email.com",
+          passwordLabel: "Password",
+          passwordPlaceholder: "Create a password",
+          confirmPasswordLabel: "Confirm password",
+          confirmPasswordPlaceholder: "Repeat your password",
+          createAccountButton: "Create Account",
+          hasAccount: "Already have an account?",
+          signIn: "Log in",
+          acceptTerms: {
+            part1: "I accept the",
+            termsLink: "Terms of Service",
+            and: "and the",
+            privacyLink: "Privacy Policy"
+          }
+        },
+        logout: "Log Out",
+        showcase: {
+          title: "Effortlessly manage your team and operations",
+          description: "Log in to access your CRM dashboard and manage your files efficiently."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "Nenhuma conta conectada",
+        integrations: "Integrações",
+        toStartWorking: "para começar a trabalhar",
+        totalFiles: "Total de Arquivos",
+        filesManaged: "Arquivos Gerenciados",
+        activeOperations: "Operações Ativas",
+        inProgress: "Em Progresso",
+        totalOperations: "Total de Operações",
+        operationsPerformed: "Operações Realizadas",
+        completedOperations: "Operações Concluídas",
+        successfully: "Com Sucesso",
+        recentFiles: "Arquivos Recentes",
+        noRecentFiles: "Nenhum arquivo recente",
+        addedOn: "Adicionado em",
+        connectInstruction: "Conecte uma conta para começar a gerenciar seus arquivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configurações"
+      },
+      auth: {
+        login: {
+          title: "Bem-vindo de volta!",
+          subtitle: "Faça login com suas credenciais",
+          welcomeMessages: ["Bem-vindo de volta!", "Olá novamente!", "Bom te ver"],
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Sua senha",
+          signInButton: "Entrar",
+          noAccount: "Não tem uma conta? Cadastre-se",
+          forgotPassword: "Esqueceu sua senha?",
+          description: "Insira seu e-mail e senha para acessar sua conta."
+        },
+        signup: {
+          title: "Crie sua conta",
+          subtitle: "Cadastre-se para começar a gerenciar seus arquivos.",
+          nameLabel: "Nome completo",
+          namePlaceholder: "Seu nome",
+          emailLabel: "Endereço de e-mail",
+          emailPlaceholder: "seu@email.com",
+          passwordLabel: "Senha",
+          passwordPlaceholder: "Crie uma senha",
+          confirmPasswordLabel: "Confirmar senha",
+          confirmPasswordPlaceholder: "Repita sua senha",
+          createAccountButton: "Criar Conta",
+          hasAccount: "Já tem uma conta?",
+          signIn: "Faça login",
+          acceptTerms: {
+            part1: "Eu aceito os",
+            termsLink: "Termos de Serviço",
+            and: "e a",
+            privacyLink: "Política de Privacidade"
+          }
+        },
+        logout: "Sair",
+        showcase: {
+          title: "Gerencie sua equipe e operações sem esforço",
+          description: "Faça login para acessar seu painel CRM e gerenciar seus arquivos com eficiência."
+        }
+      },
+      dashboard: {
+        noAccountConnected: "No hay cuentas conectadas",
+        integrations: "Integraciones",
+        toStartWorking: "para empezar a trabajar",
+        totalFiles: "Archivos Totales",
+        filesManaged: "Archivos Gestionados",
+        activeOperations: "Operaciones Activas",
+        inProgress: "En Progreso",
+        totalOperations: "Operaciones Totales",
+        operationsPerformed: "Operaciones Realizadas",
+        completedOperations: "Operaciones Completadas",
+        successfully: "Exitosamente",
+        recentFiles: "Archivos Recientes",
+        noRecentFiles: "No hay archivos recientes",
+        addedOn: "Agregado el",
+        connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos."
+      },
+      user: {
+        profile: "Perfil",
+        settings: "Configuración"
+      },
+      auth: {
+        login: {
+          title: "¡Bienvenido de nuevo!",
+          subtitle: "Ingresa con tus datos",
+          welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Tu contraseña",
+          signInButton: "Iniciar Sesión",
+          noAccount: "¿No tienes cuenta? Regístrate",
+          forgotPassword: "¿Olvidaste tu contraseña?",
+          description: "Ingresa tu email y contraseña para acceder a tu cuenta."
+        },
+        signup: {
+          title: "Crea tu cuenta",
+          subtitle: "Regístrate para empezar a gestionar tus archivos.",
+          nameLabel: "Nombre completo",
+          namePlaceholder: "Tu nombre",
+          emailLabel: "Correo electrónico",
+          emailPlaceholder: "tu@email.com",
+          passwordLabel: "Contraseña",
+          passwordPlaceholder: "Crea una contraseña",
+          confirmPasswordLabel: "Confirmar contraseña",
+          confirmPasswordPlaceholder: "Repite tu contraseña",
+          createAccountButton: "Crear Cuenta",
+          hasAccount: "¿Ya tienes cuenta?",
+          signIn: "Inicia sesión",
+          acceptTerms: {
+            part1: "Acepto los",
+            termsLink: "Términos de Servicio",
+            and: "y la",
+            privacyLink: "Política de Privacidad"
+          }
+        },
+        logout: "Cerrar Sesión",
+        showcase: {
+          title: "Gestiona sin esfuerzo tu equipo y operaciones",
+          description: "Inicia sesión para acceder a tu panel CRM y gestionar tus archivos de manera eficiente."
+        }
       },
       landing: {
         hero: {

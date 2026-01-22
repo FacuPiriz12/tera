@@ -151,13 +151,13 @@ export default function AuthPage() {
                   transition={{ duration: 0.3 }}
                   className="text-4xl font-bold text-gray-900 mb-3 tracking-tight"
                 >
-                  {isRegistering ? t('landing.auth.signup.title') : welcomeMessage}
+                  {isRegistering ? t('auth.signup.title') : welcomeMessage}
                 </motion.h1>
               </AnimatePresence>
               <p className="text-gray-600">
                 {isRegistering 
-                  ? t('landing.auth.signup.subtitle') 
-                  : t('landing.auth.login.description')}
+                  ? t('auth.signup.subtitle') 
+                  : t('auth.login.description')}
               </p>
             </div>
 
@@ -167,7 +167,7 @@ export default function AuthPage() {
               {isRegistering && (
                 <div>
                   <label htmlFor="name-register" className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('landing.auth.signup.nameLabel')}
+                    {t('auth.signup.nameLabel')}
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -178,7 +178,7 @@ export default function AuthPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder={t('landing.auth.signup.namePlaceholder')}
+                      placeholder={t('auth.signup.namePlaceholder')}
                       className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                       required
                     />
@@ -189,7 +189,7 @@ export default function AuthPage() {
               {/* Email Field */}
               <div>
                 <label htmlFor="email-login" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('landing.auth.login.emailLabel')}
+                  {t('auth.login.emailLabel')}
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -200,7 +200,7 @@ export default function AuthPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t('landing.auth.login.emailPlaceholder')}
+                    placeholder={t('auth.login.emailPlaceholder')}
                     className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                     required
                   />
@@ -210,7 +210,7 @@ export default function AuthPage() {
               {/* Password Field */}
               <div>
                 <label htmlFor="password-login" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {t('landing.auth.login.passwordLabel')}
+                  {t('auth.login.passwordLabel')}
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -243,7 +243,7 @@ export default function AuthPage() {
               {isRegistering && (
                 <div>
                   <label htmlFor="confirm-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t('landing.auth.signup.confirmPasswordLabel')}
+                    {t('auth.signup.confirmPasswordLabel')}
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -272,12 +272,12 @@ export default function AuthPage() {
                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
                     />
                     <span className="ml-2 text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
-                      {t('landing.auth.login.rememberMe', 'Recordarme')}
+                      {t('auth.login.rememberMe', 'Recordarme')}
                     </span>
                   </label>
                   <Link href="/forgot-password">
                     <span className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer">
-                      {t('landing.auth.login.forgotPassword')}
+                      {t('auth.login.forgotPassword')}
                     </span>
                   </Link>
                 </div>
@@ -293,7 +293,7 @@ export default function AuthPage() {
                     required
                   />
                   <span className="ml-2 text-xs text-gray-600">
-                    {t('landing.auth.signup.acceptTerms.part1')} <Link href="/terms" className="text-blue-600 font-bold hover:underline">{t('landing.auth.signup.acceptTerms.termsLink')}</Link> {t('landing.auth.signup.acceptTerms.and')} <Link href="/privacy" className="text-blue-600 font-bold hover:underline">{t('landing.auth.signup.acceptTerms.privacyLink')}</Link>
+                    {t('auth.signup.acceptTerms.part1')} <Link href="/terms" className="text-blue-600 font-bold hover:underline">{t('auth.signup.acceptTerms.termsLink')}</Link> {t('auth.signup.acceptTerms.and')} <Link href="/privacy" className="text-blue-600 font-bold hover:underline">{t('auth.signup.acceptTerms.privacyLink')}</Link>
                   </span>
                 </div>
               )}
@@ -309,11 +309,11 @@ export default function AuthPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    {isRegistering ? t('landing.auth.signup.createAccountButton') : t('landing.auth.login.signInButton')}
+                    {isRegistering ? t('auth.signup.createAccountButton') : t('auth.login.signInButton')}
                   </>
                 ) : (
                   <>
-                    <span className="relative z-10">{isRegistering ? t('landing.auth.signup.createAccountButton') : t('landing.auth.login.signInButton')}</span>
+                    <span className="relative z-10">{isRegistering ? t('auth.signup.createAccountButton') : t('auth.login.signInButton')}</span>
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform relative z-10" />
                     <div className="absolute inset-0 bg-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                   </>
