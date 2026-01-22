@@ -355,7 +355,7 @@ const esTranslations = {
       terms: "Términos",
       cookies: "Cookies",
       compliance: "Cumplimiento",
-      rights: "© {{year}} TERA Cloud Technologies Inc.",
+      rights: "Copyright © 2026 TERA. Todos los derechos reservados.",
       status: "Sistemas Operativos",
       back: "Volver"
     },
@@ -438,7 +438,7 @@ const enTranslations = {
       syncDesc: "Harmony between clouds."
     },
     footer: {
-      rights: "© {{year}} TERA Cloud Technologies Inc.",
+      rights: "Copyright © 2026 TERA. Todos los derechos reservados.",
       status: "System Status"
     }
   }
@@ -510,7 +510,7 @@ const ptTranslations = {
       syncDesc: "Harmonia entre nuvens."
     },
     footer: {
-      rights: "© {{year}} TERA Cloud Technologies Inc.",
+      rights: "Copyright © 2026 TERA. Todos los derechos reservados.",
       status: "Status do Sistema"
     }
   }

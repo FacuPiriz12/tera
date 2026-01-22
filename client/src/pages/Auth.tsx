@@ -362,7 +362,7 @@ export default function AuthPage() {
 
             {/* Footer Copyright */}
             <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col items-center justify-center">
-              <p className="text-[12px] font-normal text-[#6a7282]">{t('landing.footer.rights', { year: 2026 })}</p>
+              <p className="text-[12px] font-normal text-[#6a7282]">Copyright © 2026 TERA. Todos los derechos reservados.</p>
               <div className="flex items-center mt-4">
                 <span className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
@@ -508,7 +508,7 @@ export default function AuthPage() {
 
             {/* Footer Copyright */}
             <div className="mt-10 pt-6 border-t border-gray-100 flex flex-col items-center justify-center">
-              <p className="text-[12px] font-normal text-[#6a7282]">{t('landing.footer.rights', { year: 2026 })}</p>
+              <p className="text-[12px] font-normal text-[#6a7282]">Copyright © 2026 TERA. Todos los derechos reservados.</p>
               <div className="flex items-center mt-3">
                 <span className="flex items-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
