@@ -66,13 +66,13 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/pricing" component={Pricing} />
       
-      {/* Landing page for non-authenticated users, Dashboard for authenticated */}
+      {/* Landing page for non-authenticated users, Redirect for authenticated to /dashboard */}
       <Route path="/">
-        {() => isLoggedIn ? <Home /> : <Landing />}
+        {() => isLoggedIn ? <Redirect to="/dashboard" /> : <Landing />}
       </Route>
 
       <Route path="/dashboard">
-        {() => isLoggedIn ? <Home /> : <AuthPage />}
+        {() => isLoggedIn ? <Home /> : <Redirect to="/login" />}
       </Route>
       
       <Route path="/home">
