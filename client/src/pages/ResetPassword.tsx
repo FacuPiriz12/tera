@@ -20,11 +20,11 @@ export default function ResetPasswordPage() {
   const { toast } = useToast();
 
   const passwordRequirements = [
-    { label: t('common.resetPassword.req.lowercase'), met: /[a-z]/.test(password) },
-    { label: t('common.resetPassword.req.special'), met: /[^A-Za-z0-9]/.test(password) },
-    { label: t('common.resetPassword.req.uppercase'), met: /[A-Z]/.test(password) },
-    { label: t('common.resetPassword.req.minimum'), met: password.length >= 8 },
-    { label: t('common.resetPassword.req.number'), met: /[0-9]/.test(password) },
+    { label: t('common.auth.resetPassword.req.lowercase'), met: /[a-z]/.test(password) },
+    { label: t('common.auth.resetPassword.req.special'), met: /[^A-Za-z0-9]/.test(password) },
+    { label: t('common.auth.resetPassword.req.uppercase'), met: /[A-Z]/.test(password) },
+    { label: t('common.auth.resetPassword.req.minimum'), met: password.length >= 8 },
+    { label: t('common.auth.resetPassword.req.number'), met: /[0-9]/.test(password) },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,8 +58,8 @@ export default function ResetPasswordPage() {
       
       setIsSuccess(true);
       toast({
-        title: t('common.resetPassword.successTitle'),
-        description: t('common.resetPassword.successDesc'),
+        title: t('common.auth.resetPassword.successTitle'),
+        description: t('common.auth.resetPassword.successDesc'),
       });
     } catch (error: any) {
       toast({
@@ -81,10 +81,10 @@ export default function ResetPasswordPage() {
               <CheckCircle2 className="w-10 h-10 text-green-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {t('auth.resetPassword.successTitle', '¡Todo listo!')}
+              {t('common.auth.resetPassword.successTitle')}
             </h1>
             <p className="text-gray-600 mb-8">
-              {t('auth.resetPassword.successLongDesc', 'Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.')}
+              {t('common.auth.resetPassword.successLongDesc')}
             </p>
             <Link href="/login">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-xl font-semibold">
@@ -109,17 +109,17 @@ export default function ResetPasswordPage() {
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
           <div className="mb-8 text-left">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {t('common.resetPassword.title')}
+              {t('common.auth.resetPassword.title')}
             </h1>
             <p className="text-gray-600 text-sm">
-              {t('common.resetPassword.description')}
+              {t('common.auth.resetPassword.description')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('common.resetPassword.passwordLabel')}
+                {t('common.auth.resetPassword.passwordLabel')}
               </label>
               <div className="relative group">
                 <input
@@ -136,7 +136,7 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirm-new-password" className="block text-sm font-semibold text-gray-700 mb-2">
-                {t('common.resetPassword.confirmPasswordLabel')}
+                {t('common.auth.resetPassword.confirmPasswordLabel')}
               </label>
               <div className="relative group">
                 <input
@@ -186,7 +186,7 @@ export default function ResetPasswordPage() {
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
               ) : null}
-              {t('common.resetPassword.submitButton')}
+              {t('common.auth.resetPassword.submitButton')}
             </Button>
           </form>
 
@@ -194,7 +194,7 @@ export default function ResetPasswordPage() {
             <Link href="/login">
               <button className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                {t('common.resetPassword.backToLogin')}
+                {t('common.auth.resetPassword.backToLogin')}
               </button>
             </Link>
           </div>
