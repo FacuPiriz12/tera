@@ -504,7 +504,6 @@ const resources = {
 
 i18n
   .use(LanguageDetector)
-  .use(customDetector)
   .use(initReactI18next)
   .init({
     resources,
@@ -513,7 +512,7 @@ i18n
       escapeValue: false,
     },
     detection: {
-      order: ['locationLanguageDetector', 'querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
+      order: ['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage', 'cookie'],
     },
   });
