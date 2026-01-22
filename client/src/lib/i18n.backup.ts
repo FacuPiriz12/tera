@@ -116,25 +116,7 @@ const resources = {
         auth: {
           login: "Iniciar Sesión",
           logout: "Cerrar Sesión",
-          loggingOut: "Cerrando sesión...",
-          resetPassword: {
-            title: "Elige una nueva contraseña",
-            description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
-            passwordLabel: "Nueva contraseña",
-            confirmPasswordLabel: "Confirmar nueva contraseña",
-            submitButton: "Restablecer contraseña",
-            successTitle: "Contraseña actualizada",
-            successDesc: "Tu contraseña ha sido restablecida con éxito.",
-            successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
-            backToLogin: "Volver al inicio de sesión",
-            req: {
-              lowercase: "una minúscula",
-              special: "un carácter especial",
-              uppercase: "una mayúscula",
-              minimum: "mínimo 8 caracteres",
-              number: "un número"
-            }
-          }
+          loggingOut: "Cerrando sesión..."
         },
         signupSuccess: {
           title: "¡Registro Exitoso!",
@@ -167,6 +149,29 @@ const resources = {
           signupAgain: "Registrarse de nuevo",
           tryLogin: "Iniciar Sesión",
           troubleshooting: "Si el enlace no funciona, asegúrate de hacer clic directamente desde el email."
+        },
+        auth: {
+          login: "Iniciar Sesión",
+          logout: "Cerrar Sesión",
+          loggingOut: "Cerrando sesión...",
+          resetPassword: {
+            title: "Elige una nueva contraseña",
+            description: "Casi listo. Introduce tu nueva contraseña y estarás preparado.",
+            passwordLabel: "Nueva contraseña",
+            confirmPasswordLabel: "Confirmar nueva contraseña",
+            submitButton: "Restablecer contraseña",
+            successTitle: "Contraseña actualizada",
+            successDesc: "Tu contraseña ha sido restablecida con éxito.",
+            successLongDesc: "Tu contraseña ha sido actualizada. Ahora puedes iniciar sesión con tu nueva clave.",
+            backToLogin: "Volver al inicio de sesión",
+            req: {
+              lowercase: "una minúscula",
+              special: "un carácter especial",
+              uppercase: "una mayúscula",
+              minimum: "mínimo 8 caracteres",
+              number: "un número"
+            }
+          }
         },
         buttons: {
           cancel: "Cancelar",
@@ -638,25 +643,7 @@ const resources = {
         auth: {
           login: "Log In",
           logout: "Log Out",
-          loggingOut: "Logging out...",
-          resetPassword: {
-            title: "Choose a new password",
-            description: "Almost ready. Enter your new password and you'll be set.",
-            passwordLabel: "New password",
-            confirmPasswordLabel: "Confirm new password",
-            submitButton: "Reset password",
-            successTitle: "Password updated",
-            successDesc: "Your password has been successfully reset.",
-            successLongDesc: "Your password has been updated. You can now log in with your new key.",
-            backToLogin: "Back to login",
-            req: {
-              lowercase: "one lowercase",
-              special: "one special character",
-              uppercase: "one uppercase",
-              minimum: "minimum 8 characters",
-              number: "one number"
-            }
-          }
+          loggingOut: "Logging out..."
         },
         signupSuccess: {
           title: "Signup Successful!",
@@ -679,16 +666,39 @@ const resources = {
           confirmedDescription: "Your email address has been successfully verified.",
           failed: "Verification Error",
           failedDescription: "We couldn't validate your verification link.",
-          success: "Your email has been correctly verified.",
+          success: "Your email has been successfully verified.",
           error: "An error occurred while confirming your email.",
           linkExpired: "The link has expired. Please request a new one.",
-          invalidLink: "Invalid link or already used.",
+          invalidLink: "Invalid or already used link.",
           alreadyVerified: "This email is already verified.",
-          redirecting: "Redirecting to the main panel...",
-          continueToApp: "Go to Application",
+          redirecting: "Redirecting you to the main dashboard...",
+          continueToApp: "Go to App",
           signupAgain: "Sign up again",
           tryLogin: "Log In",
           troubleshooting: "If the link doesn't work, make sure to click it directly from the email."
+        },
+        auth: {
+          login: "Log In",
+          logout: "Log Out",
+          loggingOut: "Logging out...",
+          resetPassword: {
+            title: "Choose a new password",
+            description: "Almost ready. Enter your new password and you'll be set.",
+            passwordLabel: "New password",
+            confirmPasswordLabel: "Confirm new password",
+            submitButton: "Reset password",
+            successTitle: "Password updated",
+            successDesc: "Your password has been successfully reset.",
+            successLongDesc: "Your password has been updated. You can now log in with your new key.",
+            backToLogin: "Back to login",
+            req: {
+              lowercase: "one lowercase",
+              special: "one special character",
+              uppercase: "one uppercase",
+              minimum: "minimum 8 characters",
+              number: "one number"
+            }
+          }
         },
         buttons: {
           cancel: "Cancel",
@@ -1203,25 +1213,7 @@ const resources = {
         auth: {
           login: "Iniciar Sessão",
           logout: "Sair",
-          loggingOut: "Saindo...",
-          resetPassword: {
-            title: "Escolha uma nova senha",
-            description: "Quase pronto. Digite sua nova senha e você estará preparado.",
-            passwordLabel: "Nova senha",
-            confirmPasswordLabel: "Confirmar nova senha",
-            submitButton: "Redefinir senha",
-            successTitle: "Senha atualizada",
-            successDesc: "Sua senha foi redefinida com sucesso.",
-            successLongDesc: "Sua senha foi atualizada. Agora você pode iniciar sessão com sua nova chave.",
-            backToLogin: "Voltar para o login",
-            req: {
-              lowercase: "uma minúscula",
-              special: "um caractere especial",
-              uppercase: "uma maiúscula",
-              minimum: "mínimo 8 caracteres",
-              number: "um número"
-            }
-          }
+          loggingOut: "Saindo..."
         },
         signupSuccess: {
           title: "Cadastro com Sucesso!",
@@ -1254,6 +1246,29 @@ const resources = {
           signupAgain: "Cadastrar novamente",
           tryLogin: "Iniciar Sessão",
           troubleshooting: "Se o link não funcionar, certifique-se de clicar diretamente do e-mail."
+        },
+        auth: {
+          login: "Iniciar Sessão",
+          logout: "Sair",
+          loggingOut: "Saindo...",
+          resetPassword: {
+            title: "Escolha uma nova senha",
+            description: "Quase pronto. Digite sua nova senha e você estará preparado.",
+            passwordLabel: "Nova senha",
+            confirmPasswordLabel: "Confirmar nova senha",
+            submitButton: "Redefinir senha",
+            successTitle: "Senha atualizada",
+            successDesc: "Sua senha foi redefinida com sucesso.",
+            successLongDesc: "Sua senha foi atualizada. Agora você pode iniciar sessão com sua nova chave.",
+            backToLogin: "Voltar para o login",
+            req: {
+              lowercase: "uma minúscula",
+              special: "um caractere especial",
+              uppercase: "uma maiúscula",
+              minimum: "mínimo 8 caracteres",
+              number: "um número"
+            }
+          }
         },
         buttons: {
           cancel: "Cancelar",
