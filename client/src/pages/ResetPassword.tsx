@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <Link href="/">
           <div className="flex items-center justify-center mb-12 cursor-pointer group">
-            <img src={logoUrl} alt="TERA Logo" className="h-20 w-auto group-hover:scale-105 transition-transform duration-300" />
+            <img src={logoUrl} alt="TERA Logo" className="h-24 w-auto group-hover:scale-105 transition-transform duration-300" />
           </div>
         </Link>
 

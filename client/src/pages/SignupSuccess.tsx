@@ -14,7 +14,7 @@ export default function SignupSuccess() {
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col items-center justify-center p-6 text-center">
       <div className="mb-12">
         <Link href="/">
-          <img src={logoUrl} alt="Logo" className="h-12 w-auto cursor-pointer" />
+          <img src={logoUrl} alt="Logo" className="h-24 w-auto cursor-pointer" />
         </Link>
       </div>
 
