@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { Lock, ArrowLeft, CheckCircle2, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Lock, ArrowLeft, CheckCircle2, XCircle, Globe } from 'lucide-react';
 import { useLocation } from "wouter";
 import { Link } from "@/components/ui/Link";
 import logoUrl from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 import { apiRequest } from "@/lib/queryClient";
 
 export default function ResetPasswordPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -98,7 +104,30 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4 relative">
+      {/* Language Selector Overlay */}
+      <div className="absolute top-4 right-4 z-50">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="bg-white/50 backdrop-blur-sm border border-gray-200">
+              <Globe className="w-4 h-4 mr-2" />
+              <span className="uppercase">{i18n.language.split('-')[0]}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('es')}>
+              Español
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('en')}>
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => i18n.changeLanguage('pt')}>
+              Português
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <div className="w-full max-w-md">
         <Link href="/">
           <div className="flex items-center justify-center mb-12 cursor-pointer group">

@@ -532,7 +532,7 @@ i18n
       escapeValue: false,
     },
     detection: {
-      order: ['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag'],
+      order: ['localStorage', 'cookie', 'querystring', 'navigator', 'htmlTag'],
       caches: ['localStorage', 'cookie'],
     },
   });
