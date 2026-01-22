@@ -44,6 +44,20 @@ const customDetector = {
 const resources = {
   es: {
     translation: {
+      welcomeMessages: [
+        "¡Volviste! Qué bueno verte otra vez 🙌",
+        "¡Ey! Te estábamos esperando",
+        "¡Qué alegría verte de nuevo!",
+        "¡Acá estás! Vamos a seguir",
+        "¡Bien ahí! Qué gusto tenerte otra vez",
+        "¡Hey! Todo listo para continuar",
+        "¡De vuelta al ruedo! 💪",
+        "¡Qué bueno que regresaste!",
+        "¡Hola otra vez! ¿Listo para seguir?",
+        "¡Llegaste justo!",
+        "¡Vamos! Te extrañábamos",
+        "¡Todo listo! Arranquemos 🚀"
+      ],
       emailVerificationTitle: "Verifica tu correo",
       emailVerificationDescription: "Haz clic en el botón de abajo para confirmar tu dirección de correo electrónico.",
       emailVerificationInfo: "Estás a un paso de completar tu registro. Confirma tu correo para activar tu cuenta.",
@@ -550,6 +564,20 @@ const resources = {
   },
   en: {
     translation: {
+      welcomeMessages: [
+        "You’re back! Nice to see you 😄",
+        "Hey! Welcome back",
+        "Look who’s here!",
+        "Back again? Let’s go 🚀",
+        "Good to have you back!",
+        "Hey there! Ready to continue?",
+        "Welcome back! We missed you",
+        "And… you’re in!",
+        "Nice, you’re back 🙌",
+        "Hey! Let’s pick up where you left off",
+        "Back at it! 💪",
+        "Glad to see you again"
+      ],
       emailVerificationTitle: "Verify your email",
       emailVerificationDescription: "Click the button below to confirm your email address.",
       emailVerificationInfo: "You're one step away from completing your registration. Confirm your email to activate your account.",
@@ -1056,6 +1084,20 @@ const resources = {
   },
   pt: {
     translation: {
+      welcomeMessages: [
+        "Você voltou! Que bom te ver 😄",
+        "Opa! Bem-vindo de volta",
+        "Olha quem chegou!",
+        "De volta! Bora continuar 🚀",
+        "Que bom te ter por aqui de novo",
+        "E aí! Pronto pra seguir?",
+        "Sentimos sua falta 😉",
+        "Chegou! Vamos nessa",
+        "Bom te ver outra vez!",
+        "Voltou com tudo 💪",
+        "Opa! Tudo pronto",
+        "Bora lá?"
+      ],
       emailVerificationTitle: "Verifique seu e-mail",
       emailVerificationDescription: "Clique no botão abaixo para confirmar seu endereço de e-mail.",
       emailVerificationInfo: "Você está a um passo de concluir seu cadastro. Confirme seu e-mail para ativar sua conta.",

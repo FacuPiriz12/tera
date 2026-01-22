@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabasePromise } from "@/lib/supabase";
 import { setCachedSession } from "@/lib/supabaseSession";
 import { useToast } from "@/hooks/use-toast";
@@ -19,9 +19,19 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onReplitLogin }: LoginFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Get a random welcome message based on the current language
+  const welcomeMessage = useMemo(() => {
+    const messages = t('welcomeMessages', { returnObjects: true });
+    if (Array.isArray(messages) && messages.length > 0) {
+      const randomIndex = Math.floor(Math.random() * messages.length);
+      return messages[randomIndex];
+    }
+    return t('auth.login.welcome'); // Fallback
+  }, [t, i18n.language]);
 
   const loginSchema = z.object({
     email: z.string().email({ message: t('auth.validation.invalidEmail') }),
