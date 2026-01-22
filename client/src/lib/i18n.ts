@@ -1567,10 +1567,20 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'es',
+    fallbackLng: 'en',
+    detection: {
+      order: ['locationLanguageDetector', 'querystring', 'cookie', 'localStorage', 'sessionStorage', 'navigator', 'htmlTag'],
+      lookupLocalStorage: 'i18nextLng',
+      caches: ['localStorage'],
+    },
     interpolation: {
       escapeValue: false,
     },
   });
+
+// Register the custom detector
+if (i18n.services.languageDetector) {
+  i18n.services.languageDetector.addDetector(customDetector);
+}
 
 export default i18n;
