@@ -302,6 +302,7 @@ const resources = {
         auth: {
           login: {
             title: "¡Bienvenido de nuevo!",
+            subtitle: "Ingresa con tus datos",
             welcomeMessages: ["¡Bienvenido de nuevo!", "¡Hola de nuevo!", "Qué bueno verte"],
             emailLabel: "Correo electrónico",
             emailPlaceholder: "tu@email.com",
@@ -309,10 +310,12 @@ const resources = {
             passwordPlaceholder: "Tu contraseña",
             signInButton: "Iniciar Sesión",
             noAccount: "¿No tienes cuenta? Regístrate",
-            forgotPassword: "¿Olvidaste tu contraseña?"
+            forgotPassword: "¿Olvidaste tu contraseña?",
+            description: "Ingresa tu email y contraseña para acceder a tu cuenta."
           },
           signup: {
             title: "Crea tu cuenta",
+            subtitle: "Regístrate para empezar a gestionar tus archivos.",
             nameLabel: "Nombre completo",
             namePlaceholder: "Tu nombre",
             emailLabel: "Correo electrónico",
@@ -330,6 +333,10 @@ const resources = {
               and: "y la",
               privacyLink: "Política de Privacidad"
             }
+          },
+          showcase: {
+            title: "Gestiona sin esfuerzo tu equipo y operaciones",
+            description: "Inicia sesión para acceder a tu panel CRM y gestionar tus archivos de manera eficiente."
           },
           validation: {
             invalidEmail: "Correo electrónico inválido",
@@ -822,6 +829,7 @@ const resources = {
         auth: {
           login: {
             title: "Welcome back!",
+            subtitle: "Enter your details",
             welcomeMessages: ["Welcome back!", "Hello again!", "Good to see you"],
             emailLabel: "Email address",
             emailPlaceholder: "you@email.com",
@@ -829,10 +837,12 @@ const resources = {
             passwordPlaceholder: "Your password",
             signInButton: "Log In",
             noAccount: "Don't have an account? Sign up",
-            forgotPassword: "Forgot your password?"
+            forgotPassword: "Forgot your password?",
+            description: "Enter your email and password to access your account."
           },
           signup: {
             title: "Create your account",
+            subtitle: "Sign up to start managing your files.",
             nameLabel: "Full name",
             namePlaceholder: "Your name",
             emailLabel: "Email address",
@@ -850,6 +860,10 @@ const resources = {
               and: "and the",
               privacyLink: "Privacy Policy"
             }
+          },
+          showcase: {
+            title: "Effortlessly manage your team and operations",
+            description: "Log in to access your CRM dashboard and manage your files efficiently."
           },
           validation: {
             invalidEmail: "Invalid email address",
@@ -1082,23 +1096,66 @@ const resources = {
       }
     }
   },
-  pt: {
-    translation: {
-      welcomeMessages: [
-        "Você voltou! Que bom te ver 😄",
-        "Opa! Bem-vindo de volta",
-        "Olha quem chegou!",
-        "De volta! Bora continuar 🚀",
-        "Que bom te ter por aqui de novo",
-        "E aí! Pronto pra seguir?",
-        "Sentimos sua falta 😉",
-        "Chegou! Vamos nessa",
-        "Bom te ver outra vez!",
-        "Voltou com tudo 💪",
-        "Opa! Tudo pronto",
-        "Bora lá?"
-      ],
-      emailVerificationTitle: "Verifique seu e-mail",
+      pt: {
+        translation: {
+          welcomeMessages: [
+            "Você voltou! Que bom te ver 😄",
+            "Opa! Bem-vindo de volta",
+            "Olha quem chegou!",
+            "De volta! Bora continuar 🚀",
+            "Que bom te ter por aqui de novo",
+            "E aí! Pronto pra seguir?",
+            "Sentimos sua falta 😉",
+            "Chegou! Vamos nessa",
+            "Bom te ver outra vez!",
+            "Voltou com tudo 💪",
+            "Opa! Tudo pronto",
+            "Bora lá?"
+          ],
+          auth: {
+            login: {
+              title: "Bem-vindo de volta",
+              subtitle: "Entre com seus dados",
+              emailLabel: "Endereço de e-mail",
+              emailPlaceholder: "seu@email.com",
+              passwordLabel: "Senha",
+              signInButton: "Entrar",
+              forgotPassword: "Esqueceu sua senha?",
+              noAccount: "Não tem uma conta?",
+              signUpNow: "Cadastre-se agora",
+              rememberMe: "Lembrar de mim",
+              orContinueWith: "Ou continue com",
+              description: "Insira seu e-mail e senha para acessar sua conta."
+            },
+            signup: {
+              title: "Crie sua conta",
+              subtitle: "Cadastre-se para começar a gerenciar seus arquivos.",
+              nameLabel: "Nome completo",
+              namePlaceholder: "Seu nome",
+              confirmPasswordLabel: "Confirmar senha",
+              createAccountButton: "Criar Conta",
+              hasAccount: "Já tem uma conta?",
+              signIn: "Fazer Login",
+              acceptTerms: {
+                part1: "Eu aceito os",
+                termsLink: "Termos",
+                and: "e a",
+                privacyLink: "Privacidade"
+              }
+            },
+            showcase: {
+              title: "Gerencie sem esforço sua equipe e operações",
+              description: "Faça login para acessar seu painel CRM e gerenciar seus arquivos de forma eficiente."
+            },
+            validation: {
+              invalidEmail: "E-mail inválido",
+              passwordTooShort: "A senha deve ter pelo menos 6 caracteres",
+              nameRequired: "O nome é obrigatório",
+              acceptTermsRequired: "Você deve aceitar os termos",
+              passwordsDoNotMatch: "As senhas não coincidem"
+            }
+          },
+          emailVerificationTitle: "Verifique seu e-mail",
       emailVerificationDescription: "Clique no botão abaixo para confirmar seu endereço de e-mail.",
       emailVerificationInfo: "Você está a um passo de concluir seu cadastro. Confirme seu e-mail para ativar sua conta.",
       emailVerificationConfirmButton: "Confirmar meu e-mail",
