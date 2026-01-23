@@ -308,7 +308,7 @@ export default function Header() {
                     data-testid="menu-profile"
                   >
                     <User className="mr-2 h-4 w-4" />
-                    <span>{t('user.profile')}</span>
+                    <span>{t('common.user.profile')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={goToSettings} 
@@ -316,7 +316,7 @@ export default function Header() {
                     data-testid="menu-settings"
                   >
                     <Settings className="mr-2 h-4 w-4" />
-                    <span>{t('user.settings')}</span>
+                    <span>{t('common.user.settings')}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={handleLogout} 
@@ -324,7 +324,7 @@ export default function Header() {
                     data-testid="menu-logout"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>{t('auth.logout')}</span>
+                    <span>{t('common.auth.logout')}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

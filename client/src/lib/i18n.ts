@@ -101,7 +101,10 @@ const esTranslations = {
       tasks: "Tareas Programadas",
       health: "Salud de la Nube",
       cloudExplorer: "Explorador Multi-nube",
-      shared: "Compartidos"
+      shared: "Compartidos",
+      adminPanel: "Panel Admin",
+      userManagement: "Gestión de Usuarios",
+      operationLogs: "Logs de Operaciones"
     },
     sidebar: {
       storage: "Almacenamiento",

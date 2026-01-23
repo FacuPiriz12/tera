@@ -192,11 +192,11 @@ export default function Home() {
               <div className="flex items-center text-amber-800">
                 <AlertCircle className="w-5 h-5 mr-2" />
                 <span>
-                  {t('dashboard.noAccountConnected')}{' '}
+                  {t('common.dashboard.noAccountConnected')}{' '}
                   <Link href="/integrations" className="font-bold underline text-blue-600 hover:text-blue-800 transition-colors">
-                    {t('dashboard.integrations')}
+                    {t('common.dashboard.integrations')}
                   </Link>{' '}
-                  {t('dashboard.toStartWorking')}
+                  {t('common.dashboard.toStartWorking')}
                 </span>
               </div>
             </div>
@@ -207,7 +207,7 @@ export default function Home() {
             <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('dashboard.totalFiles')}
+                  {t('common.dashboard.totalFiles')}
                 </CardTitle>
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                   <Files className="w-6 h-6 text-primary" />
@@ -218,7 +218,7 @@ export default function Home() {
                   {totalFiles.toLocaleString()}
                 </div>
                 <p className="text-[0.9rem] text-muted-foreground">
-                  {t('dashboard.filesManaged')}
+                  {t('common.dashboard.filesManaged')}
                 </p>
               </CardContent>
             </Card>
@@ -226,7 +226,7 @@ export default function Home() {
             <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('dashboard.activeOperations')}
+                  {t('common.dashboard.activeOperations')}
                 </CardTitle>
                 <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
                   <Activity className="w-6 h-6 text-secondary" />
@@ -237,7 +237,7 @@ export default function Home() {
                   {activeOperations}
                 </div>
                 <p className="text-[0.9rem] text-muted-foreground">
-                  {t('dashboard.inProgress')}
+                  {t('common.dashboard.inProgress')}
                 </p>
               </CardContent>
             </Card>
@@ -245,7 +245,7 @@ export default function Home() {
             <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('dashboard.totalOperations')}
+                  {t('common.dashboard.totalOperations')}
                 </CardTitle>
                 <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-accent" />
@@ -256,7 +256,7 @@ export default function Home() {
                   {totalOperations}
                 </div>
                 <p className="text-[0.9rem] text-muted-foreground">
-                  {t('dashboard.operationsPerformed')}
+                  {t('common.dashboard.operationsPerformed')}
                 </p>
               </CardContent>
             </Card>
@@ -264,7 +264,7 @@ export default function Home() {
             <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
               <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('dashboard.completedOperations')}
+                  {t('common.dashboard.completedOperations')}
                 </CardTitle>
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -275,7 +275,7 @@ export default function Home() {
                   {completedOperations}
                 </div>
                 <p className="text-[0.9rem] text-muted-foreground">
-                  {t('dashboard.successfully')}
+                  {t('common.dashboard.successfully')}
                 </p>
               </CardContent>
             </Card>
@@ -285,7 +285,7 @@ export default function Home() {
           <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
             <CardHeader className="bg-muted/50 border-b border-border p-6">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-[1.1rem] font-semibold">{t('dashboard.recentFiles')}</CardTitle>
+                <CardTitle className="text-[1.1rem] font-semibold">{t('common.dashboard.recentFiles')}</CardTitle>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
                     <BarChart3 className="w-4 h-4" />
@@ -315,7 +315,7 @@ export default function Home() {
                           {file.name}
                         </div>
                         <div className="text-[0.8rem] text-muted-foreground">
-                          {t('dashboard.addedOn')} {new Date(file.createdAt!).toLocaleDateString()}
+                          {t('common.dashboard.addedOn')} {new Date(file.createdAt!).toLocaleDateString()}
                         </div>
                       </div>
                       <div className="flex gap-3 opacity-0 hover:opacity-100 transition-opacity">
@@ -331,7 +331,7 @@ export default function Home() {
                 ) : (
                   <div className="text-center py-12">
                     <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('dashboard.noRecentFiles')}</p>
+                    <p className="text-muted-foreground">{t('common.dashboard.noRecentFiles')}</p>
                   </div>
                 )}
               </div>

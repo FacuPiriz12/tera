@@ -59,20 +59,20 @@ export default function Sidebar() {
     { path: "/", icon: Home, label: t('common.navigation.home') },
     { path: "/shared-drives", icon: Cloud, label: t('common.navigation.sharedDrives') },
     { path: "/operations", icon: Copy, label: t('common.navigation.operations') },
-    { path: "/tasks", icon: CalendarClock, label: "Tareas Programadas" },
-    { path: "/health", icon: HeartPulse, label: "Salud de la Nube" },
+    { path: "/tasks", icon: CalendarClock, label: t('common.navigation.tasks') },
+    { path: "/health", icon: HeartPulse, label: t('common.navigation.health') },
     { path: "/integrations", icon: Settings, label: t('common.navigation.integrations') },
-    { path: "/cloud-explorer", icon: ArrowRightLeft, label: "Explorador Multi-nube" },
+    { path: "/cloud-explorer", icon: ArrowRightLeft, label: t('common.navigation.cloudExplorer') },
     { path: "/my-files", icon: Folder, label: t('common.navigation.myFiles') },
-    { path: "/shared", icon: Share2, label: "Compartidos" },
+    { path: "/shared", icon: Share2, label: t('common.navigation.shared') },
     { path: "/analytics", icon: BarChart3, label: t('common.navigation.analytics') },
   ];
 
   // Admin-only navigation - only show if user is loaded and is admin
   const adminNavItems = !userLoading && user?.role === 'admin' ? [
-    { path: "/admin", icon: Shield, label: "Panel Admin" },
-    { path: "/admin/users", icon: Users, label: "Gestión de Usuarios" },
-    { path: "/admin/operations", icon: FileText, label: "Logs de Operaciones" },
+    { path: "/admin", icon: Shield, label: t('common.navigation.adminPanel', 'Panel Admin') },
+    { path: "/admin/users", icon: Users, label: t('common.navigation.userManagement', 'Gestión de Usuarios') },
+    { path: "/admin/operations", icon: FileText, label: t('common.navigation.operationLogs', 'Logs de Operaciones') },
   ] : [];
 
   return (
