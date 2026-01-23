@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import type { CopyOperation, User } from "@shared/schema";
 
 export default function Sidebar() {
-  const { t } = useTranslation(['common']);
+  const { t } = useTranslation();
   const [location] = useLocation();
   const queryClient = useQueryClient();
   const prevCompletedCount = useRef<number>(0);
