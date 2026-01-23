@@ -184,7 +184,7 @@ export default function Home() {
           <div className="p-8">
           {/* Page Header */}
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-[1.5rem] font-semibold text-foreground">{t('common.navigation.home')}</h1>
+            <h1 className="text-[1.5rem] font-semibold text-foreground">{t('common.navigation.home', 'Inicio')}</h1>
           </div>
 
           {!hasAnyAccountConnected && (

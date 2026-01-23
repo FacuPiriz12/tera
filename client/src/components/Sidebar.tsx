@@ -56,16 +56,16 @@ export default function Sidebar() {
     .slice(0, 3);
 
   const navItems = [
-    { path: "/", icon: Home, label: t('common.navigation.home') },
-    { path: "/shared-drives", icon: Cloud, label: t('common.navigation.sharedDrives') },
-    { path: "/operations", icon: Copy, label: t('common.navigation.operations') },
-    { path: "/tasks", icon: CalendarClock, label: t('common.navigation.tasks') },
-    { path: "/health", icon: HeartPulse, label: t('common.navigation.health') },
-    { path: "/integrations", icon: Settings, label: t('common.navigation.integrations') },
-    { path: "/cloud-explorer", icon: ArrowRightLeft, label: t('common.navigation.cloudExplorer') },
-    { path: "/my-files", icon: Folder, label: t('common.navigation.myFiles') },
-    { path: "/shared", icon: Share2, label: t('common.navigation.shared') },
-    { path: "/analytics", icon: BarChart3, label: t('common.navigation.analytics') },
+    { path: "/", icon: Home, label: t('common.navigation.home', 'Inicio') },
+    { path: "/shared-drives", icon: Cloud, label: t('common.navigation.sharedDrives', 'Drives Compartidos') },
+    { path: "/operations", icon: Copy, label: t('common.navigation.operations', 'Operaciones') },
+    { path: "/tasks", icon: CalendarClock, label: t('common.navigation.tasks', 'Tareas Programadas') },
+    { path: "/health", icon: HeartPulse, label: t('common.navigation.health', 'Salud de la Nube') },
+    { path: "/integrations", icon: Settings, label: t('common.navigation.integrations', 'Integraciones') },
+    { path: "/cloud-explorer", icon: ArrowRightLeft, label: t('common.navigation.cloudExplorer', 'Explorador Multi-nube') },
+    { path: "/my-files", icon: Folder, label: t('common.navigation.myFiles', 'Mis Archivos') },
+    { path: "/shared", icon: Share2, label: t('common.navigation.shared', 'Compartidos') },
+    { path: "/analytics", icon: BarChart3, label: t('common.navigation.analytics', 'Analíticas') },
   ];
 
   // Admin-only navigation - only show if user is loaded and is admin
