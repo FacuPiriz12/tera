@@ -18,7 +18,7 @@ The client-side is built with React 18, TypeScript, and Vite, utilizing shadcn/u
 - **Database**: PostgreSQL with Drizzle ORM for type-safe operations, schema versioning, user management, and session storage.
 - **File Management**: Integration with Google Drive API (OAuth2) for file/folder operations, metadata retrieval, and asynchronous copying with progress tracking. Dropbox integration (manual setup) provides similar functionalities using the Dropbox SDK.
 - **Real-time Features**: Server-Sent Events (SSE) provide real-time transfer progress updates managed by a global `TransferContext` in React, ensuring persistent updates and state recovery.
-- **Scheduled Tasks**: A background scheduler service manages automated file copy operations with configurable frequencies (hourly, daily, weekly, monthly). It includes a full CRUD interface for task management and execution history tracking.
+- **Payments**: Integrated Stripe for Pro subscriptions. Endpoints include `/api/stripe/create-checkout` and `/api/stripe/webhook`. Requires `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET` environment variables.
 - **Duplicate Detection**: An intelligent system combines metadata and SHA-256 hash-based verification to detect duplicates before file transfers, offering user control over handling (skip, replace, copy with suffix) for both manual and scheduled operations.
 
 ## System Design Choices

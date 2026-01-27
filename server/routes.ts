@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
@@ -11,6 +11,9 @@ import { insertCloudFileSchema, insertCopyOperationSchema } from "@shared/schema
 import { z } from "zod";
 import { google } from "googleapis";
 import crypto from "crypto";
+import Stripe from "stripe";
+
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 // Utility function to compute redirect URI consistently across all OAuth flows
 function getOAuthRedirectUri(req: any, path: string): string {
@@ -130,6 +133,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   
+  // Stripe routes
+  app.post('/api/stripe/create-checkout', isAuthenticated, async (req: any, res) => {
+    if (!stripe) return res.status(500).json({ message: "Stripe not configured" });
+    try {
+      const { priceId } = req.body;
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: `${req.protocol}://${req.get('host')}/settings?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/settings`,
+        client_reference_id: req.user.claims.sub,
+      });
+      res.json({ url: session.url });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(500).send("Stripe not configured");
+    const sig = req.headers['stripe-signature'];
+    try {
+      const event = stripe.webhooks.constructEvent(req.body, sig!, process.env.STRIPE_WEBHOOK_SECRET);
+      if (event.type === 'checkout.session.completed') {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.client_reference_id && session.subscription) {
+          await storage.updateUserStripeInfo(session.client_reference_id, {
+            subscriptionId: session.subscription as string,
+            customerId: session.customer as string
+          });
+          // Update plan to pro
+          await storage.updateUser(session.client_reference_id, { membershipPlan: 'pro' });
+        }
+      }
+      res.json({ received: true });
+    } catch (err: any) {
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 

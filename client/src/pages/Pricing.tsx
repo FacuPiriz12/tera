@@ -1,17 +1,48 @@
 import React, { useState } from 'react';
-import { Check, X, ArrowRight, Star, Zap, Shield, Zap as ZapIcon, Users, HardDrive, RefreshCw, Clock, FileText, Sparkles, Crown, ChevronDown } from 'lucide-react';
+import { Check, X, ArrowRight, Star, Zap, Shield, Zap as ZapIcon, Users, HardDrive, RefreshCw, Clock, FileText, Sparkles, Crown, ChevronDown, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
 import logoUrl from '../assets/logo.png';
 import Footer from '../components/Footer';
 import LanguageSelector from '../components/LanguageSelector';
+import { useToast } from "@/hooks/use-toast";
 
 const PricingPage = () => {
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [loading, setLoading] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const handleCheckout = async (priceId: string) => {
+    if (priceId === "0") return;
+    try {
+      setLoading(priceId);
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al crear la sesión de pago');
+      }
+      
+      const { url } = await response.json();
+      window.location.href = url;
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
 
   const plans = [
     {
       name: "Free",
+      priceId: "0",
       price: { monthly: "0", annual: "0" },
       tagline: 'Para uso personal',
       description: "Ideal para empezar a organizar tus archivos personales.",
@@ -32,6 +63,7 @@ const PricingPage = () => {
     },
     {
       name: "Pro",
+      priceId: "price_PRO_ID", // Reemplazar con ID real de Stripe
       price: { monthly: "12.00", annual: "120" },
       tagline: 'Para profesionales',
       highlight: 'La mejor oferta',
@@ -54,6 +86,7 @@ const PricingPage = () => {
     },
     {
       name: "Business",
+      priceId: "price_BUSINESS_ID", // Reemplazar con ID real de Stripe
       price: { monthly: "25.00", annual: "250" },
       tagline: 'Para equipos',
       description: "Soluciones a medida para equipos y grandes organizaciones.",
@@ -244,11 +277,17 @@ const PricingPage = () => {
                 </div>
 
                 <div className="mb-10 order-last lg:order-none">
-                  <button className={`w-full py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex items-center justify-center group ${
+                  <button 
+                    disabled={plan.priceId === "0" || !!loading}
+                    onClick={() => handleCheckout(plan.priceId)}
+                    className={`w-full py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex items-center justify-center group ${
                     plan.popular
                       ? 'bg-white text-blue-700 hover:bg-blue-50'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}>
+                  } ${loading === plan.priceId ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                    {loading === plan.priceId ? (
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : null}
                     {plan.cta}
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </button>
