@@ -64,7 +64,7 @@ const PricingPage = () => {
     },
     {
       name: "Pro",
-      priceId: "price_PRO_ID", // Reemplazar con ID real de Stripe
+      priceId: "price_1QpsmX2eZvW4zJp1R1X1X1X1", // Reemplazar con ID real de Stripe
       price: { monthly: "12.00", annual: "120" },
       tagline: 'Para profesionales',
       highlight: 'La mejor oferta',
@@ -87,7 +87,7 @@ const PricingPage = () => {
     },
     {
       name: "Business",
-      priceId: "price_BUSINESS_ID", // Reemplazar con ID real de Stripe
+      priceId: "price_1QpsmY2eZvW4zJp1R2X2X2X2", // Reemplazar con ID real de Stripe
       price: { monthly: "25.00", annual: "250" },
       tagline: 'Para equipos',
       description: "Soluciones a medida para equipos y grandes organizaciones.",
