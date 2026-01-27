@@ -321,14 +321,16 @@ export default function MyFiles() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="page-my-files">
+    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300 pl-20" data-testid="page-my-files">
       <Header />
       <div className="flex">
         <Sidebar />
         <main className="flex-1 p-8">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-[1.5rem] font-semibold text-foreground mb-2">{t('myFiles.title')}</h1>
+            <h1 className="text-[1.5rem] font-semibold text-foreground mb-2">
+              {t('myFiles.title', { defaultValue: 'Mis Archivos' })}
+            </h1>
             <p className="text-muted-foreground">
               Archivos y Carpetas
             </p>
@@ -340,7 +342,7 @@ export default function MyFiles() {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={t('myFiles.searchPlaceholder')}
+                placeholder={t('myFiles.searchPlaceholder', { defaultValue: 'Buscar en mis archivos...' })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -412,16 +414,16 @@ export default function MyFiles() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Folder className="w-16 h-16 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                {searchTerm ? t('myFiles.noFilesFound') : t('myFiles.noFilesCopied')}
+                {searchTerm ? t('myFiles.noFilesFound', { defaultValue: 'No se encontraron archivos' }) : t('myFiles.noFilesCopied', { defaultValue: 'No hay archivos copiados' })}
               </h3>
               <p className="text-muted-foreground text-center">
                 {searchTerm 
-                  ? t('myFiles.tryDifferentSearch')
+                  ? t('myFiles.tryDifferentSearch', { defaultValue: 'Intenta con otros términos de búsqueda.' })
                   : platformFilter === 'dropbox'
                     ? 'Los archivos y carpetas de Dropbox aparecerán aquí.'
                     : platformFilter === 'google'
                       ? 'Los archivos y carpetas de Google Drive aparecerán aquí.'
-                      : t('myFiles.filesWillAppearHere')
+                      : t('myFiles.filesWillAppearHere', { defaultValue: 'Tus archivos aparecerán aquí una vez copiados.' })
                 }
               </p>
             </CardContent>
