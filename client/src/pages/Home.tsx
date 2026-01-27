@@ -1,360 +1,235 @@
-import { Link } from "wouter";
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
-import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
+import { useState, useEffect } from 'react';
+import { 
+  FileText, 
+  Image as ImageIcon, 
+  Video, 
+  MoreVertical, 
+  Folder, 
+  HardDrive,
+  Upload,
+  Plus
+} from "lucide-react";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
-import Footer from "@/components/Footer";
-import QuickCopyDialog from "@/components/QuickCopyDialog";
-import CopyProgressModal from "@/components/CopyProgressModal";
-import GoogleDriveConnection from "@/components/GoogleDriveConnection";
-import ConnectionWarningBanner from "@/components/ConnectionWarningBanner";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQueryFn, getAuthHeaders } from "@/lib/queryClient";
-import { 
-  Files, 
-  CloudDownload, 
-  Activity,
-  FileText,
-  Folder,
-  BarChart3,
-  Clock,
-  CheckCircle,
-  AlertCircle
-} from "lucide-react";
-import type { CopyOperation, DriveFile } from "@shared/schema";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "react-i18next";
+import { useQuery } from "@tanstack/react-query";
+import type { CopyOperation } from "@shared/schema";
 
 export default function Home() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const { toast } = useToast();
   const { t } = useTranslation();
-  const [quickCopyOpen, setQuickCopyOpen] = useState(false);
-  const [progressModalOpen, setProgressModalOpen] = useState(false);
-  const [activeOperationId, setActiveOperationId] = useState<string>();
-  const [runTutorial, setRunTutorial] = useState(false);
 
-  useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem(`tutorial_seen_${user?.id}`);
-    if (isAuthenticated && !hasSeenTutorial) {
-      setRunTutorial(true);
-    }
-  }, [isAuthenticated, user?.id]);
+  const { data: operations = [] } = useQuery<CopyOperation[]>({
+    queryKey: ["/api/copy-operations"],
+  });
 
-  const handleTutorialCallback = (data: CallBackProps) => {
-    const { status } = data;
-    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status as any)) {
-      setRunTutorial(false);
-      localStorage.setItem(`tutorial_seen_${user?.id}`, "true");
-    }
-  };
-
-  const steps: Step[] = [
-    {
-      target: "[data-testid='page-home']",
-      content: "¡Bienvenido a TERA! Esta guía te ayudará a conocer las funciones principales.",
-      placement: "center",
-      disableBeacon: true,
-    },
-    {
-      target: "[data-testid='link-nav-home']",
-      content: "Este es tu Panel de Control, donde verás el resumen de tus archivos y operaciones.",
-    },
-    {
-      target: "[data-testid='link-nav-cloud-explorer']",
-      content: "En el Explorador Multi-nube puedes gestionar tus archivos de Google Drive y Dropbox en un solo lugar.",
-    },
-    {
-      target: "[data-testid='link-nav-integrations']",
-      content: "Configura tus cuentas de almacenamiento aquí para empezar a transferir archivos.",
-    },
-    {
-      target: ".grid-cols-1",
-      content: "Aquí tienes estadísticas en tiempo real sobre tus archivos y transferencias.",
-    }
+  const categories = [
+    { title: t('dashboard.categories.documents', 'Documentos'), count: '1,245', size: '2.4 GB', icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
+    { title: t('dashboard.categories.images', 'Imágenes'), count: '8,450', size: '14.5 GB', icon: ImageIcon, color: 'text-purple-500', bg: 'bg-purple-50' },
+    { title: t('dashboard.categories.media', 'Multimedia'), count: '450', size: '8.2 GB', icon: Video, color: 'text-orange-500', bg: 'bg-orange-50' },
+    { title: t('dashboard.categories.others', 'Otros'), count: '320', size: '1.8 GB', icon: Folder, color: 'text-gray-500', bg: 'bg-gray-50' },
   ];
 
-  // Fetch data for dashboard only if authenticated
-  const { data: operations = [] } = useQuery({
-    queryKey: ["/api/copy-operations"],
-    refetchInterval: isAuthenticated ? 5000 : false, // Only refetch if authenticated
-    enabled: isAuthenticated, // Only run query if authenticated
-  });
-
-  const { data: filesData = { files: [], total: 0, totalPages: 0 } } = useQuery({
-    queryKey: ["/api/drive-files", 1, 10],
-    queryFn: async ({ queryKey }) => {
-      const [, page, limit] = queryKey;
-      const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`, {
-        headers: authHeaders,
-        credentials: "include",
-      });
-      if (!response.ok) {
-        if (response.status === 401) return { files: [], total: 0, totalPages: 0 };
-        throw new Error('Failed to fetch files');
-      }
-      return response.json();
-    },
-    enabled: isAuthenticated,
-  });
-
-  // Check connection status for Google Drive and Dropbox
-  const { data: googleStatus } = useQuery({
-    queryKey: ["/api/auth/google/status"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    refetchInterval: 30000,
-    enabled: isAuthenticated,
-  });
-
-  const { data: dropboxStatus } = useQuery({
-    queryKey: ["/api/auth/dropbox/status"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-    refetchInterval: 30000,
-    enabled: isAuthenticated,
-  });
-
-  const files = filesData.files || [];
-
-  // Check if any account is connected
-  const hasGoogleConnected = googleStatus?.connected && googleStatus?.hasValidToken;
-  const hasDropboxConnected = dropboxStatus?.connected && dropboxStatus?.hasValidToken;
-  const hasAnyAccountConnected = hasGoogleConnected || hasDropboxConnected;
-
-  if (!isAuthenticated && !isLoading) {
-    return null;
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  // Calculate statistics
-  const totalFiles = filesData.total || 0;
-  const totalOperations = operations.length;
-  const completedOperations = operations.filter((op: CopyOperation) => op.status === 'completed').length;
-  const activeOperations = operations.filter((op: CopyOperation) => op.status === 'in_progress' || op.status === 'pending').length;
-  
-  // Recent files (last 5)
-  const recentFiles = files
-    .sort((a: DriveFile, b: DriveFile) => 
-      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-    )
-    .slice(0, 5);
+  const recentFiles = operations
+    .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+    .slice(0, 5)
+    .map(op => ({
+      name: op.sourceName || t('common.notifications.copyOperation'),
+      size: `${(op.totalFiles || 0)} files`,
+      date: new Date(op.createdAt!).toLocaleDateString(),
+      type: 'transfer',
+      icon: FileText,
+      color: op.status === 'completed' ? 'text-green-500' : 'text-blue-500',
+      bg: op.status === 'completed' ? 'bg-green-50' : 'bg-blue-50'
+    }));
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="page-home">
-      <Joyride
-        steps={steps}
-        run={runTutorial}
-        continuous
-        showProgress
-        showSkipButton
-        callback={handleTutorialCallback}
-        locale={{
-          back: "Atrás",
-          close: "Cerrar",
-          last: "Finalizar",
-          next: "Siguiente",
-          skip: "Saltar tutorial",
-        }}
-        styles={{
-          options: {
-            primaryColor: "#0061D5",
-            zIndex: 1000,
-          },
-        }}
-      />
+    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300" style={{ paddingLeft: 'var(--sidebar-width, 80px)' }}>
       <Header />
-      
-      
-      <div className="flex">
+      <div className="flex flex-1">
         <Sidebar />
-        
-        <main className="flex-1" data-testid="main-content">
-          <ConnectionWarningBanner />
-          
-          <div className="p-8">
-          {/* Page Header */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-[1.5rem] font-semibold text-foreground">{t('common.navigation.home', 'Inicio')}</h1>
-          </div>
-
-          {!hasAnyAccountConnected && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
-              <div className="flex items-center text-amber-800">
-                <AlertCircle className="w-5 h-5 mr-2" />
-                <span>
-                  {t('common.dashboard.noAccountConnected')}{' '}
-                  <Link href="/integrations" className="font-bold underline text-blue-600 hover:text-blue-800 transition-colors">
-                    {t('common.dashboard.integrations')}
-                  </Link>{' '}
-                  {t('common.dashboard.toStartWorking')}
-                </span>
+        <main className="flex-1 p-8 overflow-y-auto">
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="flex justify-between items-end">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title', 'Mi Unidad')}</h1>
               </div>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
+                <Upload className="w-4 h-4" />
+                {t('common.actions.upload', 'Subir Archivo')}
+              </Button>
             </div>
-          )}
 
-          {/* Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('common.dashboard.totalFiles')}
-                </CardTitle>
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Files className="w-6 h-6 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-[1.8rem] font-bold text-foreground mb-1" data-testid="stat-total-files">
-                  {totalFiles.toLocaleString()}
-                </div>
-                <p className="text-[0.9rem] text-muted-foreground">
-                  {t('common.dashboard.filesManaged')}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('common.dashboard.activeOperations')}
-                </CardTitle>
-                <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-secondary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-[1.8rem] font-bold text-foreground mb-1" data-testid="stat-active-operations">
-                  {activeOperations}
-                </div>
-                <p className="text-[0.9rem] text-muted-foreground">
-                  {t('common.dashboard.inProgress')}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('common.dashboard.totalOperations')}
-                </CardTitle>
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6 text-accent" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-[1.8rem] font-bold text-foreground mb-1" data-testid="stat-total-operations">
-                  {totalOperations}
-                </div>
-                <p className="text-[0.9rem] text-muted-foreground">
-                  {t('common.dashboard.operationsPerformed')}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-              <CardHeader className="flex flex-row items-center justify-between pb-4">
-                <CardTitle className="text-[0.9rem] font-semibold text-muted-foreground">
-                  {t('common.dashboard.completedOperations')}
-                </CardTitle>
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-[1.8rem] font-bold text-foreground mb-1" data-testid="stat-completed-operations">
-                  {completedOperations}
-                </div>
-                <p className="text-[0.9rem] text-muted-foreground">
-                  {t('common.dashboard.successfully')}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Files */}
-          <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">
-            <CardHeader className="bg-muted/50 border-b border-border p-6">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-[1.1rem] font-semibold">{t('common.dashboard.recentFiles')}</CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                    <BarChart3 className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                    <Folder className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="max-h-[400px] overflow-y-auto">
-                {recentFiles.length > 0 ? (
-                  recentFiles.map((file: DriveFile, index) => (
-                    <div 
-                      key={file.id} 
-                      className={`flex items-center p-6 transition-colors hover:bg-gray-50 ${
-                        index < recentFiles.length - 1 ? 'border-b border-gray-100' : ''
-                      }`}
-                      data-testid={`file-item-${file.id}`}
-                    >
-                      <div className="w-6 h-6 mr-4 text-center text-muted-foreground">
-                        <FileText className="w-5 h-5" />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <Card className="lg:col-span-1 shadow-sm border-gray-100">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-900">{t('sidebar.storage')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div className="relative pt-2">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-medium text-gray-700">75% {t('dashboard.storage.used', 'Utilizado')}</span>
+                        <span className="text-gray-500">75 GB / 100 GB</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground mb-1 truncate">
-                          {file.name}
+                      <Progress value={75} className="h-3" />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 pt-2">
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <span className="text-xs font-medium text-gray-500">{t('dashboard.categories.documents')}</span>
                         </div>
-                        <div className="text-[0.8rem] text-muted-foreground">
-                          {t('common.dashboard.addedOn')} {new Date(file.createdAt!).toLocaleDateString()}
-                        </div>
+                        <p className="text-sm font-bold text-gray-900 ml-4">24.5 GB</p>
                       </div>
-                      <div className="flex gap-3 opacity-0 hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                          <CloudDownload className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-                          <Clock className="w-4 h-4" />
-                        </Button>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                          <span className="text-xs font-medium text-gray-500">{t('dashboard.categories.images')}</span>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900 ml-4">32.8 GB</p>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-12">
-                    <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">{t('common.dashboard.noRecentFiles')}</p>
+                    
+                    <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100">
+                      {t('common.actions.viewDetails', 'Ver detalles')}
+                    </Button>
                   </div>
-                )}
+                </CardContent>
+              </Card>
+
+              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {categories.map((cat, i) => (
+                  <Card key={i} className="shadow-sm border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                    <CardContent className="p-6 flex items-start justify-between">
+                      <div>
+                        <div className={`w-10 h-10 ${cat.bg} rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                          <cat.icon className={`w-5 h-5 ${cat.color}`} />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-1">{cat.title}</h3>
+                        <p className="text-sm text-gray-500">{cat.count} {t('common.notifications.files')}</p>
+                      </div>
+                      <span className="text-xs font-medium px-2 py-1 bg-gray-100 rounded-full text-gray-600">
+                        {cat.size}
+                      </span>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.quickAccess', 'Acceso Rápido')}</h2>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <HardDrive className="w-5 h-5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{t('common.navigation.home')}</h3>
+                      <p className="text-xs text-gray-500">{t('dashboard.quickAccess.homeDesc', 'Panel principal')}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <FileText className="w-5 h-5 text-indigo-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{t('common.navigation.operations')}</h3>
+                      <p className="text-xs text-gray-500">{t('dashboard.quickAccess.opsDesc', 'Gestionar flujos')}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Plus className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{t('common.navigation.tasks')}</h3>
+                      <p className="text-xs text-gray-500">{t('dashboard.quickAccess.tasksDesc', 'Pendientes hoy')}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="shadow-sm border-gray-100 hover:shadow-md transition-shadow cursor-pointer group">
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-10 h-10 bg-orange-50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MoreVertical className="w-5 h-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{t('common.navigation.analytics')}</h3>
+                      <p className="text-xs text-gray-500">{t('dashboard.quickAccess.analyticsDesc', 'Estadísticas')}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">{t('dashboard.recentFiles', 'Archivos Recientes')}</h2>
+                <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 font-medium">
+                  {t('common.actions.viewAll', 'Ver todos')}
+                </Button>
+              </div>
+              
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/30">
+                        <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.table.name', 'Nombre')}</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.table.size', 'Tamaño')}</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.table.date', 'Modificado')}</th>
+                        <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">{t('common.table.actions', 'Acciones')}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {recentFiles.map((file, i) => (
+                        <tr key={i} className="hover:bg-gray-50/80 transition-colors group cursor-pointer">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 ${file.bg} rounded-lg flex items-center justify-center`}>
+                                <file.icon className={`w-4 h-4 ${file.color}`} />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm text-gray-900 group-hover:text-blue-600 transition-colors">{file.name}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{file.type.toUpperCase()}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-500 font-medium">{file.size}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-500">{file.date}</span>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </main>
       </div>
-
-      <QuickCopyDialog
-        open={quickCopyOpen}
-        onOpenChange={setQuickCopyOpen}
-      />
-
-      {activeOperationId && (
-        <CopyProgressModal
-          operationId={activeOperationId}
-          open={progressModalOpen}
-          onOpenChange={setProgressModalOpen}
-        />
-      )}
-
-      <Footer />
     </div>
   );
 }
