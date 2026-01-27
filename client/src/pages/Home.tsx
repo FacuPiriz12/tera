@@ -12,6 +12,7 @@ import {
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import FileUploadDialog from "@/components/FileUploadDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -58,13 +59,7 @@ export default function Home() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title', 'Mi Unidad')}</h1>
               </div>
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2"
-                onClick={() => setLocation('/cloud-explorer')}
-              >
-                <Upload className="w-4 h-4" />
-                {t('common.actions.upload', 'Subir Archivo')}
-              </Button>
+              <FileUploadDialog />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

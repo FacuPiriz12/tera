@@ -614,6 +614,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generic file upload route - handles uploading from PC to Google Drive or Dropbox
+  app.post('/api/upload-file', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { filename, content, provider, mimeType } = req.body;
+
+      // Validate required fields
+      if (!filename || typeof filename !== 'string') {
+        return res.status(400).json({ message: "Valid filename is required" });
+      }
+      if (!content || typeof content !== 'string') {
+        return res.status(400).json({ message: "File content (base64) is required" });
+      }
+      if (!provider || (provider !== 'google' && provider !== 'dropbox')) {
+        return res.status(400).json({ message: "Provider must be 'google' or 'dropbox'" });
+      }
+
+      // Validate filename
+      if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        return res.status(400).json({ message: "Invalid filename format" });
+      }
+
+      // Convert base64 to buffer
+      let contentBuffer: ArrayBuffer;
+      try {
+        const binaryString = Buffer.from(content, 'base64').toString('binary');
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        contentBuffer = bytes.buffer;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid base64 content" });
+      }
+
+      // Check file size (max 100MB)
+      const maxSize = 100 * 1024 * 1024;
+      if (contentBuffer.byteLength > maxSize) {
+        return res.status(413).json({ message: "File too large. Maximum size is 100MB." });
+      }
+
+      if (provider === 'google') {
+        const driveService = new GoogleDriveService(userId);
+        const file = await driveService.uploadFile(filename, contentBuffer, 'root', mimeType);
+        console.log("File uploaded successfully to Google Drive:", { userId, filename, size: contentBuffer.byteLength });
+        res.json(file);
+      } else if (provider === 'dropbox') {
+        const dropboxService = new DropboxService(userId);
+        const file = await dropboxService.uploadFile(filename, contentBuffer);
+        console.log("File uploaded successfully to Dropbox:", { userId, filename, size: contentBuffer.byteLength });
+        res.json(file);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('not connected') || error.message.includes('User has not connected')) {
+          return res.status(401).json({ 
+            message: `${provider === 'google' ? 'Google Drive' : 'Dropbox'} account not connected. Please connect first.`,
+            action: "connect_required"
+          });
+        }
+        if (error.message.includes('expired') || error.message.includes('access token')) {
+          return res.status(401).json({ 
+            message: `${provider === 'google' ? 'Google Drive' : 'Dropbox'} access expired. Please reconnect.`,
+            action: "reconnect_required"
+          });
+        }
+        if (error.message.includes('storage_quota') || error.message.includes('insufficient_space')) {
+          return res.status(507).json({ message: "Insufficient storage space" });
+        }
+      }
+      
+      res.status(500).json({ 
+        message: "Failed to upload file",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
   // Google Drive upload route
   app.post('/api/drive/upload', isAuthenticated, async (req: any, res) => {
     try {
