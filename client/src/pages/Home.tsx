@@ -9,6 +9,7 @@ import {
   Upload,
   Plus
 } from "lucide-react";
+import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import type { CopyOperation } from "@shared/schema";
 
 export default function Home() {
   const { t } = useTranslation();
+  const [, setLocation] = useLocation();
 
   const { data: operations = [] } = useQuery<CopyOperation[]>({
     queryKey: ["/api/copy-operations"],
@@ -56,7 +58,10 @@ export default function Home() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title', 'Mi Unidad')}</h1>
               </div>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2"
+                onClick={() => setLocation('/cloud-explorer')}
+              >
                 <Upload className="w-4 h-4" />
                 {t('common.actions.upload', 'Subir Archivo')}
               </Button>
@@ -94,7 +99,11 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    <Button variant="outline" className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100">
+                    <Button 
+                      variant="outline" 
+                      className="w-full text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-100"
+                      onClick={() => setLocation('/analytics')}
+                    >
                       {t('common.actions.viewDetails', 'Ver detalles')}
                     </Button>
                   </div>
