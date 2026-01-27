@@ -13,15 +13,12 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import CloneDriveLogo from "./CloneDriveLogo";
+import LanguageSelector from "./LanguageSelector";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const { user, signOut } = useAuth();
-  const { t, i18n } = useTranslation();
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
+  const { t } = useTranslation();
 
   return (
     <header className="sticky top-0 z-[110] bg-white border-b border-gray-100 h-[75px]">
@@ -45,25 +42,7 @@ export default function Header() {
         
         <div className="flex items-center gap-3">
           {/* Language Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2 px-3 text-gray-600 hover:bg-gray-50 rounded-lg">
-                <Languages className="h-4 w-4" />
-                <span className="text-sm font-medium uppercase">{i18n.language.substring(0, 2)}</span>
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem className="flex justify-between items-center" onClick={() => changeLanguage('es')}>
-                <span>Español</span>
-                <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold">ES</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex justify-between items-center" onClick={() => changeLanguage('en')}>
-                <span>English</span>
-                <span className="text-[10px] bg-gray-50 text-gray-500 px-1.5 py-0.5 rounded font-bold">EN</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LanguageSelector />
 
           <div className="h-4 w-[1px] bg-gray-100 mx-1" />
 
