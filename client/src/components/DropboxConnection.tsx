@@ -173,8 +173,9 @@ export default function DropboxConnection({ variant = 'header' }: DropboxConnect
             <Button
               onClick={handleConnect}
               disabled={isConnecting}
+              variant="outline"
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 px-8"
+              className="px-8"
               data-testid="button-connect-dropbox"
             >
               {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
