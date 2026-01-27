@@ -21,10 +21,7 @@ export default function Sidebar() {
   const { t } = useTranslation();
   
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--sidebar-width', 
-      isExpanded ? '288px' : '80px'
-    );
+    // We are no longer updating --sidebar-width globally to avoid shifting fixed elements like the Header logo/search
   }, [isExpanded]);
   
   const navItems = [

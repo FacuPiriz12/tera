@@ -118,7 +118,7 @@ export default function CloudExplorer() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col transition-all duration-300" style={{ paddingLeft: 'var(--sidebar-width, 80px)' }}>
+    <div className="min-h-screen bg-slate-50 flex flex-col transition-all duration-300 pl-20">
       <Header />
       <Sidebar />
       <AnimatePresence>
