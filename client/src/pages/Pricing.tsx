@@ -8,6 +8,7 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useToast } from "@/hooks/use-toast";
 
 const PricingPage = () => {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
