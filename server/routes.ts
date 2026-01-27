@@ -167,6 +167,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Update plan to pro
           await storage.updateUser(session.client_reference_id, { membershipPlan: 'pro' });
         }
+      } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
+        const subscription = event.data.object as Stripe.Subscription;
+        // Find user by subscription ID
+        const users = await storage.getAllUsers();
+        const user = users.users.find(u => u.stripeSubscriptionId === subscription.id);
+        
+        if (user) {
+          if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+            await storage.updateUser(user.id, { membershipPlan: 'free' });
+            console.log(`Subscription ${subscription.id} for user ${user.id} has ended. Plan reverted to free.`);
+          }
+        }
       }
       res.json({ received: true });
     } catch (err: any) {
