@@ -43,7 +43,7 @@ const PricingPage = () => {
   const plans = [
     {
       name: "Free",
-      priceId: "0",
+      priceId: { monthly: "0", annual: "0" },
       price: { monthly: "0", annual: "0" },
       tagline: 'Para uso personal',
       description: "Ideal para empezar a organizar tus archivos personales.",
@@ -64,7 +64,7 @@ const PricingPage = () => {
     },
     {
       name: "Pro",
-      priceId: "price_1Rapr1GMtCDZ5sKaT1LJRKZv",
+      priceId: { monthly: "price_1Rapr1GMtCDZ5sKaT1LJRKZv", annual: "price_1RapoMGMtCDZ5sKa2LbGdPBj" },
       price: { monthly: "12.00", annual: "10.00" },
       annualTotal: "120",
       tagline: 'Para profesionales',
@@ -88,7 +88,7 @@ const PricingPage = () => {
     },
     {
       name: "Business",
-      priceId: "price_1Rb6mvGMtCDZ5sKaDaIwMjcC",
+      priceId: { monthly: "price_1Rb6mvGMtCDZ5sKaDaIwMjcC", annual: "price_1Rb6kNGMtCDZ5sKaNIIpe6Gy" },
       price: { monthly: "25.00", annual: "20.75" },
       annualTotal: "249",
       tagline: 'Para equipos',
@@ -282,14 +282,14 @@ const PricingPage = () => {
 
                 <div className="mb-10 order-last lg:order-none">
                   <button 
-                    disabled={plan.priceId === "0" || !!loading}
-                    onClick={() => handleCheckout(plan.priceId)}
+                    disabled={plan.priceId[billingCycle] === "0" || !!loading}
+                    onClick={() => handleCheckout(plan.priceId[billingCycle])}
                     className={`w-full py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-[0.1em] transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex items-center justify-center group ${
                     plan.popular
                       ? 'bg-white text-blue-700 hover:bg-blue-50'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
-                  } ${loading === plan.priceId ? 'opacity-70 cursor-not-allowed' : ''}`}>
-                    {loading === plan.priceId ? (
+                  } ${loading === plan.priceId[billingCycle] ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                    {loading === plan.priceId[billingCycle] ? (
                       <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     ) : null}
                     {plan.cta}
