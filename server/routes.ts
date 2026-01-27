@@ -657,14 +657,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (provider === 'google') {
         const driveService = new GoogleDriveService(userId);
-        const file = await driveService.uploadFile(filename, contentBuffer, 'root', mimeType);
+        const uploadedFile = await driveService.uploadFile(filename, contentBuffer, 'root', mimeType);
+        
+        // Save file metadata to TERA database
+        await storage.createCloudFile({
+          userId,
+          provider: 'google',
+          originalFileId: filename, // Use filename as original ID for uploads from PC
+          copiedFileId: uploadedFile.id || uploadedFile.fileId || 'unknown',
+          fileName: filename,
+          mimeType: mimeType || 'application/octet-stream',
+          fileSize: contentBuffer.byteLength,
+          sourceUrl: uploadedFile.webViewLink || uploadedFile.webContentLink || `https://drive.google.com/file/d/${uploadedFile.id}`,
+        });
+        
         console.log("File uploaded successfully to Google Drive:", { userId, filename, size: contentBuffer.byteLength });
-        res.json(file);
+        res.json(uploadedFile);
       } else if (provider === 'dropbox') {
         const dropboxService = new DropboxService(userId);
-        const file = await dropboxService.uploadFile(filename, contentBuffer);
+        const uploadedFile = await dropboxService.uploadFile(filename, contentBuffer);
+        
+        // Save file metadata to TERA database
+        await storage.createCloudFile({
+          userId,
+          provider: 'dropbox',
+          originalFileId: filename, // Use filename as original ID for uploads from PC
+          copiedFileId: uploadedFile.id || uploadedFile.file_id || 'unknown',
+          fileName: filename,
+          mimeType: mimeType || 'application/octet-stream',
+          fileSize: contentBuffer.byteLength,
+          sourceUrl: uploadedFile.preview_url || `https://www.dropbox.com/preview/${uploadedFile.path_display}`,
+        });
+        
         console.log("File uploaded successfully to Dropbox:", { userId, filename, size: contentBuffer.byteLength });
-        res.json(file);
+        res.json(uploadedFile);
       }
     } catch (error) {
       console.error("Error uploading file:", error);
