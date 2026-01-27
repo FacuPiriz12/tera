@@ -175,7 +175,7 @@ export default function DropboxConnection({ variant = 'header' }: DropboxConnect
               disabled={isConnecting}
               variant="outline"
               size="sm"
-              className="px-8"
+              className="px-8 text-[#0061D5] border-slate-200"
               data-testid="button-connect-dropbox"
             >
               {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
