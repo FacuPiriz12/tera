@@ -1,0 +1,315 @@
+import React, { useState } from 'react';
+import { 
+  Cloud, Folder, File, Search, RefreshCw, Home, ChevronRight,
+  FileText, FileSpreadsheet, Image, Video, Music, Archive,
+  Download, Trash2, Share2, MoreVertical, Grid, List,
+  Upload, Filter, ArrowUpDown, Settings, Check, 
+  ExternalLink, HardDrive, Clock, Star, AlertCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import googleLogo from '../assets/cloud-logos/google-drive.png';
+import dropboxLogo from '../assets/cloud-logos/dropbox.png';
+import onedriveLogo from '../assets/cloud-logos/onedrive.png';
+import boxLogo from '../assets/cloud-logos/box.png';
+
+export default function CloudExplorer() {
+  const [view, setView] = useState('grid');
+  const [activeTab, setActiveTab] = useState('explorer');
+  const [syncMode, setSyncMode] = useState('acumulativa');
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState(null);
+
+  const cloudProviders = [
+    { id: 'google', name: 'Google Drive', logo: googleLogo, color: '#4285F4' },
+    { id: 'dropbox', name: 'Dropbox', logo: dropboxLogo, color: '#0061FF' },
+    { id: 'onedrive', name: 'OneDrive', logo: onedriveLogo, color: '#0078D4' },
+    { id: 'box', name: 'Box', logo: boxLogo, color: '#0061D5' }
+  ];
+
+  const folders = [
+    { id: 1, name: '20 cellos en SVG', items: 45, cloud: 'google' },
+    { id: 2, name: 'Copy of Fotos Lenceria', items: 128, cloud: 'google' },
+    { id: 3, name: 'WP Rocket', items: 23, cloud: 'google' },
+    { id: 4, name: 'Typebot Download', items: 12, cloud: 'dropbox' },
+    { id: 5, name: '20 selos em SVG', items: 45, cloud: 'google' },
+    { id: 6, name: 'Colab Notebooks', items: 67, cloud: 'google' }
+  ];
+
+  const files = [
+    { id: 13, name: 'IA DE LIGAÇÃO.zip', size: '2.3 MB', type: 'archive', color: 'gray', cloud: 'google' },
+    { id: 14, name: 'Planilla Finanzas Perso...', size: '19 KB', type: 'spreadsheet', color: 'green', cloud: 'google' },
+    { id: 15, name: 'Documento sin título', size: '5 KB', type: 'document', color: 'blue', cloud: 'dropbox' },
+    { id: 16, name: 'Planilla Chacra.xlsx', size: '16 KB', type: 'spreadsheet', color: 'green', cloud: 'google' }
+  ];
+
+  const getFileIcon = (type) => {
+    switch(type) {
+      case 'spreadsheet': return FileSpreadsheet;
+      case 'document': return FileText;
+      case 'archive': return Archive;
+      case 'image': return Image;
+      case 'video': return Video;
+      case 'audio': return Music;
+      default: return File;
+    }
+  };
+
+  const getFileColor = (color) => {
+    const colors = {
+      gray: 'bg-gray-50 text-gray-400',
+      green: 'bg-emerald-50 text-emerald-500',
+      blue: 'bg-blue-50 text-blue-500',
+      orange: 'bg-orange-50 text-orange-500',
+      purple: 'bg-purple-50 text-purple-500',
+      pink: 'bg-pink-50 text-pink-500'
+    };
+    return colors[color] || colors.gray;
+  };
+
+  const handleDragStart = (e, item) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDropTarget(null);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDragEnter = (e, targetId) => {
+    e.preventDefault();
+    setDropTarget(targetId);
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (draggedItem) {
+      setPendingTransfer(draggedItem);
+      setShowSyncModal(true);
+    }
+    setDropTarget(null);
+  };
+
+  const confirmTransfer = (mode) => {
+    setSyncMode(mode);
+    setShowSyncModal(false);
+    setPendingTransfer(null);
+    // Aquí iría la lógica de transferencia real
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col transition-all duration-300" style={{ paddingLeft: 'var(--sidebar-width, 80px)' }}>
+      <AnimatePresence>
+        {showSyncModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSyncModal(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100"
+            >
+              <div className="p-8">
+                {pendingTransfer && (
+                  <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl mb-8 border border-slate-100">
+                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                      {('items' in pendingTransfer) ? <Folder className="w-6 h-6 text-blue-500" /> : <File className="w-6 h-6 text-blue-500" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{pendingTransfer.name}</p>
+                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{pendingTransfer.size || `${pendingTransfer.items} elementos`}</p>
+                    </div>
+                  </div>
+                )}
+
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Modo de sincronización</h3>
+                <p className="text-sm text-slate-500 mb-8">Selecciona cómo quieres que TERA gestione este envío.</p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => confirmTransfer('acumulativa')}
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1"
+                  >
+                    <span className="font-bold text-slate-700 group-hover:text-blue-600">Acumulativa</span>
+                    <span className="text-[10px] text-slate-400 group-hover:text-blue-400">Añade archivos nuevos sin borrar existentes</span>
+                  </button>
+                  <button
+                    onClick={() => confirmTransfer('mirror')}
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1"
+                  >
+                    <span className="font-bold text-slate-700 group-hover:text-blue-600">Mirror Sync</span>
+                    <span className="text-[10px] text-slate-400 group-hover:text-blue-400">Sincronización exacta de ambas carpetas</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowSyncModal(false)}
+                  className="w-full mt-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Cancelar envío
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <div className="max-w-[1600px] mx-auto p-6 lg:p-10 w-full space-y-8">
+        
+        {/* Header Section - Dashboard Style */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Cloud Explorer</h1>
+              <p className="text-sm text-gray-500 mt-1">Gestiona tus archivos multi-nube con la potencia de TERA.</p>
+            </div>
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-xl border border-gray-200 w-fit">
+              <button
+                onClick={() => setActiveTab('explorer')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                  activeTab === 'explorer'
+                    ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Folder className="w-4 h-4" />
+                Explorar
+              </button>
+              <button
+                onClick={() => setActiveTab('transfers')}
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-bold transition-all ${
+                  activeTab === 'transfers'
+                    ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Transferencias
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {[1, 2].map((panelIdx) => {
+            const isDestination = panelIdx === 2;
+            return (
+              <div
+                key={panelIdx}
+                className={`bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col min-h-[700px] transition-all duration-300 ${
+                  isDestination && dropTarget === 'panel-2' ? 'ring-2 ring-blue-500 bg-blue-50/10' : ''
+                }`}
+              >
+                {/* Dashboard Style Toolbar */}
+                <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 p-1.5 bg-white rounded-xl border border-gray-200 shadow-sm">
+                      <img src={googleLogo} alt="Google Drive" className="w-5 h-5 object-contain" />
+                      <img src={dropboxLogo} alt="Dropbox" className="w-5 h-5 object-contain opacity-40 grayscale hover:opacity-100 hover:grayscale-0 transition-all cursor-pointer" />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Buscar archivos..."
+                        className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all w-48"
+                      />
+                    </div>
+                    <button className="p-2 text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm">
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Content Area */}
+                <div 
+                  onDragOver={handleDragOver}
+                  onDragEnter={(e) => isDestination && handleDragEnter(e, 'panel-2')}
+                  onDragLeave={() => isDestination && setDropTarget(null)}
+                  onDrop={(e) => isDestination && handleDrop(e, 'panel-2')}
+                  className="p-6 flex-1 relative bg-white rounded-b-2xl overflow-y-auto"
+                >
+                  <div className="flex items-center justify-between mb-6 px-2">
+                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                      {isDestination ? 'Destino Remoto' : 'Mi Unidad'}
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {(!isDestination || (isDestination && dropTarget === 'panel-2' && draggedItem)) && (isDestination ? [draggedItem].filter(Boolean) : [...folders, ...files]).map((item, i) => {
+                      const isFolder = 'items' in item;
+                      const Icon = isFolder ? Folder : getFileIcon(item.type);
+                      return (
+                        <motion.div
+                          key={item.id || i}
+                          draggable={!isDestination}
+                          onDragStart={(e) => handleDragStart(e, item)}
+                          onDragEnd={handleDragEnd}
+                          whileHover={{ y: -2, shadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" }}
+                          className="flex flex-col items-center p-6 bg-gray-50 border border-gray-100 rounded-2xl hover:border-blue-200 hover:bg-white transition-all cursor-grab active:cursor-grabbing group shadow-sm"
+                        >
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-all ${
+                            isFolder ? 'bg-blue-100 text-blue-600' : 'bg-white text-blue-500 shadow-sm border border-gray-100 group-hover:scale-110'
+                          }`}>
+                            <Icon className="w-6 h-6 stroke-[1.5]" />
+                          </div>
+                          <span className="text-[11px] font-bold text-gray-700 truncate w-full text-center mb-1">
+                            {item.name}
+                          </span>
+                          {!isFolder && (
+                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
+                              {item.size || '532 B'}
+                            </span>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+
+                    {isDestination && !draggedItem && (
+                      <div className="col-span-full h-[450px] flex flex-col items-center justify-center">
+                        <div className="w-20 h-20 bg-gray-50 rounded-3xl flex items-center justify-center mb-4 border-2 border-dashed border-gray-200">
+                          <ArrowUpDown className="w-8 h-8 text-gray-300" />
+                        </div>
+                        <p className="font-bold text-gray-400 uppercase text-[10px] tracking-widest text-center max-w-[180px] leading-relaxed">
+                          Arrastra archivos aquí para moverlos a la nube
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {isDestination && dropTarget === 'panel-2' && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute inset-4 bg-blue-600/5 backdrop-blur-[2px] flex items-center justify-center border-2 border-dashed border-blue-400 rounded-2xl"
+                    >
+                      <div className="bg-white p-6 rounded-2xl shadow-xl flex flex-col items-center gap-3 border border-blue-50">
+                        <Upload className="w-6 h-6 text-blue-600 animate-bounce" />
+                        <span className="font-black text-blue-600 text-xs uppercase tracking-widest">Soltar para transferir</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
