@@ -64,7 +64,7 @@ const PricingPage = () => {
     },
     {
       name: "Pro",
-      priceId: "price_1Rb6mvGMtCDZ5sKaDalwMjcC",
+      priceId: "price_1Rapr1GMtCDZ5sKaT1LJRKZv",
       price: { monthly: "12.00", annual: "120" },
       tagline: 'Para profesionales',
       highlight: 'La mejor oferta',
@@ -87,7 +87,7 @@ const PricingPage = () => {
     },
     {
       name: "Business",
-      priceId: "price_1Rb6mvGMtCDZ5sKaDalwMjcC", // Note: The user provided the same ID in the screenshot logs for both events, but usually they are different. I'll use this for both or wait for clarity if it fails, but I'll proceed with this one for Business as well for now as it's the only one visible.
+      priceId: "price_1Rb6mvGMtCDZ5sKaDaIwMjcC",
       price: { monthly: "25.00", annual: "250" },
       tagline: 'Para equipos',
       description: "Soluciones a medida para equipos y grandes organizaciones.",
