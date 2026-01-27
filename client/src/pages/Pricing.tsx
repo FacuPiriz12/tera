@@ -65,7 +65,8 @@ const PricingPage = () => {
     {
       name: "Pro",
       priceId: "price_1Rapr1GMtCDZ5sKaT1LJRKZv",
-      price: { monthly: "12.00", annual: "120" },
+      price: { monthly: "12.00", annual: "10.00" },
+      annualTotal: "120",
       tagline: 'Para profesionales',
       highlight: 'La mejor oferta',
       description: "Para usuarios avanzados que necesitan automatización real.",
@@ -88,7 +89,8 @@ const PricingPage = () => {
     {
       name: "Business",
       priceId: "price_1Rb6mvGMtCDZ5sKaDaIwMjcC",
-      price: { monthly: "25.00", annual: "250" },
+      price: { monthly: "25.00", annual: "20.75" },
+      annualTotal: "249",
       tagline: 'Para equipos',
       description: "Soluciones a medida para equipos y grandes organizaciones.",
       features: [
@@ -268,11 +270,12 @@ const PricingPage = () => {
                       /mes
                     </span>
                   </div>
-                  {billingCycle === 'annual' && plan.price.annual !== "0" && (
+                  {billingCycle === 'annual' && plan.price.annual !== "0" && plan.annualTotal && (
                     <div className={`mt-3 inline-block px-3 py-1 rounded-lg text-xs font-black uppercase tracking-tight ${
                       plan.popular ? 'bg-white/10 text-white' : 'bg-green-50 text-green-600'
                     }`}>
-                      Facturado como ${plan.price.annual} al año
+                      <span className="line-through opacity-60 mr-2">${parseFloat(plan.price.monthly) * 12}</span>
+                      Facturado ${plan.annualTotal}/año
                     </div>
                   )}
                 </div>
