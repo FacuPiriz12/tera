@@ -110,7 +110,7 @@ export default function FileUploadDialog() {
           Subir Archivo
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-3xl border border-slate-200 shadow-2xl p-8 z-[200]">
+      <DialogContent className="sm:max-w-md rounded-3xl border-2 border-slate-200/60 shadow-2xl p-8 z-[200] !top-[50%] !translate-y-[-50%]">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-2xl font-bold text-slate-900">Subir archivo a la nube</DialogTitle>
           <DialogDescription className="text-slate-500 text-[0.95rem]">
