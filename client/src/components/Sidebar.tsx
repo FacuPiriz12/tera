@@ -28,7 +28,7 @@ export default function Sidebar() {
     { id: 'home', path: "/dashboard", icon: Home, label: t('common.navigation.home'), section: 'menu' },
     { id: 'shared-drives', path: "/shared-drives", icon: Share2, label: t('common.navigation.sharedDrives'), section: 'menu' },
     { id: 'operations', path: "/operations", icon: FileText, label: t('common.navigation.operations'), section: 'menu' },
-    { id: 'tasks', path: "/tasks", icon: t('common.navigation.tasks'), section: 'menu' },
+    { id: 'tasks', path: "/tasks", icon: Clock, label: t('common.navigation.tasks'), section: 'menu' },
     { id: 'health', path: "/health", icon: Zap, label: t('common.navigation.health'), section: 'menu' },
     { id: 'integrations', path: "/integrations", icon: Settings, label: t('common.navigation.integrations'), section: 'other' },
     { id: 'cloud-explorer', path: "/cloud-explorer", icon: Globe, label: t('common.navigation.cloudExplorer'), section: 'other' },
