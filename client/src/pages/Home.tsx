@@ -49,7 +49,7 @@ export default function Home() {
     }));
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300 pl-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col transition-all duration-300 pl-20">
       <Header />
       <div className="flex flex-1">
         <Sidebar />

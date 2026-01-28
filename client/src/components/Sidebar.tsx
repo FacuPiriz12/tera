@@ -50,7 +50,7 @@ export default function Sidebar() {
     <aside 
       onMouseEnter={() => setIsExpanded(true)}
       onMouseLeave={() => setIsExpanded(false)}
-      className={`bg-white border-r border-slate-200 flex flex-col fixed left-0 top-[75px] h-[calc(100vh-75px)] transition-all duration-300 ease-in-out z-[120] ${
+      className={`bg-white border-r border-slate-200 flex flex-col fixed left-0 top-[75px] h-[calc(100vh-75px)] transition-all duration-300 ease-in-out z-[90] ${
         isExpanded ? 'w-72 shadow-xl' : 'w-20'
       }`}
       style={{ backgroundColor: '#ffffff' }}

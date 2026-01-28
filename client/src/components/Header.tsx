@@ -21,7 +21,7 @@ export default function Header() {
   const { t } = useTranslation();
 
   return (
-    <header className="sticky top-0 z-[110] bg-white border-b border-gray-100 h-[75px]">
+    <header className="sticky top-0 z-[100] bg-white border-b border-gray-100 h-[75px]">
       <div className="px-8 h-full flex justify-between items-center max-w-full mx-auto">
         <div className="flex items-center w-full">
           <div className="flex items-center justify-center w-[120px] ml-[-5px] flex-shrink-0 cursor-pointer" onClick={() => setLocation('/')}>
