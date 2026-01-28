@@ -110,54 +110,62 @@ export default function FileUploadDialog() {
           Subir Archivo
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Subir archivo a la nube</DialogTitle>
-          <DialogDescription>
-            Selecciona un archivo y elige a dónde deseas subirlo (Google Drive o Dropbox).
+      <DialogContent className="sm:max-w-md rounded-3xl border-none shadow-2xl p-8">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-2xl font-bold text-slate-900">Subir archivo a la nube</DialogTitle>
+          <DialogDescription className="text-slate-500 text-[0.95rem]">
+            Selecciona un archivo y elige el destino para guardarlo de forma segura.
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-6 pt-4">
           {/* File Input */}
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors">
-            <label htmlFor="file-input" className="cursor-pointer">
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="w-6 h-6 text-gray-400" />
-                <span className="text-sm font-medium text-gray-700">
-                  {selectedFile ? selectedFile.name : 'Haz clic para seleccionar un archivo'}
-                </span>
-                <span className="text-xs text-gray-500">Máximo 100 MB</span>
+          <div className="relative group">
+            <input
+              id="file-input"
+              type="file"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={uploading}
+            />
+            <label 
+              htmlFor="file-input" 
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer bg-slate-50/50 hover:bg-white
+                ${selectedFile 
+                  ? 'border-blue-500 bg-blue-50/30' 
+                  : 'border-slate-200 hover:border-blue-400'}`}
+            >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${selectedFile ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400 shadow-sm border border-slate-100'}`}>
+                <Upload className="w-6 h-6" />
               </div>
-              <input
-                id="file-input"
-                type="file"
-                onChange={handleFileSelect}
-                className="hidden"
-                disabled={uploading}
-              />
+              <span className="text-sm font-semibold text-slate-700 mb-1">
+                {selectedFile ? selectedFile.name : 'Haz clic para seleccionar un archivo'}
+              </span>
+              <span className="text-xs text-slate-400 font-medium">
+                {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Máximo 100 MB'}
+              </span>
             </label>
           </div>
 
           {/* Destination Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Destino</label>
+          <div className="space-y-3">
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Destino de subida</label>
             <Select value={destination} onValueChange={(v: any) => setDestination(v)} disabled={uploading}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white focus:ring-blue-500">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="google">Google Drive</SelectItem>
-                <SelectItem value="dropbox">Dropbox</SelectItem>
+              <SelectContent className="rounded-xl border-slate-200">
+                <SelectItem value="google" className="py-3 cursor-pointer">Google Drive</SelectItem>
+                <SelectItem value="dropbox" className="py-3 cursor-pointer">Dropbox</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Warning */}
-          {destination === 'google' || destination === 'dropbox' && (
-            <div className="flex gap-2 p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+          {(destination === 'google' || destination === 'dropbox') && (
+            <div className="flex gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 text-sm text-blue-700 leading-relaxed">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>Asegúrate de haber conectado tu cuenta de {destination === 'google' ? 'Google Drive' : 'Dropbox'} primero.</span>
+              <p className="font-medium">Asegúrate de haber conectado tu cuenta de <span className="font-bold">{destination === 'google' ? 'Google Drive' : 'Dropbox'}</span> primero.</p>
             </div>
           )}
 
@@ -165,10 +173,18 @@ export default function FileUploadDialog() {
           <Button
             onClick={handleUpload}
             disabled={!selectedFile || uploading}
-            className="w-full"
+            className={`w-full h-12 rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98] ${
+              !selectedFile || uploading 
+                ? 'bg-slate-100 text-slate-400 border-none shadow-none' 
+                : 'bg-[#0061D5] hover:bg-[#0052B5] text-white'
+            }`}
           >
-            {uploading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {uploading ? 'Subiendo...' : 'Subir Archivo'}
+            {uploading ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-5 h-5 mr-2" />
+            )}
+            {uploading ? 'Subiendo archivo...' : 'Comenzar Subida'}
           </Button>
         </div>
       </DialogContent>
