@@ -110,7 +110,7 @@ export default function FileUploadDialog() {
           Subir Archivo
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md rounded-3xl border-none shadow-2xl p-8 z-[200]">
+      <DialogContent className="sm:max-w-md rounded-3xl border-none shadow-2xl p-8 z-[200] !top-[20%] !translate-y-0">
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-2xl font-bold text-slate-900">Subir archivo a la nube</DialogTitle>
           <DialogDescription className="text-slate-500 text-[0.95rem]">
@@ -130,13 +130,13 @@ export default function FileUploadDialog() {
             />
             <label 
               htmlFor="file-input" 
-              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-8 transition-all cursor-pointer bg-slate-50/50 hover:bg-white
+              className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-4 transition-all cursor-pointer bg-slate-50/50 hover:bg-white
                 ${selectedFile 
                   ? 'border-blue-500 bg-blue-50/30' 
                   : 'border-slate-200 hover:border-blue-400'}`}
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-110 ${selectedFile ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400 shadow-sm border border-slate-100'}`}>
-                <Upload className="w-6 h-6" />
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-transform group-hover:scale-110 ${selectedFile ? 'bg-blue-100 text-blue-600' : 'bg-white text-slate-400 shadow-sm border border-slate-100'}`}>
+                <Upload className="w-5 h-5" />
               </div>
               <span className="text-sm font-semibold text-slate-700 mb-1">
                 {selectedFile ? selectedFile.name : 'Haz clic para seleccionar un archivo'}
