@@ -497,23 +497,53 @@ export class GoogleDriveService {
     }
   }
 
-  /**
-   * Download file content from Google Drive
-   */
-  async downloadFile(fileId: string): Promise<ArrayBuffer> {
-    await this.ensureValidToken();
-    
-    try {
-      const response = await this.drive.files.get({
-        fileId,
-        alt: 'media',
-        supportsAllDrives: true
-      }, { responseType: 'arraybuffer' });
+  // Google Workspace native formats must be exported, not downloaded directly.
+  private static readonly WORKSPACE_EXPORT_MAP: Record<string, { mimeType: string; extension: string }> = {
+    'application/vnd.google-apps.spreadsheet':  { mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',        extension: '.xlsx' },
+    'application/vnd.google-apps.document':     { mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',   extension: '.docx' },
+    'application/vnd.google-apps.presentation': { mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', extension: '.pptx' },
+    'application/vnd.google-apps.drawing':      { mimeType: 'image/png',                                                                  extension: '.png'  },
+  };
 
-      return response.data as ArrayBuffer;
-    } catch (error) {
-      console.error('Error downloading file from Google Drive:', error);
-      throw new Error('Failed to download file from Google Drive');
+  /**
+   * Download file content from Google Drive.
+   * Google Workspace native files (Sheets, Docs, Slides) are exported to their
+   * Office-compatible format automatically.
+   * Returns content plus an optional `exportExtension` the caller should append
+   * to the filename when the file was exported (e.g. ".xlsx").
+   */
+  async downloadFile(fileId: string): Promise<{ content: ArrayBuffer; exportExtension?: string }> {
+    await this.ensureValidToken();
+
+    try {
+      // Fetch metadata first to detect Google Workspace native formats.
+      const meta = await this.drive.files.get({
+        fileId,
+        fields: 'mimeType',
+        supportsAllDrives: true,
+      });
+
+      const mimeType = meta.data.mimeType || '';
+      const exportTarget = GoogleDriveService.WORKSPACE_EXPORT_MAP[mimeType];
+
+      if (exportTarget) {
+        console.log(`Exporting Google Workspace file (${mimeType}) → ${exportTarget.mimeType}`);
+        const response = await this.drive.files.export(
+          { fileId, mimeType: exportTarget.mimeType },
+          { responseType: 'arraybuffer' }
+        );
+        return { content: response.data as ArrayBuffer, exportExtension: exportTarget.extension };
+      }
+
+      // Regular binary file — download directly.
+      const response = await this.drive.files.get(
+        { fileId, alt: 'media', supportsAllDrives: true },
+        { responseType: 'arraybuffer' }
+      );
+      return { content: response.data as ArrayBuffer };
+    } catch (error: any) {
+      console.error('Error downloading file from Google Drive:', error?.message || error);
+      throw new Error(`Failed to download file from Google Drive: ${error?.message || 'Unknown error'}`);
     }
   }
 

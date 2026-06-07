@@ -261,7 +261,8 @@ export class QueueWorker extends EventEmitter {
   }
 
   private async executeTransfer(job: CopyOperation): Promise<{ copiedFileId?: string; copiedFileName?: string; copiedFileUrl?: string }> {
-    const { sourceProvider, destProvider, sourceFileId, sourceFilePath, fileName, destinationFolderId, sourceUrl } = job;
+    const { sourceProvider, destProvider, sourceFileId, sourceFilePath, destinationFolderId, sourceUrl } = job;
+    let fileName = job.fileName;
 
     // Check for cancellation before starting
     const currentJob = await storage.getCopyOperation(job.id);
@@ -302,11 +303,12 @@ export class QueueWorker extends EventEmitter {
         throw new Error('Source file ID is required for Google Drive');
       }
       const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-      const downloadedContent = await driveService.downloadFile(sourceFileId);
-      // Convert ArrayBuffer to Buffer if needed
-      fileContent = downloadedContent instanceof ArrayBuffer 
-        ? Buffer.from(downloadedContent) 
-        : downloadedContent as Buffer;
+      const download = await driveService.downloadFile(sourceFileId);
+      fileContent = Buffer.from(download.content);
+      // Append the correct extension when a Google Workspace file was exported
+      if (download.exportExtension && fileName && !fileName.includes('.')) {
+        fileName = fileName + download.exportExtension;
+      }
     } else if (sourceProvider === 'dropbox') {
       if (!sourceFilePath) {
         throw new Error('Source file path is required for Dropbox');
