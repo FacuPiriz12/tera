@@ -38,12 +38,32 @@ export function getSession() {
   if (process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '' && process.env.NODE_ENV === 'production') {
     console.log('Using PostgreSQL session store');
     const pgStore = connectPg(session);
-    sessionStore = new pgStore({
+    const pgSessionStore = new pgStore({
       conString: process.env.DATABASE_URL,
       createTableIfMissing: false,
       ttl: sessionTtl,
       tableName: "sessions",
     });
+
+    // Prevent DB connectivity errors from crashing all requests with 500.
+    // If the session store can't connect (e.g. ENETUNREACH), requests fall through
+    // session-less instead of hitting the error middleware.
+    pgSessionStore.on('error', (err: Error) => {
+      console.error('Session store error (non-fatal):', err.message);
+    });
+    const origGet = pgSessionStore.get.bind(pgSessionStore);
+    pgSessionStore.get = (sid: string, cb: (err: any, session?: any) => void) => {
+      origGet(sid, (err: any, session: any) => {
+        if (err) {
+          console.error('Session get error (non-fatal):', err.message);
+          cb(null, null);
+          return;
+        }
+        cb(null, session);
+      });
+    };
+
+    sessionStore = pgSessionStore;
   } else {
     console.log('Using memory session store (development)');
   }
