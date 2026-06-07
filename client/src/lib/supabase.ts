@@ -1,54 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 import { setCachedSession } from './supabaseSession';
 
-// Get Supabase credentials from server endpoint
-async function getSupabaseConfig() {
-  try {
-    const response = await fetch('/api/config/supabase');
-    if (!response.ok) {
-      throw new Error('Failed to fetch Supabase config');
-    }
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching Supabase config:', error);
-    throw error;
-  }
-}
+function createSupabaseClient() {
+  const url = import.meta.env.VITE_SUPABASE_URL;
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Create Supabase client with config from server
-export async function createSupabaseClient() {
-  try {
-    const config = await getSupabaseConfig();
-    
-    if (!config.url || !config.anonKey) {
-      console.log('Supabase not configured, falling back to Replit Auth');
-      return null;
-    }
-
-    const client = createClient(config.url, config.anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'supabase.auth.token'
-      }
-    });
-    
-    // Remove realtime connection to prevent WebSocket errors
-    if (client.realtime) {
-      client.realtime.disconnect();
-    }
-
-    // Initialize cached session with current session
-    const { data: { session } } = await client.auth.getSession();
-    setCachedSession(session);
-
-    return client;
-  } catch (error) {
-    console.log('Supabase initialization failed, using Replit Auth only');
+  if (!url || !anonKey) {
+    console.warn('Supabase env vars not set (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)');
     return null;
   }
+
+  const client = createClient(url, anonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: 'supabase.auth.token',
+    }
+  });
+
+  if (client.realtime) client.realtime.disconnect();
+
+  // Seed the module-level session cache on startup
+  client.auth.getSession().then(({ data: { session } }) => {
+    setCachedSession(session);
+  });
+
+  return client;
 }
 
-// Export a promise that resolves to the supabase client or null
-export const supabasePromise = createSupabaseClient();
+// Synchronous — no HTTP round-trip needed
+export const supabasePromise: Promise<ReturnType<typeof createClient> | null> =
+  Promise.resolve(createSupabaseClient());

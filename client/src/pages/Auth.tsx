@@ -23,8 +23,15 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [, setLocation] = useLocation();
-  const { loginMutation, registerMutation } = useAuth();
+  const { loginMutation, registerMutation, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
+
+  // Redirect authenticated users away from login page
+  useEffect(() => {
+    if (isAuthenticated && !isAuthLoading) {
+      setLocation("/dashboard");
+    }
+  }, [isAuthenticated, isAuthLoading, setLocation]);
 
   const [floatingIcons, setFloatingIcons] = useState<any[]>([]);
 
@@ -95,7 +102,7 @@ export default function AuthPage() {
         email,
       }, {
         onSuccess: () => {
-          setLocation("/");
+          setLocation("/dashboard");
         }
       });
     }

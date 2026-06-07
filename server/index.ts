@@ -1,3 +1,10 @@
+// Load .env.local before anything else (Node 20.6+, no extra packages needed)
+try {
+  (process as any).loadEnvFile('.env.local');
+} catch {
+  // File not found or already loaded via system env vars — that's fine
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
@@ -154,30 +161,17 @@ app.use((req, res, next) => {
   const server = await registerRoutes(app);
 
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    // Handle session-related errors gracefully
-    if (err.message && (
-      err.message.includes('session') || 
-      err.message.includes('Session') ||
-      err.message.includes('cookie') ||
-      err.code === 'EBADCSRFTOKEN'
-    )) {
-      console.log('🔄 Session error detected, clearing cookie and redirecting...');
+    // Only handle CSRF token errors — don't catch generic DB/session store errors
+    if (err.code === 'EBADCSRFTOKEN') {
       res.clearCookie('connect.sid', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax'
       });
-      
-      // For API requests, return JSON error
       if (req.path.startsWith('/api')) {
-        return res.status(401).json({ 
-          message: "Session expired. Please refresh the page.",
-          action: "refresh_required"
-        });
+        return res.status(401).json({ message: "Session expired. Please refresh the page." });
       }
-      
-      // For page requests, redirect to home
-      return res.redirect('/');
+      return res.redirect('/login');
     }
     
     const status = err.status || err.statusCode || 500;
