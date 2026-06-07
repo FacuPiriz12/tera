@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useTransfer } from "@/contexts/TransferContext";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 
@@ -386,13 +387,22 @@ export default function CloudExplorer() {
     search: '',
   });
 
-  const [draggedItem, setDraggedItem] = useState<{ item: CloudItem; provider: Provider; path: string } | null>(null);
+  const { addJob } = useTransfer();
+
+  const [draggedItem, setDraggedItem] = useState<{ item: CloudItem; provider: Provider; sourcePath: string } | null>(null);
   const [dropTarget, setDropTarget] = useState<1 | 2 | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const [pendingTransfer, setPendingTransfer] = useState<{ item: CloudItem; from: Provider; to: Provider } | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [pendingTransfer, setPendingTransfer] = useState<{
+    item: CloudItem;
+    from: Provider;
+    to: Provider;
+    sourcePath: string;
+    toPanel: 1 | 2;
+  } | null>(null);
 
-  function handleDragStart(item: CloudItem, provider: Provider, path: string) {
-    setDraggedItem({ item, provider, path });
+  function handleDragStart(item: CloudItem, provider: Provider, sourcePath: string) {
+    setDraggedItem({ item, provider, sourcePath });
   }
 
   function handleDragEnd() {
@@ -409,22 +419,77 @@ export default function CloudExplorer() {
         description: 'Arrastrá al panel del otro proveedor para transferir.',
       });
     } else {
-      setPendingTransfer({ item: draggedItem.item, from: draggedItem.provider, to: targetProvider });
+      setPendingTransfer({
+        item: draggedItem.item,
+        from: draggedItem.provider,
+        to: targetProvider,
+        sourcePath: draggedItem.sourcePath,
+        toPanel: targetPanel,
+      });
       setShowSyncModal(true);
     }
     setDraggedItem(null);
     setDropTarget(null);
   }
 
-  function confirmTransfer(mode: 'acumulativa' | 'mirror') {
-    setShowSyncModal(false);
-    if (pendingTransfer) {
+  async function confirmTransfer(duplicateAction: 'skip' | 'replace') {
+    if (!pendingTransfer) return;
+    setIsTransferring(true);
+
+    try {
+      const destPanel = pendingTransfer.toPanel === 1 ? panel1 : panel2;
+
+      const payload: Record<string, any> = {
+        sourceProvider: pendingTransfer.from,
+        targetProvider: pendingTransfer.to,
+        fileName: pendingTransfer.item.name,
+        duplicateAction,
+        targetPath: pendingTransfer.to === 'google'
+          ? destPanel.googleFolderId
+          : (destPanel.dropboxPath || '/'),
+      };
+
+      if (pendingTransfer.item.size) {
+        payload.fileSize = Number(pendingTransfer.item.size);
+      }
+
+      if (pendingTransfer.from === 'google') {
+        payload.sourceFileId = pendingTransfer.item.id;
+      } else {
+        const folder = pendingTransfer.sourcePath;
+        payload.sourceFilePath = folder === '' || folder === '/'
+          ? `/${pendingTransfer.item.name}`
+          : `${folder}/${pendingTransfer.item.name}`;
+      }
+
+      const res = await apiRequest('POST', '/api/transfer-files', payload);
+      const job = await res.json();
+
+      addJob({
+        id: job.jobId,
+        fileName: job.fileName || pendingTransfer.item.name,
+        status: 'queued',
+        progress: 0,
+        sourceProvider: pendingTransfer.from,
+        targetProvider: pendingTransfer.to,
+        createdAt: new Date().toISOString(),
+      });
+
       toast({
         title: t('copy.transferInitiated', 'Transferencia iniciada'),
-        description: `"${pendingTransfer.item.name}" → ${pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'} (${mode})`,
+        description: `"${job.fileName}" está en cola hacia ${pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'}.`,
       });
+    } catch (error: any) {
+      toast({
+        title: 'Error al iniciar transferencia',
+        description: error.message || 'No se pudo iniciar la transferencia.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsTransferring(false);
+      setShowSyncModal(false);
+      setPendingTransfer(null);
     }
-    setPendingTransfer(null);
   }
 
   return (
@@ -475,8 +540,9 @@ export default function CloudExplorer() {
 
                 <div className="space-y-3">
                   <button
-                    onClick={() => confirmTransfer('acumulativa')}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1"
+                    onClick={() => confirmTransfer('skip')}
+                    disabled={isTransferring}
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="font-bold text-slate-700 group-hover:text-blue-600">
                       {t('pages.cloudExplorer.cumulative', 'Acumulativa')}
@@ -486,8 +552,9 @@ export default function CloudExplorer() {
                     </span>
                   </button>
                   <button
-                    onClick={() => confirmTransfer('mirror')}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1"
+                    onClick={() => confirmTransfer('replace')}
+                    disabled={isTransferring}
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="font-bold text-slate-700 group-hover:text-blue-600">
                       {t('pages.cloudExplorer.mirror', 'Mirror Sync')}
@@ -498,9 +565,17 @@ export default function CloudExplorer() {
                   </button>
                 </div>
 
+                {isTransferring && (
+                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Iniciando transferencia...</span>
+                  </div>
+                )}
+
                 <button
-                  onClick={() => setShowSyncModal(false)}
-                  className="w-full mt-6 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                  onClick={() => { if (!isTransferring) { setShowSyncModal(false); setPendingTransfer(null); } }}
+                  disabled={isTransferring}
+                  className="w-full mt-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
                 >
                   {t('common.actions.cancel', 'Cancelar')}
                 </button>
