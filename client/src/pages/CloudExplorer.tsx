@@ -453,6 +453,8 @@ export default function CloudExplorer() {
         payload.fileSize = Number(pendingTransfer.item.size);
       }
 
+      payload.isFolder = pendingTransfer.item.isFolder;
+
       if (pendingTransfer.from === 'google') {
         payload.sourceFileId = pendingTransfer.item.id;
       } else {

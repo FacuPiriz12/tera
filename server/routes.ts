@@ -1607,7 +1607,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetPath: z.string().optional(),
         duplicateAction: z.enum(['skip', 'replace', 'copy_with_suffix']).default('skip'),
         sourceFileId: z.string().optional(),
-        sourceFilePath: z.string().optional()
+        sourceFilePath: z.string().optional(),
+        isFolder: z.boolean().optional().default(false)
       }).refine(data => data.sourceProvider !== data.targetProvider, {
         message: "Source and target providers must be different"
       }).refine(data => {
@@ -1632,7 +1633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName, fileSize, duplicateAction } = validation.data;
+      const { sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName, fileSize, duplicateAction, isFolder } = validation.data;
 
       // Check user membership in backend for security
       const user = await storage.getUser(userId);
@@ -1671,10 +1672,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Create asynchronous transfer job in queue
-      // Build sourceUrl for cross-cloud transfers
-      const sourceUrl = sourceProvider === 'google' 
-        ? `https://drive.google.com/file/d/${sourceFileId}` 
-        : `dropbox://${sourceFilePath}`;
+      // Build sourceUrl for cross-cloud transfers (folders get a different URL shape)
+      const sourceUrl = sourceProvider === 'google'
+        ? (isFolder
+            ? `https://drive.google.com/drive/folders/${sourceFileId}`
+            : `https://drive.google.com/file/d/${sourceFileId}`)
+        : (isFolder
+            ? `dropbox://folder:${sourceFilePath}`
+            : `dropbox://${sourceFilePath}`);
       
       let finalFileName = fileName;
       
@@ -1697,6 +1702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         destProvider: targetProvider,
         destinationFolderId: targetPath || 'root',
         fileName: finalFileName,
+        itemType: isFolder ? 'folder' : 'file',
         status: 'pending'
       });
 
@@ -1704,8 +1710,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         jobId: copyOperation.id,
         userId,
         fileName: finalFileName,
+        isFolder,
         duplicateAction
       });
+
+      // Wake up worker immediately (resets backoff)
+      const worker = getQueueWorker();
+      worker?.notifyNewJob();
 
       // Return job ID immediately for tracking (202 Accepted for async processing)
       res.status(202).json({

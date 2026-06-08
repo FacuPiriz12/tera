@@ -31,6 +31,7 @@ export class QueueWorker extends EventEmitter {
   private consecutiveEmptyPolls = 0;
   private lastHeartbeat = Date.now();
   private servicePool = new Map<string, GoogleDriveService | DropboxService>();
+  private wakeUpSignal: (() => void) | null = null;
 
   constructor(config: Partial<WorkerConfig> = {}) {
     super();
@@ -112,8 +113,25 @@ export class QueueWorker extends EventEmitter {
         this.currentPollInterval = this.config.pollInterval;
       }
 
-      // Wait before next poll
-      await new Promise(resolve => setTimeout(resolve, this.currentPollInterval));
+      // Interruptible sleep — notifyNewJob() can wake this up immediately
+      await new Promise<void>(resolve => {
+        let done = false;
+        const finish = () => { if (!done) { done = true; resolve(); } };
+        this.wakeUpSignal = finish;
+        setTimeout(finish, this.currentPollInterval);
+      });
+      this.wakeUpSignal = null;
+    }
+  }
+
+  /** Called by routes after enqueuing a new job — wakes up the worker immediately. */
+  public notifyNewJob(): void {
+    this.currentPollInterval = this.config.pollInterval;
+    this.consecutiveEmptyPolls = 0;
+    if (this.wakeUpSignal) {
+      console.log('🔔 New job enqueued — waking up worker');
+      this.wakeUpSignal();
+      this.wakeUpSignal = null;
     }
   }
 
@@ -270,24 +288,11 @@ export class QueueWorker extends EventEmitter {
       throw new Error('Job was cancelled by user');
     }
 
-    // Detect if this is a folder operation by parsing the source URL
-    let isFolder = false;
-    if (sourceProvider === 'google' && sourceUrl) {
-      try {
-        const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-        const { type } = driveService.parseGoogleDriveUrl(sourceUrl);
-        isFolder = type === 'folder';
-      } catch (error) {
-        console.warn('Could not parse Google Drive URL, assuming file:', error);
-      }
-    } else if (sourceProvider === 'dropbox' && sourceUrl) {
-      try {
-        const dropboxService = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
-        const { type } = dropboxService.parseDropboxUrl(sourceUrl);
-        isFolder = type === 'folder';
-      } catch (error) {
-        console.warn('Could not parse Dropbox URL, assuming file:', error);
-      }
+    // Detect if this is a folder operation — prefer the stored itemType, fall back to URL parsing
+    let isFolder = job.itemType === 'folder';
+    if (!isFolder && sourceUrl) {
+      // URL-based fallback (older jobs without itemType set)
+      isFolder = sourceUrl.includes('/drive/folders/') || sourceUrl.includes('dropbox://folder:');
     }
 
     // Handle folder operations with progress callback
@@ -397,11 +402,42 @@ export class QueueWorker extends EventEmitter {
 
     // Create progress callback that emits real-time updates
     const progressCallback = async (completedFiles: number, totalFiles: number, progressPct: number) => {
-      // Only emit real-time progress event - services handle database updates
       this.emit('jobProgress', job.id, job.userId, { completedFiles, totalFiles, progressPct });
     };
 
     let result: { copiedFileId?: string; copiedFileName?: string; copiedFileUrl?: string } = {};
+
+    // Cross-cloud folder transfer (Drive→Dropbox or Dropbox→Drive)
+    if (sourceProvider !== destProvider) {
+      let actualSourceId = sourceFileId || sourceFilePath || '';
+      if (!actualSourceId && sourceUrl) {
+        if (sourceProvider === 'google') {
+          const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
+          const parsed = driveService.parseGoogleDriveUrl(sourceUrl);
+          actualSourceId = parsed.fileId;
+        } else {
+          // Dropbox: extract path from dropbox:// URL or use as-is
+          actualSourceId = sourceUrl.replace('dropbox://folder:', '');
+        }
+      }
+
+      const totalFiles = await this.countFilesInSourceFolder(
+        sourceProvider as 'google' | 'dropbox', actualSourceId, job.userId
+      );
+      const progressCtx = { completed: 0, total: Math.max(totalFiles, 1) };
+      await storage.setJobProgress(job.id, 0, progressCtx.total, 0);
+      this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: progressCtx.total, progressPct: 0 });
+
+      const destParent = destProvider === 'dropbox' ? (destinationFolderId || '') : destinationFolderId;
+      await this.crossCloudFolderTransfer(
+        job, actualSourceId, destParent, fileName || 'Untitled', progressCtx, progressCallback
+      );
+
+      return {
+        copiedFileName: fileName,
+        copiedFileUrl: undefined
+      };
+    }
 
     if (sourceProvider === 'google') {
       if (!sourceUrl) {
@@ -464,6 +500,116 @@ export class QueueWorker extends EventEmitter {
     }
 
     return result;
+  }
+
+  private async countFilesInSourceFolder(
+    provider: 'google' | 'dropbox',
+    folderId: string,
+    userId: string
+  ): Promise<number> {
+    try {
+      if (provider === 'google') {
+        const svc = this.getServiceFromPool('google', userId) as GoogleDriveService;
+        const files = await svc.listFiles(folderId);
+        let count = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder').length;
+        for (const sub of files.filter(f => f.mimeType === 'application/vnd.google-apps.folder')) {
+          count += await this.countFilesInSourceFolder('google', sub.id, userId);
+        }
+        return count;
+      } else {
+        const svc = this.getServiceFromPool('dropbox', userId) as DropboxService;
+        const path = folderId === '/' ? '' : folderId;
+        const items = await svc.listFiles(path);
+        let count = items.filter(f => f.mimeType !== 'application/vnd.dropbox.folder').length;
+        for (const sub of items.filter(f => f.mimeType === 'application/vnd.dropbox.folder')) {
+          const subPath = path ? `${path}/${sub.name}` : `/${sub.name}`;
+          count += await this.countFilesInSourceFolder('dropbox', subPath, userId);
+        }
+        return count;
+      }
+    } catch {
+      return 0;
+    }
+  }
+
+  private async crossCloudFolderTransfer(
+    job: CopyOperation,
+    sourceFolderId: string,
+    destParentPath: string,
+    folderName: string,
+    progressCtx: { completed: number; total: number },
+    progressCallback: (c: number, t: number, pct: number) => Promise<void>
+  ): Promise<void> {
+    const { sourceProvider, destProvider } = job;
+    const CONCURRENCY = 5;
+
+    if (sourceProvider === 'google' && destProvider === 'dropbox') {
+      const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
+      const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
+
+      const newPath = destParentPath ? `${destParentPath}/${folderName}` : `/${folderName}`;
+      try { await dbx.createFolder(newPath); } catch { /* folder may already exist */ }
+
+      const files = await drive.listFiles(sourceFolderId);
+      const subs = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+      const regular = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
+
+      for (const sub of subs) {
+        await this.crossCloudFolderTransfer(job, sub.id, newPath, sub.name, progressCtx, progressCallback);
+      }
+
+      for (let i = 0; i < regular.length; i += CONCURRENCY) {
+        const batch = regular.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(batch.map(async (file) => {
+          try {
+            const dl = await drive.downloadFile(file.id);
+            let name = file.name;
+            if (dl.exportExtension && !name.includes('.')) name += dl.exportExtension;
+            await dbx.uploadFile(name, dl.content, newPath, undefined, { skipDuplicateCheck: true });
+            progressCtx.completed++;
+            const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
+            await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
+            await progressCallback(progressCtx.completed, progressCtx.total, pct);
+          } catch (err) {
+            console.error(`Cross-cloud: error transferring ${file.name}:`, err);
+          }
+        }));
+      }
+
+    } else if (sourceProvider === 'dropbox' && destProvider === 'google') {
+      const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
+      const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
+
+      const newFolder = await drive.createFolder(folderName, destParentPath || undefined);
+      const newFolderId = newFolder.id!;
+
+      const dbxPath = sourceFolderId === '/' ? '' : sourceFolderId;
+      const items = await dbx.listFiles(dbxPath);
+      const subs = items.filter(f => f.mimeType === 'application/vnd.dropbox.folder');
+      const regular = items.filter(f => f.mimeType !== 'application/vnd.dropbox.folder');
+
+      for (const sub of subs) {
+        const subPath = dbxPath ? `${dbxPath}/${sub.name}` : `/${sub.name}`;
+        await this.crossCloudFolderTransfer(job, subPath, newFolderId, sub.name, progressCtx, progressCallback);
+      }
+
+      for (let i = 0; i < regular.length; i += CONCURRENCY) {
+        const batch = regular.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(batch.map(async (file) => {
+          try {
+            const filePath = dbxPath ? `${dbxPath}/${file.name}` : `/${file.name}`;
+            const content = await dbx.downloadFile(filePath);
+            await drive.uploadFile(file.name, content, newFolderId, undefined, undefined, { skipDuplicateCheck: true });
+            progressCtx.completed++;
+            const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
+            await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
+            await progressCallback(progressCtx.completed, progressCtx.total, pct);
+          } catch (err) {
+            console.error(`Cross-cloud: error transferring ${file.name}:`, err);
+          }
+        }));
+      }
+    }
   }
 
   private calculateBackoffDelay(attempts: number): number {

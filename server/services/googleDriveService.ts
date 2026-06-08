@@ -346,14 +346,11 @@ export class GoogleDriveService {
       if (!options?.skipDuplicateCheck) {
         contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
         const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'google');
-        
+
         if (duplicateCheck.isDuplicate && !options?.forceOverwrite) {
           console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), returning duplicate info`);
           throw { isDuplicate: true, duplicateInfo: duplicateCheck } as any;
         }
-      } else {
-        // Still calculate hash for registration later
-        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
       }
       const maxRegularUploadSize = 10 * 1024 * 1024; // 10MB threshold for resumable uploads
       const maxGoogleDriveSize = 5 * 1024 * 1024 * 1024 * 1024; // 5TB maximum for Google Drive
@@ -610,20 +607,26 @@ export class GoogleDriveService {
 
       // Get all files in source folder
       const files = await this.listFiles(sourceFolderId);
+      const subfolders = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
+      const regularFiles = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
 
-      // Copy each file/folder
-      for (const file of files) {
+      // Recurse into subfolders sequentially (order matters for nested structure)
+      for (const sub of subfolders) {
         try {
-          let copiedFile: DriveFileInfo;
-          
-          if (file.mimeType === 'application/vnd.google-apps.folder') {
-            // Recursively copy subfolders - Pass progress context to track progress in all levels
-            copiedFile = await this.copyFolderRecursiveInternal(file.id, newFolder.id, file.name, progressContext);
-          } else {
-            // Copy individual files
-            copiedFile = await this.copyFile(file.id, undefined, newFolder.id);
-            
-            // Save individual file to drive_files table
+          await this.copyFolderRecursiveInternal(sub.id, newFolder.id, sub.name, progressContext);
+        } catch (error) {
+          console.error(`Error copying subfolder ${sub.name}:`, error);
+        }
+      }
+
+      // Copy regular files in parallel batches of 5
+      const CONCURRENCY = 5;
+      for (let i = 0; i < regularFiles.length; i += CONCURRENCY) {
+        const batch = regularFiles.slice(i, i + CONCURRENCY);
+        await Promise.allSettled(batch.map(async (file) => {
+          try {
+            const copiedFile = await this.copyFile(file.id, undefined, newFolder.id);
+
             try {
               await storage.createCloudFile({
                 userId: this.userId,
@@ -635,33 +638,22 @@ export class GoogleDriveService {
                 fileSize: copiedFile.size ? Number(copiedFile.size) || null : null,
                 sourceUrl: `https://drive.google.com/file/d/${file.id}/view`
               });
-              console.log(`📁 Archived individual file ${copiedFile.name} in drive_files table`);
             } catch (error) {
               console.error(`Failed to save individual file ${copiedFile.name} to drive_files:`, error);
             }
 
-            // Increment progress counter for files only (not folders)
             if (progressContext) {
               progressContext.completedFiles++;
-              // Calculate progress percentage using proper total
               const progressPct = Math.min(100, Math.round((progressContext.completedFiles / Math.max(1, progressContext.totalFiles)) * 100));
-              // Update progress in database
-              await storage.setJobProgress(
-                progressContext.operationId, 
-                progressContext.completedFiles, 
-                progressContext.totalFiles,
-                progressPct
-              );
-              // Emit real-time progress update if callback is provided
+              await storage.setJobProgress(progressContext.operationId, progressContext.completedFiles, progressContext.totalFiles, progressPct);
               if (progressContext.onProgress) {
                 await progressContext.onProgress(progressContext.completedFiles, progressContext.totalFiles, progressPct);
               }
             }
+          } catch (error) {
+            console.error(`Error copying file ${file.name}:`, error);
           }
-        } catch (error) {
-          console.error(`Error copying file ${file.name}:`, error);
-          // Continue with other files even if one fails
-        }
+        }));
       }
 
       return newFolder;

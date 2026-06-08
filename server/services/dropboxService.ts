@@ -262,14 +262,11 @@ export class DropboxService {
       if (!options?.skipDuplicateCheck) {
         contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
         const duplicateCheck = await this.duplicateDetection.checkDuplicate(filename, fileSize, contentHash, 'dropbox');
-        
+
         if (duplicateCheck.isDuplicate && !options?.forceOverwrite) {
           console.log(`⚠️ Duplicate file detected: ${filename} (${duplicateCheck.matchType}), returning duplicate info`);
           throw { isDuplicate: true, duplicateInfo: duplicateCheck } as any;
         }
-      } else {
-        // Still calculate hash for registration later
-        contentHash = await this.duplicateDetection.calculateFileHash(Readable.from(Buffer.from(content)));
       }
       const maxRegularUploadSize = 150 * 1024 * 1024; // 150MB
       const maxDropboxSize = 350 * 1024 * 1024 * 1024; // 350GB maximum for Dropbox
