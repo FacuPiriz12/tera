@@ -257,7 +257,7 @@ export class DatabaseStorage implements IStorage {
         googleAccessToken: tokens.accessToken,
         googleRefreshToken: tokens.refreshToken || null,
         googleTokenExpiry: tokens.expiry || null,
-        googleConnected: tokens.accessToken ? true : false,
+        googleConnected: !!(tokens.accessToken || tokens.refreshToken),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
@@ -1164,7 +1164,7 @@ class MemoryStorage implements IStorage {
       googleAccessToken: tokens.accessToken,
       googleRefreshToken: tokens.refreshToken || null,
       googleTokenExpiry: tokens.expiry || null,
-      googleConnected: tokens.accessToken ? true : false,
+      googleConnected: !!(tokens.accessToken || tokens.refreshToken),
       updatedAt: new Date(),
     };
     this.users.set(userId, user);
@@ -1180,7 +1180,7 @@ class MemoryStorage implements IStorage {
     if (!existingUser) {
       throw new Error('User not found');
     }
-    
+
     const user: User = {
       ...existingUser,
       dropboxAccessToken: tokens.accessToken,

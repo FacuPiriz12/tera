@@ -87,7 +87,7 @@ const esTranslations = {
     },
     navigation: {
       home: "Inicio",
-      files: "Archivos", 
+      files: "Archivos",
       operations: "Operaciones",
       myFiles: "Mis Archivos",
       sharedDrives: "Drives Compartidos",
@@ -104,11 +104,29 @@ const esTranslations = {
       shared: "Compartidos",
       adminPanel: "Panel Admin",
       userManagement: "Gestión de Usuarios",
-      operationLogs: "Logs de Operaciones"
+      operationLogs: "Logs de Operaciones",
+      mainMenu: "Menú Principal",
+      groups: "Grupos",
+      tools: "Herramientas"
     },
     sidebar: {
       storage: "Almacenamiento",
       storageUsed: "Utilizado: {{used}} de {{total}}"
+    },
+    status: {
+      loading: "Cargando...",
+      soon: "Próximamente"
+    },
+    actions: {
+      searchPlaceholder: "Buscar archivos o carpetas...",
+      cancel: "Cancelar",
+      viewAll: "Ver todo",
+      viewDetails: "Ver detalles"
+    },
+    forgotPassword: {
+      successTitle: "Correo enviado",
+      successDesc: "Revisá tu bandeja de entrada para restablecer tu contraseña",
+      backToLogin: "Volver al inicio de sesión"
     },
     dashboard: {
       noAccountConnected: "No hay cuentas conectadas",
@@ -192,13 +210,108 @@ const esTranslations = {
       next: "Siguiente",
       change: "Cambiar",
       select: "Seleccionar"
-    },
-    status: {
-      loading: "Cargando..."
-    },
-    actions: {
-      searchPlaceholder: "Buscar archivos o carpetas..."
     }
+  },
+  sidebar: {
+    storage: "Almacenamiento"
+  },
+  myFiles: {
+    title: "Mis Archivos",
+    searchPlaceholder: "Buscar archivos...",
+    noFilesFound: "No se encontraron archivos",
+    noFilesCopied: "Aún no copiaste ningún archivo",
+    tryDifferentSearch: "Intentá con otra búsqueda",
+    filesWillAppearHere: "Tus archivos transferidos aparecerán acá",
+    showing: "Mostrando",
+    to: "a",
+    of: "de",
+    files: "archivos",
+    previous: "Anterior",
+    next: "Siguiente"
+  },
+  operations: {
+    title: "Operaciones",
+    description: "Historial de todas tus transferencias",
+    copyOperation: "Transferencia",
+    date: "Fecha",
+    duration: "Duración",
+    state: "Estado",
+    error: "Error",
+    started: "Iniciada",
+    startedMessage: "Tu operación fue iniciada correctamente",
+    noOperations: "Sin operaciones",
+    operationsWillAppear: "Tus transferencias aparecerán acá"
+  },
+  analytics: {
+    title: "Analíticas",
+    description: "Estadísticas de tus transferencias",
+    totalOperations: "Operaciones Totales",
+    filesCopied: "Archivos Transferidos",
+    totalFilesProcessed: "Archivos Procesados",
+    completed: "Completadas",
+    failed: "Fallidas",
+    inProgress: "En Progreso",
+    inProgressStatus: "En curso",
+    successRate: "Tasa de Éxito",
+    averageTime: "Tiempo Promedio",
+    perCompletedOperation: "por operación completada",
+    operationStatus: "Estado de Operaciones",
+    activityLast7Days: "Actividad (últimos 7 días)",
+    noDataTitle: "Sin datos aún",
+    noDataMessage: "Realizá transferencias para ver tus estadísticas"
+  },
+  pages: {
+    cloudExplorer: {
+      title: "Explorador Multi-nube",
+      subtitle: "Arrastrá archivos entre tus nubes",
+      syncMode: "Modo de transferencia",
+      cumulative: "Acumular",
+      cumulativeDesc: "Agrega archivos sin eliminar los existentes",
+      mirror: "Reemplazar",
+      mirrorDesc: "Reemplaza archivos con el mismo nombre",
+      syncDesc: "Seleccioná el modo antes de transferir"
+    },
+    integrations: {
+      title: "Integraciones",
+      subtitle: "Conectá tus servicios de almacenamiento",
+      personalStorage: "Almacenamiento personal",
+      googleDriveDesc: "Almacenamiento en la nube de Google con colaboración en tiempo real",
+      dropboxDesc: "Almacenamiento en la nube con sincronización y uso compartido sencillo",
+      features: "Funcionalidades",
+      autoSync: "Sincronización automática",
+      sharedFolders: "Carpetas compartidas",
+      permissions: "Control de permisos",
+      maxSupport: "Archivos hasta 5TB",
+      perFile: "por archivo",
+      collabAndFiles: "Colaboración y archivos",
+      realTimeCollab: "Colaboración en tiempo real",
+      versionHistory: "Historial de versiones",
+      secureLinks: "Links de compartición seguros",
+      comingSoonTitle: "Próximamente",
+      comingSoonSubtitle: "Estamos trabajando en nuevas integraciones",
+      requestBtn: "Solicitar integración",
+      requestDesc: "¿No ves tu servicio? Podés solicitarlo"
+    }
+  },
+  quickCopy: {
+    title: "Transferencia Rápida",
+    urlLabel: "URL del archivo",
+    urlPlaceholder: "Pegá la URL de Google Drive o Dropbox",
+    googleUrlLabel: "URL de Google Drive",
+    googleUrlPlaceholder: "https://drive.google.com/...",
+    dropboxUrlLabel: "URL de Dropbox",
+    dropboxUrlPlaceholder: "https://www.dropbox.com/...",
+    destinationLabel: "Carpeta destino",
+    includeSubfolders: "Incluir subcarpetas",
+    preview: "Vista previa",
+    starting: "Iniciando..."
+  },
+  notFound: {
+    title: "Página no encontrada",
+    description: "La página que buscás no existe o fue movida"
+  },
+  copy: {
+    transferInitiated: "Transferencia iniciada"
   },
   dashboard: {
     noAccountConnected: "No hay cuentas conectadas",

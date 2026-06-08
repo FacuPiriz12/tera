@@ -1113,10 +1113,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
       
+      // hasValidToken = true if access token is still valid OR if we have a refresh token
+      // (ensureValidToken auto-refreshes when needed, so having a refresh token is enough)
+      const accessTokenValid = !!(user?.googleAccessToken && user?.googleTokenExpiry &&
+                                  new Date(user.googleTokenExpiry) > new Date());
+      const canAutoRefresh = !!user?.googleRefreshToken;
       res.json({
         connected: user?.googleConnected || false,
-        hasValidToken: user?.googleAccessToken && user?.googleTokenExpiry && 
-                      new Date(user.googleTokenExpiry) > new Date()
+        hasValidToken: accessTokenValid || canAutoRefresh
       });
     } catch (error) {
       console.error("Error checking Google auth status:", error);
