@@ -430,6 +430,20 @@ export class DropboxService {
     }
   }
 
+  async fileExistsAtPath(folderPath: string, name: string, size?: number): Promise<boolean> {
+    try {
+      await this.ensureValidToken();
+      const normalized = folderPath && folderPath !== '/' ? folderPath : '';
+      const filePath = normalized ? `${normalized}/${name}` : `/${name}`;
+      const res = await this.dbx.filesGetMetadata({ path: filePath });
+      if ((res.result as any)['.tag'] !== 'file') return false;
+      if (size === undefined) return true;
+      return (res.result as any).size === size;
+    } catch {
+      return false; // file not found or error — proceed with transfer
+    }
+  }
+
   async createFolder(path: string): Promise<DropboxFile> {
     await this.ensureValidToken();
     

@@ -101,6 +101,7 @@ export const copyOperations = pgTable("copy_operations", {
   lockedAt: timestamp("locked_at"),
   cancelRequested: boolean("cancel_requested").default(false),
   progressPct: integer("progress_pct").default(0),
+  duplicateAction: varchar("duplicate_action").default('skip'), // 'skip' | 'replace' | 'copy_with_suffix'
   
   // Result fields
   copiedFileId: varchar("copied_file_id"), // ID del archivo/carpeta copiado

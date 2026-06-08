@@ -1703,6 +1703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         destinationFolderId: targetPath || 'root',
         fileName: finalFileName,
         itemType: isFolder ? 'folder' : 'file',
+        duplicateAction,
         status: 'pending'
       });
 

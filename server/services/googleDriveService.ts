@@ -286,6 +286,21 @@ export class GoogleDriveService {
     }
   }
 
+  async fileExistsInFolder(name: string, folderId: string, size?: number): Promise<boolean> {
+    try {
+      await this.ensureValidToken();
+      const safeName = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const q = `name = '${safeName}' and '${folderId}' in parents and trashed = false`;
+      const res = await this.drive.files.list({ q, fields: 'files(id,size)', supportsAllDrives: true, pageSize: 5 });
+      const files = res.data.files || [];
+      if (files.length === 0) return false;
+      if (size === undefined) return true;
+      return files.some(f => f.size !== undefined && Number(f.size) === size);
+    } catch {
+      return false; // fail open — proceed with transfer
+    }
+  }
+
   /**
    * Create a folder in user's drive
    */
@@ -492,6 +507,10 @@ export class GoogleDriveService {
       console.error('Error in large file upload:', error);
       throw new Error(`Failed to upload large file: ${error.message}`);
     }
+  }
+
+  static getExportExtension(mimeType: string): string | undefined {
+    return GoogleDriveService.WORKSPACE_EXPORT_MAP[mimeType]?.extension;
   }
 
   // Google Workspace native formats must be exported, not downloaded directly.

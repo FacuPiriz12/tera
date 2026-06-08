@@ -300,6 +300,23 @@ export class QueueWorker extends EventEmitter {
       return await this.executefolderTransfer(job);
     }
 
+    // Skip-if-exists: live check against destination before downloading
+    if (job.duplicateAction === 'skip' && fileName) {
+      const fileSize = undefined; // size not stored on the job; name match is sufficient
+      const exists = await this.destFileExists(
+        destProvider as 'google' | 'dropbox',
+        job.userId,
+        destinationFolderId || 'root',
+        fileName,
+        fileSize
+      );
+      if (exists) {
+        console.log(`⏭️  Skipping "${fileName}" — already exists at destination`);
+        await storage.setJobProgress(job.id, 1, 1, 100);
+        return { copiedFileName: fileName };
+      }
+    }
+
     // Step 1: Download file from source
     let fileContent: Buffer;
     
@@ -543,6 +560,8 @@ export class QueueWorker extends EventEmitter {
     const { sourceProvider, destProvider } = job;
     const CONCURRENCY = 5;
 
+    const skipIfExists = job.duplicateAction === 'skip';
+
     if (sourceProvider === 'google' && destProvider === 'dropbox') {
       const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
       const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
@@ -554,6 +573,16 @@ export class QueueWorker extends EventEmitter {
       const subs = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
       const regular = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
 
+      // Build existing-files set for this destination folder (one API call, not N)
+      let existingAtDest = new Set<string>();
+      if (skipIfExists) {
+        try {
+          const existing = await dbx.listFiles(newPath);
+          existing.filter(f => f.mimeType !== 'application/vnd.dropbox.folder')
+            .forEach(f => existingAtDest.add(f.name));
+        } catch { /* ignore — proceed without skip optimization */ }
+      }
+
       for (const sub of subs) {
         await this.crossCloudFolderTransfer(job, sub.id, newPath, sub.name, progressCtx, progressCallback);
       }
@@ -562,8 +591,19 @@ export class QueueWorker extends EventEmitter {
         const batch = regular.slice(i, i + CONCURRENCY);
         await Promise.allSettled(batch.map(async (file) => {
           try {
-            const dl = await drive.downloadFile(file.id);
             let name = file.name;
+            // Pre-compute the export extension to check the final name against existing files
+            const exportExt = GoogleDriveService.getExportExtension(file.mimeType);
+            const finalName = exportExt && !name.includes('.') ? name + exportExt : name;
+            if (skipIfExists && existingAtDest.has(finalName)) {
+              console.log(`⏭️  Skipping "${finalName}" — already exists in Dropbox`);
+              progressCtx.completed++;
+              const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
+              await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
+              await progressCallback(progressCtx.completed, progressCtx.total, pct);
+              return;
+            }
+            const dl = await drive.downloadFile(file.id);
             if (dl.exportExtension && !name.includes('.')) name += dl.exportExtension;
             await dbx.uploadFile(name, dl.content, newPath, undefined, { skipDuplicateCheck: true });
             progressCtx.completed++;
@@ -580,8 +620,25 @@ export class QueueWorker extends EventEmitter {
       const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
       const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
 
-      const newFolder = await drive.createFolder(folderName, destParentPath || undefined);
-      const newFolderId = newFolder.id!;
+      // Reuse existing folder if it already exists (skip create only if folder transfer)
+      let newFolderId: string;
+      try {
+        const newFolder = await drive.createFolder(folderName, destParentPath || undefined);
+        newFolderId = newFolder.id!;
+      } catch (err: any) {
+        // If folder creation fails unexpectedly, rethrow
+        throw err;
+      }
+
+      // Build existing-files set for this destination Drive folder
+      let existingAtDest = new Set<string>();
+      if (skipIfExists) {
+        try {
+          const existing = await drive.listFiles(newFolderId);
+          existing.filter(f => f.mimeType !== 'application/vnd.google-apps.folder')
+            .forEach(f => existingAtDest.add(f.name));
+        } catch { /* ignore */ }
+      }
 
       const dbxPath = sourceFolderId === '/' ? '' : sourceFolderId;
       const items = await dbx.listFiles(dbxPath);
@@ -597,6 +654,14 @@ export class QueueWorker extends EventEmitter {
         const batch = regular.slice(i, i + CONCURRENCY);
         await Promise.allSettled(batch.map(async (file) => {
           try {
+            if (skipIfExists && existingAtDest.has(file.name)) {
+              console.log(`⏭️  Skipping "${file.name}" — already exists in Drive`);
+              progressCtx.completed++;
+              const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
+              await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
+              await progressCallback(progressCtx.completed, progressCtx.total, pct);
+              return;
+            }
             const filePath = dbxPath ? `${dbxPath}/${file.name}` : `/${file.name}`;
             const content = await dbx.downloadFile(filePath);
             await drive.uploadFile(file.name, content, newFolderId, undefined, undefined, { skipDuplicateCheck: true });
@@ -609,6 +674,26 @@ export class QueueWorker extends EventEmitter {
           }
         }));
       }
+    }
+  }
+
+  private async destFileExists(
+    provider: 'google' | 'dropbox',
+    userId: string,
+    folderIdOrPath: string,
+    name: string,
+    size?: number
+  ): Promise<boolean> {
+    try {
+      if (provider === 'google') {
+        const svc = this.getServiceFromPool('google', userId) as GoogleDriveService;
+        return await svc.fileExistsInFolder(name, folderIdOrPath || 'root', size);
+      } else {
+        const svc = this.getServiceFromPool('dropbox', userId) as DropboxService;
+        return await svc.fileExistsAtPath(folderIdOrPath, name, size);
+      }
+    } catch {
+      return false; // fail open
     }
   }
 
