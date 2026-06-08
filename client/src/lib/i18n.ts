@@ -115,7 +115,10 @@ const esTranslations = {
     },
     status: {
       loading: "Cargando...",
-      soon: "Próximamente"
+      soon: "Próximamente",
+      completed: "Completado",
+      inProgress: "En progreso",
+      pending: "Pendiente"
     },
     actions: {
       searchPlaceholder: "Buscar archivos o carpetas...",
@@ -127,6 +130,10 @@ const esTranslations = {
       successTitle: "Correo enviado",
       successDesc: "Revisá tu bandeja de entrada para restablecer tu contraseña",
       backToLogin: "Volver al inicio de sesión"
+    },
+    notifications: {
+      copyOperation: "Operación de copia",
+      files: "archivos"
     },
     dashboard: {
       noAccountConnected: "No hay cuentas conectadas",
@@ -313,6 +320,22 @@ const esTranslations = {
   copy: {
     transferInitiated: "Transferencia iniciada"
   },
+  status: {
+    loading: "Cargando..."
+  },
+  language: {
+    switchLanguage: "Cambiar idioma",
+    select: "Seleccionar idioma",
+    spanish: "Español",
+    english: "English",
+    portuguese: "Português"
+  },
+  errors: {
+    validation: {
+      invalidUrl: "URL inválida",
+      urlRequired: "La URL es requerida"
+    }
+  },
   dashboard: {
     noAccountConnected: "No hay cuentas conectadas",
     integrations: "Integraciones",
@@ -328,7 +351,13 @@ const esTranslations = {
     recentFiles: "Archivos Recientes",
     noRecentFiles: "No hay archivos recientes",
     addedOn: "Agregado el",
-    connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos."
+    connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos.",
+    categories: {
+      documents: "Documentos",
+      images: "Imágenes",
+      media: "Multimedia",
+      others: "Otros"
+    }
   },
   user: {
     profile: "Perfil",
@@ -483,6 +512,238 @@ const esTranslations = {
       signup: {
         hasAccount: "¿Ya tienes cuenta?",
         signIn: "Inicia sesión"
+      }
+    },
+    privacy: {
+      title: "Política de Privacidad",
+      lastUpdated: "Última actualización",
+      section1: {
+        title: "Introducción",
+        content: "En TERA nos tomamos muy en serio la privacidad de nuestros usuarios. Esta Política de Privacidad describe cómo recopilamos, usamos, almacenamos y protegemos tu información personal cuando utilizas nuestra plataforma de gestión y transferencia de archivos en la nube."
+      },
+      section2: {
+        title: "Información que Recopilamos",
+        subsection1: {
+          title: "Información de cuenta",
+          item1: "Nombre completo y dirección de correo electrónico",
+          item2: "Contraseña (almacenada con hash seguro, nunca en texto plano)",
+          item3: "Foto de perfil (opcional, si la proporcionas)"
+        },
+        subsection2: {
+          title: "Datos de uso",
+          item1: "Historial de operaciones de transferencia y copia",
+          item2: "Preferencias de configuración y ajustes de la aplicación",
+          item3: "Logs de actividad para diagnóstico y mejora del servicio",
+          item4: "Información del dispositivo y navegador (tipo, versión, sistema operativo)"
+        },
+        subsection3: {
+          title: "Tokens de acceso OAuth",
+          intro: "Cuando conectas servicios de terceros (Google Drive, Dropbox, OneDrive), almacenamos de forma segura:",
+          item1: "Tokens de acceso temporales para operar en tu nombre",
+          item2: "Tokens de actualización para mantener la conexión activa",
+          item3: "Solo los permisos mínimos necesarios para las funciones solicitadas"
+        }
+      },
+      section3: {
+        title: "Cómo Usamos tu Información",
+        intro: "Utilizamos la información recopilada exclusivamente para:",
+        item1: "Proveer y mejorar los servicios de transferencia y gestión de archivos",
+        item2: "Autenticar tu identidad y mantener la seguridad de tu cuenta",
+        item3: "Ejecutar operaciones en tu nombre en servicios conectados",
+        item4: "Enviar notificaciones sobre el estado de tus operaciones",
+        item5: "Cumplir con obligaciones legales y prevenir fraudes",
+        item6: "Mejorar la experiencia de usuario a través de análisis agregados y anonimizados"
+      },
+      section4: {
+        title: "Almacenamiento y Seguridad",
+        subsection1: {
+          title: "Infraestructura",
+          intro: "Tus datos se almacenan en servidores seguros con:",
+          item1: "Cifrado AES-256 en reposo para datos sensibles",
+          item2: "TLS 1.3 para todas las comunicaciones en tránsito"
+        },
+        subsection2: {
+          title: "Tokens OAuth",
+          intro: "Los tokens de acceso a servicios de terceros son:",
+          item1: "Almacenados cifrados en nuestra base de datos",
+          item2: "Nunca expuestos en logs o interfaces de usuario",
+          item3: "Revocables en cualquier momento desde tu panel de integraciones"
+        },
+        subsection3: {
+          title: "Retención de datos",
+          content: "Conservamos tus datos mientras tu cuenta esté activa.",
+          intro: "Al eliminar tu cuenta:",
+          item1: "Tus datos personales se eliminan en un plazo de 30 días",
+          item2: "Los tokens OAuth se revocan inmediatamente",
+          item3: "Los logs de operaciones se anonomizan y conservan por 90 días por razones legales",
+          item4: "Los archivos en servicios de terceros no se ven afectados"
+        }
+      },
+      section5: {
+        title: "Compartición de Datos",
+        subsection1: {
+          title: "Lo que nunca hacemos",
+          item1: "Vender o alquilar tu información personal a terceros",
+          item2: "Usar tus datos para publicidad dirigida",
+          item3: "Acceder a tus archivos más allá de lo necesario para ejecutar tus operaciones"
+        },
+        subsection2: {
+          title: "Proveedores de servicios",
+          item1: "Supabase: autenticación y base de datos (con cifrado)",
+          item2: "Render: infraestructura de servidor",
+          item3: "Google (OAuth): integración con Google Drive",
+          item4: "Dropbox (OAuth): integración con Dropbox",
+          item5: "Todos sujetos a acuerdos de procesamiento de datos compatibles con GDPR"
+        },
+        subsection3: {
+          title: "Requerimientos legales",
+          content: "Podemos divulgar información si la ley lo requiere, en respuesta a procesos legales válidos, o para proteger los derechos y seguridad de TERA y sus usuarios."
+        }
+      },
+      section6: {
+        title: "Tus Derechos",
+        intro: "Dependiendo de tu ubicación, puedes tener los siguientes derechos sobre tus datos:",
+        subsection1: {
+          title: "Derechos GDPR (usuarios europeos)",
+          item1: "Acceso: solicitar una copia de tus datos personales",
+          item2: "Rectificación: corregir datos inexactos o incompletos",
+          item3: "Supresión: solicitar la eliminación de tus datos ('derecho al olvido')",
+          item4: "Portabilidad: recibir tus datos en formato estructurado y legible por máquina"
+        },
+        subsection2: {
+          title: "Cómo ejercer tus derechos",
+          content: "Para ejercer cualquiera de estos derechos, contacta a nuestro equipo en privacy@tera.app. Responderemos en un plazo máximo de 30 días."
+        }
+      },
+      section7: {
+        title: "Cookies y Tecnologías de Seguimiento",
+        intro: "Utilizamos las siguientes tecnologías de seguimiento:",
+        item1: "Cookies de sesión: necesarias para mantener tu sesión activa",
+        item2: "localStorage: para preferencias de idioma y configuración UI",
+        item3: "Cookies de autenticación: para recordar tu sesión de forma segura",
+        item4: "No utilizamos cookies de publicidad ni de seguimiento de terceros",
+        item5: "No compartimos datos de comportamiento con redes publicitarias",
+        item6: "Puedes gestionar las cookies desde la configuración de tu navegador",
+        contact: "Para más información sobre nuestro uso de cookies, contáctanos en privacy@tera.app"
+      },
+      section8: {
+        title: "Menores de Edad",
+        intro: "TERA no está dirigido a menores de 16 años. No recopilamos intencionalmente información de menores.",
+        item1: "Si eres menor de 16 años, no uses nuestros servicios",
+        item2: "Si eres padre/tutor y crees que tu hijo nos proporcionó datos, contáctanos",
+        item3: "Eliminaremos inmediatamente cualquier dato identificado como perteneciente a un menor",
+        note: "En jurisdicciones donde se requiere, la edad mínima puede ser diferente según la ley local aplicable."
+      },
+      section9: {
+        title: "Transferencias Internacionales de Datos",
+        content: "TERA opera desde Argentina y puede procesar datos en servidores ubicados en Estados Unidos (AWS us-east-1). Al usar nuestros servicios, consientes esta transferencia. Implementamos salvaguardas apropiadas, incluyendo cláusulas contractuales estándar aprobadas por la Comisión Europea."
+      },
+      section10: {
+        title: "Cambios en esta Política",
+        content: "Podemos actualizar esta Política de Privacidad periódicamente. Cuando hagamos cambios significativos, te notificaremos por correo electrónico y/o mediante un aviso destacado en la aplicación al menos 30 días antes de que entren en vigor."
+      },
+      section11: {
+        title: "Base Legal para el Procesamiento (GDPR)",
+        content: "Para usuarios en el Espacio Económico Europeo, procesamos tus datos bajo las siguientes bases legales: (a) Ejecución de contrato: para proveer los servicios que solicitaste; (b) Intereses legítimos: para mejorar nuestros servicios y garantizar la seguridad; (c) Cumplimiento legal: cuando la ley nos lo requiere; (d) Consentimiento: para comunicaciones de marketing (siempre opt-in)."
+      },
+      section12: {
+        title: "Contacto",
+        content: "Si tienes preguntas, comentarios o solicitudes relacionadas con esta Política de Privacidad o el tratamiento de tus datos personales, puedes contactarnos en:",
+        email: "privacy@tera.app"
+      },
+      section13: {
+        title: "Ley Aplicable",
+        intro: "Esta Política de Privacidad se rige por las leyes de Argentina, sin perjuicio de los derechos adicionales que puedan corresponder a usuarios de la Unión Europea bajo el GDPR. En caso de conflicto:",
+        item1: "Para usuarios en Argentina: Ley 25.326 de Protección de Datos Personales",
+        item2: "Para usuarios en la Unión Europea: Reglamento (UE) 2016/679 (GDPR)",
+        item3: "Para usuarios en California: California Consumer Privacy Act (CCPA)",
+        item4: "Los tribunales competentes serán los de la Ciudad Autónoma de Buenos Aires, Argentina"
+      }
+    },
+    terms: {
+      title: "Términos y Condiciones de Uso",
+      lastUpdated: "Última actualización",
+      section1: {
+        title: "Aceptación de los Términos",
+        content: "Al acceder o utilizar TERA, aceptas estar vinculado por estos Términos y Condiciones. Si no estás de acuerdo con alguna parte de estos términos, no podrás acceder al servicio. Estos términos aplican a todos los usuarios, visitantes y cualquier persona que acceda o use el servicio."
+      },
+      section2: {
+        title: "Descripción del Servicio",
+        content: "TERA es una plataforma de gestión y transferencia de archivos entre servicios de almacenamiento en la nube. Permitimos a los usuarios conectar servicios como Google Drive, Dropbox, OneDrive y otros para transferir, organizar y gestionar sus archivos desde una única interfaz."
+      },
+      section3: {
+        title: "Registro y Cuenta de Usuario",
+        intro: "Para utilizar TERA debes:",
+        item1: "Ser mayor de 16 años (o contar con autorización parental)",
+        item2: "Proporcionar información veraz y actualizada al registrarte",
+        item3: "Mantener la confidencialidad de tus credenciales de acceso",
+        item4: "Notificarnos inmediatamente ante cualquier uso no autorizado de tu cuenta"
+      },
+      section4: {
+        title: "Uso Aceptable",
+        intro: "Al usar TERA, te comprometes a NO:",
+        item1: "Violar leyes aplicables o derechos de terceros",
+        item2: "Transferir contenido ilegal, malicioso o que infrinja derechos de autor",
+        item3: "Intentar acceder a sistemas o datos no autorizados",
+        item4: "Usar el servicio para spam, phishing u otras actividades fraudulentas",
+        item5: "Sobrecargar intencionalmente nuestra infraestructura",
+        item6: "Realizar ingeniería inversa o intentar obtener el código fuente de TERA"
+      },
+      section5: {
+        title: "Planes y Pagos",
+        intro: "TERA ofrece planes gratuitos y de pago:",
+        item1: "Plan Gratuito: acceso limitado a funciones básicas según los límites vigentes",
+        item2: "Plan PRO: acceso completo a todas las funciones, incluyendo transferencias cross-cloud ilimitadas",
+        item3: "Los precios están sujetos a cambios con un aviso previo de 30 días",
+        note: "Los pagos son procesados de forma segura. No almacenamos datos de tarjetas de crédito."
+      },
+      section6: {
+        title: "Propiedad Intelectual",
+        intro: "Respecto a la propiedad intelectual:",
+        item1: "TERA y su contenido son propiedad de sus desarrolladores y están protegidos por leyes de propiedad intelectual",
+        item2: "Tus archivos y datos siguen siendo de tu propiedad en todo momento",
+        item3: "Al usar TERA, nos otorgas una licencia limitada para operar con tus archivos únicamente según tus instrucciones",
+        item4: "No reclamamos ningún derecho de propiedad sobre tu contenido",
+        note: "Nunca accedemos, leemos ni analizamos el contenido de tus archivos más allá de lo técnicamente necesario para ejecutar las operaciones que solicitas."
+      },
+      section7: {
+        title: "Limitación de Responsabilidad",
+        content: "TERA se proporciona 'tal cual' y 'según disponibilidad'. En la máxima medida permitida por la ley, no nos responsabilizamos por pérdidas de datos, interrupciones del servicio, daños indirectos o consecuentes derivados del uso de nuestra plataforma. Nuestra responsabilidad máxima estará limitada al monto pagado por el servicio en los últimos 12 meses."
+      },
+      section8: {
+        title: "Disponibilidad del Servicio",
+        content: "Nos esforzamos por mantener TERA disponible el mayor tiempo posible. Sin embargo, no garantizamos disponibilidad ininterrumpida. Podemos realizar mantenimientos programados notificando con anticipación. En caso de interrupciones no planificadas, trabajaremos para restablecer el servicio lo antes posible."
+      },
+      section9: {
+        title: "Terminación",
+        intro: "Tu cuenta puede ser suspendida o terminada si:",
+        item1: "Violas estos Términos y Condiciones",
+        item2: "Tu suscripción de pago vence sin renovación",
+        item3: "Se detecta actividad fraudulenta o maliciosa",
+        item4: "Lo solicitas voluntariamente",
+        item5: "TERA cesa operaciones (con aviso previo de 30 días)",
+        note: "Al terminar tu cuenta, perderás acceso al servicio. Tus archivos en servicios de terceros no se verán afectados."
+      },
+      section10: {
+        title: "Cambios en los Términos",
+        content: "Podemos modificar estos términos en cualquier momento. Los cambios significativos serán notificados por email y/o en la aplicación con al menos 30 días de anticipación. El uso continuado del servicio después de los cambios constituye aceptación de los nuevos términos."
+      },
+      section11: {
+        title: "Resolución de Disputas",
+        content: "Ante cualquier disputa relacionada con estos términos o el uso de TERA, las partes acuerdan intentar resolver el conflicto de forma amigable en primera instancia. Si no se llega a un acuerdo, la disputa se someterá a la jurisdicción de los tribunales ordinarios de la Ciudad Autónoma de Buenos Aires, Argentina."
+      },
+      section12: {
+        title: "Indemnización",
+        content: "Aceptas indemnizar y mantener indemne a TERA, sus desarrolladores, empleados y colaboradores de cualquier reclamación, daño, pérdida o gasto (incluidos honorarios legales razonables) que surjan de tu uso del servicio o violación de estos términos."
+      },
+      section13: {
+        title: "Ley Aplicable",
+        content: "Estos Términos se rigen por las leyes de la República Argentina, sin perjuicio de los derechos adicionales que puedan corresponder a usuarios bajo legislaciones específicas de su país de residencia."
+      },
+      section14: {
+        title: "Contacto",
+        content: "Para consultas sobre estos Términos y Condiciones, contáctanos en:",
+        email: "legal@tera.app"
       }
     }
   }
