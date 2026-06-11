@@ -123,8 +123,6 @@ function CloudPanel({
   onDragEnter,
   onDragLeave,
 }: CloudPanelProps) {
-  const { t } = useTranslation();
-
   const currentPath = panelState.provider === 'google'
     ? panelState.googleFolderId
     : panelState.dropboxPath;
@@ -209,13 +207,14 @@ function CloudPanel({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border flex flex-col h-full transition-all duration-200 ${
+      className={`relative bg-white rounded-2xl shadow-sm border flex flex-col transition-all duration-200 ${
         isDragTarget
           ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50/30 shadow-blue-100 shadow-lg'
           : isDragSource
           ? 'border-gray-200 opacity-80'
           : 'border-gray-200 hover:shadow-md'
       }`}
+      style={{ maxHeight: 'calc(100vh - 180px)' }}
       onDragOver={(e) => e.preventDefault()}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
@@ -326,8 +325,8 @@ function CloudPanel({
         </div>
       </div>
 
-      {/* Content — scrollable, fixed height */}
-      <div className="flex-1 overflow-y-auto p-4 min-h-0">
+      {/* Content — scrollable */}
+      <div className="flex-1 min-h-0 overflow-y-scroll p-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
         {/* Error */}
         {error && !isLoading && (
           <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
@@ -376,15 +375,13 @@ function CloudPanel({
               const Icon = item.isFolder ? Folder : getFileIcon(item.mimeType);
               const colorClass = item.isFolder ? 'bg-blue-50 text-blue-500' : getFileColor(item.mimeType);
               return (
-                <motion.div
+                <div
                   key={item.id}
-                  layout
                   draggable
                   onDragStart={() => onDragStart(item, panelState.provider, currentPath)}
                   onDragEnd={onDragEnd}
                   onClick={() => enterFolder(item)}
-                  whileHover={{ y: -1 }}
-                  className={`relative p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all group flex flex-col items-center text-center gap-2 select-none ${
+                  className={`relative p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-sm hover:-translate-y-px transition-all group flex flex-col items-center text-center gap-2 select-none ${
                     item.isFolder ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
                   }`}
                 >
@@ -405,7 +402,7 @@ function CloudPanel({
                       {item.isFolder ? 'Carpeta' : (formatSize(item.size) || '—')}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>
@@ -480,7 +477,7 @@ export default function CloudExplorer() {
     setDropTarget(null);
   }
 
-  async function confirmTransfer(duplicateAction: 'skip' | 'replace') {
+  async function confirmTransfer(duplicateAction: 'skip' | 'replace' | 'copy_with_suffix') {
     if (!pendingTransfer) return;
     setIsTransferring(true);
 
@@ -548,7 +545,7 @@ export default function CloudExplorer() {
     : null;
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col pl-20 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex flex-col pl-20">
       <Header />
       <Sidebar />
 
@@ -609,25 +606,37 @@ export default function CloudExplorer() {
                   <button
                     onClick={() => confirmTransfer('skip')}
                     disabled={isTransferring}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
-                      {t('pages.cloudExplorer.cumulative', 'Saltear existentes')}
+                      Saltear existentes
                     </p>
                     <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
-                      {t('pages.cloudExplorer.cumulativeDesc', 'Copia solo archivos nuevos, no sobreescribe')}
+                      Copia solo archivos nuevos, no sobreescribe
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => confirmTransfer('copy_with_suffix')}
+                    disabled={isTransferring}
+                    className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
+                      Copiar con nuevo nombre
+                    </p>
+                    <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
+                      Si ya existe, crea una copia con sufijo (_1, _2…)
                     </p>
                   </button>
                   <button
                     onClick={() => confirmTransfer('replace')}
                     disabled={isTransferring}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-red-300 hover:bg-red-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
-                      {t('pages.cloudExplorer.mirror', 'Reemplazar')}
+                    <p className="text-sm font-bold text-slate-700 group-hover:text-red-600">
+                      Reemplazar
                     </p>
-                    <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
-                      {t('pages.cloudExplorer.mirrorDesc', 'Sobreescribe archivos con el mismo nombre')}
+                    <p className="text-[11px] text-slate-400 group-hover:text-red-400 mt-0.5">
+                      Sobreescribe el archivo existente con el mismo nombre
                     </p>
                   </button>
                 </div>
@@ -652,8 +661,8 @@ export default function CloudExplorer() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 flex flex-col p-6 lg:p-8 min-h-0 overflow-hidden">
-        <div className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 gap-5 min-h-0">
+      <main className="flex-1 p-6 lg:p-8">
+        <div className="max-w-[1600px] mx-auto w-full flex flex-col gap-5">
           {/* Page header */}
           <div className="flex-shrink-0">
             <h1 className="text-xl font-bold text-gray-900">
@@ -679,8 +688,8 @@ export default function CloudExplorer() {
             )}
           </AnimatePresence>
 
-          {/* Panels — flex-1 + min-h-0 = fill remaining space, scroll inside */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-0 relative">
+          {/* Panels */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <CloudPanel
               panelId={1}
               panelState={panel1}
