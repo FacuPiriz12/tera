@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
-  ChevronRight, Home, AlertCircle, Loader2
+  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
@@ -107,6 +107,7 @@ interface CloudPanelProps {
   onDragEnd: () => void;
   onDrop: (e: React.DragEvent) => void;
   isDragTarget: boolean;
+  isDragSource: boolean;
   onDragEnter: (e: React.DragEvent) => void;
   onDragLeave: () => void;
 }
@@ -118,6 +119,7 @@ function CloudPanel({
   onDragEnd,
   onDrop,
   isDragTarget,
+  isDragSource,
   onDragEnter,
   onDragLeave,
 }: CloudPanelProps) {
@@ -148,6 +150,9 @@ function CloudPanel({
     ...filtered.filter(i => i.isFolder),
     ...filtered.filter(i => !i.isFolder),
   ];
+
+  const folderCount = sorted.filter(i => i.isFolder).length;
+  const fileCount = sorted.filter(i => !i.isFolder).length;
 
   function enterFolder(item: CloudItem) {
     if (!item.isFolder) return;
@@ -198,99 +203,135 @@ function CloudPanel({
     });
   }
 
+  const providerColor = panelState.provider === 'google'
+    ? 'from-blue-500/10 to-blue-600/5'
+    : 'from-blue-400/10 to-blue-500/5';
+
   return (
     <div
-      className={`bg-white rounded-2xl shadow-sm border flex flex-col min-h-[700px] transition-all duration-300 ${
-        isDragTarget ? 'ring-2 ring-blue-500 border-blue-200 bg-blue-50/5' : 'border-gray-200'
+      className={`bg-white rounded-2xl shadow-sm border flex flex-col h-full transition-all duration-200 ${
+        isDragTarget
+          ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50/30 shadow-blue-100 shadow-lg'
+          : isDragSource
+          ? 'border-gray-200 opacity-80'
+          : 'border-gray-200 hover:shadow-md'
       }`}
       onDragOver={(e) => e.preventDefault()}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      {/* Header */}
-      <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/30 rounded-t-2xl">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Provider toggle */}
-          <div className="flex items-center gap-1 p-1.5 bg-white rounded-xl border border-gray-200 shadow-sm flex-shrink-0">
-            <button
-              onClick={() => switchProvider('google')}
-              title="Google Drive"
-              className={`p-1 rounded-lg transition-all ${
-                panelState.provider === 'google' ? 'bg-blue-50' : 'opacity-35 grayscale hover:opacity-100 hover:grayscale-0'
-              }`}
-            >
-              <img src={googleLogo} alt="Google Drive" className="w-5 h-5 object-contain" />
-            </button>
-            <button
-              onClick={() => switchProvider('dropbox')}
-              title="Dropbox"
-              className={`p-1 rounded-lg transition-all ${
-                panelState.provider === 'dropbox' ? 'bg-blue-50' : 'opacity-35 grayscale hover:opacity-100 hover:grayscale-0'
-              }`}
-            >
-              <img src={dropboxLogo} alt="Dropbox" className="w-5 h-5 object-contain" />
-            </button>
+      {/* Drop overlay */}
+      {isDragTarget && (
+        <div className="absolute inset-0 rounded-2xl pointer-events-none z-10 border-2 border-dashed border-blue-400 flex items-center justify-center">
+          <div className="bg-blue-500 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg">
+            <MoveRight className="w-4 h-4" />
+            Soltar para transferir
+          </div>
+        </div>
+      )}
+
+      {/* Panel header */}
+      <div className={`p-4 border-b border-gray-100 rounded-t-2xl bg-gradient-to-r ${providerColor}`}>
+        {/* Provider selector + location */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-gray-200 shadow-sm">
+              <button
+                onClick={() => switchProvider('google')}
+                title="Google Drive"
+                className={`p-1.5 rounded-lg transition-all ${
+                  panelState.provider === 'google'
+                    ? 'bg-blue-50 shadow-sm'
+                    : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'
+                }`}
+              >
+                <img src={googleLogo} alt="Google Drive" className="w-4 h-4 object-contain" />
+              </button>
+              <button
+                onClick={() => switchProvider('dropbox')}
+                title="Dropbox"
+                className={`p-1.5 rounded-lg transition-all ${
+                  panelState.provider === 'dropbox'
+                    ? 'bg-blue-50 shadow-sm'
+                    : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'
+                }`}
+              >
+                <img src={dropboxLogo} alt="Dropbox" className="w-4 h-4 object-contain" />
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold text-gray-700">
+                {panelState.provider === 'google' ? 'Google Drive' : 'Dropbox'}
+              </p>
+              {!isLoading && sorted.length > 0 && (
+                <p className="text-[10px] text-gray-400 font-medium">
+                  {folderCount > 0 && `${folderCount} carpeta${folderCount !== 1 ? 's' : ''}`}
+                  {folderCount > 0 && fileCount > 0 && ' · '}
+                  {fileCount > 0 && `${fileCount} archivo${fileCount !== 1 ? 's' : ''}`}
+                </p>
+              )}
+            </div>
           </div>
 
-          {/* Breadcrumbs */}
-          <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-1.5">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar..."
+                value={panelState.search}
+                onChange={(e) => setPanelState({ ...panelState, search: e.target.value })}
+                className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all w-28"
+              />
+            </div>
             <button
-              onClick={navigateToRoot}
-              className="text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0"
+              onClick={() => refetch()}
+              disabled={isLoading}
+              className="p-1.5 text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-lg transition-colors disabled:opacity-50"
             >
-              <Home className="w-3.5 h-3.5" />
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-            {panelState.breadcrumbs.map((crumb, i) => (
-              <React.Fragment key={i}>
-                <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
-                <button
-                  onClick={() => navigateToCrumb(i)}
-                  className="text-xs text-gray-500 hover:text-blue-600 transition-colors truncate max-w-[90px]"
-                  title={crumb.name}
-                >
-                  {crumb.name}
-                </button>
-              </React.Fragment>
-            ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={t('common.actions.searchPlaceholder', 'Buscar...')}
-              value={panelState.search}
-              onChange={(e) => setPanelState({ ...panelState, search: e.target.value })}
-              className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all w-36"
-            />
-          </div>
+        {/* Breadcrumbs */}
+        <div className="flex items-center gap-1 bg-white/60 rounded-lg px-2 py-1.5 border border-white/80 min-w-0">
           <button
-            onClick={() => refetch()}
-            disabled={isLoading}
-            className="p-2 text-gray-400 hover:text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            onClick={navigateToRoot}
+            className="text-gray-400 hover:text-blue-600 transition-colors flex-shrink-0"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <Home className="w-3 h-3" />
           </button>
+          {panelState.breadcrumbs.length === 0 && (
+            <span className="text-[11px] text-gray-400 font-medium ml-1">Raíz</span>
+          )}
+          {panelState.breadcrumbs.map((crumb, i) => (
+            <React.Fragment key={i}>
+              <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+              <button
+                onClick={() => navigateToCrumb(i)}
+                className={`text-[11px] font-medium transition-colors truncate max-w-[100px] ${
+                  i === panelState.breadcrumbs.length - 1
+                    ? 'text-gray-700'
+                    : 'text-gray-400 hover:text-blue-600'
+                }`}
+                title={crumb.name}
+              >
+                {crumb.name}
+              </button>
+            </React.Fragment>
+          ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-6 flex-1 overflow-y-auto">
-        <div className="flex items-center justify-between mb-5 px-1">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-            {panelState.provider === 'google' ? 'Google Drive' : 'Dropbox'}
-            {panelState.breadcrumbs.length === 0 && ' — Raíz'}
-          </h3>
-          {isLoading && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
-        </div>
-
+      {/* Content — scrollable, fixed height */}
+      <div className="flex-1 overflow-y-auto p-4 min-h-0">
         {/* Error */}
         {error && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-48 gap-3 text-center">
-            <AlertCircle className="w-9 h-9 text-red-300" />
+          <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
+            <AlertCircle className="w-8 h-8 text-red-300" />
             <p className="text-sm text-gray-500 max-w-[220px]">
               {error instanceof Error ? error.message : 'Error al cargar los archivos'}
             </p>
@@ -305,13 +346,13 @@ function CloudPanel({
 
         {/* Loading skeleton */}
         {isLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="p-4 border border-gray-100 rounded-2xl flex flex-col items-center gap-2.5 animate-pulse">
-                <div className="w-11 h-11 rounded-xl bg-gray-100" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <div key={i} className="p-3 border border-gray-100 rounded-xl flex flex-col items-center gap-2 animate-pulse">
+                <div className="w-10 h-10 rounded-xl bg-gray-100" />
                 <div className="w-full space-y-1.5">
-                  <div className="h-2.5 bg-gray-100 rounded-full w-3/4 mx-auto" />
-                  <div className="h-2 bg-gray-100 rounded-full w-1/2 mx-auto" />
+                  <div className="h-2 bg-gray-100 rounded-full w-3/4 mx-auto" />
+                  <div className="h-1.5 bg-gray-100 rounded-full w-1/2 mx-auto" />
                 </div>
               </div>
             ))}
@@ -320,8 +361,8 @@ function CloudPanel({
 
         {/* Empty */}
         {!isLoading && !error && sorted.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-48 gap-2">
-            <Folder className="w-9 h-9 text-gray-200" />
+          <div className="flex flex-col items-center justify-center h-40 gap-2">
+            <Folder className="w-8 h-8 text-gray-200" />
             <p className="text-sm text-gray-400">
               {panelState.search ? 'Sin resultados' : 'Carpeta vacía'}
             </p>
@@ -330,7 +371,7 @@ function CloudPanel({
 
         {/* Grid */}
         {!isLoading && !error && sorted.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {sorted.map((item) => {
               const Icon = item.isFolder ? Folder : getFileIcon(item.mimeType);
               const colorClass = item.isFolder ? 'bg-blue-50 text-blue-500' : getFileColor(item.mimeType);
@@ -342,18 +383,25 @@ function CloudPanel({
                   onDragStart={() => onDragStart(item, panelState.provider, currentPath)}
                   onDragEnd={onDragEnd}
                   onClick={() => enterFolder(item)}
-                  className={`p-4 bg-white border border-gray-100 rounded-2xl hover:border-blue-400 hover:shadow-md transition-all group flex flex-col items-center text-center gap-2.5 select-none ${
+                  whileHover={{ y: -1 }}
+                  className={`relative p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-sm transition-all group flex flex-col items-center text-center gap-2 select-none ${
                     item.isFolder ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
                   }`}
                 >
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${colorClass} group-hover:scale-110 transition-transform`}>
+                  {/* Drag hint on hover for files */}
+                  {!item.isFolder && (
+                    <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ArrowRight className="w-3 h-3 text-gray-300" />
+                    </div>
+                  )}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass} transition-transform group-hover:scale-105`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <div className="w-full">
-                    <p className="text-xs font-bold text-slate-700 truncate" title={item.name}>
+                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight" title={item.name}>
                       {item.name}
                     </p>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mt-0.5">
+                    <p className="text-[10px] font-medium text-slate-400 mt-0.5">
                       {item.isFolder ? 'Carpeta' : (formatSize(item.size) || '—')}
                     </p>
                   </div>
@@ -494,90 +542,107 @@ export default function CloudExplorer() {
     }
   }
 
+  // Determine which panel is the drag source
+  const dragSourcePanel = draggedItem
+    ? (draggedItem.provider === panel1.provider ? 1 : 2)
+    : null;
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col transition-all duration-300 pl-20">
+    <div className="h-screen bg-slate-50 flex flex-col pl-20 overflow-hidden">
       <Header />
       <Sidebar />
 
-      {/* Sync mode modal */}
+      {/* Transfer confirmation modal */}
       <AnimatePresence>
         {showSyncModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowSyncModal(false)}
+              onClick={() => !isTransferring && setShowSyncModal(false)}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100"
+              exit={{ opacity: 0, scale: 0.96, y: 16 }}
+              className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100"
             >
-              <div className="p-8">
+              <div className="p-7">
+                {/* File info */}
                 {pendingTransfer && (
-                  <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl mb-8 border border-slate-100">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                  <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl mb-6 border border-slate-100">
+                    <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
                       {pendingTransfer.item.isFolder
-                        ? <Folder className="w-6 h-6 text-blue-500" />
-                        : <File className="w-6 h-6 text-blue-500" />}
+                        ? <Folder className="w-5 h-5 text-blue-500" />
+                        : <File className="w-5 h-5 text-blue-500" />}
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">{pendingTransfer.item.name}</p>
-                      <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                        {pendingTransfer.from === 'google' ? 'Google Drive' : 'Dropbox'}
-                        {' → '}
-                        {pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'}
-                      </p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-slate-900 truncate">{pendingTransfer.item.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <img
+                          src={pendingTransfer.from === 'google' ? googleLogo : dropboxLogo}
+                          alt=""
+                          className="w-3.5 h-3.5 object-contain"
+                        />
+                        <ArrowRight className="w-3 h-3 text-gray-300" />
+                        <img
+                          src={pendingTransfer.to === 'google' ? googleLogo : dropboxLogo}
+                          alt=""
+                          className="w-3.5 h-3.5 object-contain"
+                        />
+                        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
+                          {pendingTransfer.item.isFolder ? 'Carpeta' : 'Archivo'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                <h3 className="text-lg font-bold text-slate-900 mb-2">
-                  {t('pages.cloudExplorer.syncMode', 'Modo de sincronización')}
+                <h3 className="text-base font-bold text-slate-900 mb-1">
+                  {t('pages.cloudExplorer.syncMode', '¿Cómo transferir?')}
                 </h3>
-                <p className="text-sm text-slate-500 mb-8">
-                  {t('pages.cloudExplorer.syncDesc', 'Selecciona cómo quieres que TERA gestione este envío.')}
+                <p className="text-xs text-slate-500 mb-5">
+                  {t('pages.cloudExplorer.syncDesc', 'Elegí qué hacer si ya existe un archivo con el mismo nombre.')}
                 </p>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <button
                     onClick={() => confirmTransfer('skip')}
                     disabled={isTransferring}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span className="font-bold text-slate-700 group-hover:text-blue-600">
-                      {t('pages.cloudExplorer.cumulative', 'Acumulativa')}
-                    </span>
-                    <span className="text-[10px] text-slate-400 group-hover:text-blue-400">
-                      {t('pages.cloudExplorer.cumulativeDesc', 'Añade archivos nuevos sin borrar existentes')}
-                    </span>
+                    <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
+                      {t('pages.cloudExplorer.cumulative', 'Saltear existentes')}
+                    </p>
+                    <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
+                      {t('pages.cloudExplorer.cumulativeDesc', 'Copia solo archivos nuevos, no sobreescribe')}
+                    </p>
                   </button>
                   <button
                     onClick={() => confirmTransfer('replace')}
                     disabled={isTransferring}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all group flex flex-col items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span className="font-bold text-slate-700 group-hover:text-blue-600">
-                      {t('pages.cloudExplorer.mirror', 'Mirror Sync')}
-                    </span>
-                    <span className="text-[10px] text-slate-400 group-hover:text-blue-400">
-                      {t('pages.cloudExplorer.mirrorDesc', 'Sincronización exacta de ambas carpetas')}
-                    </span>
+                    <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
+                      {t('pages.cloudExplorer.mirror', 'Reemplazar')}
+                    </p>
+                    <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
+                      {t('pages.cloudExplorer.mirrorDesc', 'Sobreescribe archivos con el mismo nombre')}
+                    </p>
                   </button>
                 </div>
 
                 {isTransferring && (
                   <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Iniciando transferencia...</span>
+                    <span className="text-xs font-medium">Iniciando transferencia...</span>
                   </div>
                 )}
 
                 <button
                   onClick={() => { if (!isTransferring) { setShowSyncModal(false); setPendingTransfer(null); } }}
                   disabled={isTransferring}
-                  className="w-full mt-4 py-3 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                  className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
                 >
                   {t('common.actions.cancel', 'Cancelar')}
                 </button>
@@ -587,18 +652,35 @@ export default function CloudExplorer() {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 p-6 lg:p-10">
-        <div className="max-w-[1600px] mx-auto space-y-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
+      <main className="flex-1 flex flex-col p-6 lg:p-8 min-h-0 overflow-hidden">
+        <div className="max-w-[1600px] mx-auto w-full flex flex-col flex-1 gap-5 min-h-0">
+          {/* Page header */}
+          <div className="flex-shrink-0">
+            <h1 className="text-xl font-bold text-gray-900">
               {t('pages.cloudExplorer.title', 'Cloud Explorer')}
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {t('pages.cloudExplorer.subtitle', 'Gestiona tus archivos multi-nube con la potencia de TERA.')}
+            <p className="text-xs text-gray-400 mt-0.5">
+              {t('pages.cloudExplorer.subtitle', 'Arrastrá archivos entre paneles para transferirlos entre nubes.')}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Drag hint bar */}
+          <AnimatePresence>
+            {draggedItem && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex-shrink-0 flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-600"
+              >
+                <MoveRight className="w-3.5 h-3.5" />
+                Soltá "{draggedItem.item.name}" en el otro panel para transferir
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Panels — flex-1 + min-h-0 = fill remaining space, scroll inside */}
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 min-h-0 relative">
             <CloudPanel
               panelId={1}
               panelState={panel1}
@@ -607,6 +689,7 @@ export default function CloudExplorer() {
               onDragEnd={handleDragEnd}
               onDrop={(e) => { e.preventDefault(); handleDrop(1); }}
               isDragTarget={dropTarget === 1}
+              isDragSource={dragSourcePanel === 1}
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(1); }}
               onDragLeave={() => setDropTarget(null)}
             />
@@ -618,6 +701,7 @@ export default function CloudExplorer() {
               onDragEnd={handleDragEnd}
               onDrop={(e) => { e.preventDefault(); handleDrop(2); }}
               isDragTarget={dropTarget === 2}
+              isDragSource={dragSourcePanel === 2}
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(2); }}
               onDragLeave={() => setDropTarget(null)}
             />
