@@ -1011,8 +1011,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: 'consent',
         scope: [
           'https://www.googleapis.com/auth/drive',
-          'https://www.googleapis.com/auth/drive.file',
-          'https://www.googleapis.com/auth/gmail.send'
+          'openid',
+          'email',
+          'profile'
         ],
         state: state
       });
