@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Image as ImageIcon, 
-  Video, 
-  MoreVertical, 
-  Folder, 
+import {
+  FileText,
+  Image as ImageIcon,
+  Video,
+  MoreVertical,
+  Folder,
   HardDrive,
   Upload,
-  Plus
+  Plus,
+  ArrowRight,
+  Zap,
+  Globe
 } from "lucide-react";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
@@ -61,6 +64,42 @@ export default function Home() {
               </div>
               <FileUploadDialog />
             </div>
+
+            {/* Onboarding banner — shown only when no transfers have been done */}
+            {operations.length === 0 && (
+              <div className="relative overflow-hidden bg-gradient-to-r from-[#0061D5] to-blue-500 rounded-2xl p-6 text-white">
+                <div className="relative z-10">
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Primeros pasos</p>
+                  <h2 className="text-xl font-bold mb-2">¡Bienvenido a TERA!</h2>
+                  <p className="text-sm text-blue-100 mb-5 max-w-lg">
+                    Conectá tus cuentas de Google Drive o Dropbox y empezá a mover archivos entre la nube en segundos.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      onClick={() => setLocation('/integrations')}
+                      className="flex items-center gap-2 px-4 py-2 bg-white text-[#0061D5] rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors"
+                    >
+                      <HardDrive className="w-4 h-4" /> Conectar cuentas
+                    </button>
+                    <button
+                      onClick={() => setLocation('/cloud-explorer')}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600/40 text-white border border-white/20 rounded-xl text-sm font-bold hover:bg-blue-600/60 transition-colors"
+                    >
+                      <Globe className="w-4 h-4" /> Explorar archivos <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setLocation('/copy-from-url')}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600/40 text-white border border-white/20 rounded-xl text-sm font-bold hover:bg-blue-600/60 transition-colors"
+                    >
+                      <Zap className="w-4 h-4" /> Transferencia rápida
+                    </button>
+                  </div>
+                </div>
+                {/* Decorative circles */}
+                <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/5 rounded-full" />
+                <div className="absolute -right-4 -bottom-10 w-28 h-28 bg-white/5 rounded-full" />
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <Card className="lg:col-span-1 shadow-sm border-gray-100">

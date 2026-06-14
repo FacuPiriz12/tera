@@ -2391,6 +2391,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Retry failed operation (user-level — only own operations)
+  app.post('/api/copy-operations/:id/retry', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const operation = await storage.getCopyOperation(req.params.id);
+      if (!operation) return res.status(404).json({ message: "Operation not found" });
+      if (operation.userId !== userId) return res.status(403).json({ message: "Access denied" });
+      if (operation.status !== 'failed') return res.status(400).json({ message: "Only failed operations can be retried" });
+      const retried = await storage.retryOperation(req.params.id);
+      res.json(retried);
+    } catch (error) {
+      console.error("Error retrying operation:", error);
+      res.status(500).json({ message: "Failed to retry operation" });
+    }
+  });
+
   // Retry failed operation (admin only)
   app.post('/api/admin/operations/:id/retry', isAuthenticated, isAdmin, async (req: any, res) => {
     try {

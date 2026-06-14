@@ -9,8 +9,15 @@ export default function QuickCopy() {
   const [open, setOpen] = useState(true);
 
   function handleOpenChange(next: boolean) {
-    if (!next) setLocation("/dashboard");
-    else setOpen(true);
+    if (!next) {
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        setLocation("/dashboard");
+      }
+    } else {
+      setOpen(true);
+    }
   }
 
   return (

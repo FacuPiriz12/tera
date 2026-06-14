@@ -3,18 +3,35 @@ import { useTransfer, TransferJob } from "@/contexts/TransferContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowRightLeft, ChevronUp, ChevronDown, X, CheckCircle2, 
-  XCircle, Loader2, ExternalLink, Minimize2, Maximize2 
+import {
+  ArrowRightLeft, ChevronUp, ChevronDown, X, CheckCircle2,
+  XCircle, Loader2, ExternalLink, Minimize2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function GlobalTransferIndicator() {
-  const { jobs, activeJobsCount, clearCompletedJobs } = useTransfer();
+  const { jobs, activeJobsCount, clearCompletedJobs, updateJob } = useTransfer();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [cancellingIds, setCancellingIds] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  async function handleCancel(jobId: string) {
+    setCancellingIds(prev => new Set(prev).add(jobId));
+    try {
+      await apiRequest('POST', `/api/transfer-jobs/${jobId}/cancel`);
+      updateJob(jobId, { status: 'cancelled' });
+      toast({ title: 'Transferencia cancelada' });
+    } catch {
+      toast({ title: 'No se pudo cancelar', variant: 'destructive' });
+    } finally {
+      setCancellingIds(prev => { const s = new Set(prev); s.delete(jobId); return s; });
+    }
+  }
 
   if (jobs.length === 0) return null;
 
@@ -146,17 +163,32 @@ export default function GlobalTransferIndicator() {
                         {job.sourceProvider} → {job.targetProvider}
                       </div>
                     </div>
-                    {job.status === 'completed' && job.copiedFileUrl && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 shrink-0"
-                        onClick={() => window.open(job.copiedFileUrl, '_blank')}
-                        data-testid={`btn-open-file-${job.id}`}
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1 shrink-0">
+                      {(job.status === 'in_progress' || job.status === 'pending' || job.status === 'queued') && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground hover:text-red-500"
+                          onClick={() => handleCancel(job.id)}
+                          disabled={cancellingIds.has(job.id)}
+                          title="Cancelar"
+                          data-testid={`btn-cancel-job-${job.id}`}
+                        >
+                          {cancellingIds.has(job.id) ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+                        </Button>
+                      )}
+                      {job.status === 'completed' && job.copiedFileUrl && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => window.open(job.copiedFileUrl, '_blank')}
+                          data-testid={`btn-open-file-${job.id}`}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   {job.status === 'in_progress' && (

@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { 
-  TrendingUp, 
-  Files, 
-  Clock, 
+import { useLocation } from "wouter";
+import {
+  TrendingUp,
+  Files,
+  Clock,
   CheckCircle,
   XCircle,
   BarChart3,
   Calendar,
-  Target
+  Target,
+  ArrowRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -18,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 export default function Analytics() {
   const { t } = useTranslation(['pages', 'common']);
+  const [, setLocation] = useLocation();
   const { data: operations = [], isLoading } = useQuery({
     queryKey: ["/api/copy-operations"],
   });
@@ -75,6 +79,42 @@ export default function Analytics() {
             <div className="flex items-center justify-center h-64">
               <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (totalOperations === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50" data-testid="page-analytics">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 p-8">
+            <div className="mb-6">
+              <h1 className="text-[1.5rem] font-semibold text-foreground mb-2">{t('analytics.title')}</h1>
+              <p className="text-muted-foreground">{t('analytics.description')}</p>
+            </div>
+            <Card className="border-0 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center">
+                  <BarChart3 className="w-8 h-8 text-blue-400" />
+                </div>
+                <div className="text-center max-w-sm">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{t('analytics.noDataTitle')}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{t('analytics.noDataMessage')}</p>
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <Button onClick={() => setLocation('/integrations')} variant="outline">
+                    Conectar cuentas
+                  </Button>
+                  <Button onClick={() => setLocation('/cloud-explorer')} className="gap-2">
+                    Explorar archivos <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </main>
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Clock, CheckCircle, XCircle, Loader2, Calendar, Files, Timer, ExternalLink, Eye, Zap } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Loader2, Calendar, Files, Timer, ExternalLink, Eye, Zap, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import CopyProgressModal from "@/components/CopyProgressModal";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Operations() {
   const { t } = useTranslation(['pages', 'common']);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const prevCompletedCount = useRef<number>(0);
   const [selectedOperation, setSelectedOperation] = useState<string | undefined>();
   const [progressModalOpen, setProgressModalOpen] = useState(false);
+
+  const retryMutation = useMutation({
+    mutationFn: (id: string) => apiRequest('POST', `/api/copy-operations/${id}/retry`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/copy-operations'] });
+      toast({ title: 'Reintentando transferencia', description: 'La operación fue puesta en cola nuevamente.' });
+    },
+    onError: () => {
+      toast({ title: 'Error al reintentar', variant: 'destructive' });
+    },
+  });
   
   const { data: operations = [], isLoading } = useQuery({
     queryKey: ["/api/copy-operations"],
@@ -279,6 +293,19 @@ export default function Operations() {
 
                     {/* Action Buttons */}
                     <div className="mt-4 flex justify-end space-x-2">
+                      {operation.status === 'failed' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => retryMutation.mutate(operation.id)}
+                          disabled={retryMutation.isPending}
+                          className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                          data-testid={`button-retry-${operation.id}`}
+                        >
+                          {retryMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-1" />}
+                          Reintentar
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"

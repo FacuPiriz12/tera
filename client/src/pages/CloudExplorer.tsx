@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
-  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight
+  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTransfer } from "@/contexts/TransferContext";
+import { Link } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 
@@ -328,20 +329,46 @@ function CloudPanel({
       {/* Content — scrollable */}
       <div className="flex-1 min-h-0 overflow-y-scroll p-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
         {/* Error */}
-        {error && !isLoading && (
-          <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
-            <AlertCircle className="w-8 h-8 text-red-300" />
-            <p className="text-sm text-gray-500 max-w-[220px]">
-              {error instanceof Error ? error.message : 'Error al cargar los archivos'}
-            </p>
-            <button
-              onClick={() => refetch()}
-              className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
-            >
-              Reintentar
-            </button>
-          </div>
-        )}
+        {error && !isLoading && (() => {
+          const msg = error instanceof Error ? error.message : '';
+          const isDisconnected = msg.includes('not connected') || msg.includes('connect_required') || msg.includes('401:');
+          if (isDisconnected) {
+            return (
+              <div className="flex flex-col items-center justify-center h-48 gap-3 text-center px-4">
+                <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center">
+                  <WifiOff className="w-6 h-6 text-orange-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">
+                    {panelState.provider === 'google' ? 'Google Drive' : 'Dropbox'} no conectado
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1 max-w-[200px]">
+                    Conectá tu cuenta para explorar y transferir archivos
+                  </p>
+                </div>
+                <Link href="/integrations">
+                  <button className="text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl">
+                    Ir a Integraciones →
+                  </button>
+                </Link>
+              </div>
+            );
+          }
+          return (
+            <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
+              <AlertCircle className="w-8 h-8 text-red-300" />
+              <p className="text-sm text-gray-500 max-w-[220px]">
+                {msg || 'Error al cargar los archivos'}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
+              >
+                Reintentar
+              </button>
+            </div>
+          );
+        })()}
 
         {/* Loading skeleton */}
         {isLoading && (
