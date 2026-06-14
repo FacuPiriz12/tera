@@ -58,79 +58,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy for correct protocol/host detection behind load balancers
   app.set('trust proxy', 1);
   
-  // Supabase config endpoint for frontend
-  app.get('/api/config/supabase', (req, res) => {
-    res.json({
-      url: process.env.SUPABASE_URL || '',
-      anonKey: process.env.SUPABASE_ANON_KEY || ''
-    });
-  });
-
-  // Debug endpoint to list all registered routes
-  app.get('/api/debug/routes', (req, res) => {
-    const routes: string[] = [];
-    app._router.stack.forEach((middleware: any) => {
-      if (middleware.route) {
-        const methods = Object.keys(middleware.route.methods).join(',').toUpperCase();
-        routes.push(`${methods} ${middleware.route.path}`);
-      } else if (middleware.name === 'router') {
-        middleware.handle.stack.forEach((handler: any) => {
-          if (handler.route) {
-            const methods = Object.keys(handler.route.methods).join(',').toUpperCase();
-            routes.push(`${methods} ${handler.route.path}`);
-          }
-        });
-      }
-    });
-    
-    const dropboxRoutes = routes.filter(r => r.toLowerCase().includes('dropbox'));
-    
-    res.json({
-      totalRoutes: routes.length,
-      dropboxRoutes,
-      allRoutes: routes.slice(0, 50), // First 50 routes
-      timestamp: new Date().toISOString()
-    });
-  });
-
-  // Debug endpoint to check environment variables and database status
-  app.get('/api/debug/env', async (req, res) => {
-    try {
-      const supabaseUrl = process.env.SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_ANON_KEY;
-      const dbUrl = process.env.DATABASE_URL;
-      
-      const envStatus = {
-        SUPABASE_URL: supabaseUrl ? `set (${supabaseUrl.length} chars, starts: ${supabaseUrl.substring(0, 20)}...)` : 'not set',
-        SUPABASE_ANON_KEY: supabaseKey ? `set (${supabaseKey.length} chars)` : 'not set',
-        DATABASE_URL: dbUrl ? `set (${dbUrl.length} chars)` : 'not set',
-        PGHOST: process.env.PGHOST || 'not set',
-        PGUSER: process.env.PGUSER || 'not set',
-        PGDATABASE: process.env.PGDATABASE || 'not set',
-        NODE_ENV: process.env.NODE_ENV,
-        allEnvKeys: Object.keys(process.env).filter(k => 
-          k.includes('SUPABASE') || k.includes('PG') || k.includes('DATABASE') || k.includes('REPLIT')
-        ),
-      };
-      
-      // Try to connect to database
-      let dbStatus = 'unknown';
-      try {
-        const users = await storage.getAllUsers(1, 1);
-        dbStatus = `connected (${users.total} users)`;
-      } catch (dbError: any) {
-        dbStatus = `error: ${dbError.message}`;
-      }
-      
-      res.json({
-        envStatus,
-        dbStatus,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
 
   
   // Stripe routes
@@ -148,7 +75,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       res.json({ url: session.url });
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      console.error("Stripe checkout error:", error);
+      res.status(500).json({ message: "Failed to create checkout session" });
     }
   });
 
@@ -3231,7 +3159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error executing cumulative sync:", error);
-      res.status(500).json({ message: "Failed to execute cumulative sync", error: error.message });
+      res.status(500).json({ message: "Failed to execute cumulative sync" });
     }
   });
 
@@ -3281,7 +3209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(stats);
     } catch (error: any) {
       console.error("Error fetching cumulative sync stats:", error);
-      res.status(500).json({ message: "Failed to fetch sync statistics", error: error.message });
+      res.status(500).json({ message: "Failed to fetch sync statistics" });
     }
   });
 
@@ -3370,7 +3298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error executing mirror sync:", error);
-      res.status(500).json({ message: "Failed to execute mirror sync", error: error.message });
+      res.status(500).json({ message: "Failed to execute mirror sync" });
     }
   });
 
@@ -3386,7 +3314,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const conflicts = await storage.getFileConflicts(task.id);
       res.json({ conflicts, count: conflicts.length });
     } catch (error: any) {
-      res.status(500).json({ message: "Failed to fetch conflicts", error: error.message });
+      res.status(500).json({ message: "Failed to fetch conflicts" });
     }
   });
 
@@ -3404,7 +3332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ success: true, conflict: resolved, message: `Conflict resolved: ${resolution}` });
     } catch (error: any) {
-      res.status(500).json({ message: "Failed to resolve conflict", error: error.message });
+      res.status(500).json({ message: "Failed to resolve conflict" });
     }
   });
 
@@ -3453,7 +3381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(status);
     } catch (error: any) {
       console.error("Error fetching mirror sync status:", error);
-      res.status(500).json({ message: "Failed to fetch mirror sync status", error: error.message });
+      res.status(500).json({ message: "Failed to fetch mirror sync status" });
     }
   });
 
@@ -3547,7 +3475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error listing folders:", error);
-      res.status(500).json({ message: "Failed to list folders", error: error.message });
+      res.status(500).json({ message: "Failed to list folders" });
     }
   });
 
@@ -3585,7 +3513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error("Error saving folder selection:", error);
-      res.status(500).json({ message: "Failed to save folder selection", error: error.message });
+      res.status(500).json({ message: "Failed to save folder selection" });
     }
   });
 
@@ -3597,7 +3525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(versions);
     } catch (error: any) {
       console.error("Error fetching file versions:", error);
-      res.status(500).json({ message: "Failed to fetch versions", error: error.message });
+      res.status(500).json({ message: "Failed to fetch versions" });
     }
   });
 
@@ -3633,7 +3561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(newVersion);
     } catch (error: any) {
       console.error("Error restoring file version:", error);
-      res.status(500).json({ message: "Failed to restore version", error: error.message });
+      res.status(500).json({ message: "Failed to restore version" });
     }
   });
 
@@ -3716,7 +3644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error: any) {
         console.error("Error seeding test data:", error);
-        res.status(500).json({ message: "Failed to seed test data", error: error.message });
+        res.status(500).json({ message: "Failed to seed test data" });
       }
     });
   }
