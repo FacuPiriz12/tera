@@ -1,13 +1,5 @@
-import { useState, useEffect } from 'react';
-import {
-  Home,
-  FileText,
-  Settings,
-  Globe,
-  Folder,
-  BarChart3,
-  Zap
-} from "lucide-react";
+import { useState } from 'react';
+import { Home, FileText, Settings, Globe, Folder, BarChart3, Zap } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 
@@ -16,27 +8,23 @@ export default function Sidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { t } = useTranslation();
 
-  useEffect(() => {
-    // We are no longer updating --sidebar-width globally to avoid shifting fixed elements like the Header logo/search
-  }, [isExpanded]);
-
   const menuItems = [
-    { id: 'home',         path: "/dashboard",      icon: Home,     label: t('common.navigation.home') },
-    { id: 'cloud-explorer', path: "/cloud-explorer", icon: Globe,   label: t('common.navigation.cloudExplorer') },
-    { id: 'my-files',    path: "/my-files",         icon: Folder,   label: t('common.navigation.myFiles') },
-    { id: 'operations',  path: "/operations",       icon: FileText, label: t('common.navigation.operations') },
+    { id: 'home',           path: "/dashboard",      icon: Home,      label: t('common.navigation.home') },
+    { id: 'cloud-explorer', path: "/cloud-explorer", icon: Globe,     label: t('common.navigation.cloudExplorer') },
+    { id: 'my-files',       path: "/my-files",       icon: Folder,    label: t('common.navigation.myFiles') },
+    { id: 'operations',     path: "/operations",     icon: FileText,  label: t('common.navigation.operations') },
   ];
 
   const toolItems = [
-    { id: 'quick-copy',   path: "/copy-from-url",   icon: Zap,      label: t('common.navigation.copyFromUrl') },
-    { id: 'integrations', path: "/integrations",    icon: Settings, label: t('common.navigation.integrations') },
-    { id: 'analytics',   path: "/analytics",        icon: BarChart3, label: t('common.navigation.analytics') },
+    { id: 'quick-copy',   path: "/copy-from-url", icon: Zap,       label: t('common.navigation.copyFromUrl') },
+    { id: 'integrations', path: "/integrations",  icon: Settings,  label: t('common.navigation.integrations') },
+    { id: 'analytics',    path: "/analytics",     icon: BarChart3, label: t('common.navigation.analytics') },
   ];
 
   function NavItem({ id, path, icon: Icon, label }: { id: string; path: string; icon: any; label: string }) {
     const isActive = location === path;
     return (
-      <Link key={id} href={path}>
+      <Link href={path}>
         <div className={`w-full flex items-center px-3 py-2.5 rounded-xl transition-all cursor-pointer group ${
           isActive ? 'bg-[#0061D5]/10 text-[#0061D5] shadow-sm' : 'hover:bg-slate-50 text-slate-600'
         }`}>
@@ -67,8 +55,6 @@ export default function Sidebar() {
       data-testid="sidebar-main"
     >
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 scrollbar-hide">
-
-        {/* Principal */}
         <div className="mb-2">
           {isExpanded && (
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-3 animate-in fade-in duration-300">
@@ -82,7 +68,6 @@ export default function Sidebar() {
 
         <div className="h-px bg-slate-100 my-3 mx-3" />
 
-        {/* Herramientas */}
         <div>
           {isExpanded && (
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-3 animate-in fade-in duration-300">
@@ -93,7 +78,6 @@ export default function Sidebar() {
             {toolItems.map(item => <NavItem key={item.id} {...item} />)}
           </div>
         </div>
-
       </div>
     </aside>
   );
