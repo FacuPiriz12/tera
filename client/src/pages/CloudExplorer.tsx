@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
-  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff
+  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
+  CheckSquare, Square, Clock, SendHorizontal
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
@@ -42,6 +43,20 @@ interface PanelState {
 
 const GOOGLE_FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DROPBOX_FOLDER_MIME = 'application/vnd.dropbox.folder';
+
+interface RecentFolder { id: string; name: string; path: string }
+
+function getRecentFolders(provider: Provider): RecentFolder[] {
+  try {
+    return JSON.parse(localStorage.getItem(`tera_recent_${provider}`) || '[]');
+  } catch { return []; }
+}
+
+function saveRecentFolder(provider: Provider, folder: RecentFolder) {
+  const existing = getRecentFolders(provider).filter(f => f.id !== folder.id);
+  const updated = [folder, ...existing].slice(0, 5);
+  localStorage.setItem(`tera_recent_${provider}`, JSON.stringify(updated));
+}
 
 function formatSize(size?: string | number): string {
   if (size === undefined || size === null) return '';
@@ -111,6 +126,7 @@ interface CloudPanelProps {
   isDragSource: boolean;
   onDragEnter: (e: React.DragEvent) => void;
   onDragLeave: () => void;
+  onRequestMultiTransfer: (items: CloudItem[], provider: Provider, path: string) => void;
 }
 
 function CloudPanel({
@@ -123,6 +139,7 @@ function CloudPanel({
   isDragSource,
   onDragEnter,
   onDragLeave,
+  onRequestMultiTransfer,
 }: CloudPanelProps) {
   const currentPath = panelState.provider === 'google'
     ? panelState.googleFolderId
@@ -141,6 +158,11 @@ function CloudPanel({
     staleTime: 30 * 1000,
   });
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [recentFolders, setRecentFolders] = useState<RecentFolder[]>(
+    () => getRecentFolders(panelState.provider)
+  );
+
   const filtered = panelState.search
     ? items.filter(i => i.name.toLowerCase().includes(panelState.search.toLowerCase()))
     : items;
@@ -152,10 +174,27 @@ function CloudPanel({
 
   const folderCount = sorted.filter(i => i.isFolder).length;
   const fileCount = sorted.filter(i => !i.isFolder).length;
+  const isAtRoot = panelState.breadcrumbs.length === 0;
+
+  function toggleSelect(item: CloudItem, e: React.MouseEvent) {
+    if (item.isFolder) return;
+    e.stopPropagation();
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(item.id)) next.delete(item.id);
+      else next.add(item.id);
+      return next;
+    });
+  }
+
+  function clearSelection() { setSelected(new Set()); }
 
   function enterFolder(item: CloudItem) {
     if (!item.isFolder) return;
     if (panelState.provider === 'google') {
+      const folder: RecentFolder = { id: item.id, name: item.name, path: item.id };
+      saveRecentFolder('google', folder);
+      setRecentFolders(getRecentFolders('google'));
       setPanelState({
         ...panelState,
         googleFolderId: item.id,
@@ -165,21 +204,21 @@ function CloudPanel({
       const newPath = panelState.dropboxPath === '' || panelState.dropboxPath === '/'
         ? `/${item.name}`
         : `${panelState.dropboxPath}/${item.name}`;
+      const folder: RecentFolder = { id: newPath, name: item.name, path: newPath };
+      saveRecentFolder('dropbox', folder);
+      setRecentFolders(getRecentFolders('dropbox'));
       setPanelState({
         ...panelState,
         dropboxPath: newPath,
         breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: newPath }],
       });
     }
+    clearSelection();
   }
 
   function navigateToRoot() {
-    setPanelState({
-      ...panelState,
-      googleFolderId: 'root',
-      dropboxPath: '',
-      breadcrumbs: [],
-    });
+    setPanelState({ ...panelState, googleFolderId: 'root', dropboxPath: '', breadcrumbs: [] });
+    clearSelection();
   }
 
   function navigateToCrumb(index: number) {
@@ -190,21 +229,29 @@ function CloudPanel({
       dropboxPath: panelState.provider === 'dropbox' ? crumb.id : panelState.dropboxPath,
       breadcrumbs: panelState.breadcrumbs.slice(0, index + 1),
     });
+    clearSelection();
+  }
+
+  function navigateToRecent(folder: RecentFolder) {
+    if (panelState.provider === 'google') {
+      setPanelState({ ...panelState, googleFolderId: folder.id, breadcrumbs: [{ name: folder.name, id: folder.id }] });
+    } else {
+      setPanelState({ ...panelState, dropboxPath: folder.path, breadcrumbs: [{ name: folder.name, id: folder.path }] });
+    }
+    clearSelection();
   }
 
   function switchProvider(p: Provider) {
-    setPanelState({
-      provider: p,
-      googleFolderId: 'root',
-      dropboxPath: '',
-      breadcrumbs: [],
-      search: '',
-    });
+    setPanelState({ provider: p, googleFolderId: 'root', dropboxPath: '', breadcrumbs: [], search: '' });
+    setRecentFolders(getRecentFolders(p));
+    clearSelection();
   }
 
   const providerColor = panelState.provider === 'google'
     ? 'from-blue-500/10 to-blue-600/5'
     : 'from-blue-400/10 to-blue-500/5';
+
+  const selectedItems = sorted.filter(i => selected.has(i.id));
 
   return (
     <div
@@ -295,6 +342,23 @@ function CloudPanel({
             </button>
           </div>
         </div>
+
+        {/* Carpetas recientes — solo en raíz */}
+        {isAtRoot && recentFolders.length > 0 && (
+          <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+            <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            {recentFolders.map(f => (
+              <button
+                key={f.id}
+                onClick={() => navigateToRecent(f)}
+                className="text-[10px] font-semibold text-gray-500 bg-white border border-gray-200 rounded-lg px-2 py-1 hover:border-blue-300 hover:text-blue-600 transition-colors truncate max-w-[90px]"
+                title={f.name}
+              >
+                {f.name}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Breadcrumbs */}
         <div className="flex items-center gap-1 bg-white/60 rounded-lg px-2 py-1.5 border border-white/80 min-w-0">
@@ -401,19 +465,30 @@ function CloudPanel({
             {sorted.map((item) => {
               const Icon = item.isFolder ? Folder : getFileIcon(item.mimeType);
               const colorClass = item.isFolder ? 'bg-blue-50 text-blue-500' : getFileColor(item.mimeType);
+              const isSelected = selected.has(item.id);
               return (
                 <div
                   key={item.id}
-                  draggable
+                  draggable={!item.isFolder}
                   onDragStart={() => onDragStart(item, panelState.provider, currentPath)}
                   onDragEnd={onDragEnd}
-                  onClick={() => enterFolder(item)}
-                  className={`relative p-3 bg-white border border-gray-100 rounded-xl hover:border-blue-300 hover:shadow-sm hover:-translate-y-px transition-all group flex flex-col items-center text-center gap-2 select-none ${
-                    item.isFolder ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'
-                  }`}
+                  onClick={(e) => item.isFolder ? enterFolder(item) : toggleSelect(item, e)}
+                  className={`relative p-3 border rounded-xl transition-all group flex flex-col items-center text-center gap-2 select-none ${
+                    isSelected
+                      ? 'bg-blue-50 border-blue-400 shadow-sm'
+                      : 'bg-white border-gray-100 hover:border-blue-300 hover:shadow-sm hover:-translate-y-px'
+                  } ${item.isFolder ? 'cursor-pointer' : 'cursor-pointer'}`}
                 >
-                  {/* Drag hint on hover for files */}
+                  {/* Checkbox for files */}
                   {!item.isFolder && (
+                    <div className={`absolute top-1.5 left-1.5 transition-opacity ${isSelected || selected.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                      {isSelected
+                        ? <CheckSquare className="w-3.5 h-3.5 text-blue-500" />
+                        : <Square className="w-3.5 h-3.5 text-gray-300" />}
+                    </div>
+                  )}
+                  {/* Drag hint for files when nothing selected */}
+                  {!item.isFolder && selected.size === 0 && (
                     <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="w-3 h-3 text-gray-300" />
                     </div>
@@ -432,6 +507,25 @@ function CloudPanel({
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Barra de selección múltiple */}
+        {selectedItems.length > 0 && (
+          <div className="sticky bottom-2 mt-3 flex items-center justify-between bg-blue-600 text-white rounded-xl px-4 py-2.5 shadow-lg shadow-blue-200">
+            <span className="text-xs font-bold">{selectedItems.length} archivo{selectedItems.length !== 1 ? 's' : ''} seleccionado{selectedItems.length !== 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-2">
+              <button onClick={clearSelection} className="text-[11px] text-blue-200 hover:text-white font-semibold transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={() => onRequestMultiTransfer(selectedItems, panelState.provider, currentPath)}
+                className="flex items-center gap-1.5 text-xs font-bold bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                <SendHorizontal className="w-3.5 h-3.5" />
+                Transferir
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -466,7 +560,7 @@ export default function CloudExplorer() {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [pendingTransfer, setPendingTransfer] = useState<{
-    item: CloudItem;
+    items: CloudItem[];
     from: Provider;
     to: Provider;
     sourcePath: string;
@@ -486,13 +580,10 @@ export default function CloudExplorer() {
     if (!draggedItem) return;
     const targetProvider = targetPanel === 1 ? panel1.provider : panel2.provider;
     if (draggedItem.provider === targetProvider) {
-      toast({
-        title: 'Mismo proveedor',
-        description: 'Arrastrá al panel del otro proveedor para transferir.',
-      });
+      toast({ title: 'Mismo proveedor', description: 'Arrastrá al panel del otro proveedor para transferir.' });
     } else {
       setPendingTransfer({
-        item: draggedItem.item,
+        items: [draggedItem.item],
         from: draggedItem.provider,
         to: targetProvider,
         sourcePath: draggedItem.sourcePath,
@@ -504,61 +595,65 @@ export default function CloudExplorer() {
     setDropTarget(null);
   }
 
+  function handleMultiTransfer(items: CloudItem[], provider: Provider, path: string) {
+    const otherProvider = provider === panel1.provider
+      ? panel2.provider
+      : panel1.provider;
+    const toPanel: 1 | 2 = provider === panel1.provider ? 2 : 1;
+    setPendingTransfer({ items, from: provider, to: otherProvider, sourcePath: path, toPanel });
+    setShowSyncModal(true);
+  }
+
   async function confirmTransfer(duplicateAction: 'skip' | 'replace' | 'copy_with_suffix') {
     if (!pendingTransfer) return;
     setIsTransferring(true);
 
     try {
       const destPanel = pendingTransfer.toPanel === 1 ? panel1 : panel2;
+      const targetPath = pendingTransfer.to === 'google'
+        ? destPanel.googleFolderId
+        : (destPanel.dropboxPath || '/');
 
-      const payload: Record<string, any> = {
-        sourceProvider: pendingTransfer.from,
-        targetProvider: pendingTransfer.to,
-        fileName: pendingTransfer.item.name,
-        duplicateAction,
-        targetPath: pendingTransfer.to === 'google'
-          ? destPanel.googleFolderId
-          : (destPanel.dropboxPath || '/'),
-      };
-
-      if (pendingTransfer.item.size) {
-        payload.fileSize = Number(pendingTransfer.item.size);
+      for (const item of pendingTransfer.items) {
+        const payload: Record<string, any> = {
+          sourceProvider: pendingTransfer.from,
+          targetProvider: pendingTransfer.to,
+          fileName: item.name,
+          duplicateAction,
+          targetPath,
+          isFolder: item.isFolder,
+        };
+        if (item.size) payload.fileSize = Number(item.size);
+        if (pendingTransfer.from === 'google') {
+          payload.sourceFileId = item.id;
+        } else {
+          const folder = pendingTransfer.sourcePath;
+          payload.sourceFilePath = folder === '' || folder === '/'
+            ? `/${item.name}`
+            : `${folder}/${item.name}`;
+        }
+        const res = await apiRequest('POST', '/api/transfer-files', payload);
+        const job = await res.json();
+        addJob({
+          id: job.jobId,
+          fileName: job.fileName || item.name,
+          status: 'queued',
+          progress: 0,
+          sourceProvider: pendingTransfer.from,
+          targetProvider: pendingTransfer.to,
+          createdAt: new Date().toISOString(),
+        });
       }
 
-      payload.isFolder = pendingTransfer.item.isFolder;
-
-      if (pendingTransfer.from === 'google') {
-        payload.sourceFileId = pendingTransfer.item.id;
-      } else {
-        const folder = pendingTransfer.sourcePath;
-        payload.sourceFilePath = folder === '' || folder === '/'
-          ? `/${pendingTransfer.item.name}`
-          : `${folder}/${pendingTransfer.item.name}`;
-      }
-
-      const res = await apiRequest('POST', '/api/transfer-files', payload);
-      const job = await res.json();
-
-      addJob({
-        id: job.jobId,
-        fileName: job.fileName || pendingTransfer.item.name,
-        status: 'queued',
-        progress: 0,
-        sourceProvider: pendingTransfer.from,
-        targetProvider: pendingTransfer.to,
-        createdAt: new Date().toISOString(),
-      });
-
+      const count = pendingTransfer.items.length;
       toast({
         title: t('copy.transferInitiated', 'Transferencia iniciada'),
-        description: `"${job.fileName}" está en cola hacia ${pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'}.`,
+        description: count === 1
+          ? `"${pendingTransfer.items[0].name}" está en cola.`
+          : `${count} archivos en cola hacia ${pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'}.`,
       });
     } catch (error: any) {
-      toast({
-        title: 'Error al iniciar transferencia',
-        description: error.message || 'No se pudo iniciar la transferencia.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Error al iniciar transferencia', description: error.message || 'No se pudo iniciar la transferencia.', variant: 'destructive' });
     } finally {
       setIsTransferring(false);
       setShowSyncModal(false);
@@ -572,7 +667,7 @@ export default function CloudExplorer() {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pl-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col pl-0 sm:pl-20">
       <Header />
       <Sidebar />
 
@@ -593,34 +688,32 @@ export default function CloudExplorer() {
             >
               <div className="p-7">
                 {/* File info */}
-                {pendingTransfer && (
-                  <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl mb-6 border border-slate-100">
-                    <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
-                      {pendingTransfer.item.isFolder
-                        ? <Folder className="w-5 h-5 text-blue-500" />
-                        : <File className="w-5 h-5 text-blue-500" />}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold text-slate-900 truncate">{pendingTransfer.item.name}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <img
-                          src={pendingTransfer.from === 'google' ? googleLogo : dropboxLogo}
-                          alt=""
-                          className="w-3.5 h-3.5 object-contain"
-                        />
-                        <ArrowRight className="w-3 h-3 text-gray-300" />
-                        <img
-                          src={pendingTransfer.to === 'google' ? googleLogo : dropboxLogo}
-                          alt=""
-                          className="w-3.5 h-3.5 object-contain"
-                        />
-                        <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
-                          {pendingTransfer.item.isFolder ? 'Carpeta' : 'Archivo'}
-                        </span>
+                {pendingTransfer && (() => {
+                  const first = pendingTransfer.items[0];
+                  const count = pendingTransfer.items.length;
+                  return (
+                    <div className="flex items-center gap-3 p-3.5 bg-slate-50 rounded-2xl mb-6 border border-slate-100">
+                      <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100 flex-shrink-0">
+                        {count > 1
+                          ? <File className="w-5 h-5 text-blue-500" />
+                          : first.isFolder ? <Folder className="w-5 h-5 text-blue-500" /> : <File className="w-5 h-5 text-blue-500" />}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">
+                          {count > 1 ? `${count} archivos seleccionados` : first.name}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <img src={pendingTransfer.from === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                          <ArrowRight className="w-3 h-3 text-gray-300" />
+                          <img src={pendingTransfer.to === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                          <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
+                            {count > 1 ? `${count} archivos` : first.isFolder ? 'Carpeta' : 'Archivo'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <h3 className="text-base font-bold text-slate-900 mb-1">
                   {t('pages.cloudExplorer.syncMode', '¿Cómo transferir?')}
@@ -728,6 +821,7 @@ export default function CloudExplorer() {
               isDragSource={dragSourcePanel === 1}
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(1); }}
               onDragLeave={() => setDropTarget(null)}
+              onRequestMultiTransfer={handleMultiTransfer}
             />
             <CloudPanel
               panelId={2}
@@ -740,6 +834,7 @@ export default function CloudExplorer() {
               isDragSource={dragSourcePanel === 2}
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(2); }}
               onDragLeave={() => setDropTarget(null)}
+              onRequestMultiTransfer={handleMultiTransfer}
             />
           </div>
         </div>

@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { TransferProvider } from "@/contexts/TransferContext";
 import GlobalTransferIndicator from "@/components/GlobalTransferIndicator";
+import BottomNav from "@/components/BottomNav";
 import Landing from "@/pages/Landing";
 import Pricing from "@/pages/Pricing";
 import AuthPage from "@/pages/Auth";
@@ -81,9 +82,7 @@ function Router() {
       </Route>
       
       {/* Protected routes - show Auth page if not authenticated */}
-      <Route path="/shared-drives">
-        {() => isLoggedIn ? <div>Drives Compartidos (En desarrollo)</div> : <AuthPage />}
-      </Route>
+
       <Route path="/operations">
         {() => isLoggedIn ? <Operations /> : <AuthPage />}
       </Route>
@@ -157,6 +156,7 @@ function App() {
           <Toaster />
           <Router />
           <GlobalTransferIndicator />
+          <BottomNav />
         </TransferProvider>
       </TooltipProvider>
     </QueryClientProvider>

@@ -321,7 +321,7 @@ export default function MyFiles() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300 pl-20" data-testid="page-my-files">
+    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300 pl-0 sm:pl-20" data-testid="page-my-files">
       <Header />
       <div className="flex">
         <Sidebar />

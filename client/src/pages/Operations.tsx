@@ -208,9 +208,7 @@ export default function Operations() {
                         <div>
                           <p className="text-xs text-muted-foreground">{t('operations.state')}</p>
                           <p className="text-sm font-medium">
-                            {operation.status === 'completed' ? 'Exitoso' : 
-                             operation.status === 'in_progress' ? 'En curso' : 
-                             operation.status === 'failed' ? 'Error' : 'Pendiente'}
+                            {getStatusText(operation.status)}
                           </p>
                         </div>
                       </div>

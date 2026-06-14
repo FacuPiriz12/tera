@@ -21,7 +21,7 @@ export default function QuickCopy() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pl-20">
+    <div className="min-h-screen bg-slate-50 flex flex-col pl-0 sm:pl-20">
       <Header />
       <Sidebar />
       <QuickCopyDialog open={open} onOpenChange={handleOpenChange} />
