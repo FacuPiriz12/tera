@@ -32,6 +32,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import EmailSent from "@/pages/EmailSent";
+import QuickCopy from "@/pages/QuickCopy";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -91,6 +92,9 @@ function Router() {
       </Route>
       <Route path="/cloud-explorer">
         {() => isLoggedIn ? <CloudExplorer /> : <AuthPage />}
+      </Route>
+      <Route path="/copy-from-url">
+        {() => isLoggedIn ? <QuickCopy /> : <AuthPage />}
       </Route>
       <Route path="/my-files">
         {() => isLoggedIn ? <MyFiles /> : <AuthPage />}
