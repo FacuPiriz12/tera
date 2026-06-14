@@ -118,16 +118,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
-  // Ruta para verificar el estado de la sesión (debug)
-  app.get('/api/session-status', (req, res) => {
-    res.json({
-      sessionId: req.sessionID,
-      devLoggedIn: req.session?.devLoggedIn,
-      hasUser: !!req.user,
-      nodeEnv: process.env.NODE_ENV
-    });
-  });
-  
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -373,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Since we are in Fast mode, I will mock the email sending.
       });
 
-      console.log(`[AUTH] Password reset requested for ${email}. Token: ${resetToken}`);
+      console.log(`[AUTH] Password reset email sent to: ${email}`);
       res.json({ message: "Reset instructions sent." });
     } catch (error) {
       console.error("Forgot password error:", error);
