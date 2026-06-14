@@ -163,7 +163,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
     // Upsert user in database (non-fatal)
     try {
-      const isAdminEmail = user.email === 'facupiriz87@gmail.com';
+      const isAdminEmail = user.email === (process.env.ADMIN_EMAIL || 'facupiriz87@gmail.com');
       await storage.upsertUser({
         id: user.id,
         email: user.email || '',

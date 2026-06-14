@@ -7,6 +7,8 @@ try {
 
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import { rateLimit } from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
@@ -16,6 +18,34 @@ import { ensureTablesExist } from "./db";
 import { storage } from "./storage";
 
 const app = express();
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled to allow Vite HMR in dev
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Rate limiting — stricter on auth endpoints, relaxed on API
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 20,
+  message: { message: "Demasiados intentos. Volvé a intentarlo en 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 200,
+  message: { message: "Demasiadas solicitudes. Esperá un momento." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.path.startsWith('/api/transfer-jobs/events'), // SSE endpoint — skip
+});
+
+app.use('/api/auth', authLimiter);
+app.use('/api', apiLimiter);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

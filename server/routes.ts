@@ -206,7 +206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userEmail = req.user.claims.email;
       
       // Check if this is the admin user
-      const isAdminEmail = userEmail === 'facupiriz87@gmail.com';
+      const isAdminEmail = userEmail === (process.env.ADMIN_EMAIL || 'facupiriz87@gmail.com');
       
       // Try to get user from database first
       let user;
