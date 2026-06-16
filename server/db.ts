@@ -277,6 +277,37 @@ async function ensureTablesExist() {
       CREATE INDEX IF NOT EXISTS "IDX_file_versions_user_file" ON file_versions (user_id, file_id)
     `);
 
+    // Sync file registry for cumulative sync tracking
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS sync_file_registry (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        scheduled_task_id VARCHAR NOT NULL REFERENCES scheduled_tasks(id) ON DELETE CASCADE,
+        source_file_id VARCHAR NOT NULL,
+        source_provider VARCHAR NOT NULL,
+        source_file_path TEXT,
+        file_name TEXT NOT NULL,
+        mime_type VARCHAR,
+        file_size BIGINT,
+        source_modified_at TIMESTAMP,
+        source_content_hash VARCHAR,
+        dest_file_id VARCHAR,
+        dest_provider VARCHAR NOT NULL,
+        dest_file_path TEXT,
+        last_synced_at TIMESTAMP DEFAULT NOW(),
+        sync_status VARCHAR DEFAULT 'synced',
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_sync_file_registry_task" ON sync_file_registry (scheduled_task_id)
+    `);
+
+    await database.execute(sql`
+      CREATE UNIQUE INDEX IF NOT EXISTS "IDX_sync_file_registry_unique" ON sync_file_registry (scheduled_task_id, source_file_id)
+    `);
+
     tablesInitialized = true;
     console.log('✅ Database tables initialized successfully');
   } catch (error) {

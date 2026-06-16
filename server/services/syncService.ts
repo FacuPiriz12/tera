@@ -117,13 +117,15 @@ export class SyncService {
                   syncStatus: 'synced',
                 });
                 // Create version record
+                const destFileId1 = retryResult.destFileId || file.id;
+                const existingV1 = await storage.getFileVersions(task.userId, destFileId1);
                 await storage.createFileVersion({
                   userId: task.userId,
                   fileName: file.name,
-                  fileId: retryResult.destFileId || file.id,
+                  fileId: destFileId1,
                   provider: task.destProvider,
                   filePath: retryResult.destFilePath || file.path || null,
-                  versionNumber: 1,
+                  versionNumber: existingV1.length > 0 ? Math.max(...existingV1.map(v => v.versionNumber)) + 1 : 1,
                   size: file.size || null,
                   mimeType: file.mimeType || null,
                   changeType: 'synced',
@@ -155,13 +157,15 @@ export class SyncService {
                 syncStatus: 'synced',
               });
               // Create version record
+              const destFileId2 = copyResult.destFileId || file.id;
+              const existingV2 = await storage.getFileVersions(task.userId, destFileId2);
               await storage.createFileVersion({
                 userId: task.userId,
                 fileName: file.name,
-                fileId: copyResult.destFileId || file.id,
+                fileId: destFileId2,
                 provider: task.destProvider,
                 filePath: copyResult.destFilePath || file.path || null,
-                versionNumber: 1,
+                versionNumber: existingV2.length > 0 ? Math.max(...existingV2.map(v => v.versionNumber)) + 1 : 1,
                 size: file.size || null,
                 mimeType: file.mimeType || null,
                 changeType: 'synced',

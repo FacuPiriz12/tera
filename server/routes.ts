@@ -60,6 +60,11 @@ function detectProviderFromUrl(sourceUrl: string): 'google' | 'dropbox' | null {
   }
 }
 
+async function getNextVersionNumber(userId: string, fileId: string): Promise<number> {
+  const existing = await storage.getFileVersions(userId, fileId);
+  return existing.length > 0 ? Math.max(...existing.map(v => v.versionNumber)) + 1 : 1;
+}
+
 async function enforceOperationLimits(userId: string): Promise<{ status: number; message: string } | null> {
   const user = await storage.getUser(userId);
   if (!user) return null;
@@ -2830,7 +2835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               fileName: result.name!,
               fileId: result.id!,
               provider: 'google',
-              versionNumber: 1,
+              versionNumber: await getNextVersionNumber(userId, result.id!),
               size: result.size ? Number(result.size) : null,
               mimeType: result.mimeType,
               changeType: 'copied',
@@ -2886,7 +2891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               fileId: result.id,
               provider: 'dropbox',
               filePath: result.path_display,
-              versionNumber: 1,
+              versionNumber: await getNextVersionNumber(userId, result.id),
               size: result.size || null,
               changeType: 'copied',
               changeDetails: 'Copiado desde compartir archivo',
