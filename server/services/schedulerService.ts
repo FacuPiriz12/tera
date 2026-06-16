@@ -1,7 +1,22 @@
 import { storage } from '../storage';
 import { getQueueWorker } from '../queueWorker';
 import { getSyncService } from './syncService';
+import { sendTaskNotificationEmail } from '../lib/email';
 import type { ScheduledTask, InsertCopyOperation } from '@shared/schema';
+
+async function notifyTaskResult(
+  task: ScheduledTask,
+  success: boolean,
+  details: { filesProcessed?: number; duration?: number; errorMessage?: string }
+): Promise<void> {
+  if (success && !task.notifyOnComplete) return;
+  if (!success && !task.notifyOnFailure) return;
+
+  const user = await storage.getUser(task.userId);
+  if (!user?.email) return;
+
+  await sendTaskNotificationEmail(user.email, task.name, success, details);
+}
 
 interface SchedulerConfig {
   pollInterval: number;
@@ -177,6 +192,7 @@ export class SchedulerService {
           successfulRuns: (task.successfulRuns || 0) + 1,
         });
         console.log(`✅ Cumulative sync completed: ${result.filesCopied} files copied, ${result.filesSkipped} skipped`);
+        notifyTaskResult(task, true, { filesProcessed: result.filesCopied, duration });
       } else {
         await storage.updateScheduledTask(task.id, {
           lastRunStatus: 'failed',
@@ -184,10 +200,11 @@ export class SchedulerService {
           failedRuns: (task.failedRuns || 0) + 1,
         });
         console.log(`⚠️ Cumulative sync completed with errors: ${result.errors.length} errors`);
+        notifyTaskResult(task, false, { errorMessage: result.errors.join('; '), duration });
       }
     } catch (error: any) {
       console.error(`❌ Cumulative sync failed for task ${task.id}:`, error);
-      
+
       await storage.updateTaskRun(taskRunId, {
         status: 'failed',
         completedAt: new Date(),
@@ -199,6 +216,7 @@ export class SchedulerService {
         lastRunError: error.message || 'Unknown error',
         failedRuns: (task.failedRuns || 0) + 1,
       });
+      notifyTaskResult(task, false, { errorMessage: error.message });
     }
   }
 
@@ -241,6 +259,7 @@ export class SchedulerService {
           });
 
           console.log(`✅ Scheduled task ${taskId} completed successfully in ${duration}s`);
+          if (task) notifyTaskResult(task, true, { filesProcessed: operation.completedFiles || 1, duration });
           return;
         }
 
@@ -263,6 +282,7 @@ export class SchedulerService {
           });
 
           console.log(`❌ Scheduled task ${taskId} failed: ${operation.errorMessage}`);
+          if (task) notifyTaskResult(task, false, { errorMessage: operation.errorMessage || 'Copy operation failed', duration });
           return;
         }
 

@@ -254,6 +254,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cloud health stats — real data derived from user's copy operations
+  app.get('/api/cloud-health', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const ops = await storage.getUserCopyOperations(userId);
+
+      const total = ops.length;
+      const completed = ops.filter(op => op.status === 'completed').length;
+      const failed = ops.filter(op => op.status === 'failed').length;
+      const cancelled = ops.filter(op => op.status === 'cancelled').length;
+      const active = ops.filter(op => op.status === 'pending' || op.status === 'in_progress').length;
+      const finishedTotal = completed + failed;
+      const successRate = finishedTotal > 0 ? Math.round((completed / finishedTotal) * 100) : 100;
+      const totalFilesProcessed = ops.reduce((sum, op) => sum + (op.completedFiles || 0), 0);
+
+      const byProvider: Record<string, number> = {};
+      for (const op of ops) {
+        const src = op.sourceProvider;
+        const dst = op.destProvider;
+        if (src) byProvider[src] = (byProvider[src] || 0) + 1;
+        if (dst && dst !== src) byProvider[dst] = (byProvider[dst] || 0) + 1;
+      }
+
+      // Last 7 days vs prior 7 days
+      const now = Date.now();
+      const day7 = now - 7 * 24 * 60 * 60 * 1000;
+      const day14 = now - 14 * 24 * 60 * 60 * 1000;
+      const recentOps = ops.filter(op => op.createdAt && new Date(op.createdAt).getTime() >= day7).length;
+      const prevOps = ops.filter(op => op.createdAt && new Date(op.createdAt).getTime() >= day14 && new Date(op.createdAt).getTime() < day7).length;
+
+      // Health score: 100% when success rate is high, penalised by failures
+      const healthScore = total === 0 ? 100 : Math.max(0, successRate);
+
+      res.json({
+        healthScore,
+        successRate,
+        total,
+        completed,
+        failed,
+        cancelled,
+        active,
+        totalFilesProcessed,
+        byProvider,
+        trend: { recentOps, prevOps },
+      });
+    } catch (error) {
+      console.error("Error fetching cloud health:", error);
+      res.status(500).json({ message: "Failed to fetch cloud health data" });
+    }
+  });
+
   // Drive files routes
   app.get('/api/drive-files', isAuthenticated, async (req: any, res) => {
     try {
