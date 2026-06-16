@@ -1,7 +1,8 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./replitAuth";
+import { sendPasswordResetEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { DuplicateDetectionService } from "./services/duplicateDetectionService";
@@ -341,46 +342,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Password reset endpoints
+  // Password reset endpoints — delegates token generation/validation to Supabase Auth,
+  // we only generate the recovery link (admin API) and send the email via Resend.
   app.post('/api/auth/forgot-password', async (req, res) => {
+    const genericResponse = { message: "Si la cuenta existe, se enviará un enlace de restablecimiento." };
     try {
       const { email } = req.body;
       if (!email) return res.status(400).json({ message: "Email is required" });
 
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // We return 200 even if user not found for security (prevent email enumeration)
-        return res.json({ message: "If the account exists, a reset link will be sent." });
+      const supabase = createSupabaseClient();
+      if (!supabase) {
+        console.error("Forgot password error: Supabase client not configured");
+        return res.json(genericResponse);
       }
 
-      // Generate a simple reset token (in production use a library like crypto)
-      const resetToken = crypto.randomBytes(32).toString('hex');
-      const expiry = new Date(Date.now() + 3600000); // 1 hour
-
-      await storage.updateUser(user.id, {
-        // We'll use the existing updateUser to store token in a new column or similar
-        // For now, let's assume we have a way to store it. 
-        // Since we are in Fast mode, I will mock the email sending.
+      const redirectTo = `${req.protocol}://${req.get('host')}/reset-password`;
+      const { data, error } = await supabase.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: { redirectTo },
       });
 
-      console.log(`[AUTH] Password reset email sent to: ${email}`);
-      res.json({ message: "Reset instructions sent." });
+      if (error || !data?.properties?.action_link) {
+        console.error("Forgot password error:", error?.message);
+        return res.json(genericResponse);
+      }
+
+      await sendPasswordResetEmail(email, data.properties.action_link);
+      res.json(genericResponse);
     } catch (error) {
       console.error("Forgot password error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/auth/reset-password', async (req, res) => {
-    try {
-      const { token, password } = req.body;
-      if (!password) return res.status(400).json({ message: "Password is required" });
-
-      // In a real app, verify token from DB. For now, we simulate success.
-      res.json({ success: true, message: "Password updated successfully" });
-    } catch (error) {
-      console.error("Reset password error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.json(genericResponse);
     }
   });
 

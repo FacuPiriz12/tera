@@ -29,6 +29,8 @@ function createSupabaseClient() {
   return client;
 }
 
+export { createSupabaseClient };
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
 

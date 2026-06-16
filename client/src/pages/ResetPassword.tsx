@@ -6,14 +6,14 @@ import logoUrl from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-import { apiRequest } from "@/lib/queryClient";
+import { supabasePromise } from "@/lib/supabase";
 
 export default function ResetPasswordPage() {
   const { t, i18n } = useTranslation();
@@ -22,8 +22,21 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [hasValidSession, setHasValidSession] = useState<boolean | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  useEffect(() => {
+    (async () => {
+      const supabase = await supabasePromise;
+      if (!supabase) {
+        setHasValidSession(false);
+        return;
+      }
+      const { data } = await supabase.auth.getSession();
+      setHasValidSession(!!data.session);
+    })();
+  }, []);
 
   const passwordRequirements = [
     { label: t('common.auth.resetPassword.req.lowercase'), met: /[a-z]/.test(password) },
@@ -55,13 +68,14 @@ export default function ResetPasswordPage() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      await apiRequest("POST", "/api/auth/reset-password", { 
-        token: new URLSearchParams(window.location.search).get("token"),
-        password 
-      });
-      
+      const supabase = await supabasePromise;
+      if (!supabase) throw new Error("Service unavailable");
+
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+
       setIsSuccess(true);
       toast({
         title: t('common.auth.resetPassword.successTitle'),
@@ -77,6 +91,31 @@ export default function ResetPasswordPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (hasValidSession === false) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 flex flex-col items-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-6">
+              <XCircle className="w-10 h-10 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Enlace inválido o vencido
+            </h1>
+            <p className="text-gray-600 mb-8">
+              Este enlace de restablecimiento ya no es válido. Solicitá uno nuevo.
+            </p>
+            <Link href="/forgot-password">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-xl font-semibold">
+                Solicitar nuevo enlace
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
