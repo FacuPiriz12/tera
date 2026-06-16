@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { type FileVersion } from "@shared/schema";
 import { Loader2, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface FileVersionsTimelineProps {
   fileId: string;
@@ -12,8 +13,8 @@ export function FileVersionsTimeline({ fileId, fileName }: FileVersionsTimelineP
   const { data, isLoading } = useQuery({
     queryKey: [`/api/files/${fileId}/versions`],
     queryFn: async () => {
-      const response = await apiRequest(`/api/files/${fileId}/versions`);
-      return response.versions as FileVersion[];
+      const response = await apiRequest("GET", `/api/files/${fileId}/versions`);
+      return response.json() as Promise<FileVersion[]>;
     },
   });
 
@@ -86,7 +87,7 @@ export function FileVersionsTimeline({ fileId, fileName }: FileVersionsTimelineP
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Clock className="w-3 h-3" />
-                      {new Date(version.createdAt).toLocaleString('es-ES')}
+                      {version.createdAt ? new Date(version.createdAt).toLocaleString('es-ES') : '—'}
                     </div>
                     {version.changedBy && (
                       <div className="text-[10px] text-muted-foreground mt-1">

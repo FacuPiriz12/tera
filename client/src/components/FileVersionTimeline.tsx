@@ -65,16 +65,15 @@ export default function FileVersionTimeline({
   const { data: versions = [], isLoading } = useQuery({
     queryKey: ["/api/files", fileId, "versions"],
     queryFn: async () => {
-      const response = await apiRequest(`/api/files/${fileId}/versions`);
-      return response as FileVersion[];
+      const response = await apiRequest("GET", `/api/files/${fileId}/versions`);
+      return response.json() as Promise<FileVersion[]>;
     },
   });
 
   const restoreMutation = useMutation({
     mutationFn: async (versionId: string) => {
-      return apiRequest(`/api/files/${fileId}/restore/${versionId}`, {
-        method: "POST",
-      });
+      const response = await apiRequest("POST", `/api/files/${fileId}/restore/${versionId}`);
+      return response.json();
     },
     onSuccess: (data: any) => {
       toast({
@@ -167,7 +166,7 @@ export default function FileVersionTimeline({
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {formatRelativeTime(new Date(version.createdAt))}
+                      {version.createdAt ? formatRelativeTime(new Date(version.createdAt)) : '—'}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatBytes(Number(version.size) || 0)}
@@ -210,13 +209,15 @@ export default function FileVersionTimeline({
                     <div>
                       <p className="text-xs text-muted-foreground">Fecha</p>
                       <p className="font-semibold text-sm">
-                        {new Date(selectedVersion.createdAt).toLocaleDateString("es-ES", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {selectedVersion.createdAt
+                          ? new Date(selectedVersion.createdAt).toLocaleDateString("es-ES", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : '—'}
                       </p>
                     </div>
                     <div>

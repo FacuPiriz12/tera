@@ -35,54 +35,6 @@ interface FileGridProps {
   onSelectionChange?: (selectedIds: string[]) => void;
 }
 
-const mockFiles: FileItem[] = [
-  {
-    id: '1',
-    name: 'Presentaciones Marketing',
-    type: 'folder',
-    modifiedTime: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    name: 'Propuesta_Proyecto_Q4.docx',
-    type: 'file',
-    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    size: 2500000,
-    modifiedTime: '2024-01-14T15:45:00Z'
-  },
-  {
-    id: '3',
-    name: 'Presupuesto_2024.xlsx',
-    type: 'file',
-    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    size: 1800000,
-    modifiedTime: '2024-01-12T09:20:00Z'
-  },
-  {
-    id: '4',
-    name: 'Manual_Usuario_v2.pdf',
-    type: 'file',
-    mimeType: 'application/pdf',
-    size: 5200000,
-    modifiedTime: '2024-01-08T14:10:00Z'
-  },
-  {
-    id: '5',
-    name: 'Logo_Empresa_2024.png',
-    type: 'file',
-    mimeType: 'image/png',
-    size: 890000,
-    modifiedTime: '2024-01-01T11:00:00Z'
-  },
-  {
-    id: '6',
-    name: 'Backup_Proyecto_Final.zip',
-    type: 'file',
-    mimeType: 'application/zip',
-    size: 25700000,
-    modifiedTime: '2023-12-15T16:30:00Z'
-  }
-];
 
 function getFileIcon(file: FileItem) {
   if (file.type === 'folder') {
@@ -130,7 +82,7 @@ function formatModifiedTime(dateString: string): string {
   return `hace ${Math.ceil(diffDays / 30)} mes${Math.ceil(diffDays / 30) > 1 ? 'es' : ''}`;
 }
 
-export default function FileGrid({ files = mockFiles, onSelectionChange }: FileGridProps) {
+export default function FileGrid({ files = [], onSelectionChange }: FileGridProps) {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('name');
