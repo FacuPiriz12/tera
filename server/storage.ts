@@ -35,6 +35,7 @@ import {
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
+import { encryptToken, decryptToken, decryptUserTokens } from "./lib/tokenCrypto";
 
 export interface IStorage {
   // User operations - mandatory for Replit Auth
@@ -175,7 +176,7 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await getDb().select().from(users).where(eq(users.id, id));
-    return user;
+    return user ? decryptUserTokens(user) : undefined;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -254,15 +255,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await getDb()
       .update(users)
       .set({
-        googleAccessToken: tokens.accessToken,
-        googleRefreshToken: tokens.refreshToken || null,
+        googleAccessToken: encryptToken(tokens.accessToken),
+        googleRefreshToken: encryptToken(tokens.refreshToken || null),
         googleTokenExpiry: tokens.expiry || null,
         googleConnected: !!(tokens.accessToken || tokens.refreshToken),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
       .returning();
-    return user;
+    return decryptUserTokens(user);
   }
 
   async updateUserDropboxTokens(userId: string, tokens: {
@@ -273,15 +274,15 @@ export class DatabaseStorage implements IStorage {
     const [user] = await getDb()
       .update(users)
       .set({
-        dropboxAccessToken: tokens.accessToken,
-        dropboxRefreshToken: tokens.refreshToken || null,
+        dropboxAccessToken: encryptToken(tokens.accessToken),
+        dropboxRefreshToken: encryptToken(tokens.refreshToken || null),
         dropboxTokenExpiry: tokens.expiry || null,
         dropboxConnected: !!(tokens.accessToken || tokens.refreshToken),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
       .returning();
-    return user;
+    return decryptUserTokens(user);
   }
 
   async updateUserStripeInfo(userId: string, stripeData: {
