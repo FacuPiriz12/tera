@@ -1113,6 +1113,50 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return result.length;
   }
+
+  // Duplicate detection operations
+  async createFileHash(hash: InsertFileHash): Promise<FileHash> {
+    const [created] = await getDb()
+      .insert(fileHashes)
+      .values(hash)
+      .returning();
+    return created;
+  }
+
+  async findFilesByMetadata(userId: string, fileName: string, fileSize: number, provider?: string): Promise<FileHash[]> {
+    const conditions = [
+      eq(fileHashes.userId, userId),
+      eq(fileHashes.fileName, fileName),
+      eq(fileHashes.fileSize, fileSize),
+    ];
+    if (provider) conditions.push(eq(fileHashes.provider, provider));
+    return await getDb().select().from(fileHashes).where(and(...conditions));
+  }
+
+  async findFileByHash(userId: string, contentHash: string): Promise<FileHash | undefined> {
+    const [hash] = await getDb()
+      .select()
+      .from(fileHashes)
+      .where(and(eq(fileHashes.userId, userId), eq(fileHashes.contentHash, contentHash)));
+    return hash;
+  }
+
+  // File versioning operations
+  async createFileVersion(version: InsertFileVersion): Promise<FileVersion> {
+    const [result] = await getDb()
+      .insert(fileVersions)
+      .values(version)
+      .returning();
+    return result;
+  }
+
+  async getFileVersions(userId: string, fileId: string): Promise<FileVersion[]> {
+    return await getDb()
+      .select()
+      .from(fileVersions)
+      .where(and(eq(fileVersions.userId, userId), eq(fileVersions.fileId, fileId)))
+      .orderBy(desc(fileVersions.versionNumber));
+  }
 }
 
 // Memory storage for development when DATABASE_URL is not available
@@ -1124,6 +1168,8 @@ class MemoryStorage implements IStorage {
   private shareEventsMap: Map<string, ShareEvent> = new Map();
   private scheduledTasksMap: Map<string, ScheduledTask> = new Map();
   private scheduledTaskRunsMap: Map<string, ScheduledTaskRun> = new Map();
+  private fileHashesMap: Map<string, FileHash> = new Map();
+  private fileVersionsMap: Map<string, FileVersion> = new Map();
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
@@ -2032,103 +2078,47 @@ class MemoryStorage implements IStorage {
 
   // Duplicate detection operations
   async createFileHash(hash: InsertFileHash): Promise<FileHash> {
-    const [created] = await getDb()
-      .insert(fileHashes)
-      .values(hash)
-      .returning();
+    const id = crypto.randomUUID();
+    const now = new Date();
+    const created: FileHash = { id, filePath: null, ...hash, createdAt: now, updatedAt: now };
+    this.fileHashesMap.set(id, created);
     return created;
   }
 
   async findFilesByMetadata(userId: string, fileName: string, fileSize: number, provider?: string): Promise<FileHash[]> {
-    let query = getDb()
-      .select()
-      .from(fileHashes)
-      .where(and(
-        eq(fileHashes.userId, userId),
-        eq(fileHashes.fileName, fileName),
-        eq(fileHashes.fileSize, fileSize)
-      ));
-    
-    if (provider) {
-      query = query.where(and(
-        eq(fileHashes.userId, userId),
-        eq(fileHashes.fileName, fileName),
-        eq(fileHashes.fileSize, fileSize),
-        eq(fileHashes.provider, provider)
-      ));
-    }
-    
-    return await query;
+    return Array.from(this.fileHashesMap.values()).filter(h =>
+      h.userId === userId && h.fileName === fileName && h.fileSize === fileSize &&
+      (!provider || h.provider === provider)
+    );
   }
 
   async findFileByHash(userId: string, contentHash: string): Promise<FileHash | undefined> {
-    const [hash] = await getDb()
-      .select()
-      .from(fileHashes)
-      .where(and(
-        eq(fileHashes.userId, userId),
-        eq(fileHashes.contentHash, contentHash)
-      ));
-    return hash;
+    return Array.from(this.fileHashesMap.values())
+      .find(h => h.userId === userId && h.contentHash === contentHash);
   }
 
-  // File conflict methods (for mirror sync)
+  // File conflict methods (for mirror sync) - stubs for dev mode
   async createFileConflict(conflict: InsertFileConflict): Promise<FileConflict> {
-    const [result] = await getDb()
-      .insert(fileConflicts)
-      .values(conflict)
-      .returning();
-    return result;
+    const id = crypto.randomUUID();
+    const now = new Date();
+    const created: FileConflict = {
+      id, ...conflict,
+      createdAt: now, updatedAt: now,
+      resolvedAt: null, resolution: null, resolutionDetails: null,
+      backupFileId: null, backupProvider: null, backupPath: null,
+    };
+    return created;
   }
 
-  async getFileConflicts(taskId: string): Promise<FileConflict[]> {
-    return await getDb()
-      .select()
-      .from(fileConflicts)
-      .where(and(
-        eq(fileConflicts.scheduledTaskId, taskId),
-        isNull(fileConflicts.resolvedAt)
-      ));
+  async getFileConflicts(_taskId: string): Promise<FileConflict[]> {
+    return [];
   }
 
-  async resolveFileConflict(
-    conflictId: string,
-    resolution: 'keep_newer' | 'keep_source' | 'keep_target',
-    details?: string
-  ): Promise<FileConflict> {
-    const [result] = await getDb()
-      .update(fileConflicts)
-      .set({
-        resolution,
-        resolvedAt: new Date(),
-        resolutionDetails: details || '',
-        updatedAt: new Date(),
-      })
-      .where(eq(fileConflicts.id, conflictId))
-      .returning();
-    return result;
-  }
-
-  // File versioning methods
-  async createFileVersion(version: InsertFileVersion): Promise<FileVersion> {
-    const [result] = await getDb()
-      .insert(fileVersions)
-      .values(version)
-      .returning();
-    return result;
-  }
-
-  async getFileVersions(userId: string, fileId: string): Promise<FileVersion[]> {
-    return await getDb()
-      .select()
-      .from(fileVersions)
-      .where(and(
-        eq(fileVersions.userId, userId),
-        eq(fileVersions.fileId, fileId)
-      ))
-      .orderBy(desc(fileVersions.versionNumber));
+  async resolveFileConflict(conflictId: string, resolution: 'keep_newer' | 'keep_source' | 'keep_target', _details?: string): Promise<FileConflict> {
+    throw new Error(`resolveFileConflict not supported in dev mode (id: ${conflictId}, resolution: ${resolution})`);
   }
 }
 
-console.log('💾 Using memory storage - data will be lost on restart (development mode)');
-export const storage: IStorage = new MemoryStorage();
+export const storage: IStorage = process.env.DATABASE_URL
+  ? new DatabaseStorage()
+  : new MemoryStorage();

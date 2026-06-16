@@ -231,7 +231,52 @@ async function ensureTablesExist() {
     await database.execute(sql`
       CREATE INDEX IF NOT EXISTS "IDX_file_hashes_metadata" ON file_hashes (user_id, file_name, file_size, provider)
     `);
-    
+
+    // File conflicts for Mirror Sync
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS file_conflicts (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        scheduled_task_id VARCHAR NOT NULL REFERENCES scheduled_tasks(id) ON DELETE CASCADE,
+        file_name TEXT NOT NULL,
+        file_id VARCHAR NOT NULL,
+        source_version JSONB NOT NULL,
+        dest_version JSONB NOT NULL,
+        resolved_at TIMESTAMP,
+        resolution VARCHAR,
+        resolution_details TEXT,
+        backup_file_id VARCHAR,
+        backup_provider VARCHAR,
+        backup_path TEXT,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // File versions for history timeline
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS file_versions (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        file_name TEXT NOT NULL,
+        file_id VARCHAR NOT NULL,
+        provider VARCHAR NOT NULL,
+        file_path TEXT,
+        version_number INTEGER NOT NULL,
+        size BIGINT,
+        mime_type VARCHAR,
+        change_type VARCHAR NOT NULL,
+        changed_by VARCHAR,
+        change_details TEXT,
+        copy_operation_id VARCHAR REFERENCES copy_operations(id),
+        scheduled_task_id VARCHAR REFERENCES scheduled_tasks(id),
+        created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await database.execute(sql`
+      CREATE INDEX IF NOT EXISTS "IDX_file_versions_user_file" ON file_versions (user_id, file_id)
+    `);
+
     tablesInitialized = true;
     console.log('✅ Database tables initialized successfully');
   } catch (error) {
