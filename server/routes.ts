@@ -16,6 +16,11 @@ import Stripe from "stripe";
 
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
+const PLAN_LIMITS = {
+  free: { maxDailyOperations: 100,  maxConcurrentOperations: 5,  maxStorageBytes: 16106127360  }, // 15 GB
+  pro:  { maxDailyOperations: 500,  maxConcurrentOperations: 20, maxStorageBytes: 107374182400 }, // 100 GB
+} as const;
+
 // Utility function to compute redirect URI consistently across all OAuth flows
 function getOAuthRedirectUri(req: any, path: string): string {
   // On Replit, use HTTPS with the dev domain
@@ -64,16 +69,19 @@ async function enforceOperationLimits(userId: string): Promise<{ status: number;
     storage.countUserActiveOperations(userId),
   ]);
 
-  if (user.maxDailyOperations > 0 && daily >= user.maxDailyOperations) {
+  const maxDaily = user.maxDailyOperations ?? PLAN_LIMITS.free.maxDailyOperations;
+  const maxConcurrent = user.maxConcurrentOperations ?? PLAN_LIMITS.free.maxConcurrentOperations;
+
+  if (maxDaily > 0 && daily >= maxDaily) {
     return {
       status: 429,
-      message: `Límite diario alcanzado (${user.maxDailyOperations} operaciones/día). Actualizá tu plan para continuar.`,
+      message: `Límite diario alcanzado (${maxDaily} operaciones/día). Actualizá tu plan para continuar.`,
     };
   }
-  if (user.maxConcurrentOperations > 0 && active >= user.maxConcurrentOperations) {
+  if (maxConcurrent > 0 && active >= maxConcurrent) {
     return {
       status: 429,
-      message: `Demasiadas operaciones activas (máximo ${user.maxConcurrentOperations} simultáneas). Esperá a que termine alguna.`,
+      message: `Demasiadas operaciones activas (máximo ${maxConcurrent} simultáneas). Esperá a que termine alguna.`,
     };
   }
   return null;
@@ -117,19 +125,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             subscriptionId: session.subscription as string,
             customerId: session.customer as string
           });
-          // Update plan to pro
-          await storage.updateUser(session.client_reference_id, { membershipPlan: 'pro' });
+          await storage.updateUser(session.client_reference_id, {
+            membershipPlan: 'pro',
+            ...PLAN_LIMITS.pro,
+          });
+          console.log(`User ${session.client_reference_id} upgraded to PRO via Stripe`);
         }
       } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
         const subscription = event.data.object as Stripe.Subscription;
-        // Find user by subscription ID
         const users = await storage.getAllUsers();
         const user = users.users.find(u => u.stripeSubscriptionId === subscription.id);
-        
+
         if (user) {
           if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-            await storage.updateUser(user.id, { membershipPlan: 'free' });
-            console.log(`Subscription ${subscription.id} for user ${user.id} has ended. Plan reverted to free.`);
+            await storage.updateUser(user.id, {
+              membershipPlan: 'free',
+              ...PLAN_LIMITS.free,
+            });
+            console.log(`Subscription ${subscription.id} ended — user ${user.id} reverted to FREE`);
           }
         }
       }
@@ -1989,10 +2002,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiryDate = new Date();
       expiryDate.setMonth(expiryDate.getMonth() + (duration || 1));
 
-      // Update user membership (this would integrate with payment system)
       const updatedUser = await storage.updateUser(userId, {
         membershipPlan: 'pro',
-        membershipExpiry: expiryDate
+        membershipExpiry: expiryDate,
+        ...PLAN_LIMITS.pro,
       });
 
       res.json({

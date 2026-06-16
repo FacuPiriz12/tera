@@ -9,14 +9,14 @@ export default function ConnectionWarningBanner() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
 
-  const { data: googleStatus } = useQuery({
+  const { data: googleStatus } = useQuery<{ connected: boolean; hasValidToken: boolean }>({
     queryKey: ["/api/auth/google/status"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchInterval: 30000,
     enabled: isAuthenticated,
   });
 
-  const { data: dropboxStatus } = useQuery({
+  const { data: dropboxStatus } = useQuery<{ connected: boolean; hasValidToken: boolean }>({
     queryKey: ["/api/auth/dropbox/status"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     refetchInterval: 30000,
