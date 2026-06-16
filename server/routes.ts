@@ -55,6 +55,30 @@ function detectProviderFromUrl(sourceUrl: string): 'google' | 'dropbox' | null {
   }
 }
 
+async function enforceOperationLimits(userId: string): Promise<{ status: number; message: string } | null> {
+  const user = await storage.getUser(userId);
+  if (!user) return null;
+
+  const [daily, active] = await Promise.all([
+    storage.countUserDailyOperations(userId),
+    storage.countUserActiveOperations(userId),
+  ]);
+
+  if (user.maxDailyOperations > 0 && daily >= user.maxDailyOperations) {
+    return {
+      status: 429,
+      message: `Límite diario alcanzado (${user.maxDailyOperations} operaciones/día). Actualizá tu plan para continuar.`,
+    };
+  }
+  if (user.maxConcurrentOperations > 0 && active >= user.maxConcurrentOperations) {
+    return {
+      status: 429,
+      message: `Demasiadas operaciones activas (máximo ${user.maxConcurrentOperations} simultáneas). Esperá a que termine alguna.`,
+    };
+  }
+  return null;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy for correct protocol/host detection behind load balancers
   app.set('trust proxy', 1);
@@ -260,15 +284,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/copy-operations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      
+
+      const limitError = await enforceOperationLimits(userId);
+      if (limitError) return res.status(limitError.status).json({ message: limitError.message });
+
       // Validate provider before creating operation
       const provider = detectProviderFromUrl(req.body.sourceUrl);
       if (!provider) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Unsupported URL format - only Google Drive and Dropbox URLs are supported"
         });
       }
-      
+
       // Validate with Zod schema
       const validation = insertCopyOperationSchema.parse({
         ...req.body,
@@ -1513,6 +1540,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
 
+      const limitError = await enforceOperationLimits(userId);
+      if (limitError) return res.status(limitError.status).json({ message: limitError.message });
+
       // Strict validation with Zod schema
       const transferSchema = z.object({
         sourceProvider: z.enum(['google', 'dropbox']),
@@ -1974,6 +2004,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/dropbox/copy-from-url', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+
+      const limitError = await enforceOperationLimits(userId);
+      if (limitError) return res.status(limitError.status).json({ message: limitError.message });
+
       const validation = insertCopyOperationSchema.parse({
         ...req.body,
         userId,
@@ -2637,6 +2671,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shareId = req.params.id;
       const { provider, destinationFolderId, destinationPath } = req.body;
 
+      const limitError = await enforceOperationLimits(userId);
+      if (limitError) return res.status(limitError.status).json({ message: limitError.message });
+
       if (!provider || !['google', 'dropbox'].includes(provider)) {
         return res.status(400).json({ message: "Invalid provider. Must be 'google' or 'dropbox'" });
       }
@@ -3025,14 +3062,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const task = await storage.getScheduledTask(req.params.id);
-      
+
       if (!task) {
         return res.status(404).json({ message: "Task not found" });
       }
-      
+
       if (task.userId !== userId) {
         return res.status(403).json({ message: "Not authorized" });
       }
+
+      const limitError = await enforceOperationLimits(userId);
+      if (limitError) return res.status(limitError.status).json({ message: limitError.message });
 
       // Check if task is already running to prevent duplicates
       if (task.lastRunStatus === 'running') {

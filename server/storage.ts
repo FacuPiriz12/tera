@@ -121,6 +121,8 @@ export interface IStorage {
   completeJob(id: string, result: { copiedFileId?: string; copiedFileName?: string; copiedFileUrl?: string; duration?: number }): Promise<CopyOperation>;
   failJob(id: string, errorMessage: string): Promise<CopyOperation>;
   countUserRunningJobs(userId: string): Promise<number>;
+  countUserDailyOperations(userId: string): Promise<number>;
+  countUserActiveOperations(userId: string): Promise<number>;
   setJobProgress(id: string, completedFiles: number, totalFiles: number, progressPct: number): Promise<CopyOperation>;
   requestJobCancel(id: string): Promise<CopyOperation>;
   reclaimStaleJobs(staleDurationMs: number): Promise<number>;
@@ -768,12 +770,37 @@ export class DatabaseStorage implements IStorage {
     const [result] = await getDb()
       .select({ count: count() })
       .from(copyOperations)
-      .where(
-        and(
-          eq(copyOperations.userId, userId),
+      .where(and(
+        eq(copyOperations.userId, userId),
+        eq(copyOperations.status, 'in_progress')
+      ));
+    return result.count;
+  }
+
+  async countUserDailyOperations(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [result] = await getDb()
+      .select({ count: count() })
+      .from(copyOperations)
+      .where(and(
+        eq(copyOperations.userId, userId),
+        sql`${copyOperations.createdAt} >= ${today}`
+      ));
+    return result.count;
+  }
+
+  async countUserActiveOperations(userId: string): Promise<number> {
+    const [result] = await getDb()
+      .select({ count: count() })
+      .from(copyOperations)
+      .where(and(
+        eq(copyOperations.userId, userId),
+        or(
+          eq(copyOperations.status, 'pending'),
           eq(copyOperations.status, 'in_progress')
         )
-      );
+      ));
     return result.count;
   }
 
@@ -1640,6 +1667,20 @@ class MemoryStorage implements IStorage {
   async countUserRunningJobs(userId: string): Promise<number> {
     return Array.from(this.copyOperations.values())
       .filter(op => op.userId === userId && op.status === 'in_progress')
+      .length;
+  }
+
+  async countUserDailyOperations(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from(this.copyOperations.values())
+      .filter(op => op.userId === userId && op.createdAt >= today)
+      .length;
+  }
+
+  async countUserActiveOperations(userId: string): Promise<number> {
+    return Array.from(this.copyOperations.values())
+      .filter(op => op.userId === userId && (op.status === 'pending' || op.status === 'in_progress'))
       .length;
   }
 
