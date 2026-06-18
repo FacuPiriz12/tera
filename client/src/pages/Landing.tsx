@@ -615,44 +615,70 @@ export default function Home() {
 
       {/* ── Pricing teaser ─────────────────────────────────────────────────── */}
       <section className="py-20 px-6 lg:px-16 bg-gray-50/50">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-5xl mx-auto text-center">
           <p className="text-xs font-black text-blue-600 uppercase tracking-[0.3em] mb-3">{t('landing.pricing.label')}</p>
           <h2 className="text-4xl font-black text-gray-900 mb-5 tracking-tight">{t('landing.pricing.title')}</h2>
           <p className="text-lg text-gray-500 mb-12 font-medium">{t('landing.pricing.description')}</p>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-5">
             {[
               {
-                name: 'Free', price: '$0', periodKey: 'forever',
+                name: 'Free', price: '$0', period: t('landing.pricing.forever'),
                 features: ['freeF1','freeF2','freeF3','freeF4'],
-                ctaKey: 'ctaFree', highlight: false,
+                ctaKey: 'ctaFree', highlight: false, badge: null,
               },
               {
-                name: 'Pro', price: '$9', periodKey: 'perMonth',
+                name: 'Pro', price: '$7.99', period: t('landing.pricing.perMonth'),
                 features: ['proF1','proF2','proF3','proF4','proF5','proF6'],
-                ctaKey: 'ctaPro', highlight: true,
+                ctaKey: 'ctaPro', highlight: true, badge: t('landing.pricing.popular'),
+              },
+              {
+                name: 'Business', price: '$19.99', period: t('landing.pricing.perMonth'),
+                features: ['bizF1','bizF2','bizF3','bizF4'],
+                ctaKey: 'ctaBiz', highlight: false, badge: t('landing.pricing.bestValue'),
               },
             ].map((plan) => (
-              <motion.div key={plan.name} whileHover={{ y: -4 }} className={`rounded-3xl p-8 text-left ${plan.highlight ? 'bg-blue-600 text-white shadow-2xl shadow-blue-200' : 'bg-white border border-gray-100 shadow-sm'}`}>
-                <div className="flex items-end justify-between mb-6">
-                  <div>
-                    <p className={`text-xs font-black uppercase tracking-widest mb-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>{plan.name}</p>
-                    <div className="flex items-end gap-1">
-                      <span className={`text-5xl font-black tracking-tighter ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                      <span className={`text-sm font-bold mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/{t(`landing.pricing.${plan.periodKey}`)}</span>
-                    </div>
+              <motion.div
+                key={plan.name}
+                whileHover={{ y: -4 }}
+                className={`rounded-3xl p-7 text-left relative ${
+                  plan.highlight
+                    ? 'bg-gradient-to-br from-[#0061D5] to-[#1a4fa3] text-white shadow-2xl shadow-blue-200'
+                    : 'bg-white border border-gray-100 shadow-sm'
+                }`}
+              >
+                {plan.badge && (
+                  <span className={`absolute top-5 right-5 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                    plan.highlight ? 'bg-white/20 text-white' : 'bg-slate-900 text-white'
+                  }`}>
+                    {plan.badge}
+                  </span>
+                )}
+                <div className="mb-5">
+                  <p className={`text-[11px] font-black uppercase tracking-widest mb-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>{plan.name}</p>
+                  <div className="flex items-end gap-1">
+                    <span className={`text-4xl font-black tracking-tighter ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
+                    <span className={`text-xs font-bold mb-1 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/{plan.period}</span>
                   </div>
-                  {plan.highlight && <span className="bg-white/20 text-white text-xs font-black px-3 py-1 rounded-full">{t('landing.pricing.popular')}</span>}
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2.5 mb-7">
                   {plan.features.map((fk) => (
-                    <li key={fk} className="flex items-center gap-2.5">
-                      <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${plan.highlight ? 'text-blue-200' : 'text-blue-500'}`} />
-                      <span className={`text-sm font-medium ${plan.highlight ? 'text-blue-100' : 'text-gray-600'}`}>{t(`landing.pricing.${fk}`)}</span>
+                    <li key={fk} className="flex items-center gap-2">
+                      <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 ${plan.highlight ? 'text-blue-200' : 'text-blue-500'}`} />
+                      <span className={`text-xs font-medium ${plan.highlight ? 'text-blue-100' : 'text-gray-600'}`}>{t(`landing.pricing.${fk}`)}</span>
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => setLocation('/login?mode=register')} className={`w-full py-3.5 rounded-2xl font-bold text-sm transition-all ${plan.highlight ? 'bg-white text-blue-600 hover:bg-blue-50' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                <button
+                  onClick={() => setLocation('/login?mode=register')}
+                  className={`w-full py-3 rounded-2xl font-bold text-sm transition-all ${
+                    plan.highlight
+                      ? 'bg-white text-[#0061D5] hover:bg-blue-50'
+                      : plan.name === 'Business'
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-[#0061D5] text-white hover:bg-blue-700'
+                  }`}
+                >
                   {t(`landing.pricing.${plan.ctaKey}`)}
                 </button>
               </motion.div>
