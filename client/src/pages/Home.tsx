@@ -30,6 +30,13 @@ export default function Home() {
     queryKey: ["/api/copy-operations"],
   });
 
+  const { data: googleStatus }   = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/google/status"] });
+  const { data: dropboxStatus }  = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/dropbox/status"] });
+  const { data: onedriveStatus } = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/onedrive/status"] });
+  const { data: boxStatus }      = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/box/status"] });
+
+  const hasAnyConnected = googleStatus?.connected || dropboxStatus?.connected || onedriveStatus?.connected || boxStatus?.connected;
+
   const completedOps = operations.filter(op => op.status === 'completed');
   const failedOps    = operations.filter(op => op.status === 'failed');
   const activeOps    = operations.filter(op => op.status === 'in_progress' || op.status === 'pending');
@@ -74,8 +81,8 @@ export default function Home() {
               <FileUploadDialog />
             </div>
 
-            {/* Onboarding banner — solo si no hay transferencias */}
-            {operations.length === 0 && (
+            {/* Onboarding banner — solo si no hay cuentas conectadas */}
+            {!hasAnyConnected && (
               <div className="relative overflow-hidden bg-gradient-to-r from-[#0061D5] to-blue-500 rounded-2xl p-6 text-white">
                 <div className="relative z-10">
                   <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Primeros pasos</p>
