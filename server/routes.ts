@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./rep
 import { sendPasswordResetEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
+import { OneDriveService } from "./services/oneDriveService";
 import { DuplicateDetectionService } from "./services/duplicateDetectionService";
 import { SyncService } from "./services/syncService";
 import { getQueueWorker } from "./queueWorker";
@@ -3739,6 +3740,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     });
   }
+
+  // ── OneDrive OAuth routes ─────────────────────────────────────────────────
+
+  app.get('/api/auth/onedrive', async (req: any, res) => {
+    try {
+      let userId: string | null = null;
+
+      const token = req.query.token as string;
+      if (token) {
+        const user = await validateSupabaseToken(token);
+        if (user) { userId = user.id; req.session.supabaseUserId = user.id; }
+      }
+      if (!userId && req.user?.claims?.sub) userId = req.user.claims.sub;
+      if (!userId && req.session?.supabaseUserId) userId = req.session.supabaseUserId;
+
+      if (!userId) return res.redirect('/login?redirect=/integrations&error=auth_required');
+
+      if (!process.env.ONEDRIVE_CLIENT_ID || !process.env.ONEDRIVE_CLIENT_SECRET) {
+        console.error('OneDrive OAuth not configured');
+        return res.redirect('/integrations?onedrive_auth=error&reason=not_configured');
+      }
+
+      const redirectUri = getOAuthRedirectUri(req, '/api/auth/onedrive/callback');
+      const state = crypto.randomBytes(16).toString('hex');
+      req.session.onedriveOAuthState = state;
+      req.session.onedriveUserId = userId;
+
+      await new Promise<void>((resolve) => req.session.save((err: any) => resolve()));
+
+      const authUrl = OneDriveService.getAuthUrl(redirectUri, state);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error starting OneDrive OAuth:', error);
+      res.redirect('/integrations?onedrive_auth=error&reason=server_error');
+    }
+  });
+
+  app.get('/api/auth/onedrive/callback', async (req: any, res) => {
+    try {
+      const { code, state, error: oauthError } = req.query;
+
+      if (oauthError) {
+        delete req.session.onedriveOAuthState;
+        delete req.session.onedriveUserId;
+        return res.redirect(`/integrations?onedrive_auth=error&reason=${oauthError === 'access_denied' ? 'denied' : 'error'}`);
+      }
+
+      if (!code) {
+        delete req.session.onedriveOAuthState;
+        delete req.session.onedriveUserId;
+        return res.redirect('/integrations?onedrive_auth=error&reason=no_code');
+      }
+
+      const expectedState = req.session.onedriveOAuthState;
+      const sessionUserId = req.session.onedriveUserId;
+
+      if (state !== expectedState) {
+        delete req.session.onedriveOAuthState;
+        delete req.session.onedriveUserId;
+        return res.redirect('/integrations?onedrive_auth=error&reason=invalid_state');
+      }
+
+      if (!sessionUserId) return res.redirect('/integrations?onedrive_auth=error&reason=no_session');
+
+      delete req.session.onedriveOAuthState;
+      delete req.session.onedriveUserId;
+
+      const redirectUri = getOAuthRedirectUri(req, '/api/auth/onedrive/callback');
+      const { accessToken, refreshToken, expiresIn } = await OneDriveService.exchangeCode(code as string, redirectUri);
+      const expiry = new Date(Date.now() + expiresIn * 1000);
+
+      await storage.updateUserOnedriveTokens(sessionUserId, { accessToken, refreshToken, expiry });
+
+      console.log('OneDrive OAuth completed for user:', sessionUserId);
+      res.redirect('/integrations?onedrive_auth=success');
+    } catch (error) {
+      console.error('Error in OneDrive OAuth callback:', error);
+      delete req.session.onedriveOAuthState;
+      delete req.session.onedriveUserId;
+      res.redirect('/integrations?onedrive_auth=error&reason=unknown');
+    }
+  });
+
+  app.get('/api/auth/onedrive/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ connected: false, hasValidToken: false });
+
+      const hasAccessToken = !!user.onedriveAccessToken;
+      const hasRefreshToken = !!user.onedriveRefreshToken;
+      const isExpired = user.onedriveTokenExpiry && new Date(user.onedriveTokenExpiry) <= new Date();
+      res.json({
+        connected: hasAccessToken || hasRefreshToken,
+        hasValidToken: (hasAccessToken && !isExpired) || !!hasRefreshToken,
+      });
+    } catch (error) {
+      console.error('Error checking OneDrive status:', error);
+      res.status(500).json({ connected: false, hasValidToken: false });
+    }
+  });
+
+  app.delete('/api/auth/onedrive', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.updateUserOnedriveTokens(userId, { accessToken: null, refreshToken: null, expiry: null });
+      res.json({ message: 'OneDrive disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting OneDrive:', error);
+      res.status(500).json({ message: 'Failed to disconnect OneDrive' });
+    }
+  });
+
+  // ── OneDrive API routes ───────────────────────────────────────────────────
+
+  app.get('/api/onedrive/files', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folderId = req.query.folderId as string | undefined;
+      const service = new OneDriveService(userId);
+      const files = await service.listFolder(folderId);
+      res.json(files);
+    } catch (error: any) {
+      console.error('Error listing OneDrive files:', error);
+      if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
+      res.status(500).json({ message: 'Failed to list OneDrive files' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

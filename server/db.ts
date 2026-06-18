@@ -186,6 +186,16 @@ async function ensureTablesExist() {
       // Column might already exist, ignore
     }
 
+    // Add OneDrive columns if they don't exist (migration)
+    try {
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS onedrive_access_token TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS onedrive_refresh_token TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS onedrive_token_expiry TIMESTAMP`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS onedrive_connected BOOLEAN DEFAULT false`);
+    } catch (error) {
+      // Columns might already exist, ignore
+    }
+
     // Create scheduled_task_runs table
     await database.execute(sql`
       CREATE TABLE IF NOT EXISTS scheduled_task_runs (

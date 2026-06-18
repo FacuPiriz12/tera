@@ -60,7 +60,12 @@ export interface IStorage {
     refreshToken?: string | null;
     expiry?: Date | null;
   }): Promise<User>;
-  
+  updateUserOnedriveTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User>;
+
   // Stripe integration methods - for Stripe payment processing
   updateUserStripeInfo(userId: string, stripeData: {
     customerId?: string;
@@ -280,6 +285,25 @@ export class DatabaseStorage implements IStorage {
         dropboxRefreshToken: encryptToken(tokens.refreshToken || null),
         dropboxTokenExpiry: tokens.expiry || null,
         dropboxConnected: !!(tokens.accessToken || tokens.refreshToken),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return decryptUserTokens(user);
+  }
+
+  async updateUserOnedriveTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User> {
+    const [user] = await getDb()
+      .update(users)
+      .set({
+        onedriveAccessToken: encryptToken(tokens.accessToken),
+        onedriveRefreshToken: encryptToken(tokens.refreshToken || null),
+        onedriveTokenExpiry: tokens.expiry || null,
+        onedriveConnected: !!(tokens.accessToken || tokens.refreshToken),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
@@ -1190,6 +1214,10 @@ class MemoryStorage implements IStorage {
       dropboxRefreshToken: existingUser?.dropboxRefreshToken || null,
       dropboxTokenExpiry: existingUser?.dropboxTokenExpiry || null,
       dropboxConnected: existingUser?.dropboxConnected || false,
+      onedriveAccessToken: existingUser?.onedriveAccessToken || null,
+      onedriveRefreshToken: existingUser?.onedriveRefreshToken || null,
+      onedriveTokenExpiry: existingUser?.onedriveTokenExpiry || null,
+      onedriveConnected: existingUser?.onedriveConnected || false,
     };
     this.users.set(userData.id, user);
     return user;
@@ -1251,16 +1279,32 @@ class MemoryStorage implements IStorage {
     expiry?: Date | null;
   }): Promise<User> {
     const existingUser = this.users.get(userId);
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
-
+    if (!existingUser) throw new Error('User not found');
     const user: User = {
       ...existingUser,
       dropboxAccessToken: tokens.accessToken,
       dropboxRefreshToken: tokens.refreshToken || null,
       dropboxTokenExpiry: tokens.expiry || null,
       dropboxConnected: !!(tokens.accessToken || tokens.refreshToken),
+      updatedAt: new Date(),
+    };
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async updateUserOnedriveTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User> {
+    const existingUser = this.users.get(userId);
+    if (!existingUser) throw new Error('User not found');
+    const user: User = {
+      ...existingUser,
+      onedriveAccessToken: tokens.accessToken,
+      onedriveRefreshToken: tokens.refreshToken || null,
+      onedriveTokenExpiry: tokens.expiry || null,
+      onedriveConnected: !!(tokens.accessToken || tokens.refreshToken),
       updatedAt: new Date(),
     };
     this.users.set(userId, user);
