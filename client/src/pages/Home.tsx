@@ -34,8 +34,9 @@ export default function Home() {
   const { data: dropboxStatus }  = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/dropbox/status"] });
   const { data: onedriveStatus } = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/onedrive/status"] });
   const { data: boxStatus }      = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/box/status"] });
+  const { data: s3Status }       = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/s3/status"] });
 
-  const hasAnyConnected = googleStatus?.connected || dropboxStatus?.connected || onedriveStatus?.connected || boxStatus?.connected;
+  const hasAnyConnected = googleStatus?.connected || dropboxStatus?.connected || onedriveStatus?.connected || boxStatus?.connected || s3Status?.connected;
 
   const completedOps = operations.filter(op => op.status === 'completed');
   const failedOps    = operations.filter(op => op.status === 'failed');

@@ -70,6 +70,11 @@ export interface IStorage {
     refreshToken?: string | null;
     expiry?: Date | null;
   }): Promise<User>;
+  updateUserS3Credentials(userId: string, credentials: {
+    accessKeyId: string | null;
+    secretAccessKey: string | null;
+    region?: string;
+  }): Promise<User>;
 
   // Stripe integration methods - for Stripe payment processing
   updateUserStripeInfo(userId: string, stripeData: {
@@ -328,6 +333,25 @@ export class DatabaseStorage implements IStorage {
         boxRefreshToken: encryptToken(tokens.refreshToken || null),
         boxTokenExpiry: tokens.expiry || null,
         boxConnected: !!(tokens.accessToken || tokens.refreshToken),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return decryptUserTokens(user);
+  }
+
+  async updateUserS3Credentials(userId: string, credentials: {
+    accessKeyId: string | null;
+    secretAccessKey: string | null;
+    region?: string;
+  }): Promise<User> {
+    const [user] = await getDb()
+      .update(users)
+      .set({
+        s3AccessKeyId: encryptToken(credentials.accessKeyId),
+        s3SecretAccessKey: encryptToken(credentials.secretAccessKey),
+        s3Region: credentials.region || 'us-east-1',
+        s3Connected: !!(credentials.accessKeyId && credentials.secretAccessKey),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
@@ -1246,6 +1270,10 @@ class MemoryStorage implements IStorage {
       boxRefreshToken: existingUser?.boxRefreshToken || null,
       boxTokenExpiry: existingUser?.boxTokenExpiry || null,
       boxConnected: existingUser?.boxConnected || false,
+      s3AccessKeyId: existingUser?.s3AccessKeyId || null,
+      s3SecretAccessKey: existingUser?.s3SecretAccessKey || null,
+      s3Region: existingUser?.s3Region || 'us-east-1',
+      s3Connected: existingUser?.s3Connected || false,
     };
     this.users.set(userData.id, user);
     return user;
@@ -1352,6 +1380,25 @@ class MemoryStorage implements IStorage {
       boxRefreshToken: tokens.refreshToken || null,
       boxTokenExpiry: tokens.expiry || null,
       boxConnected: !!(tokens.accessToken || tokens.refreshToken),
+      updatedAt: new Date(),
+    };
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async updateUserS3Credentials(userId: string, credentials: {
+    accessKeyId: string | null;
+    secretAccessKey: string | null;
+    region?: string;
+  }): Promise<User> {
+    const existingUser = this.users.get(userId);
+    if (!existingUser) throw new Error('User not found');
+    const user: User = {
+      ...existingUser,
+      s3AccessKeyId: credentials.accessKeyId,
+      s3SecretAccessKey: credentials.secretAccessKey,
+      s3Region: credentials.region || 'us-east-1',
+      s3Connected: !!(credentials.accessKeyId && credentials.secretAccessKey),
       updatedAt: new Date(),
     };
     this.users.set(userId, user);

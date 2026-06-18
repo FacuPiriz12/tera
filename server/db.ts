@@ -206,6 +206,16 @@ async function ensureTablesExist() {
       // Columns might already exist, ignore
     }
 
+    // Add S3 columns if they don't exist (migration)
+    try {
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS s3_access_key_id TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS s3_secret_access_key TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS s3_region VARCHAR DEFAULT 'us-east-1'`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS s3_connected BOOLEAN DEFAULT false`);
+    } catch (error) {
+      // Columns might already exist, ignore
+    }
+
     // Create scheduled_task_runs table
     await database.execute(sql`
       CREATE TABLE IF NOT EXISTS scheduled_task_runs (

@@ -62,6 +62,11 @@ export const users = pgTable("users", {
   boxRefreshToken: text("box_refresh_token"),
   boxTokenExpiry: timestamp("box_token_expiry"),
   boxConnected: boolean("box_connected").default(false),
+  // Amazon S3 fields
+  s3AccessKeyId: text("s3_access_key_id"),
+  s3SecretAccessKey: text("s3_secret_access_key"),
+  s3Region: varchar("s3_region").default('us-east-1'),
+  s3Connected: boolean("s3_connected").default(false),
   // Membership fields
   membershipPlan: varchar("membership_plan").notNull().default('free'), // 'free', 'pro'
   membershipExpiry: timestamp("membership_expiry"),

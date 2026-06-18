@@ -7,6 +7,7 @@ import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
 import { BoxService } from "./services/boxService";
+import { S3Service } from "./services/s3Service";
 import { DuplicateDetectionService } from "./services/duplicateDetectionService";
 import { SyncService } from "./services/syncService";
 import { getQueueWorker } from "./queueWorker";
@@ -3995,6 +3996,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error listing Box files:', error);
       if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
       res.status(500).json({ message: 'Failed to list Box files' });
+    }
+  });
+
+  // ── Amazon S3 routes ──────────────────────────────────────────────────────
+
+  app.post('/api/auth/s3', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { accessKeyId, secretAccessKey, region } = req.body;
+
+      if (!accessKeyId || !secretAccessKey) {
+        return res.status(400).json({ message: 'Access Key ID and Secret Access Key are required' });
+      }
+
+      const valid = await S3Service.validateCredentials(accessKeyId, secretAccessKey, region || 'us-east-1');
+      if (!valid) {
+        return res.status(401).json({ message: 'Invalid AWS credentials. Please check your Access Key ID and Secret Access Key.' });
+      }
+
+      await storage.updateUserS3Credentials(userId, { accessKeyId, secretAccessKey, region: region || 'us-east-1' });
+      res.json({ message: 'S3 connected successfully' });
+    } catch (error) {
+      console.error('Error connecting S3:', error);
+      res.status(500).json({ message: 'Failed to connect S3' });
+    }
+  });
+
+  app.get('/api/auth/s3/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ connected: false });
+      res.json({ connected: !!user.s3Connected, region: user.s3Region });
+    } catch (error) {
+      console.error('Error checking S3 status:', error);
+      res.status(500).json({ connected: false });
+    }
+  });
+
+  app.delete('/api/auth/s3', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.updateUserS3Credentials(userId, { accessKeyId: null, secretAccessKey: null });
+      res.json({ message: 'S3 disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting S3:', error);
+      res.status(500).json({ message: 'Failed to disconnect S3' });
+    }
+  });
+
+  app.get('/api/s3/buckets', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const service = new S3Service(userId);
+      const buckets = await service.listBuckets();
+      res.json(buckets);
+    } catch (error: any) {
+      console.error('Error listing S3 buckets:', error);
+      if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
+      res.status(500).json({ message: 'Failed to list S3 buckets' });
+    }
+  });
+
+  app.get('/api/s3/files', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { bucket, prefix } = req.query;
+      if (!bucket) return res.status(400).json({ message: 'Bucket name is required' });
+      const service = new S3Service(userId);
+      const files = await service.listFolder(bucket as string, prefix as string);
+      res.json(files);
+    } catch (error: any) {
+      console.error('Error listing S3 files:', error);
+      if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
+      res.status(500).json({ message: 'Failed to list S3 files' });
     }
   });
 
