@@ -395,98 +395,131 @@ const esTranslations = {
     }
   },
   landing: {
+    nav: {
+      howItWorks: "Cómo funciona",
+      features: "Funcionalidades",
+      pricing: "Precios",
+      security: "Seguridad",
+      login: "Iniciar sesión",
+      startFree: "Empieza gratis"
+    },
     hero: {
-      title: "Mueve y protege tus archivos con",
-      subtitle: "Inteligencia Real",
-      description: "TERA es el puente entre tus nubes. Transfiere archivos entre plataformas, programa copias de seguridad automáticas y conecta tus herramientas favoritas en segundos.",
-      ctaButton: "Empieza gratis hoy",
-      demoButton: "Ver demostración",
-      integrationsLabel: "Mejores Integraciones",
-      syncBadge: "Auto-Sincronización",
-      transferLabel: "Transferencia",
-      backupLabel: "Backup",
-      completed: "Completado",
-      scanning: "Escaneando",
-      freedLabel: "Liberado",
-      duplicatesLabel: "Duplicados",
-      securityBadge: "Seguridad Activa",
-      encryptionLabel: "Cifrado de 256 bits"
+      badge: "Conectá tus nubes en segundos",
+      title: "Mueve tus archivos entre nubes",
+      highlight: "sin fricción",
+      description: "TERA conecta tus servicios en la nube para transferir, sincronizar y respaldar tus archivos de forma automática. Sin descargas. Sin complicaciones.",
+      cta: "Empieza gratis hoy",
+      howItWorks: "Cómo funciona",
+      noCard: "Sin tarjeta de crédito",
+      encryption: "Cifrado AES-256",
+      instantTransfer: "Transferencia inmediata"
+    },
+    dragdrop: {
+      badge: "Nueva funcionalidad",
+      title: "Arrastrá y soltá.",
+      highlight: "Así de simple.",
+      description: "En el explorador de archivos de TERA podés ver tus nubes lado a lado y arrastrar archivos directamente de una a otra. Sin formularios, sin pasos extra — solo arrastrás y listo.",
+      f1: "Dos paneles simultáneos: origen y destino",
+      f2: "Arrastrá archivos individuales o seleccioná varios",
+      f3: "La transferencia empieza al instante",
+      f4: "Compatible con carpetas y múltiples formatos",
+      cta: "Probarlo gratis"
+    },
+    integrations: {
+      label: "Integraciones disponibles",
+      comingSoon: "+ más próximamente"
+    },
+    howItWorks: {
+      label: "Proceso",
+      title: "Tres pasos. Listo.",
+      step1Title: "Conectá tus cuentas",
+      step1Desc: "Vinculá tu Google Drive y Dropbox en segundos con OAuth seguro. Sin contraseñas almacenadas.",
+      step2Title: "Configurá la transferencia",
+      step2Desc: "Pegá un link de Drive o Dropbox, elegí el destino y personalizá las opciones.",
+      step3Title: "TERA lo hace por vos",
+      step3Desc: "La transferencia corre en la nube. Recibís un email cuando termina y el historial queda guardado."
     },
     features: {
-      title: "Productos"
+      label: "Funcionalidades",
+      title: "Todo lo que necesitás, nada que no",
+      description: "Diseñado para hacer una cosa muy bien: mover archivos entre nubes sin que tengas que pensar en ello.",
+      f1Title: "Transferencias Multi-nube",
+      f1Desc: "Copia archivos y carpetas enteras entre tus servicios en la nube con un solo clic. Sin descargar nada a tu equipo.",
+      f2Title: "Sincronización Automática",
+      f2Desc: "Programá tareas para que tus carpetas se mantengan sincronizadas entre tus nubes. Diario, semanal o cuando vos quieras.",
+      f3Title: "Historial de Versiones",
+      f3Desc: "Cada archivo transferido queda registrado con su versión. Restaurá cualquier estado anterior en segundos.",
+      f4Title: "Share Inbox",
+      f4Desc: "Recibí archivos compartidos de cualquier persona y mandalos directamente a tu nube favorita, sin intermediarios.",
+      f5Title: "Notificaciones por Email",
+      f5Desc: "Te avisamos cuando una transferencia termina, falla o necesita tu atención. Nunca te pierdas nada.",
+      f6Title: "Tokens Cifrados AES-256",
+      f6Desc: "Tus credenciales de Google Drive y Dropbox se almacenan con cifrado AES-256-GCM. Nadie más tiene acceso."
     },
-    stats: {
-      filesMoved: "Archivos Movidos",
-      activeUsers: "Usuarios Activos",
-      guaranteedUptime: "Uptime Garantizado",
-      bankingSecurity: "Seguridad Bancaria"
-    },
-    benefits: {
-      badge: "Productos",
-      title: "Todo tu contenido, conectado",
-      description: "Simplificamos lo complejo. Automatizamos lo tedioso. Protegemos lo que importa.",
-      learnMore: "Saber más",
-      feature1: {
-        title: "Transferencias Multi-nube",
-        description: "Mueve gigabytes entre Dropbox, Drive y OneDrive con un solo clic. Sin descargar nada a tu equipo."
-      },
-      feature2: {
-        title: "Copias de Seguridad Inteligentes",
-        description: "Programa respaldos automáticos entre nubes para que tus archivos más importantes siempre tengan un espejo."
-      },
-      feature3: {
-        title: "+50 Integraciones Nativas",
-        description: "Conecta Slack, Teams, Notion y todas tus herramientas de trabajo para centralizar tu ecosistema digital."
-      }
-    },
-    ai: {
-      title: "Tú define las reglas,",
-      subtitle: "TERA las ejecuta por ti.",
-      description: "Configura flujos de trabajo potentes en segundos. TERA monitorea tus archivos 24/7 and realiza las tareas repetitivas para que tú no tengas que hacerlo.",
-      panelTitle: "Panel de Automatización",
-      panelStatus: "Sistema Inteligente Activo",
-      aiMessage: "\"He detectado 150 archivos nuevos en tu Dropbox. ¿Deseas que inicie la migración automática a tu carpeta de Proyectos 2024 en Google Drive?\"",
-      userResponse: "\"Sí, por favor. Y elimina los duplicados de más de 6 meses.\"",
-      progressLabel: "Migración en curso",
-      suggestions: {
-        suggestion1: "Mueve mis archivos de Dropbox a Google Drive",
-        suggestion2: "Crea una copia de seguridad de mis fotos en OneDrive",
-        suggestion3: "¿Qué nubes tengo integradas actualmente?",
-        suggestion4: "Transfiere la carpeta 'Proyectos' a mi cuenta de Box",
-        suggestion5: "Sincronize minha pasta do Notion com meu Drive"
-      }
+    tasks: {
+      badge: "Sincronización automática · PRO",
+      title: "Configuralo una vez.",
+      highlight: "Olvidate.",
+      description: "Creá tareas programadas para que TERA sincronice tus carpetas automáticamente. Diario, semanal, o el horario que elijas. Los archivos nuevos o modificados se transfieren solos.",
+      f1: "Sincronización incremental (solo lo que cambió)",
+      f2: "Detección de archivos nuevos y modificados",
+      f3: "Notificación por email al completar o si hay errores",
+      f4: "Historial de cada ejecución con estadísticas",
+      cta: "Crear mi primera tarea"
     },
     security: {
-      badge: "Seguridad sin Compromisos",
-      title: "Dormir tranquilo es parte del plan",
-      description: "No escatimamos en seguridad. TERA utiliza los mismos protocolos que las instituciones financieras globales para garantizar que tus datos nunca caigan en manos equivocadas.",
-      whitepaperButton: "Lee nuestro Whitepaper de Seguridad",
-      aesTitle: "AES-256",
-      aesDesc: "Encriptación de nivel militar para cada bit de información.",
-      zeroKnowledgeTitle: "Zero Knowledge",
-      zeroKnowledgeDesc: "Tus claves son solo tuyas. Ni siquiera nosotros podemos ver tus archivos.",
-      auditTitle: "Auditoría Real",
-      auditDesc: "Registros detallados de cada movimiento para tu control total.",
-      syncTitle: "Sincronización",
-      syncDesc: "Tus nubes siempre en armonía, protegidas por nuestro firewall inteligente."
+      label: "Seguridad",
+      title: "Tus archivos son tuyos. Nosotros solo los movemos.",
+      description: "TERA actúa como intermediario autorizado entre tus nubes. Nunca almacenamos el contenido de tus archivos — solo ejecutamos las operaciones que vos configurás.",
+      card1Title: "AES-256-GCM",
+      card1Desc: "Tus credenciales de acceso se cifran con el estándar de nivel militar antes de guardarse.",
+      card2Title: "OAuth Seguro",
+      card2Desc: "Nunca almacenamos tu usuario ni contraseña. Solo tokens OAuth con los permisos mínimos necesarios.",
+      card3Title: "Registro de operaciones",
+      card3Desc: "Cada transferencia queda registrada con fecha, origen, destino y resultado.",
+      card4Title: "Permisos mínimos",
+      card4Desc: "TERA solicita solo los permisos estrictamente necesarios para operar en tus cuentas.",
+      p1: "Tokens OAuth cifrados con AES-256-GCM",
+      p2: "Conexión HTTPS en toda la plataforma",
+      p3: "Nunca guardamos el contenido de tus archivos",
+      p4: "Podés revocar el acceso en cualquier momento"
+    },
+    pricing: {
+      label: "Planes",
+      title: "Simple y transparente",
+      description: "Empieza gratis. Escalá cuando lo necesites.",
+      forever: "para siempre",
+      perMonth: "por mes",
+      popular: "Popular",
+      ctaFree: "Empezar gratis",
+      ctaPro: "Probar Pro",
+      viewMore: "¿Necesitás más?",
+      viewAllPlans: "Ver todos los planes",
+      freeF1: "100 transferencias por día",
+      freeF2: "5 operaciones simultáneas",
+      freeF3: "15 GB de almacenamiento",
+      freeF4: "Google Drive + Dropbox",
+      proF1: "500 transferencias por día",
+      proF2: "20 operaciones simultáneas",
+      proF3: "100 GB de almacenamiento",
+      proF4: "Tareas programadas",
+      proF5: "Notificaciones por email",
+      proF6: "Historial completo"
     },
     cta: {
-      title: "El futuro de tus archivos comienza hoy.",
-      description: "Únete a más de 85,000 profesionales que ya han optimizado su ecosistema digital con TERA. Sin tarjetas, sin complicaciones.",
-      createAccount: "Crear mi cuenta gratis",
-      talkToSales: "Hablar con ventas"
+      title: "Tus archivos merecen un mejor flujo.",
+      description: "Empezá gratis hoy. Sin tarjeta de crédito. Conectá tus cuentas y hacé tu primera transferencia en menos de 2 minutos.",
+      button: "Crear cuenta gratis"
     },
     footer: {
-      description: "Elevando la gestión de archivos a una nueva dimensión de inteligencia y seguridad.",
+      description: "La forma más simple de mover y sincronizar archivos entre tus servicios en la nube.",
       platform: "Plataforma",
       legal: "Legal",
       privacy: "Privacidad",
       terms: "Términos",
       cookies: "Cookies",
-      compliance: "Cumplimiento",
-      rights: "Copyright © 2026 TERA. Todos los derechos reservados.",
-      status: "Sistemas Operativos",
-      back: "Volver"
+      rights: "© 2026 TERA. Todos los derechos reservados.",
+      operational: "Sistemas operativos"
     },
     auth: {
       login: {
@@ -865,60 +898,100 @@ const enTranslations = {
   forgotPasswordSubmitButton: "Send link",
   forgotPasswordBackToLogin: "Back to login",
   landing: {
+    nav: { howItWorks: "How it works", features: "Features", pricing: "Pricing", security: "Security", login: "Log in", startFree: "Get started" },
     hero: {
-      title: "Move and protect your files with", subtitle: "Real Intelligence",
-      description: "TERA is the bridge between your clouds. Transfer files between platforms, schedule automatic backups, and connect your favorite tools in seconds.",
-      ctaButton: "Get started for free", demoButton: "View demo",
-      integrationsLabel: "Best Integrations", syncBadge: "Auto-Sync",
-      transferLabel: "Transfer", backupLabel: "Backup", completed: "Completed",
-      scanning: "Scanning", freedLabel: "Freed", duplicatesLabel: "Duplicates",
-      securityBadge: "Active Security", encryptionLabel: "256-bit Encryption"
+      badge: "Connect your clouds in seconds",
+      title: "Move your files between clouds",
+      highlight: "without friction",
+      description: "TERA connects your cloud services to transfer, sync, and back up your files automatically. No downloads. No hassle.",
+      cta: "Get started for free",
+      howItWorks: "How it works",
+      noCard: "No credit card",
+      encryption: "AES-256 Encryption",
+      instantTransfer: "Instant transfer"
     },
-    features: { title: "Products" },
-    stats: { filesMoved: "Files Moved", activeUsers: "Active Users", guaranteedUptime: "Guaranteed Uptime", bankingSecurity: "Banking Security" },
-    benefits: {
-      badge: "Products", title: "All your content, connected",
-      description: "We simplify the complex. We automate the tedious. We protect what matters.",
-      learnMore: "Learn more",
-      feature1: { title: "Multi-cloud Transfers", description: "Move gigabytes between Dropbox, Drive and OneDrive with one click. No downloads needed." },
-      feature2: { title: "Smart Backups", description: "Schedule automatic backups between clouds so your important files always have a mirror." },
-      feature3: { title: "50+ Native Integrations", description: "Connect Slack, Teams, Notion and all your work tools to centralize your digital ecosystem." }
+    dragdrop: {
+      badge: "New feature",
+      title: "Drag and drop.",
+      highlight: "That simple.",
+      description: "In TERA's file explorer you can see your clouds side by side and drag files directly from one to the other. No forms, no extra steps — just drag and done.",
+      f1: "Two simultaneous panels: source and destination",
+      f2: "Drag individual files or select multiple",
+      f3: "Transfer starts instantly",
+      f4: "Compatible with folders and multiple formats",
+      cta: "Try for free"
     },
-    ai: {
-      title: "You define the rules,", subtitle: "TERA executes them for you.",
-      description: "Set up powerful workflows in seconds. TERA monitors your files 24/7 and handles repetitive tasks so you don't have to.",
-      panelTitle: "Automation Panel", panelStatus: "Smart System Active",
-      aiMessage: "\"I've detected 150 new files in your Dropbox. Shall I start the automatic migration to your Projects 2024 folder in Google Drive?\"",
-      userResponse: "\"Yes please. And remove duplicates older than 6 months.\"",
-      progressLabel: "Migration in progress",
-      suggestions: {
-        suggestion1: "Move my files from Dropbox to Google Drive",
-        suggestion2: "Create a backup of my photos in OneDrive",
-        suggestion3: "What clouds do I have integrated?",
-        suggestion4: "Transfer the Projects folder to my Box account",
-        suggestion5: "Sync my Notion folder with my Drive"
-      }
+    integrations: { label: "Available integrations", comingSoon: "+ more coming soon" },
+    howItWorks: {
+      label: "Process",
+      title: "Three steps. Done.",
+      step1Title: "Connect your accounts",
+      step1Desc: "Link your Google Drive and Dropbox in seconds with secure OAuth. No passwords stored.",
+      step2Title: "Configure the transfer",
+      step2Desc: "Paste a Drive or Dropbox link, choose the destination and customize the options.",
+      step3Title: "TERA does it for you",
+      step3Desc: "The transfer runs in the cloud. You get an email when it's done and the history is saved."
+    },
+    features: {
+      label: "Features",
+      title: "Everything you need, nothing you don't",
+      description: "Designed to do one thing very well: move files between clouds without you having to think about it.",
+      f1Title: "Multi-cloud Transfers", f1Desc: "Copy files and entire folders between your cloud services with one click. No downloads to your device.",
+      f2Title: "Auto Sync", f2Desc: "Schedule tasks to keep your folders synced between clouds. Daily, weekly, or whenever you want.",
+      f3Title: "Version History", f3Desc: "Every transferred file is recorded with its version. Restore any previous state in seconds.",
+      f4Title: "Share Inbox", f4Desc: "Receive files shared by anyone and send them directly to your favorite cloud, no middlemen.",
+      f5Title: "Email Notifications", f5Desc: "We notify you when a transfer finishes, fails, or needs your attention. Never miss anything.",
+      f6Title: "AES-256 Encrypted Tokens", f6Desc: "Your Google Drive and Dropbox credentials are stored with AES-256-GCM encryption. No one else has access."
+    },
+    tasks: {
+      badge: "Auto sync · PRO",
+      title: "Set it once.",
+      highlight: "Forget it.",
+      description: "Create scheduled tasks so TERA syncs your folders automatically. Daily, weekly, or whatever schedule you choose. New or modified files transfer on their own.",
+      f1: "Incremental sync (only what changed)",
+      f2: "Detection of new and modified files",
+      f3: "Email notification on complete or errors",
+      f4: "Run history with statistics",
+      cta: "Create my first task"
     },
     security: {
-      badge: "Uncompromising Security", title: "Sleeping soundly is part of the plan",
-      description: "We don't cut corners on security. TERA uses the same protocols as global financial institutions.",
-      whitepaperButton: "Read our Security Whitepaper",
-      aesTitle: "AES-256", aesDesc: "Military-grade encryption for every bit of information.",
-      zeroKnowledgeTitle: "Zero Knowledge", zeroKnowledgeDesc: "Your keys are yours alone. Not even we can see your files.",
-      auditTitle: "Real Audit", auditDesc: "Detailed logs of every movement for your total control.",
-      syncTitle: "Sync", syncDesc: "Your clouds always in harmony, protected by our smart firewall."
+      label: "Security",
+      title: "Your files are yours. We just move them.",
+      description: "TERA acts as an authorized intermediary between your clouds. We never store the content of your files — we only execute the operations you configure.",
+      card1Title: "AES-256-GCM", card1Desc: "Your access credentials are encrypted with the military-grade standard before being stored.",
+      card2Title: "Secure OAuth", card2Desc: "We never store your username or password. Only OAuth tokens with the minimum necessary permissions.",
+      card3Title: "Operation log", card3Desc: "Every transfer is recorded with date, origin, destination and result.",
+      card4Title: "Minimum permissions", card4Desc: "TERA only requests the strictly necessary permissions to operate on your accounts.",
+      p1: "OAuth tokens encrypted with AES-256-GCM",
+      p2: "HTTPS connection across the entire platform",
+      p3: "We never store the content of your files",
+      p4: "You can revoke access at any time"
+    },
+    pricing: {
+      label: "Plans",
+      title: "Simple and transparent",
+      description: "Start free. Scale when you need it.",
+      forever: "forever",
+      perMonth: "per month",
+      popular: "Popular",
+      ctaFree: "Start for free",
+      ctaPro: "Try Pro",
+      viewMore: "Need more?",
+      viewAllPlans: "See all plans",
+      freeF1: "100 transfers per day", freeF2: "5 concurrent operations", freeF3: "15 GB storage", freeF4: "Google Drive + Dropbox",
+      proF1: "500 transfers per day", proF2: "20 concurrent operations", proF3: "100 GB storage",
+      proF4: "Scheduled tasks", proF5: "Email notifications", proF6: "Full history"
     },
     cta: {
-      title: "The future of your files starts today.",
-      description: "Join over 85,000 professionals who have already optimized their digital ecosystem with TERA.",
-      createAccount: "Create my free account", talkToSales: "Talk to sales"
+      title: "Your files deserve a better flow.",
+      description: "Start free today. No credit card. Connect your accounts and make your first transfer in under 2 minutes.",
+      button: "Create free account"
     },
     footer: {
-      description: "Elevating file management to a new dimension of intelligence and security.",
-      platform: "Platform", legal: "Legal", privacy: "Privacy", terms: "Terms",
-      cookies: "Cookies", compliance: "Compliance",
-      rights: "Copyright © 2026 TERA. All rights reserved.",
-      status: "System Status", back: "Back"
+      description: "The simplest way to move and sync files between your cloud services.",
+      platform: "Platform", legal: "Legal", privacy: "Privacy", terms: "Terms", cookies: "Cookies",
+      rights: "© 2026 TERA. All rights reserved.",
+      operational: "Systems operational"
     },
     auth: { login: { noAccount: "Don't have an account?", signUpNow: "Sign Up Now" }, signup: { hasAccount: "Already have an account?", signIn: "Sign in" } },
     privacy: {
@@ -1108,60 +1181,100 @@ const ptTranslations = {
   forgotPasswordSubmitButton: "Enviar link",
   forgotPasswordBackToLogin: "Voltar ao login",
   landing: {
+    nav: { howItWorks: "Como funciona", features: "Funcionalidades", pricing: "Preços", security: "Segurança", login: "Entrar", startFree: "Começar grátis" },
     hero: {
-      title: "Mova e proteja seus arquivos com", subtitle: "Inteligência Real",
-      description: "TERA é a ponte entre suas nuvens. Transfira arquivos entre plataformas, agende backups automáticos e conecte suas ferramentas favoritas em segundos.",
-      ctaButton: "Comece grátis hoje", demoButton: "Ver demonstração",
-      integrationsLabel: "Melhores Integrações", syncBadge: "Auto-Sincronização",
-      transferLabel: "Transferência", backupLabel: "Backup", completed: "Concluído",
-      scanning: "Escaneando", freedLabel: "Liberado", duplicatesLabel: "Duplicados",
-      securityBadge: "Segurança Ativa", encryptionLabel: "Criptografia de 256 bits"
+      badge: "Conecte suas nuvens em segundos",
+      title: "Mova seus arquivos entre nuvens",
+      highlight: "sem fricção",
+      description: "TERA conecta seus serviços na nuvem para transferir, sincronizar e fazer backup dos seus arquivos automaticamente. Sem downloads. Sem complicações.",
+      cta: "Comece grátis hoje",
+      howItWorks: "Como funciona",
+      noCard: "Sem cartão de crédito",
+      encryption: "Criptografia AES-256",
+      instantTransfer: "Transferência imediata"
     },
-    features: { title: "Produtos" },
-    stats: { filesMoved: "Arquivos Movidos", activeUsers: "Usuários Ativos", guaranteedUptime: "Uptime Garantido", bankingSecurity: "Segurança Bancária" },
-    benefits: {
-      badge: "Produtos", title: "Todo seu conteúdo, conectado",
-      description: "Simplificamos o complexo. Automatizamos o tedioso. Protegemos o que importa.",
-      learnMore: "Saiba mais",
-      feature1: { title: "Transferências Multi-nuvem", description: "Mova gigabytes entre Dropbox, Drive e OneDrive com um clique. Sem downloads necessários." },
-      feature2: { title: "Backups Inteligentes", description: "Agende backups automáticos entre nuvens para que seus arquivos importantes sempre tenham uma cópia." },
-      feature3: { title: "Mais de 50 Integrações", description: "Conecte Slack, Teams, Notion e todas as suas ferramentas de trabalho para centralizar seu ecossistema digital." }
+    dragdrop: {
+      badge: "Nova funcionalidade",
+      title: "Arraste e solte.",
+      highlight: "Simples assim.",
+      description: "No explorador de arquivos do TERA você pode ver suas nuvens lado a lado e arrastar arquivos diretamente de uma para outra. Sem formulários, sem etapas extras — só arrasta e pronto.",
+      f1: "Dois painéis simultâneos: origem e destino",
+      f2: "Arraste arquivos individuais ou selecione vários",
+      f3: "A transferência começa instantaneamente",
+      f4: "Compatível com pastas e múltiplos formatos",
+      cta: "Experimentar grátis"
     },
-    ai: {
-      title: "Você define as regras,", subtitle: "TERA executa para você.",
-      description: "Configure fluxos poderosos em segundos. TERA monitora seus arquivos 24h/7 e cuida das tarefas repetitivas para que você não precise.",
-      panelTitle: "Painel de Automação", panelStatus: "Sistema Inteligente Ativo",
-      aiMessage: "\"Detectei 150 novos arquivos no seu Dropbox. Devo iniciar a migração automática para sua pasta Projetos 2024 no Google Drive?\"",
-      userResponse: "\"Sim, por favor. E remova duplicados com mais de 6 meses.\"",
-      progressLabel: "Migração em andamento",
-      suggestions: {
-        suggestion1: "Mover meus arquivos do Dropbox para o Google Drive",
-        suggestion2: "Criar backup das minhas fotos no OneDrive",
-        suggestion3: "Quais nuvens tenho integradas?",
-        suggestion4: "Transferir a pasta Projetos para minha conta Box",
-        suggestion5: "Sincronizar minha pasta Notion com meu Drive"
-      }
+    integrations: { label: "Integrações disponíveis", comingSoon: "+ mais em breve" },
+    howItWorks: {
+      label: "Processo",
+      title: "Três passos. Pronto.",
+      step1Title: "Conecte suas contas",
+      step1Desc: "Vincule seu Google Drive e Dropbox em segundos com OAuth seguro. Sem senhas armazenadas.",
+      step2Title: "Configure a transferência",
+      step2Desc: "Cole um link do Drive ou Dropbox, escolha o destino e personalize as opções.",
+      step3Title: "TERA faz por você",
+      step3Desc: "A transferência roda na nuvem. Você recebe um e-mail quando termina e o histórico fica salvo."
+    },
+    features: {
+      label: "Funcionalidades",
+      title: "Tudo que você precisa, nada que não",
+      description: "Projetado para fazer uma coisa muito bem: mover arquivos entre nuvens sem que você precise pensar nisso.",
+      f1Title: "Transferências Multi-nuvem", f1Desc: "Copie arquivos e pastas inteiras entre seus serviços na nuvem com um clique. Sem baixar nada.",
+      f2Title: "Sincronização Automática", f2Desc: "Agende tarefas para manter suas pastas sincronizadas entre nuvens. Diário, semanal ou quando quiser.",
+      f3Title: "Histórico de Versões", f3Desc: "Cada arquivo transferido fica registrado com sua versão. Restaure qualquer estado anterior em segundos.",
+      f4Title: "Share Inbox", f4Desc: "Receba arquivos compartilhados por qualquer pessoa e envie diretamente para sua nuvem favorita.",
+      f5Title: "Notificações por E-mail", f5Desc: "Avisamos quando uma transferência termina, falha ou precisa de atenção. Nunca perca nada.",
+      f6Title: "Tokens Criptografados AES-256", f6Desc: "Suas credenciais do Google Drive e Dropbox são armazenadas com criptografia AES-256-GCM."
+    },
+    tasks: {
+      badge: "Sincronização automática · PRO",
+      title: "Configure uma vez.",
+      highlight: "Esqueça.",
+      description: "Crie tarefas programadas para que o TERA sincronize suas pastas automaticamente. Diário, semanal ou o horário que você escolher. Arquivos novos ou modificados se transferem sozinhos.",
+      f1: "Sincronização incremental (só o que mudou)",
+      f2: "Detecção de arquivos novos e modificados",
+      f3: "Notificação por e-mail ao concluir ou em erros",
+      f4: "Histórico de cada execução com estatísticas",
+      cta: "Criar minha primeira tarefa"
     },
     security: {
-      badge: "Segurança Inegociável", title: "Dormir tranquilo faz parte do plano",
-      description: "Não cortamos cantos na segurança. TERA usa os mesmos protocolos de instituições financeiras globais.",
-      whitepaperButton: "Leia nosso Whitepaper de Segurança",
-      aesTitle: "AES-256", aesDesc: "Criptografia militar para cada bit de informação.",
-      zeroKnowledgeTitle: "Zero Knowledge", zeroKnowledgeDesc: "Suas chaves são só suas. Nem nós podemos ver seus arquivos.",
-      auditTitle: "Auditoria Real", auditDesc: "Logs detalhados de cada movimentação para seu controle total.",
-      syncTitle: "Sincronização", syncDesc: "Suas nuvens sempre em harmonia, protegidas pelo nosso firewall inteligente."
+      label: "Segurança",
+      title: "Seus arquivos são seus. Nós só os movemos.",
+      description: "O TERA age como intermediário autorizado entre suas nuvens. Nunca armazenamos o conteúdo dos seus arquivos — só executamos as operações que você configura.",
+      card1Title: "AES-256-GCM", card1Desc: "Suas credenciais de acesso são criptografadas com o padrão militar antes de serem salvas.",
+      card2Title: "OAuth Seguro", card2Desc: "Nunca armazenamos seu usuário ou senha. Só tokens OAuth com as permissões mínimas necessárias.",
+      card3Title: "Registro de operações", card3Desc: "Cada transferência fica registrada com data, origem, destino e resultado.",
+      card4Title: "Permissões mínimas", card4Desc: "O TERA solicita apenas as permissões estritamente necessárias para operar em suas contas.",
+      p1: "Tokens OAuth criptografados com AES-256-GCM",
+      p2: "Conexão HTTPS em toda a plataforma",
+      p3: "Nunca salvamos o conteúdo dos seus arquivos",
+      p4: "Você pode revogar o acesso a qualquer momento"
+    },
+    pricing: {
+      label: "Planos",
+      title: "Simples e transparente",
+      description: "Comece grátis. Escale quando precisar.",
+      forever: "para sempre",
+      perMonth: "por mês",
+      popular: "Popular",
+      ctaFree: "Começar grátis",
+      ctaPro: "Testar Pro",
+      viewMore: "Precisa de mais?",
+      viewAllPlans: "Ver todos os planos",
+      freeF1: "100 transferências por dia", freeF2: "5 operações simultâneas", freeF3: "15 GB de armazenamento", freeF4: "Google Drive + Dropbox",
+      proF1: "500 transferências por dia", proF2: "20 operações simultâneas", proF3: "100 GB de armazenamento",
+      proF4: "Tarefas programadas", proF5: "Notificações por e-mail", proF6: "Histórico completo"
     },
     cta: {
-      title: "O futuro dos seus arquivos começa hoje.",
-      description: "Junte-se a mais de 85.000 profissionais que já otimizaram seu ecossistema digital com TERA.",
-      createAccount: "Criar minha conta gratuita", talkToSales: "Falar com vendas"
+      title: "Seus arquivos merecem um fluxo melhor.",
+      description: "Comece grátis hoje. Sem cartão de crédito. Conecte suas contas e faça sua primeira transferência em menos de 2 minutos.",
+      button: "Criar conta grátis"
     },
     footer: {
-      description: "Elevando o gerenciamento de arquivos a uma nova dimensão de inteligência e segurança.",
-      platform: "Plataforma", legal: "Legal", privacy: "Privacidade", terms: "Termos",
-      cookies: "Cookies", compliance: "Conformidade",
-      rights: "Copyright © 2026 TERA. Todos os direitos reservados.",
-      status: "Status do Sistema", back: "Voltar"
+      description: "A forma mais simples de mover e sincronizar arquivos entre seus serviços na nuvem.",
+      platform: "Plataforma", legal: "Legal", privacy: "Privacidade", terms: "Termos", cookies: "Cookies",
+      rights: "© 2026 TERA. Todos os direitos reservados.",
+      operational: "Sistemas operacionais"
     },
     auth: { login: { noAccount: "Não tem uma conta?", signUpNow: "Cadastre-se" }, signup: { hasAccount: "Já tem uma conta?", signIn: "Entrar" } },
     privacy: {
