@@ -1,63 +1,84 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, Shield, Lock, Eye, Database, UserCheck, Bell, ExternalLink, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Bell, ExternalLink, ChevronRight, Globe } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const LAST_UPDATED = "18 de junio de 2025";
-const LAST_UPDATED_EN = "June 18, 2025";
+type Lang = "es" | "en" | "pt";
+
+const LAST_UPDATED: Record<Lang, string> = {
+  es: "18 de junio de 2025",
+  en: "June 18, 2025",
+  pt: "18 de junho de 2025",
+};
 const CONTACT_EMAIL = "privacy@mytera.app";
 const APP_URL = "https://mytera.app";
 
-const SECTIONS_ES = [
-  { id: "intro",       title: "Introducción" },
-  { id: "quienes",     title: "Quiénes somos" },
-  { id: "recopilamos", title: "Información que recopilamos" },
-  { id: "usamos",      title: "Cómo usamos tu información" },
-  { id: "seguridad",   title: "Almacenamiento y seguridad" },
-  { id: "compartimos", title: "Compartición de datos" },
-  { id: "terceros",    title: "Servicios de terceros" },
-  { id: "derechos",    title: "Tus derechos" },
-  { id: "cookies",     title: "Cookies y rastreo" },
-  { id: "menores",     title: "Menores de edad" },
-  { id: "internac",    title: "Transferencias internacionales" },
-  { id: "cambios",     title: "Cambios en esta política" },
-  { id: "gdpr",        title: "Base legal (GDPR)" },
-  { id: "contacto",    title: "Contacto" },
-  { id: "ley",         title: "Ley aplicable" },
-];
-
-const SECTIONS_EN = [
-  { id: "intro",       title: "Introduction" },
-  { id: "quienes",     title: "Who we are" },
-  { id: "recopilamos", title: "Information we collect" },
-  { id: "usamos",      title: "How we use your info" },
-  { id: "seguridad",   title: "Storage and security" },
-  { id: "compartimos", title: "Data sharing" },
-  { id: "terceros",    title: "Third-party services" },
-  { id: "derechos",    title: "Your rights" },
-  { id: "cookies",     title: "Cookies and tracking" },
-  { id: "menores",     title: "Minors" },
-  { id: "internac",    title: "International transfers" },
-  { id: "cambios",     title: "Policy changes" },
-  { id: "gdpr",        title: "Legal basis (GDPR)" },
-  { id: "contacto",    title: "Contact" },
-  { id: "ley",         title: "Applicable law" },
-];
+const SECTIONS: Record<Lang, { id: string; title: string }[]> = {
+  es: [
+    { id: "intro",       title: "Introducción" },
+    { id: "quienes",     title: "Quiénes somos" },
+    { id: "recopilamos", title: "Información que recopilamos" },
+    { id: "usamos",      title: "Cómo usamos tu información" },
+    { id: "seguridad",   title: "Almacenamiento y seguridad" },
+    { id: "compartimos", title: "Compartición de datos" },
+    { id: "terceros",    title: "Servicios de terceros" },
+    { id: "derechos",    title: "Tus derechos" },
+    { id: "cookies",     title: "Cookies y rastreo" },
+    { id: "menores",     title: "Menores de edad" },
+    { id: "internac",    title: "Transferencias internacionales" },
+    { id: "cambios",     title: "Cambios en esta política" },
+    { id: "gdpr",        title: "Base legal (GDPR)" },
+    { id: "contacto",    title: "Contacto" },
+    { id: "ley",         title: "Ley aplicable" },
+  ],
+  en: [
+    { id: "intro",       title: "Introduction" },
+    { id: "quienes",     title: "Who we are" },
+    { id: "recopilamos", title: "Information we collect" },
+    { id: "usamos",      title: "How we use your info" },
+    { id: "seguridad",   title: "Storage and security" },
+    { id: "compartimos", title: "Data sharing" },
+    { id: "terceros",    title: "Third-party services" },
+    { id: "derechos",    title: "Your rights" },
+    { id: "cookies",     title: "Cookies and tracking" },
+    { id: "menores",     title: "Minors" },
+    { id: "internac",    title: "International transfers" },
+    { id: "cambios",     title: "Policy changes" },
+    { id: "gdpr",        title: "Legal basis (GDPR)" },
+    { id: "contacto",    title: "Contact" },
+    { id: "ley",         title: "Applicable law" },
+  ],
+  pt: [
+    { id: "intro",       title: "Introdução" },
+    { id: "quienes",     title: "Quem somos" },
+    { id: "recopilamos", title: "Informações que coletamos" },
+    { id: "usamos",      title: "Como usamos suas informações" },
+    { id: "seguridad",   title: "Armazenamento e segurança" },
+    { id: "compartimos", title: "Compartilhamento de dados" },
+    { id: "terceros",    title: "Serviços de terceiros" },
+    { id: "derechos",    title: "Seus direitos" },
+    { id: "cookies",     title: "Cookies e rastreamento" },
+    { id: "menores",     title: "Menores de idade" },
+    { id: "internac",    title: "Transferências internacionais" },
+    { id: "cambios",     title: "Alterações nesta política" },
+    { id: "gdpr",        title: "Base legal (LGPD/GDPR)" },
+    { id: "contacto",    title: "Contato" },
+    { id: "ley",         title: "Lei aplicável" },
+  ],
+};
 
 export default function PrivacyPolicy() {
   const { i18n } = useTranslation();
-  const [lang, setLang] = useState<"es" | "en">(
-    (i18n.language?.startsWith("en") ? "en" : "es") as "es" | "en"
-  );
+  const raw = i18n.language?.startsWith("pt") ? "pt" : i18n.language?.startsWith("en") ? "en" : "es";
+  const [lang, setLang] = useState<Lang>(raw as Lang);
   const [activeSection, setActiveSection] = useState("intro");
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const sections = lang === "es" ? SECTIONS_ES : SECTIONS_EN;
+  const sections = SECTIONS[lang];
 
-  const toggleLang = () => {
-    const next = lang === "es" ? "en" : "es";
-    setLang(next);
-    i18n.changeLanguage(next);
+  const setLanguage = (l: Lang) => {
+    setLang(l);
+    i18n.changeLanguage(l);
   };
 
   useEffect(() => {
@@ -76,37 +97,74 @@ export default function PrivacyPolicy() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const es = lang === "es";
+  const pageTitle   = { es: "Política de Privacidad", en: "Privacy Policy", pt: "Política de Privacidade" }[lang];
+  const contentLabel = { es: "Contenido", en: "Contents", pt: "Conteúdo" }[lang];
+  const backLabel    = { es: "Volver", en: "Back", pt: "Voltar" }[lang];
+
+  const subprocesadores = {
+    es: [
+      ["Supabase", "Autenticación y base de datos", "Email, hash de contraseña, datos de sesión"],
+      ["Render", "Hosting de servidor", "Logs técnicos anonimizados"],
+      ["Resend", "Emails transaccionales", "Dirección de email únicamente"],
+      ["Google (OAuth)", "Integración con Google Drive", "Token OAuth mínimo necesario"],
+      ["Dropbox (OAuth)", "Integración con Dropbox", "Token OAuth mínimo necesario"],
+      ["Microsoft (OAuth)", "Integración con OneDrive", "Token OAuth mínimo necesario"],
+      ["Box (OAuth)", "Integración con Box", "Token OAuth mínimo necesario"],
+      ["Amazon AWS", "Integración con S3", "Credenciales IAM cifradas"],
+    ],
+    en: [
+      ["Supabase", "Authentication and database", "Email, password hash, session data"],
+      ["Render", "Server hosting", "Anonymized technical logs"],
+      ["Resend", "Transactional emails", "Email address only"],
+      ["Google (OAuth)", "Google Drive integration", "Minimum necessary OAuth token"],
+      ["Dropbox (OAuth)", "Dropbox integration", "Minimum necessary OAuth token"],
+      ["Microsoft (OAuth)", "OneDrive integration", "Minimum necessary OAuth token"],
+      ["Box (OAuth)", "Box integration", "Minimum necessary OAuth token"],
+      ["Amazon AWS", "S3 integration", "Encrypted IAM credentials"],
+    ],
+    pt: [
+      ["Supabase", "Autenticação e banco de dados", "Email, hash de senha, dados de sessão"],
+      ["Render", "Hospedagem do servidor", "Logs técnicos anonimizados"],
+      ["Resend", "Emails transacionais", "Endereço de email apenas"],
+      ["Google (OAuth)", "Integração com Google Drive", "Token OAuth mínimo necessário"],
+      ["Dropbox (OAuth)", "Integração com Dropbox", "Token OAuth mínimo necessário"],
+      ["Microsoft (OAuth)", "Integração com OneDrive", "Token OAuth mínimo necessário"],
+      ["Box (OAuth)", "Integração com Box", "Token OAuth mínimo necessário"],
+      ["Amazon AWS", "Integração com S3", "Credenciais IAM criptografadas"],
+    ],
+  }[lang];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/">
             <button className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium">
-              <ArrowLeft className="w-4 h-4" />
-              {es ? "Volver" : "Back"}
+              <ArrowLeft className="w-4 h-4" /> {backLabel}
             </button>
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-lg font-black text-[#0061D5] tracking-tight">TERA</span>
             <span className="text-slate-300">·</span>
-            <span className="text-sm text-slate-500 font-medium">
-              {es ? "Política de Privacidad" : "Privacy Policy"}
-            </span>
+            <span className="text-sm text-slate-500 font-medium hidden sm:block">{pageTitle}</span>
           </div>
-          <button
-            onClick={toggleLang}
-            className="flex items-center gap-2 text-sm font-semibold text-[#0061D5] hover:text-blue-700 border border-[#0061D5]/30 hover:border-[#0061D5] px-3 py-1.5 rounded-lg transition-all"
-          >
-            <Globe className="w-4 h-4" />
-            {lang === "es" ? "English" : "Español"}
-          </button>
+          {/* 3-lang selector */}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-bold">
+            {(["es", "en", "pt"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLanguage(l)}
+                className={`px-3 py-2 transition-colors ${lang === l ? "bg-[#0061D5] text-white" : "text-slate-500 hover:bg-slate-50"}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <div className="bg-gradient-to-br from-[#0061D5] via-blue-600 to-blue-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="max-w-3xl">
@@ -115,55 +173,35 @@ export default function PrivacyPolicy() {
                 <Shield className="w-4 h-4" />
               </div>
               <span className="text-sm font-bold text-blue-200 uppercase tracking-widest">
-                {es ? "Privacidad" : "Privacy"}
+                {{ es: "Privacidad", en: "Privacy", pt: "Privacidade" }[lang]}
               </span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">
-              {es ? "Política de Privacidad" : "Privacy Policy"}
-            </h1>
+            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">{pageTitle}</h1>
             <p className="text-lg text-blue-100 mb-6 leading-relaxed max-w-2xl">
-              {es
-                ? "En TERA, tu privacidad no es una característica — es una responsabilidad. Este documento explica con total transparencia qué datos recopilamos, cómo los usamos y cómo los protegemos."
-                : "At TERA, your privacy is not a feature — it's a responsibility. This document transparently explains what data we collect, how we use it, and how we protect it."}
+              {{ es: "En TERA, tu privacidad no es una característica — es una responsabilidad. Este documento explica con total transparencia qué datos recopilamos, cómo los usamos y cómo los protegemos.", en: "At TERA, your privacy is not a feature — it's a responsibility. This document transparently explains what data we collect, how we use it, and how we protect it.", pt: "Na TERA, sua privacidade não é uma funcionalidade — é uma responsabilidade. Este documento explica com total transparência quais dados coletamos, como os usamos e como os protegemos." }[lang]}
             </p>
             <div className="flex flex-wrap gap-4 text-sm text-blue-200">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                {es ? "Última actualización" : "Last updated"}: {es ? LAST_UPDATED : LAST_UPDATED_EN}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-blue-300 rounded-full"></span>
-                {es ? "Versión 2.0" : "Version 2.0"}
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                {{ es: "Última actualización", en: "Last updated", pt: "Última atualização" }[lang]}: {LAST_UPDATED[lang]}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Layout ── */}
+      {/* Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex gap-12">
-
-          {/* Sidebar TOC */}
+          {/* TOC */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                {es ? "Contenido" : "Contents"}
-              </p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{contentLabel}</p>
               <nav className="space-y-1">
                 {sections.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => scrollTo(s.id)}
-                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
-                      activeSection === s.id
-                        ? "bg-blue-50 text-[#0061D5] font-semibold"
-                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span className={`text-xs font-bold w-5 text-right flex-shrink-0 ${activeSection === s.id ? "text-[#0061D5]" : "text-slate-300"}`}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                  <button key={s.id} onClick={() => scrollTo(s.id)}
+                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${activeSection === s.id ? "bg-blue-50 text-[#0061D5] font-semibold" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"}`}>
+                    <span className={`text-xs font-black w-5 text-right flex-shrink-0 ${activeSection === s.id ? "text-[#0061D5]" : "text-slate-300"}`}>{String(i + 1).padStart(2, "0")}</span>
                     <span className="truncate">{s.title}</span>
                     {activeSection === s.id && <ChevronRight className="w-3 h-3 ml-auto flex-shrink-0" />}
                   </button>
@@ -172,658 +210,289 @@ export default function PrivacyPolicy() {
             </div>
           </aside>
 
-          {/* Content */}
+          {/* Main */}
           <main ref={contentRef} className="flex-1 min-w-0 space-y-2">
 
-            {/* 01 — Introducción */}
-            <Section id="intro" number="01" icon={<Shield className="w-5 h-5" />} title={es ? "Introducción" : "Introduction"}>
-              {es ? (
-                <>
-                  <P>En <strong>TERA</strong> nos comprometemos con la privacidad y seguridad de nuestros usuarios. Esta Política de Privacidad describe de forma detallada y transparente cómo recopilamos, utilizamos, almacenamos, protegemos y compartimos la información personal cuando utilizás nuestra plataforma de transferencia y gestión de archivos entre servicios de almacenamiento en la nube.</P>
-                  <P>Al registrarte y utilizar TERA, aceptás las prácticas descritas en este documento. Si en algún momento no estás de acuerdo con alguna de estas prácticas, tenés el derecho de dejar de utilizar el servicio y solicitar la eliminación de tu cuenta.</P>
-                  <Callout color="blue" icon="💡">
-                    Este documento está redactado en lenguaje claro y accesible. Si tenés alguna duda, podés contactarnos directamente en <strong>{CONTACT_EMAIL}</strong>.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>At <strong>TERA</strong> we are committed to the privacy and security of our users. This Privacy Policy describes in detail and transparently how we collect, use, store, protect, and share personal information when you use our cloud file transfer and management platform.</P>
-                  <P>By registering and using TERA, you accept the practices described in this document. If at any point you disagree with any of these practices, you have the right to stop using the service and request deletion of your account.</P>
-                  <Callout color="blue" icon="💡">
-                    This document is written in plain, accessible language. If you have any questions, you can contact us directly at <strong>{CONTACT_EMAIL}</strong>.
-                  </Callout>
-                </>
-              )}
+            {/* 01 */}
+            <Section id="intro" number="01" icon={<Shield className="w-5 h-5" />} title={sections[0].title}>
+              {lang === "es" && <>
+                <P>En <strong>TERA</strong> nos comprometemos con la privacidad de nuestros usuarios. Esta Política describe cómo recopilamos, utilizamos, almacenamos y protegemos tu información personal al usar nuestra plataforma de transferencia de archivos entre nubes.</P>
+                <P>Al registrarte y utilizar TERA, aceptás las prácticas descritas aquí. Si no estás de acuerdo, tenés el derecho de dejar de usar el servicio y solicitar la eliminación de tu cuenta.</P>
+                <Callout color="blue" icon="💡">Escrito en lenguaje claro. Dudas: <strong>{CONTACT_EMAIL}</strong></Callout>
+              </>}
+              {lang === "en" && <>
+                <P>At <strong>TERA</strong> we are committed to our users' privacy. This Policy describes how we collect, use, store and protect your personal information when using our cloud file transfer platform.</P>
+                <P>By registering and using TERA, you accept the practices described here. If you disagree, you have the right to stop using the service and request account deletion.</P>
+                <Callout color="blue" icon="💡">Written in plain language. Questions: <strong>{CONTACT_EMAIL}</strong></Callout>
+              </>}
+              {lang === "pt" && <>
+                <P>Na <strong>TERA</strong> nos comprometemos com a privacidade dos nossos usuários. Esta Política descreve como coletamos, usamos, armazenamos e protegemos suas informações pessoais ao usar nossa plataforma de transferência de arquivos entre nuvens.</P>
+                <P>Ao se cadastrar e usar a TERA, você aceita as práticas descritas aqui. Se não concordar, você tem o direito de parar de usar o serviço e solicitar a exclusão da sua conta.</P>
+                <Callout color="blue" icon="💡">Escrito em linguagem clara. Dúvidas: <strong>{CONTACT_EMAIL}</strong></Callout>
+              </>}
             </Section>
 
-            {/* 02 — Quiénes somos */}
-            <Section id="quienes" number="02" icon={<Eye className="w-5 h-5" />} title={es ? "Quiénes somos" : "Who we are"}>
-              {es ? (
-                <>
-                  <P><strong>TERA</strong> es una plataforma de software desarrollada para facilitar la transferencia, sincronización y gestión de archivos entre múltiples servicios de almacenamiento en la nube (Google Drive, Dropbox, OneDrive, Box, Amazon S3, entre otros).</P>
-                  <InfoGrid items={[
-                    { label: "Nombre comercial", value: "TERA" },
-                    { label: "Sitio web", value: APP_URL },
-                    { label: "Contacto de privacidad", value: CONTACT_EMAIL },
-                    { label: "País de operación", value: "Argentina" },
-                  ]} />
-                  <P>TERA actúa como intermediario técnico autorizado entre tus cuentas de almacenamiento en la nube. <strong>No somos propietarios de tus archivos.</strong> No vendemos tus datos. No los usamos para publicidad. Solo los procesamos para ejecutar las operaciones que vos configurás.</P>
-                </>
-              ) : (
-                <>
-                  <P><strong>TERA</strong> is a software platform developed to facilitate the transfer, synchronization, and management of files between multiple cloud storage services (Google Drive, Dropbox, OneDrive, Box, Amazon S3, among others).</P>
-                  <InfoGrid items={[
-                    { label: "Trade name", value: "TERA" },
-                    { label: "Website", value: APP_URL },
-                    { label: "Privacy contact", value: CONTACT_EMAIL },
-                    { label: "Country of operation", value: "Argentina" },
-                  ]} />
-                  <P>TERA acts as an authorized technical intermediary between your cloud storage accounts. <strong>We do not own your files.</strong> We do not sell your data. We do not use it for advertising. We only process it to execute the operations you configure.</P>
-                </>
-              )}
+            {/* 02 */}
+            <Section id="quienes" number="02" icon={<Eye className="w-5 h-5" />} title={sections[1].title}>
+              {lang === "es" && <>
+                <P><strong>TERA</strong> es una plataforma SaaS para transferir y sincronizar archivos entre Google Drive, Dropbox, OneDrive, Box, Amazon S3 y otros servicios de almacenamiento en la nube.</P>
+                <InfoGrid items={[{ label: "Nombre comercial", value: "TERA" }, { label: "Sitio web", value: APP_URL }, { label: "Contacto", value: CONTACT_EMAIL }, { label: "País", value: "Argentina" }]} />
+                <P>Actuamos como intermediario técnico autorizado. <strong>No somos propietarios de tus archivos.</strong> No vendemos ni usamos tus datos para publicidad.</P>
+              </>}
+              {lang === "en" && <>
+                <P><strong>TERA</strong> is a SaaS platform for transferring and syncing files between Google Drive, Dropbox, OneDrive, Box, Amazon S3 and other cloud storage services.</P>
+                <InfoGrid items={[{ label: "Trade name", value: "TERA" }, { label: "Website", value: APP_URL }, { label: "Contact", value: CONTACT_EMAIL }, { label: "Country", value: "Argentina" }]} />
+                <P>We act as an authorized technical intermediary. <strong>We do not own your files.</strong> We do not sell or use your data for advertising.</P>
+              </>}
+              {lang === "pt" && <>
+                <P><strong>TERA</strong> é uma plataforma SaaS para transferir e sincronizar arquivos entre Google Drive, Dropbox, OneDrive, Box, Amazon S3 e outros serviços de armazenamento em nuvem.</P>
+                <InfoGrid items={[{ label: "Nome comercial", value: "TERA" }, { label: "Site", value: APP_URL }, { label: "Contato", value: CONTACT_EMAIL }, { label: "País", value: "Argentina" }]} />
+                <P>Atuamos como intermediário técnico autorizado. <strong>Não somos proprietários dos seus arquivos.</strong> Não vendemos nem usamos seus dados para publicidade.</P>
+              </>}
             </Section>
 
-            {/* 03 — Información que recopilamos */}
-            <Section id="recopilamos" number="03" icon={<Database className="w-5 h-5" />} title={es ? "Información que recopilamos" : "Information we collect"}>
-              {es ? (
-                <>
-                  <SubHeading>Datos de cuenta</SubHeading>
-                  <BulletList items={[
-                    "Nombre completo y dirección de correo electrónico",
-                    "Contraseña (almacenada con hash seguro bcrypt, nunca en texto plano)",
-                    "Foto de perfil (opcional, si la proporcionás mediante OAuth)",
-                    "Rol en la plataforma (usuario estándar o administrador)",
-                  ]} />
-
-                  <SubHeading>Datos de uso y operaciones</SubHeading>
-                  <BulletList items={[
-                    "Historial completo de transferencias: origen, destino, archivos procesados, fecha, duración y estado",
-                    "Tareas programadas: nombre, frecuencia, fuente, destino y registros de ejecución",
-                    "Preferencias de configuración y ajustes de la interfaz (incluido idioma seleccionado)",
-                    "Logs de actividad para diagnóstico, soporte técnico y mejora del servicio",
-                    "Información del dispositivo y navegador (tipo, versión, sistema operativo, resolución)",
-                    "Dirección IP de acceso (para seguridad y detección de accesos no autorizados)",
-                  ]} />
-
-                  <SubHeading>Tokens de acceso OAuth y credenciales</SubHeading>
-                  <P>Cuando conectás servicios de terceros, almacenamos de forma cifrada:</P>
-                  <BulletList items={[
-                    "Tokens de acceso temporales (access tokens) para operar en tu nombre",
-                    "Tokens de actualización (refresh tokens) para mantener la conexión activa sin pedirte permiso constantemente",
-                    "Región y configuración de Amazon S3 (si aplicable)",
-                    "Solo los permisos mínimos necesarios para las funciones que solicitaste",
-                  ]} />
-
-                  <Callout color="green" icon="🔒">
-                    Todos los tokens y credenciales se cifran con <strong>AES-256-GCM</strong> antes de guardarse en la base de datos. Nunca los vemos en texto plano ni aparecen en logs del sistema.
-                  </Callout>
-
-                  <SubHeading>Lo que NO recopilamos</SubHeading>
-                  <BulletList items={[
-                    "El contenido de tus archivos (solo accedemos a ellos para ejecutar la operación que pediste)",
-                    "Datos de tarjeta de crédito (procesados directamente por el proveedor de pagos)",
-                    "Información de contacto de personas en tus archivos",
-                    "Datos biométricos de ningún tipo",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <SubHeading>Account data</SubHeading>
-                  <BulletList items={[
-                    "Full name and email address",
-                    "Password (stored with secure bcrypt hash, never in plain text)",
-                    "Profile photo (optional, provided via OAuth)",
-                    "Platform role (standard user or administrator)",
-                  ]} />
-
-                  <SubHeading>Usage data and operations</SubHeading>
-                  <BulletList items={[
-                    "Complete transfer history: source, destination, processed files, date, duration and status",
-                    "Scheduled tasks: name, frequency, source, destination and execution logs",
-                    "Configuration preferences and UI settings (including selected language)",
-                    "Activity logs for diagnostics, technical support and service improvement",
-                    "Device and browser information (type, version, operating system, resolution)",
-                    "Access IP address (for security and unauthorized access detection)",
-                  ]} />
-
-                  <SubHeading>OAuth access tokens and credentials</SubHeading>
-                  <P>When you connect third-party services, we securely store:</P>
-                  <BulletList items={[
-                    "Temporary access tokens to operate on your behalf",
-                    "Refresh tokens to keep the connection active without constantly asking for permission",
-                    "Region and Amazon S3 configuration (if applicable)",
-                    "Only the minimum permissions necessary for the functions you requested",
-                  ]} />
-
-                  <Callout color="green" icon="🔒">
-                    All tokens and credentials are encrypted with <strong>AES-256-GCM</strong> before being stored in the database. We never see them in plain text and they never appear in system logs.
-                  </Callout>
-
-                  <SubHeading>What we do NOT collect</SubHeading>
-                  <BulletList items={[
-                    "The content of your files (we only access them to execute the operation you requested)",
-                    "Credit card data (processed directly by the payment provider)",
-                    "Contact information of people in your files",
-                    "Biometric data of any kind",
-                  ]} />
-                </>
-              )}
+            {/* 03 */}
+            <Section id="recopilamos" number="03" icon={<Database className="w-5 h-5" />} title={sections[2].title}>
+              {lang === "es" && <>
+                <SubHeading>Datos de cuenta</SubHeading>
+                <BulletList items={["Nombre completo y correo electrónico", "Contraseña (hash bcrypt, nunca en texto plano)", "Foto de perfil (opcional, desde OAuth)", "Rol en la plataforma"]} />
+                <SubHeading>Datos de uso</SubHeading>
+                <BulletList items={["Historial de transferencias: origen, destino, archivos, fecha, duración", "Tareas programadas y sus registros de ejecución", "Preferencias de configuración e idioma seleccionado", "Logs de actividad para soporte técnico", "IP de acceso para seguridad"]} />
+                <SubHeading>Tokens OAuth y credenciales</SubHeading>
+                <BulletList items={["Access tokens y refresh tokens de cada servicio conectado", "Credenciales IAM de Amazon S3 (cifradas)", "Solo los permisos mínimos necesarios"]} />
+                <Callout color="green" icon="🔒">Todos los tokens se cifran con <strong>AES-256-GCM</strong> antes de guardarse. Nunca aparecen en logs.</Callout>
+                <SubHeading>Lo que NO recopilamos</SubHeading>
+                <BulletList items={["Contenido de tus archivos", "Datos de tarjeta de crédito", "Datos biométricos"]} />
+              </>}
+              {lang === "en" && <>
+                <SubHeading>Account data</SubHeading>
+                <BulletList items={["Full name and email address", "Password (bcrypt hash, never in plain text)", "Profile photo (optional, from OAuth)", "Platform role"]} />
+                <SubHeading>Usage data</SubHeading>
+                <BulletList items={["Transfer history: source, destination, files, date, duration", "Scheduled tasks and execution logs", "Configuration preferences and selected language", "Activity logs for technical support", "Access IP for security"]} />
+                <SubHeading>OAuth tokens and credentials</SubHeading>
+                <BulletList items={["Access tokens and refresh tokens for each connected service", "Amazon S3 IAM credentials (encrypted)", "Only the minimum necessary permissions"]} />
+                <Callout color="green" icon="🔒">All tokens are encrypted with <strong>AES-256-GCM</strong> before storage. Never appear in logs.</Callout>
+                <SubHeading>What we do NOT collect</SubHeading>
+                <BulletList items={["Content of your files", "Credit card data", "Biometric data"]} />
+              </>}
+              {lang === "pt" && <>
+                <SubHeading>Dados de conta</SubHeading>
+                <BulletList items={["Nome completo e endereço de email", "Senha (hash bcrypt, nunca em texto simples)", "Foto de perfil (opcional, via OAuth)", "Função na plataforma"]} />
+                <SubHeading>Dados de uso</SubHeading>
+                <BulletList items={["Histórico de transferências: origem, destino, arquivos, data, duração", "Tarefas agendadas e seus registros de execução", "Preferências de configuração e idioma selecionado", "Logs de atividade para suporte técnico", "IP de acesso para segurança"]} />
+                <SubHeading>Tokens OAuth e credenciais</SubHeading>
+                <BulletList items={["Tokens de acesso e atualização de cada serviço conectado", "Credenciais IAM do Amazon S3 (criptografadas)", "Apenas as permissões mínimas necessárias"]} />
+                <Callout color="green" icon="🔒">Todos os tokens são criptografados com <strong>AES-256-GCM</strong> antes de serem armazenados. Nunca aparecem em logs.</Callout>
+                <SubHeading>O que NÃO coletamos</SubHeading>
+                <BulletList items={["Conteúdo dos seus arquivos", "Dados de cartão de crédito", "Dados biométricos"]} />
+              </>}
             </Section>
 
-            {/* 04 — Cómo usamos */}
-            <Section id="usamos" number="04" icon={<UserCheck className="w-5 h-5" />} title={es ? "Cómo usamos tu información" : "How we use your information"}>
-              {es ? (
-                <>
-                  <P>Utilizamos la información recopilada <strong>exclusivamente</strong> para los siguientes propósitos:</P>
-                  <BulletList items={[
-                    "Proveer, operar y mejorar los servicios de transferencia y gestión de archivos",
-                    "Autenticar tu identidad y mantener la seguridad de tu cuenta",
-                    "Ejecutar transferencias, copias y sincronizaciones en tu nombre en los servicios que conectaste",
-                    "Enviar notificaciones transaccionales: confirmación de email, restablecimiento de contraseña, alertas de operaciones",
-                    "Mostrar estadísticas e historial de tus propias operaciones en tu panel de control",
-                    "Cumplir con obligaciones legales y prevenir fraudes o abusos",
-                    "Mejorar la experiencia de usuario a través de análisis agregados y anónimos (nunca individuales)",
-                    "Responder a consultas de soporte técnico que nos enviés",
-                  ]} />
-                  <Callout color="yellow" icon="⚠️">
-                    <strong>Nunca</strong> usamos tu información para publicidad dirigida, perfilado comercial, ni la compartimos con anunciantes o brokers de datos.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>We use the collected information <strong>exclusively</strong> for the following purposes:</P>
-                  <BulletList items={[
-                    "Provide, operate and improve file transfer and management services",
-                    "Authenticate your identity and maintain account security",
-                    "Execute transfers, copies and synchronizations on your behalf on connected services",
-                    "Send transactional notifications: email confirmation, password reset, operation alerts",
-                    "Display statistics and history of your own operations in your dashboard",
-                    "Comply with legal obligations and prevent fraud or abuse",
-                    "Improve user experience through aggregated and anonymous analytics (never individual)",
-                    "Respond to technical support inquiries you send us",
-                  ]} />
-                  <Callout color="yellow" icon="⚠️">
-                    We <strong>never</strong> use your information for targeted advertising, commercial profiling, or share it with advertisers or data brokers.
-                  </Callout>
-                </>
-              )}
+            {/* 04 */}
+            <Section id="usamos" number="04" icon={<UserCheck className="w-5 h-5" />} title={sections[3].title}>
+              {lang === "es" && <>
+                <BulletList items={["Proveer y mejorar los servicios de transferencia de archivos", "Autenticar tu identidad y mantener la seguridad de tu cuenta", "Ejecutar transferencias y sincronizaciones en tu nombre", "Enviar notificaciones transaccionales (confirmación de email, alertas de operaciones)", "Mostrar estadísticas e historial en tu panel de control", "Cumplir con obligaciones legales y prevenir fraudes", "Mejorar la UX mediante análisis agregados y anónimos", "Responder a consultas de soporte técnico"]} />
+                <Callout color="yellow" icon="⚠️"><strong>Nunca</strong> usamos tu información para publicidad dirigida ni la compartimos con anunciantes.</Callout>
+              </>}
+              {lang === "en" && <>
+                <BulletList items={["Provide and improve file transfer services", "Authenticate your identity and maintain account security", "Execute transfers and syncs on your behalf", "Send transactional notifications (email confirmation, operation alerts)", "Display statistics and history in your dashboard", "Comply with legal obligations and prevent fraud", "Improve UX through aggregated and anonymous analytics", "Respond to technical support inquiries"]} />
+                <Callout color="yellow" icon="⚠️">We <strong>never</strong> use your information for targeted advertising or share it with advertisers.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <BulletList items={["Fornecer e melhorar os serviços de transferência de arquivos", "Autenticar sua identidade e manter a segurança da conta", "Executar transferências e sincronizações em seu nome", "Enviar notificações transacionais (confirmação de email, alertas de operações)", "Exibir estatísticas e histórico no seu painel de controle", "Cumprir obrigações legais e prevenir fraudes", "Melhorar a UX por meio de análises agregadas e anônimas", "Responder a consultas de suporte técnico"]} />
+                <Callout color="yellow" icon="⚠️"><strong>Nunca</strong> usamos suas informações para publicidade direcionada nem as compartilhamos com anunciantes.</Callout>
+              </>}
             </Section>
 
-            {/* 05 — Almacenamiento y seguridad */}
-            <Section id="seguridad" number="05" icon={<Lock className="w-5 h-5" />} title={es ? "Almacenamiento y seguridad" : "Storage and security"}>
-              {es ? (
-                <>
-                  <SubHeading>Infraestructura técnica</SubHeading>
-                  <BulletList items={[
-                    "Servidores alojados en Render (región US-East), con infraestructura sobre AWS",
-                    "Base de datos PostgreSQL gestionada por Supabase con cifrado en reposo",
-                    "Cifrado AES-256-GCM para todos los tokens OAuth y credenciales sensibles",
-                    "TLS 1.3 para todas las comunicaciones en tránsito (HTTPS obligatorio en toda la plataforma)",
-                    "Autenticación gestionada por Supabase Auth con soporte para JWT seguro",
-                  ]} />
-
-                  <SubHeading>Retención de datos</SubHeading>
-                  <P>Conservamos tus datos mientras tu cuenta esté activa. Al eliminar tu cuenta:</P>
-                  <BulletList items={[
-                    "Tus datos personales (nombre, email) se eliminan dentro de los 30 días",
-                    "Los tokens OAuth de todos los servicios conectados se revocan inmediatamente",
-                    "Los registros de operaciones se anonimizan y se conservan hasta 90 días por razones legales y de auditoría",
-                    "Los archivos en Google Drive, Dropbox, OneDrive, Box, S3 u otros servicios <strong>no se ven afectados</strong>",
-                  ]} />
-
-                  <SubHeading>Acceso interno a los datos</SubHeading>
-                  <BulletList items={[
-                    "Solo el personal técnico necesario puede acceder a datos para soporte o depuración",
-                    "Todo acceso interno queda registrado en logs de auditoría",
-                    "Ningún empleado o colaborador puede ver el contenido de tus archivos",
-                  ]} />
-
-                  <Callout color="green" icon="🛡️">
-                    Implementamos medidas de seguridad técnicas y organizativas acorde con el estado del arte para proteger tu información contra acceso no autorizado, pérdida, destrucción o alteración.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <SubHeading>Technical infrastructure</SubHeading>
-                  <BulletList items={[
-                    "Servers hosted on Render (US-East region), with infrastructure on AWS",
-                    "PostgreSQL database managed by Supabase with encryption at rest",
-                    "AES-256-GCM encryption for all OAuth tokens and sensitive credentials",
-                    "TLS 1.3 for all communications in transit (HTTPS mandatory across the platform)",
-                    "Authentication managed by Supabase Auth with secure JWT support",
-                  ]} />
-
-                  <SubHeading>Data retention</SubHeading>
-                  <P>We retain your data while your account is active. When you delete your account:</P>
-                  <BulletList items={[
-                    "Your personal data (name, email) is deleted within 30 days",
-                    "OAuth tokens for all connected services are immediately revoked",
-                    "Operation records are anonymized and kept for up to 90 days for legal and audit reasons",
-                    "Files in Google Drive, Dropbox, OneDrive, Box, S3 or other services <strong>are not affected</strong>",
-                  ]} />
-
-                  <SubHeading>Internal data access</SubHeading>
-                  <BulletList items={[
-                    "Only necessary technical staff can access data for support or debugging",
-                    "All internal access is recorded in audit logs",
-                    "No employee or collaborator can see the content of your files",
-                  ]} />
-
-                  <Callout color="green" icon="🛡️">
-                    We implement technical and organizational security measures consistent with the state of the art to protect your information against unauthorized access, loss, destruction or alteration.
-                  </Callout>
-                </>
-              )}
+            {/* 05 */}
+            <Section id="seguridad" number="05" icon={<Lock className="w-5 h-5" />} title={sections[4].title}>
+              {lang === "es" && <>
+                <SubHeading>Infraestructura</SubHeading>
+                <BulletList items={["Servidores en Render (AWS us-east-1)", "Base de datos PostgreSQL en Supabase con cifrado en reposo", "AES-256-GCM para tokens OAuth y credenciales sensibles", "TLS 1.3 para todas las comunicaciones (HTTPS obligatorio)", "Autenticación con Supabase Auth y JWT seguro"]} />
+                <SubHeading>Retención de datos</SubHeading>
+                <BulletList items={["Datos personales eliminados en 30 días tras eliminar cuenta", "Tokens OAuth revocados inmediatamente", "Logs de operaciones anonimizados y conservados 90 días por razones legales", "Archivos en Google Drive, Dropbox, etc. no se ven afectados"]} />
+                <Callout color="green" icon="🛡️">Implementamos medidas técnicas y organizativas de última generación para proteger tu información.</Callout>
+              </>}
+              {lang === "en" && <>
+                <SubHeading>Infrastructure</SubHeading>
+                <BulletList items={["Servers on Render (AWS us-east-1)", "PostgreSQL database on Supabase with encryption at rest", "AES-256-GCM for OAuth tokens and sensitive credentials", "TLS 1.3 for all communications (HTTPS mandatory)", "Authentication with Supabase Auth and secure JWT"]} />
+                <SubHeading>Data retention</SubHeading>
+                <BulletList items={["Personal data deleted within 30 days of account deletion", "OAuth tokens immediately revoked", "Operation logs anonymized and kept 90 days for legal reasons", "Files in Google Drive, Dropbox, etc. are not affected"]} />
+                <Callout color="green" icon="🛡️">We implement state-of-the-art technical and organizational measures to protect your information.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <SubHeading>Infraestrutura</SubHeading>
+                <BulletList items={["Servidores na Render (AWS us-east-1)", "Banco de dados PostgreSQL no Supabase com criptografia em repouso", "AES-256-GCM para tokens OAuth e credenciais sensíveis", "TLS 1.3 para todas as comunicações (HTTPS obrigatório)", "Autenticação com Supabase Auth e JWT seguro"]} />
+                <SubHeading>Retenção de dados</SubHeading>
+                <BulletList items={["Dados pessoais excluídos em 30 dias após excluir a conta", "Tokens OAuth revogados imediatamente", "Logs de operações anonimizados e mantidos por 90 dias por razões legais", "Arquivos no Google Drive, Dropbox, etc. não são afetados"]} />
+                <Callout color="green" icon="🛡️">Implementamos medidas técnicas e organizacionais de última geração para proteger suas informações.</Callout>
+              </>}
             </Section>
 
-            {/* 06 — Compartición */}
-            <Section id="compartimos" number="06" icon={<Eye className="w-5 h-5" />} title={es ? "Compartición de datos" : "Data sharing"}>
-              {es ? (
-                <>
-                  <SubHeading>Lo que nunca hacemos</SubHeading>
-                  <BulletList items={[
-                    "Vender, alquilar o intercambiar tu información personal con terceros",
-                    "Compartir tus datos con anunciantes, redes publicitarias o brokers de información",
-                    "Usar tus archivos o su contenido para entrenamiento de modelos de IA",
-                    "Acceder al contenido de tus archivos más allá de lo técnicamente necesario",
-                  ]} />
+            {/* 06 */}
+            <Section id="compartimos" number="06" icon={<Eye className="w-5 h-5" />} title={sections[5].title}>
+              {lang === "es" && <><SubHeading>Lo que nunca hacemos</SubHeading><BulletList items={["Vender o alquilar tu información a terceros", "Compartir datos con anunciantes o brokers", "Usar tus archivos para entrenar IA"]} /></>}
+              {lang === "en" && <><SubHeading>What we never do</SubHeading><BulletList items={["Sell or rent your information to third parties", "Share data with advertisers or brokers", "Use your files to train AI"]} /></>}
+              {lang === "pt" && <><SubHeading>O que nunca fazemos</SubHeading><BulletList items={["Vender ou alugar suas informações a terceiros", "Compartilhar dados com anunciantes ou corretores", "Usar seus arquivos para treinar IA"]} /></>}
 
-                  <SubHeading>Proveedores de servicios (subprocesadores)</SubHeading>
-                  <P>Compartimos datos mínimos y necesarios con los siguientes proveedores de infraestructura, todos sujetos a acuerdos de procesamiento de datos compatibles con GDPR:</P>
-                  <div className="overflow-x-auto mt-4 mb-4">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50">
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200 rounded-tl-lg">Proveedor</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200">Propósito</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200 rounded-tr-lg">Datos compartidos</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          ["Supabase", "Autenticación y base de datos", "Email, hash de contraseña, datos de sesión"],
-                          ["Render", "Hosting de servidor de aplicaciones", "Logs técnicos anonimizados"],
-                          ["Resend", "Envío de emails transaccionales", "Dirección de email únicamente"],
-                          ["Google (OAuth)", "Integración con Google Drive", "Solo el token OAuth mínimo necesario"],
-                          ["Dropbox (OAuth)", "Integración con Dropbox", "Solo el token OAuth mínimo necesario"],
-                          ["Microsoft (OAuth)", "Integración con OneDrive", "Solo el token OAuth mínimo necesario"],
-                          ["Box (OAuth)", "Integración con Box", "Solo el token OAuth mínimo necesario"],
-                          ["Amazon AWS", "Integración con S3", "Credenciales IAM cifradas"],
-                        ].map(([p, pu, d], i) => (
-                          <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 font-medium text-slate-800 border border-slate-200">{p}</td>
-                            <td className="px-4 py-3 text-slate-600 border border-slate-200">{pu}</td>
-                            <td className="px-4 py-3 text-slate-600 border border-slate-200">{d}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <SubHeading>Requerimientos legales</SubHeading>
-                  <P>Podemos divulgar información personal si la ley nos lo exige, en respuesta a procesos legales válidos (orden judicial, requerimiento gubernamental), o cuando sea necesario para proteger los derechos, la propiedad o la seguridad de TERA, sus usuarios o terceros.</P>
-                </>
-              ) : (
-                <>
-                  <SubHeading>What we never do</SubHeading>
-                  <BulletList items={[
-                    "Sell, rent, or exchange your personal information with third parties",
-                    "Share your data with advertisers, advertising networks, or data brokers",
-                    "Use your files or their content for AI model training",
-                    "Access the content of your files beyond what is technically necessary",
-                  ]} />
-
-                  <SubHeading>Service providers (sub-processors)</SubHeading>
-                  <P>We share minimal and necessary data with the following infrastructure providers, all subject to GDPR-compatible data processing agreements:</P>
-                  <div className="overflow-x-auto mt-4 mb-4">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50">
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200">Provider</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200">Purpose</th>
-                          <th className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200">Data shared</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          ["Supabase", "Authentication and database", "Email, password hash, session data"],
-                          ["Render", "Application server hosting", "Anonymized technical logs"],
-                          ["Resend", "Transactional email delivery", "Email address only"],
-                          ["Google (OAuth)", "Google Drive integration", "Minimum necessary OAuth token only"],
-                          ["Dropbox (OAuth)", "Dropbox integration", "Minimum necessary OAuth token only"],
-                          ["Microsoft (OAuth)", "OneDrive integration", "Minimum necessary OAuth token only"],
-                          ["Box (OAuth)", "Box integration", "Minimum necessary OAuth token only"],
-                          ["Amazon AWS", "S3 integration", "Encrypted IAM credentials"],
-                        ].map(([p, pu, d], i) => (
-                          <tr key={i} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                            <td className="px-4 py-3 font-medium text-slate-800 border border-slate-200">{p}</td>
-                            <td className="px-4 py-3 text-slate-600 border border-slate-200">{pu}</td>
-                            <td className="px-4 py-3 text-slate-600 border border-slate-200">{d}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <SubHeading>Legal requirements</SubHeading>
-                  <P>We may disclose personal information if required by law, in response to valid legal processes (court order, government request), or when necessary to protect the rights, property, or safety of TERA, its users, or third parties.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 07 — Terceros */}
-            <Section id="terceros" number="07" icon={<ExternalLink className="w-5 h-5" />} title={es ? "Integración con servicios de terceros" : "Third-party service integrations"}>
-              {es ? (
-                <>
-                  <P>TERA se conecta con servicios de terceros únicamente cuando vos lo autorizás explícitamente. Aquí detallamos cómo funciona cada integración:</P>
-
-                  {[
-                    { name: "Google Drive", scopes: "drive.readonly, drive.file", revoke: "myaccount.google.com/permissions" },
-                    { name: "Dropbox", scopes: "files.content.read, files.content.write, account_info.read", revoke: "dropbox.com/account/applications" },
-                    { name: "Microsoft OneDrive", scopes: "Files.ReadWrite, offline_access", revoke: "account.live.com/consent/Manage" },
-                    { name: "Box", scopes: "root_readwrite", revoke: "app.box.com/master/settings/authorizedapps" },
-                    { name: "Amazon S3", scopes: "Permisos de bucket IAM (definidos por vos)", revoke: "Desde tu consola AWS IAM" },
-                  ].map(({ name, scopes, revoke }) => (
-                    <div key={name} className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                      <h4 className="font-bold text-slate-900 mb-2">{name}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-slate-500">Permisos solicitados:</span><br /><code className="text-xs bg-white px-2 py-0.5 rounded border border-slate-200 text-[#0061D5]">{scopes}</code></div>
-                        <div><span className="text-slate-500">Para revocar el acceso:</span><br /><span className="text-slate-700 text-xs">{revoke}</span></div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <Callout color="blue" icon="ℹ️">
-                    Podés desconectar cualquier servicio en cualquier momento desde <strong>Integraciones</strong> en tu panel de control. Al hacerlo, revocamos el acceso y eliminamos los tokens almacenados inmediatamente.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>TERA connects to third-party services only when you explicitly authorize it. Here we detail how each integration works:</P>
-
-                  {[
-                    { name: "Google Drive", scopes: "drive.readonly, drive.file", revoke: "myaccount.google.com/permissions" },
-                    { name: "Dropbox", scopes: "files.content.read, files.content.write, account_info.read", revoke: "dropbox.com/account/applications" },
-                    { name: "Microsoft OneDrive", scopes: "Files.ReadWrite, offline_access", revoke: "account.live.com/consent/Manage" },
-                    { name: "Box", scopes: "root_readwrite", revoke: "app.box.com/master/settings/authorizedapps" },
-                    { name: "Amazon S3", scopes: "IAM bucket permissions (defined by you)", revoke: "From your AWS IAM console" },
-                  ].map(({ name, scopes, revoke }) => (
-                    <div key={name} className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                      <h4 className="font-bold text-slate-900 mb-2">{name}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        <div><span className="text-slate-500">Requested permissions:</span><br /><code className="text-xs bg-white px-2 py-0.5 rounded border border-slate-200 text-[#0061D5]">{scopes}</code></div>
-                        <div><span className="text-slate-500">To revoke access:</span><br /><span className="text-slate-700 text-xs">{revoke}</span></div>
-                      </div>
-                    </div>
-                  ))}
-
-                  <Callout color="blue" icon="ℹ️">
-                    You can disconnect any service at any time from <strong>Integrations</strong> in your dashboard. When you do, we immediately revoke access and delete stored tokens.
-                  </Callout>
-                </>
-              )}
-            </Section>
-
-            {/* 08 — Derechos */}
-            <Section id="derechos" number="08" icon={<UserCheck className="w-5 h-5" />} title={es ? "Tus derechos sobre tus datos" : "Your rights over your data"}>
-              {es ? (
-                <>
-                  <P>Dependiendo de tu ubicación geográfica, tenés los siguientes derechos sobre tus datos personales:</P>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-                    {[
-                      { icon: "👁️", title: "Acceso", desc: "Solicitá una copia completa de los datos personales que tenemos sobre vos." },
-                      { icon: "✏️", title: "Rectificación", desc: "Corregí datos incorrectos, inexactos o incompletos en tu perfil." },
-                      { icon: "🗑️", title: "Supresión", desc: "Solicitá la eliminación de tu cuenta y todos tus datos personales ('derecho al olvido')." },
-                      { icon: "📦", title: "Portabilidad", desc: "Recibí tus datos en formato estructurado, legible por máquina (JSON/CSV)." },
-                      { icon: "🚫", title: "Oposición", desc: "Oponete al procesamiento de tus datos para determinados fines." },
-                      { icon: "⏸️", title: "Limitación", desc: "Solicitá la restricción temporal del procesamiento de tus datos." },
-                    ].map(({ icon, title, desc }) => (
-                      <div key={title} className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{icon}</span>
-                          <h4 className="font-bold text-slate-900">{title}</h4>
-                        </div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{desc}</p>
-                      </div>
+              <SubHeading>{{ es: "Subprocesadores", en: "Sub-processors", pt: "Subprocessadores" }[lang]}</SubHeading>
+              <div className="overflow-x-auto mt-2">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50">
+                      {[{ es: "Proveedor", en: "Provider", pt: "Fornecedor" }, { es: "Propósito", en: "Purpose", pt: "Finalidade" }, { es: "Datos compartidos", en: "Data shared", pt: "Dados compartilhados" }].map((h) => (
+                        <th key={h[lang]} className="text-left px-4 py-3 font-semibold text-slate-700 border border-slate-200">{h[lang]}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subprocesadores.map(([p, pu, d], i) => (
+                      <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium text-slate-800 border border-slate-200">{p}</td>
+                        <td className="px-4 py-3 text-slate-600 border border-slate-200">{pu}</td>
+                        <td className="px-4 py-3 text-slate-600 border border-slate-200">{d}</td>
+                      </tr>
                     ))}
-                  </div>
-                  <Callout color="blue" icon="📧">
-                    Para ejercer cualquiera de estos derechos, enviá un email a <strong>{CONTACT_EMAIL}</strong> con el asunto "Ejercicio de derechos ARCO" y describiremos cómo proceder. Respondemos en un máximo de <strong>30 días hábiles</strong>.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>Depending on your geographic location, you have the following rights over your personal data:</P>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-                    {[
-                      { icon: "👁️", title: "Access", desc: "Request a complete copy of the personal data we hold about you." },
-                      { icon: "✏️", title: "Rectification", desc: "Correct incorrect, inaccurate or incomplete data in your profile." },
-                      { icon: "🗑️", title: "Erasure", desc: "Request deletion of your account and all personal data ('right to be forgotten')." },
-                      { icon: "📦", title: "Portability", desc: "Receive your data in structured, machine-readable format (JSON/CSV)." },
-                      { icon: "🚫", title: "Objection", desc: "Object to the processing of your data for certain purposes." },
-                      { icon: "⏸️", title: "Restriction", desc: "Request temporary restriction of processing of your data." },
-                    ].map(({ icon, title, desc }) => (
-                      <div key={title} className="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-lg">{icon}</span>
-                          <h4 className="font-bold text-slate-900">{title}</h4>
-                        </div>
-                        <p className="text-sm text-slate-600 leading-relaxed">{desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <Callout color="blue" icon="📧">
-                    To exercise any of these rights, send an email to <strong>{CONTACT_EMAIL}</strong> with the subject "Data rights request" and we will describe how to proceed. We respond within a maximum of <strong>30 business days</strong>.
-                  </Callout>
-                </>
-              )}
+                  </tbody>
+                </table>
+              </div>
             </Section>
 
-            {/* 09 — Cookies */}
-            <Section id="cookies" number="09" icon={<Bell className="w-5 h-5" />} title={es ? "Cookies y tecnologías de rastreo" : "Cookies and tracking technologies"}>
-              {es ? (
-                <>
-                  <P>TERA utiliza un número mínimo de tecnologías de almacenamiento local estrictamente necesarias para el funcionamiento de la plataforma:</P>
-                  <BulletList items={[
-                    "Cookies de sesión autenticada: necesarias para mantener tu sesión iniciada de forma segura (JWT)",
-                    "localStorage: para guardar tu preferencia de idioma y configuración visual de la interfaz",
-                    "Cookies de autenticación de Supabase: para gestión segura de tokens de acceso",
-                  ]} />
-                  <SubHeading>Lo que NO hacemos</SubHeading>
-                  <BulletList items={[
-                    "No utilizamos cookies de publicidad, tracking o retargeting",
-                    "No instalamos cookies de terceros con fines analíticos o de comportamiento",
-                    "No compartimos datos de comportamiento con redes publicitarias o plataformas de análisis externas",
-                    "No usamos píxeles de seguimiento ni fingerprinting",
-                  ]} />
-                  <P>Podés gestionar o eliminar las cookies desde la configuración de tu navegador en cualquier momento. La eliminación de cookies de sesión cerrará tu sesión activa.</P>
-                </>
-              ) : (
-                <>
-                  <P>TERA uses a minimum number of local storage technologies strictly necessary for platform operation:</P>
-                  <BulletList items={[
-                    "Authenticated session cookies: necessary to keep your session logged in securely (JWT)",
-                    "localStorage: to save your language preference and UI configuration",
-                    "Supabase authentication cookies: for secure access token management",
-                  ]} />
-                  <SubHeading>What we do NOT do</SubHeading>
-                  <BulletList items={[
-                    "We do not use advertising, tracking or retargeting cookies",
-                    "We do not install third-party cookies for analytics or behavioral purposes",
-                    "We do not share behavioral data with advertising networks or external analytics platforms",
-                    "We do not use tracking pixels or fingerprinting",
-                  ]} />
-                  <P>You can manage or delete cookies from your browser settings at any time. Deleting session cookies will log you out of your active session.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 10 — Menores */}
-            <Section id="menores" number="10" icon={<Shield className="w-5 h-5" />} title={es ? "Menores de edad" : "Minors"}>
-              {es ? (
-                <>
-                  <P>TERA no está dirigido a personas menores de <strong>16 años</strong>. No recopilamos intencionalmente información personal de menores de esa edad.</P>
-                  <BulletList items={[
-                    "Si tenés menos de 16 años, no podés utilizar nuestros servicios",
-                    "Si sos padre, madre o tutor legal y creés que tu hijo/a nos proporcionó datos personales sin tu consentimiento, contactanos",
-                    "Eliminaremos inmediatamente cualquier dato identificado como perteneciente a un menor de 16 años",
-                    "En algunas jurisdicciones la edad mínima puede ser mayor; consultá la ley local aplicable",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>TERA is not directed at persons under <strong>16 years of age</strong>. We do not intentionally collect personal information from minors.</P>
-                  <BulletList items={[
-                    "If you are under 16 years old, you may not use our services",
-                    "If you are a parent or legal guardian and believe your child provided us with personal data without your consent, contact us",
-                    "We will immediately delete any data identified as belonging to a minor under 16",
-                    "In some jurisdictions the minimum age may be higher; consult applicable local law",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 11 — Internacional */}
-            <Section id="internac" number="11" icon={<Globe className="w-5 h-5" />} title={es ? "Transferencias internacionales de datos" : "International data transfers"}>
-              {es ? (
-                <>
-                  <P>TERA opera desde Argentina y procesa datos en servidores ubicados en <strong>Estados Unidos</strong> (Render / AWS us-east-1) y en la infraestructura de <strong>Supabase</strong> (EU y US).</P>
-                  <P>Al crear una cuenta y usar TERA, consentís expresamente que tus datos sean procesados en estas ubicaciones. Implementamos las siguientes salvaguardas para proteger las transferencias internacionales:</P>
-                  <BulletList items={[
-                    "Cláusulas Contractuales Estándar (SCCs) aprobadas por la Comisión Europea para transferencias desde el EEE",
-                    "Proveedores subprocesadores que cumplen con el Marco de Privacidad de Datos UE-EE.UU. (Data Privacy Framework)",
-                    "Cifrado de extremo a extremo para todos los datos sensibles durante el tránsito",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>TERA operates from Argentina and processes data on servers located in the <strong>United States</strong> (Render / AWS us-east-1) and on <strong>Supabase</strong> infrastructure (EU and US).</P>
-                  <P>By creating an account and using TERA, you expressly consent to your data being processed in these locations. We implement the following safeguards to protect international transfers:</P>
-                  <BulletList items={[
-                    "Standard Contractual Clauses (SCCs) approved by the European Commission for transfers from the EEA",
-                    "Sub-processor providers compliant with the EU-US Data Privacy Framework",
-                    "End-to-end encryption for all sensitive data in transit",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 12 — Cambios */}
-            <Section id="cambios" number="12" icon={<Bell className="w-5 h-5" />} title={es ? "Cambios en esta política" : "Changes to this policy"}>
-              {es ? (
-                <>
-                  <P>Podemos actualizar esta Política de Privacidad periódicamente para reflejar cambios en nuestras prácticas, en la tecnología, en los requisitos legales o en el servicio.</P>
-                  <P>Cuando realicemos cambios significativos:</P>
-                  <BulletList items={[
-                    "Te notificaremos por correo electrónico con al menos 30 días de anticipación",
-                    "Mostraremos un aviso destacado dentro de la aplicación",
-                    "Actualizaremos la fecha de 'Última actualización' al inicio de este documento",
-                    "Mantendremos versiones anteriores accesibles si las solicitás",
-                  ]} />
-                  <P>El uso continuado de TERA después de que los cambios entren en vigor implica la aceptación de la nueva política.</P>
-                </>
-              ) : (
-                <>
-                  <P>We may periodically update this Privacy Policy to reflect changes in our practices, technology, legal requirements, or service.</P>
-                  <P>When we make significant changes:</P>
-                  <BulletList items={[
-                    "We will notify you by email at least 30 days in advance",
-                    "We will display a prominent notice within the application",
-                    "We will update the 'Last updated' date at the beginning of this document",
-                    "We will keep previous versions accessible upon request",
-                  ]} />
-                  <P>Continued use of TERA after changes take effect implies acceptance of the new policy.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 13 — GDPR */}
-            <Section id="gdpr" number="13" icon={<Shield className="w-5 h-5" />} title={es ? "Base legal para el procesamiento (GDPR)" : "Legal basis for processing (GDPR)"}>
-              {es ? (
-                <>
-                  <P>Para usuarios en el Espacio Económico Europeo, procesamos tus datos bajo las siguientes bases legales del Artículo 6 del GDPR:</P>
-                  <BulletList items={[
-                    "<strong>Ejecución de contrato (Art. 6.1.b):</strong> para proveer los servicios que solicitaste al registrarte",
-                    "<strong>Intereses legítimos (Art. 6.1.f):</strong> para mejorar nuestros servicios, garantizar la seguridad y prevenir fraudes",
-                    "<strong>Cumplimiento legal (Art. 6.1.c):</strong> cuando la ley nos requiere conservar o proporcionar información",
-                    "<strong>Consentimiento (Art. 6.1.a):</strong> para comunicaciones de marketing y notificaciones opcionales (siempre opt-in, nunca por defecto)",
-                  ]} />
-                  <P>Podés retirar tu consentimiento en cualquier momento contactándonos, sin que esto afecte la legalidad del procesamiento previo.</P>
-                </>
-              ) : (
-                <>
-                  <P>For users in the European Economic Area, we process your data under the following legal bases of Article 6 of the GDPR:</P>
-                  <BulletList items={[
-                    "<strong>Contract performance (Art. 6.1.b):</strong> to provide the services you requested when registering",
-                    "<strong>Legitimate interests (Art. 6.1.f):</strong> to improve our services, ensure security and prevent fraud",
-                    "<strong>Legal compliance (Art. 6.1.c):</strong> when the law requires us to retain or provide information",
-                    "<strong>Consent (Art. 6.1.a):</strong> for marketing communications and optional notifications (always opt-in, never by default)",
-                  ]} />
-                  <P>You can withdraw your consent at any time by contacting us, without affecting the lawfulness of prior processing.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 14 — Contacto */}
-            <Section id="contacto" number="14" icon={<Bell className="w-5 h-5" />} title={es ? "Contacto" : "Contact"}>
-              {es ? (
-                <>
-                  <P>Si tenés preguntas, comentarios, solicitudes o reclamos relacionados con esta Política de Privacidad o el tratamiento de tus datos personales, contactanos:</P>
-                  <div className="mt-4 p-6 bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl border border-blue-100">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[#0061D5] rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Shield className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 text-lg mb-1">TERA · Equipo de Privacidad</p>
-                        <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
-                        <p className="text-sm text-slate-500 mt-2">Respondemos en un máximo de 30 días hábiles.</p>
-                      </div>
+            {/* 07 */}
+            <Section id="terceros" number="07" icon={<ExternalLink className="w-5 h-5" />} title={sections[6].title}>
+              {[
+                { name: "Google Drive", scopes: "drive.readonly, drive.file", revoke: "myaccount.google.com/permissions" },
+                { name: "Dropbox", scopes: "files.content.read, files.content.write", revoke: "dropbox.com/account/applications" },
+                { name: "Microsoft OneDrive", scopes: "Files.ReadWrite, offline_access", revoke: "account.live.com/consent/Manage" },
+                { name: "Box", scopes: "root_readwrite", revoke: "app.box.com/master/settings/authorizedapps" },
+                { name: "Amazon S3", scopes: { es: "Permisos IAM (definidos por vos)", en: "IAM permissions (defined by you)", pt: "Permissões IAM (definidas por você)" }[lang], revoke: { es: "Consola AWS IAM", en: "AWS IAM Console", pt: "Console AWS IAM" }[lang] },
+              ].map(({ name, scopes, revoke }) => (
+                <div key={name} className="mb-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <h4 className="font-bold text-slate-900 mb-2 text-sm">{name}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-slate-500">{{ es: "Permisos:", en: "Permissions:", pt: "Permissões:" }[lang]}</span><br />
+                      <code className="text-xs bg-white px-2 py-0.5 rounded border border-slate-200 text-[#0061D5]">{scopes}</code>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">{{ es: "Revocar:", en: "Revoke:", pt: "Revogar:" }[lang]}</span><br />
+                      <span className="text-slate-700 text-xs">{revoke}</span>
                     </div>
                   </div>
-                </>
-              ) : (
-                <>
-                  <P>If you have questions, comments, requests or complaints related to this Privacy Policy or the processing of your personal data, contact us:</P>
-                  <div className="mt-4 p-6 bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl border border-blue-100">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-[#0061D5] rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Shield className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 text-lg mb-1">TERA · Privacy Team</p>
-                        <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
-                        <p className="text-sm text-slate-500 mt-2">We respond within a maximum of 30 business days.</p>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+                </div>
+              ))}
+              <Callout color="blue" icon="ℹ️">
+                {{ es: "Podés desconectar cualquier servicio desde Integraciones. Al hacerlo, revocamos el acceso inmediatamente.", en: "You can disconnect any service from Integrations. When you do, we immediately revoke access.", pt: "Você pode desconectar qualquer serviço em Integrações. Ao fazer isso, revogamos o acesso imediatamente." }[lang]}
+              </Callout>
             </Section>
 
-            {/* 15 — Ley */}
-            <Section id="ley" number="15" icon={<Shield className="w-5 h-5" />} title={es ? "Ley aplicable" : "Applicable law"}>
-              {es ? (
-                <>
-                  <P>Esta Política de Privacidad se rige por las leyes de la <strong>República Argentina</strong>, sin perjuicio de los derechos adicionales que puedan corresponder a usuarios de la Unión Europea bajo el GDPR o de California bajo la CCPA.</P>
-                  <BulletList items={[
-                    "Argentina: Ley 25.326 de Protección de Datos Personales y sus disposiciones reglamentarias",
-                    "Unión Europea: Reglamento (UE) 2016/679 (GDPR) para usuarios del EEE",
-                    "California, EE.UU.: California Consumer Privacy Act (CCPA) para residentes de California",
-                    "Jurisdicción competente: Ciudad Autónoma de Buenos Aires, Argentina",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>This Privacy Policy is governed by the laws of the <strong>Republic of Argentina</strong>, without prejudice to the additional rights that may correspond to European Union users under the GDPR or California users under the CCPA.</P>
-                  <BulletList items={[
-                    "Argentina: Law 25,326 on Personal Data Protection and its regulatory provisions",
-                    "European Union: Regulation (EU) 2016/679 (GDPR) for EEA users",
-                    "California, USA: California Consumer Privacy Act (CCPA) for California residents",
-                    "Competent jurisdiction: Autonomous City of Buenos Aires, Argentina",
-                  ]} />
-                </>
-              )}
+            {/* 08 */}
+            <Section id="derechos" number="08" icon={<UserCheck className="w-5 h-5" />} title={sections[7].title}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2">
+                {(lang === "es" ? [
+                  ["👁️", "Acceso", "Solicitá una copia de tus datos personales."],
+                  ["✏️", "Rectificación", "Corregí datos incorrectos en tu perfil."],
+                  ["🗑️", "Supresión", "Solicitá la eliminación de tu cuenta y datos."],
+                  ["📦", "Portabilidad", "Recibí tus datos en formato JSON/CSV."],
+                  ["🚫", "Oposición", "Oponete al procesamiento para ciertos fines."],
+                  ["⏸️", "Limitación", "Pedí restricción temporal del procesamiento."],
+                ] : lang === "en" ? [
+                  ["👁️", "Access", "Request a copy of your personal data."],
+                  ["✏️", "Rectification", "Correct incorrect data in your profile."],
+                  ["🗑️", "Erasure", "Request deletion of your account and data."],
+                  ["📦", "Portability", "Receive your data in JSON/CSV format."],
+                  ["🚫", "Objection", "Object to processing for certain purposes."],
+                  ["⏸️", "Restriction", "Request temporary restriction of processing."],
+                ] : [
+                  ["👁️", "Acesso", "Solicite uma cópia dos seus dados pessoais."],
+                  ["✏️", "Retificação", "Corrija dados incorretos no seu perfil."],
+                  ["🗑️", "Exclusão", "Solicite a exclusão da sua conta e dados."],
+                  ["📦", "Portabilidade", "Receba seus dados em formato JSON/CSV."],
+                  ["🚫", "Oposição", "Oponha-se ao processamento para certos fins."],
+                  ["⏸️", "Limitação", "Solicite restrição temporária do processamento."],
+                ]).map(([icon, title, desc]) => (
+                  <div key={title} className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">{icon}</span>
+                      <h4 className="font-bold text-slate-900 text-sm">{title}</h4>
+                    </div>
+                    <p className="text-sm text-slate-600 leading-relaxed">{desc}</p>
+                  </div>
+                ))}
+              </div>
+              <Callout color="blue" icon="📧">
+                {{ es: `Para ejercer tus derechos, escribinos a ${CONTACT_EMAIL}. Respondemos en máximo 30 días hábiles.`, en: `To exercise your rights, write to us at ${CONTACT_EMAIL}. We respond within 30 business days.`, pt: `Para exercer seus direitos, escreva para ${CONTACT_EMAIL}. Respondemos em no máximo 30 dias úteis.` }[lang]}
+              </Callout>
+            </Section>
+
+            {/* 09 */}
+            <Section id="cookies" number="09" icon={<Bell className="w-5 h-5" />} title={sections[8].title}>
+              {lang === "es" && <>
+                <BulletList items={["Cookies de sesión autenticada (JWT — necesarias)", "localStorage para idioma y configuración visual", "Cookies de autenticación de Supabase"]} />
+                <SubHeading>Lo que NO hacemos</SubHeading>
+                <BulletList items={["No usamos cookies de publicidad ni retargeting", "No instalamos cookies de análisis de comportamiento de terceros", "No compartimos datos con redes publicitarias", "No usamos píxeles de seguimiento ni fingerprinting"]} />
+              </>}
+              {lang === "en" && <>
+                <BulletList items={["Authenticated session cookies (JWT — required)", "localStorage for language and visual settings", "Supabase authentication cookies"]} />
+                <SubHeading>What we do NOT do</SubHeading>
+                <BulletList items={["No advertising or retargeting cookies", "No third-party behavioral analytics cookies", "No data sharing with ad networks", "No tracking pixels or fingerprinting"]} />
+              </>}
+              {lang === "pt" && <>
+                <BulletList items={["Cookies de sessão autenticada (JWT — necessários)", "localStorage para idioma e configurações visuais", "Cookies de autenticação do Supabase"]} />
+                <SubHeading>O que NÃO fazemos</SubHeading>
+                <BulletList items={["Sem cookies de publicidade ou retargeting", "Sem cookies de análise comportamental de terceiros", "Sem compartilhamento de dados com redes publicitárias", "Sem pixels de rastreamento ou fingerprinting"]} />
+              </>}
+            </Section>
+
+            {/* 10 */}
+            <Section id="menores" number="10" icon={<Shield className="w-5 h-5" />} title={sections[9].title}>
+              {lang === "es" && <><P>TERA no está dirigido a menores de <strong>16 años</strong>. No recopilamos información de menores intencionalmente.</P><BulletList items={["Menores de 16 años no pueden usar el servicio", "Padres/tutores que identifiquen datos de menores deben contactarnos", "Eliminaremos inmediatamente cualquier dato de menores identificado"]} /></>}
+              {lang === "en" && <><P>TERA is not directed at persons under <strong>16 years of age</strong>. We do not intentionally collect information from minors.</P><BulletList items={["Persons under 16 may not use the service", "Parents/guardians who identify minor's data should contact us", "We will immediately delete any identified minor's data"]} /></>}
+              {lang === "pt" && <><P>A TERA não é direcionada a menores de <strong>16 anos</strong>. Não coletamos intencionalmente informações de menores.</P><BulletList items={["Menores de 16 anos não podem usar o serviço", "Pais/responsáveis que identifiquem dados de menores devem nos contatar", "Excluiremos imediatamente qualquer dado de menor identificado"]} /></>}
+            </Section>
+
+            {/* 11 */}
+            <Section id="internac" number="11" icon={<Globe className="w-5 h-5" />} title={sections[10].title}>
+              {lang === "es" && <><P>TERA opera desde Argentina y procesa datos en <strong>EE.UU.</strong> (Render / AWS us-east-1) y en la infraestructura de Supabase. Al usar TERA, consentís esta transferencia. Implementamos Cláusulas Contractuales Estándar (SCCs) para transferencias desde el EEE y cifrado en tránsito para todos los datos sensibles.</P></>}
+              {lang === "en" && <><P>TERA operates from Argentina and processes data in the <strong>USA</strong> (Render / AWS us-east-1) and Supabase infrastructure. By using TERA, you consent to this transfer. We implement Standard Contractual Clauses (SCCs) for EEA transfers and in-transit encryption for all sensitive data.</P></>}
+              {lang === "pt" && <><P>A TERA opera a partir da Argentina e processa dados nos <strong>EUA</strong> (Render / AWS us-east-1) e na infraestrutura do Supabase. Ao usar a TERA, você consente com essa transferência. Implementamos Cláusulas Contratuais Padrão (SCCs) para transferências do EEE e criptografia em trânsito para todos os dados sensíveis.</P></>}
+            </Section>
+
+            {/* 12 */}
+            <Section id="cambios" number="12" icon={<Bell className="w-5 h-5" />} title={sections[11].title}>
+              {lang === "es" && <BulletList items={["Notificamos por email con al menos 30 días de anticipación ante cambios significativos", "Mostramos aviso destacado dentro de la app", "Actualizamos la fecha 'Última actualización'", "El uso continuado implica aceptación de los cambios"]} />}
+              {lang === "en" && <BulletList items={["We notify by email at least 30 days in advance for significant changes", "We display a prominent notice in the app", "We update the 'Last updated' date", "Continued use implies acceptance of changes"]} />}
+              {lang === "pt" && <BulletList items={["Notificamos por email com pelo menos 30 dias de antecedência para alterações significativas", "Exibimos aviso destacado no app", "Atualizamos a data de 'Última atualização'", "O uso continuado implica aceitação das alterações"]} />}
+            </Section>
+
+            {/* 13 */}
+            <Section id="gdpr" number="13" icon={<Shield className="w-5 h-5" />} title={sections[12].title}>
+              {lang === "es" && <><P>Para usuarios en el EEE, procesamos tus datos bajo el Art. 6 del GDPR:</P><BulletList items={["<strong>Art. 6.1.b — Contrato:</strong> para proveer los servicios solicitados", "<strong>Art. 6.1.f — Intereses legítimos:</strong> para mejorar el servicio y garantizar seguridad", "<strong>Art. 6.1.c — Cumplimiento legal:</strong> cuando la ley lo exige", "<strong>Art. 6.1.a — Consentimiento:</strong> para marketing opcional (siempre opt-in)"]} /></>}
+              {lang === "en" && <><P>For EEA users, we process your data under Art. 6 of the GDPR:</P><BulletList items={["<strong>Art. 6.1.b — Contract:</strong> to provide the requested services", "<strong>Art. 6.1.f — Legitimate interests:</strong> to improve the service and ensure security", "<strong>Art. 6.1.c — Legal compliance:</strong> when required by law", "<strong>Art. 6.1.a — Consent:</strong> for optional marketing (always opt-in)"]} /></>}
+              {lang === "pt" && <><P>Para usuários no EEE, processamos seus dados com base no Art. 6 do GDPR. Para usuários no Brasil, aplicamos também a <strong>LGPD (Lei 13.709/2018)</strong>:</P><BulletList items={["<strong>Art. 6.1.b — Contrato:</strong> para fornecer os serviços solicitados", "<strong>Art. 6.1.f — Interesses legítimos:</strong> para melhorar o serviço e garantir segurança", "<strong>Art. 6.1.c — Cumprimento legal:</strong> quando exigido por lei", "<strong>Art. 6.1.a — Consentimento:</strong> para marketing opcional (sempre opt-in)", "<strong>LGPD Art. 7:</strong> bases legais equivalentes para tratamento de dados no Brasil"]} /></>}
+            </Section>
+
+            {/* 14 */}
+            <Section id="contacto" number="14" icon={<Bell className="w-5 h-5" />} title={sections[13].title}>
+              <div className="mt-2 p-6 bg-gradient-to-br from-blue-50 to-slate-50 rounded-2xl border border-blue-100">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-[#0061D5] rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900 text-lg mb-1">TERA · {{ es: "Equipo de Privacidad", en: "Privacy Team", pt: "Equipe de Privacidade" }[lang]}</p>
+                    <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
+                    <p className="text-sm text-slate-500 mt-2">{{ es: "Respondemos en máximo 30 días hábiles.", en: "We respond within 30 business days.", pt: "Respondemos em no máximo 30 dias úteis." }[lang]}</p>
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+            {/* 15 */}
+            <Section id="ley" number="15" icon={<Shield className="w-5 h-5" />} title={sections[14].title}>
+              {lang === "es" && <BulletList items={["Argentina: Ley 25.326 de Protección de Datos Personales", "Unión Europea: GDPR (Reglamento UE 2016/679)", "California: CCPA", "Brasil: LGPD (Lei 13.709/2018) — para usuarios brasileños", "Jurisdicción: Ciudad Autónoma de Buenos Aires, Argentina"]} />}
+              {lang === "en" && <BulletList items={["Argentina: Law 25,326 on Personal Data Protection", "European Union: GDPR (Regulation EU 2016/679)", "California: CCPA", "Brazil: LGPD (Law 13,709/2018) — for Brazilian users", "Jurisdiction: Autonomous City of Buenos Aires, Argentina"]} />}
+              {lang === "pt" && <BulletList items={["Argentina: Lei 25.326 de Proteção de Dados Pessoais", "União Europeia: GDPR (Regulamento UE 2016/679)", "Califórnia: CCPA", "Brasil: LGPD (Lei 13.709/2018) — aplicável a usuários brasileiros", "Jurisdição: Cidade Autônoma de Buenos Aires, Argentina"]} />}
             </Section>
 
           </main>
@@ -833,9 +502,9 @@ export default function PrivacyPolicy() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-slate-500">© 2025 TERA · {es ? "Todos los derechos reservados" : "All rights reserved"}</span>
+          <span className="text-sm text-slate-500">© 2025 TERA · {{ es: "Todos los derechos reservados", en: "All rights reserved", pt: "Todos os direitos reservados" }[lang]}</span>
           <div className="flex items-center gap-6 text-sm">
-            <Link href="/terms"><span className="text-slate-500 hover:text-[#0061D5] cursor-pointer transition-colors">{es ? "Términos de Servicio" : "Terms of Service"}</span></Link>
+            <Link href="/terms"><span className="text-slate-500 hover:text-[#0061D5] cursor-pointer transition-colors">{{ es: "Términos de Servicio", en: "Terms of Service", pt: "Termos de Serviço" }[lang]}</span></Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-slate-500 hover:text-[#0061D5] transition-colors">{CONTACT_EMAIL}</a>
           </div>
         </div>
@@ -843,8 +512,6 @@ export default function PrivacyPolicy() {
     </div>
   );
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Section({ id, number, icon, title, children }: { id: string; number: string; icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
@@ -860,15 +527,12 @@ function Section({ id, number, icon, title, children }: { id: string; number: st
     </section>
   );
 }
-
 function P({ children }: { children: React.ReactNode }) {
   return <p className="text-slate-600 leading-relaxed text-[15px]">{children}</p>;
 }
-
 function SubHeading({ children }: { children: React.ReactNode }) {
-  return <h3 className="font-bold text-slate-900 text-[15px] mt-6 mb-2 pb-1 border-b border-slate-100">{children}</h3>;
+  return <h3 className="font-bold text-slate-900 text-[15px] mt-5 mb-2 pb-1 border-b border-slate-100">{children}</h3>;
 }
-
 function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2">
@@ -881,13 +545,8 @@ function BulletList({ items }: { items: string[] }) {
     </ul>
   );
 }
-
 function Callout({ children, color, icon }: { children: React.ReactNode; color: "blue" | "green" | "yellow"; icon: string }) {
-  const colors = {
-    blue:   "bg-blue-50 border-blue-200 text-blue-800",
-    green:  "bg-green-50 border-green-200 text-green-800",
-    yellow: "bg-amber-50 border-amber-200 text-amber-800",
-  };
+  const colors = { blue: "bg-blue-50 border-blue-200 text-blue-800", green: "bg-green-50 border-green-200 text-green-800", yellow: "bg-amber-50 border-amber-200 text-amber-800" };
   return (
     <div className={`flex gap-3 p-4 rounded-xl border text-sm leading-relaxed ${colors[color]}`}>
       <span className="text-base flex-shrink-0">{icon}</span>
@@ -895,7 +554,6 @@ function Callout({ children, color, icon }: { children: React.ReactNode; color: 
     </div>
   );
 }
-
 function InfoGrid({ items }: { items: { label: string; value: string }[] }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">

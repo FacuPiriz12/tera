@@ -1,65 +1,87 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Globe, FileText, Shield, AlertTriangle, CreditCard, Scale, UserX, RefreshCw, ChevronRight } from "lucide-react";
+import { ArrowLeft, FileText, Shield, AlertTriangle, CreditCard, Scale, UserX, RefreshCw, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const LAST_UPDATED = "18 de junio de 2025";
-const LAST_UPDATED_EN = "June 18, 2025";
-const CONTACT_EMAIL = "legal@mytera.app";
-const APP_URL = "https://mytera.app";
+type Lang = "es" | "en" | "pt";
 
-const SECTIONS_ES = [
-  { id: "aceptacion",   title: "Aceptación de los términos" },
-  { id: "servicio",     title: "Descripción del servicio" },
-  { id: "cuenta",       title: "Registro y cuenta" },
-  { id: "uso",          title: "Uso aceptable" },
-  { id: "prohibido",    title: "Usos prohibidos" },
-  { id: "planes",       title: "Planes y pagos" },
-  { id: "propiedad",    title: "Propiedad intelectual" },
-  { id: "privacidad",   title: "Privacidad y datos" },
-  { id: "limitacion",   title: "Limitación de responsabilidad" },
-  { id: "disponib",     title: "Disponibilidad del servicio" },
-  { id: "terminacion",  title: "Terminación" },
-  { id: "indemniz",     title: "Indemnización" },
-  { id: "cambios",      title: "Cambios en los términos" },
-  { id: "disputas",     title: "Resolución de disputas" },
-  { id: "ley",          title: "Ley aplicable" },
-  { id: "contacto",     title: "Contacto" },
-];
+const LAST_UPDATED: Record<Lang, string> = {
+  es: "18 de junio de 2025",
+  en: "June 18, 2025",
+  pt: "18 de junho de 2025",
+};
+const CONTACT_EMAIL  = "legal@mytera.app";
+const PRIVACY_EMAIL  = "privacy@mytera.app";
 
-const SECTIONS_EN = [
-  { id: "aceptacion",   title: "Acceptance of terms" },
-  { id: "servicio",     title: "Service description" },
-  { id: "cuenta",       title: "Registration and account" },
-  { id: "uso",          title: "Acceptable use" },
-  { id: "prohibido",    title: "Prohibited uses" },
-  { id: "planes",       title: "Plans and payments" },
-  { id: "propiedad",    title: "Intellectual property" },
-  { id: "privacidad",   title: "Privacy and data" },
-  { id: "limitacion",   title: "Limitation of liability" },
-  { id: "disponib",     title: "Service availability" },
-  { id: "terminacion",  title: "Termination" },
-  { id: "indemniz",     title: "Indemnification" },
-  { id: "cambios",      title: "Changes to terms" },
-  { id: "disputas",     title: "Dispute resolution" },
-  { id: "ley",          title: "Applicable law" },
-  { id: "contacto",     title: "Contact" },
-];
+const SECTIONS: Record<Lang, { id: string; title: string }[]> = {
+  es: [
+    { id: "aceptacion",  title: "Aceptación de los términos" },
+    { id: "servicio",    title: "Descripción del servicio" },
+    { id: "cuenta",      title: "Registro y cuenta" },
+    { id: "uso",         title: "Uso aceptable" },
+    { id: "prohibido",   title: "Usos prohibidos" },
+    { id: "planes",      title: "Planes y pagos" },
+    { id: "propiedad",   title: "Propiedad intelectual" },
+    { id: "privacidad",  title: "Privacidad y datos" },
+    { id: "limitacion",  title: "Limitación de responsabilidad" },
+    { id: "disponib",    title: "Disponibilidad del servicio" },
+    { id: "terminacion", title: "Terminación" },
+    { id: "indemniz",    title: "Indemnización" },
+    { id: "cambios",     title: "Cambios en los términos" },
+    { id: "disputas",    title: "Resolución de disputas" },
+    { id: "ley",         title: "Ley aplicable" },
+    { id: "contacto",    title: "Contacto" },
+  ],
+  en: [
+    { id: "aceptacion",  title: "Acceptance of terms" },
+    { id: "servicio",    title: "Service description" },
+    { id: "cuenta",      title: "Registration and account" },
+    { id: "uso",         title: "Acceptable use" },
+    { id: "prohibido",   title: "Prohibited uses" },
+    { id: "planes",      title: "Plans and payments" },
+    { id: "propiedad",   title: "Intellectual property" },
+    { id: "privacidad",  title: "Privacy and data" },
+    { id: "limitacion",  title: "Limitation of liability" },
+    { id: "disponib",    title: "Service availability" },
+    { id: "terminacion", title: "Termination" },
+    { id: "indemniz",    title: "Indemnification" },
+    { id: "cambios",     title: "Changes to terms" },
+    { id: "disputas",    title: "Dispute resolution" },
+    { id: "ley",         title: "Applicable law" },
+    { id: "contacto",    title: "Contact" },
+  ],
+  pt: [
+    { id: "aceptacion",  title: "Aceitação dos termos" },
+    { id: "servicio",    title: "Descrição do serviço" },
+    { id: "cuenta",      title: "Cadastro e conta" },
+    { id: "uso",         title: "Uso aceitável" },
+    { id: "prohibido",   title: "Usos proibidos" },
+    { id: "planes",      title: "Planos e pagamentos" },
+    { id: "propiedad",   title: "Propriedade intelectual" },
+    { id: "privacidad",  title: "Privacidade e dados" },
+    { id: "limitacion",  title: "Limitação de responsabilidade" },
+    { id: "disponib",    title: "Disponibilidade do serviço" },
+    { id: "terminacion", title: "Encerramento" },
+    { id: "indemniz",    title: "Indenização" },
+    { id: "cambios",     title: "Alterações nos termos" },
+    { id: "disputas",    title: "Resolução de disputas" },
+    { id: "ley",         title: "Lei aplicável" },
+    { id: "contacto",    title: "Contato" },
+  ],
+};
 
 export default function TermsOfService() {
   const { i18n } = useTranslation();
-  const [lang, setLang] = useState<"es" | "en">(
-    (i18n.language?.startsWith("en") ? "en" : "es") as "es" | "en"
-  );
+  const raw = i18n.language?.startsWith("pt") ? "pt" : i18n.language?.startsWith("en") ? "en" : "es";
+  const [lang, setLang] = useState<Lang>(raw as Lang);
   const [activeSection, setActiveSection] = useState("aceptacion");
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const sections = lang === "es" ? SECTIONS_ES : SECTIONS_EN;
+  const sections = SECTIONS[lang];
 
-  const toggleLang = () => {
-    const next = lang === "es" ? "en" : "es";
-    setLang(next);
-    i18n.changeLanguage(next);
+  const setLanguage = (l: Lang) => {
+    setLang(l);
+    i18n.changeLanguage(l);
   };
 
   useEffect(() => {
@@ -78,37 +100,41 @@ export default function TermsOfService() {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const es = lang === "es";
+  const pageTitle   = { es: "Términos y Condiciones de Uso", en: "Terms and Conditions of Use", pt: "Termos e Condições de Uso" }[lang];
+  const contentLabel = { es: "Contenido", en: "Contents", pt: "Conteúdo" }[lang];
+  const backLabel    = { es: "Volver", en: "Back", pt: "Voltar" }[lang];
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/">
             <button className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition-colors font-medium">
-              <ArrowLeft className="w-4 h-4" />
-              {es ? "Volver" : "Back"}
+              <ArrowLeft className="w-4 h-4" /> {backLabel}
             </button>
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-lg font-black text-[#0061D5] tracking-tight">TERA</span>
             <span className="text-slate-300">·</span>
-            <span className="text-sm text-slate-500 font-medium">
-              {es ? "Términos y Condiciones" : "Terms of Service"}
-            </span>
+            <span className="text-sm text-slate-500 font-medium hidden sm:block">{pageTitle}</span>
           </div>
-          <button
-            onClick={toggleLang}
-            className="flex items-center gap-2 text-sm font-semibold text-[#0061D5] hover:text-blue-700 border border-[#0061D5]/30 hover:border-[#0061D5] px-3 py-1.5 rounded-lg transition-all"
-          >
-            <Globe className="w-4 h-4" />
-            {lang === "es" ? "English" : "Español"}
-          </button>
+          {/* 3-lang selector */}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs font-bold">
+            {(["es", "en", "pt"] as Lang[]).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLanguage(l)}
+                className={`px-3 py-2 transition-colors ${lang === l ? "bg-slate-900 text-white" : "text-slate-500 hover:bg-slate-50"}`}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <div className="bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
           <div className="max-w-3xl">
@@ -116,56 +142,34 @@ export default function TermsOfService() {
               <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
                 <Scale className="w-4 h-4" />
               </div>
-              <span className="text-sm font-bold text-slate-300 uppercase tracking-widest">
-                {es ? "Legal" : "Legal"}
-              </span>
+              <span className="text-sm font-bold text-slate-300 uppercase tracking-widest">Legal</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">
-              {es ? "Términos y Condiciones de Uso" : "Terms and Conditions of Use"}
-            </h1>
+            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight">{pageTitle}</h1>
             <p className="text-lg text-slate-300 mb-6 leading-relaxed max-w-2xl">
-              {es
-                ? "Al usar TERA, acordás con estos términos. Los escribimos en lenguaje claro para que sepas exactamente qué podés esperar de nosotros y qué esperamos de vos."
-                : "By using TERA, you agree to these terms. We wrote them in plain language so you know exactly what to expect from us and what we expect from you."}
+              {{ es: "Al usar TERA, acordás con estos términos. Los escribimos en lenguaje claro para que sepas exactamente qué podés esperar de nosotros y qué esperamos de vos.", en: "By using TERA, you agree to these terms. We wrote them in plain language so you know exactly what to expect from us and what we expect from you.", pt: "Ao usar a TERA, você concorda com estes termos. Os escrevemos em linguagem clara para que você saiba exatamente o que pode esperar de nós e o que esperamos de você." }[lang]}
             </p>
             <div className="flex flex-wrap gap-4 text-sm text-slate-400">
               <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full"></span>
-                {es ? "Última actualización" : "Last updated"}: {es ? LAST_UPDATED : LAST_UPDATED_EN}
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
-                {es ? "Versión 2.0" : "Version 2.0"}
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full" />
+                {{ es: "Última actualización", en: "Last updated", pt: "Última atualização" }[lang]}: {LAST_UPDATED[lang]}
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Layout ── */}
+      {/* Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <div className="flex gap-12">
-
-          {/* Sidebar TOC */}
+          {/* TOC */}
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
-                {es ? "Contenido" : "Contents"}
-              </p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{contentLabel}</p>
               <nav className="space-y-1">
                 {sections.map((s, i) => (
-                  <button
-                    key={s.id}
-                    onClick={() => scrollTo(s.id)}
-                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
-                      activeSection === s.id
-                        ? "bg-slate-800 text-white font-semibold"
-                        : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span className={`text-xs font-bold w-5 text-right flex-shrink-0 ${activeSection === s.id ? "text-slate-400" : "text-slate-300"}`}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                  <button key={s.id} onClick={() => scrollTo(s.id)}
+                    className={`w-full text-left flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${activeSection === s.id ? "bg-slate-800 text-white font-semibold" : "text-slate-500 hover:text-slate-900 hover:bg-slate-100"}`}>
+                    <span className={`text-xs font-black w-5 text-right flex-shrink-0 ${activeSection === s.id ? "text-slate-400" : "text-slate-300"}`}>{String(i + 1).padStart(2, "0")}</span>
                     <span className="truncate">{s.title}</span>
                     {activeSection === s.id && <ChevronRight className="w-3 h-3 ml-auto flex-shrink-0" />}
                   </button>
@@ -174,635 +178,275 @@ export default function TermsOfService() {
             </div>
           </aside>
 
-          {/* Content */}
+          {/* Main */}
           <main ref={contentRef} className="flex-1 min-w-0 space-y-2">
 
-            {/* 01 — Aceptación */}
-            <Section id="aceptacion" number="01" icon={<FileText className="w-5 h-5" />} title={es ? "Aceptación de los términos" : "Acceptance of terms"}>
-              {es ? (
-                <>
-                  <P>Al acceder, registrarte o utilizar <strong>TERA</strong> y sus servicios, aceptás estar vinculado por estos Términos y Condiciones de Uso ("Términos"), junto con nuestra <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidad</span></Link> y cualquier política adicional que podamos publicar.</P>
-                  <P>Estos Términos constituyen un acuerdo legal vinculante entre vos ("Usuario") y TERA. Si no estás de acuerdo con alguna parte de estos términos, no podés acceder ni utilizar el servicio.</P>
-                  <P>Estos términos aplican a todos los usuarios: visitantes, usuarios registrados, usuarios de planes gratuitos y de planes de pago.</P>
-                  <Callout color="blue" icon="💡">
-                    Al hacer clic en "Crear cuenta" o "Iniciar sesión", confirmás que leíste, entendiste y aceptaste estos Términos.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>By accessing, registering, or using <strong>TERA</strong> and its services, you agree to be bound by these Terms and Conditions of Use ("Terms"), together with our <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Privacy Policy</span></Link> and any additional policies we may publish.</P>
-                  <P>These Terms constitute a legally binding agreement between you ("User") and TERA. If you disagree with any part of these terms, you may not access or use the service.</P>
-                  <P>These terms apply to all users: visitors, registered users, free plan users and paid plan users.</P>
-                  <Callout color="blue" icon="💡">
-                    By clicking "Create account" or "Sign in", you confirm that you have read, understood and accepted these Terms.
-                  </Callout>
-                </>
-              )}
+            {/* 01 */}
+            <Section id="aceptacion" number="01" icon={<FileText className="w-5 h-5" />} title={sections[0].title}>
+              {lang === "es" && <>
+                <P>Al acceder, registrarte o utilizar <strong>TERA</strong>, aceptás estar vinculado por estos Términos, junto con nuestra <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidad</span></Link>. Aplica a todos los usuarios: visitantes, registrados y suscriptores de pago.</P>
+                <Callout color="blue" icon="💡">Al hacer clic en "Crear cuenta" o "Iniciar sesión", confirmás que leíste y aceptaste estos Términos.</Callout>
+              </>}
+              {lang === "en" && <>
+                <P>By accessing, registering, or using <strong>TERA</strong>, you agree to be bound by these Terms, together with our <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Privacy Policy</span></Link>. Applies to all users: visitors, registered users and paid subscribers.</P>
+                <Callout color="blue" icon="💡">By clicking "Create account" or "Sign in", you confirm you have read and accepted these Terms.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <P>Ao acessar, se cadastrar ou usar a <strong>TERA</strong>, você concorda com estes Termos, juntamente com nossa <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidade</span></Link>. Aplica-se a todos os usuários: visitantes, cadastrados e assinantes pagantes.</P>
+                <Callout color="blue" icon="💡">Ao clicar em "Criar conta" ou "Entrar", você confirma que leu e aceitou estes Termos.</Callout>
+              </>}
             </Section>
 
-            {/* 02 — Descripción */}
-            <Section id="servicio" number="02" icon={<FileText className="w-5 h-5" />} title={es ? "Descripción del servicio" : "Service description"}>
-              {es ? (
-                <>
-                  <P><strong>TERA</strong> es una plataforma de software como servicio (SaaS) que permite a los usuarios:</P>
-                  <BulletList items={[
-                    "Conectar múltiples cuentas de almacenamiento en la nube (Google Drive, Dropbox, OneDrive, Box, Amazon S3 y otros)",
-                    "Transferir, copiar y mover archivos y carpetas entre distintos servicios de almacenamiento",
-                    "Programar tareas automáticas de sincronización y transferencia",
-                    "Explorar y gestionar archivos de múltiples nubes desde una única interfaz",
-                    "Ver historial detallado, estadísticas y análisis de operaciones realizadas",
-                    "Recibir notificaciones por email sobre el estado de las operaciones",
-                  ]} />
-                  <P>TERA opera como intermediario técnico autorizado. <strong>No almacenamos el contenido de tus archivos.</strong> Los archivos solo pasan a través de nuestra infraestructura durante la transferencia y no se guardan de forma permanente en nuestros servidores.</P>
-                  <Callout color="yellow" icon="⚠️">
-                    TERA no es un servicio de almacenamiento en la nube. Solo transferimos y sincronizamos archivos entre los servicios de terceros que vos conectás.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P><strong>TERA</strong> is a Software as a Service (SaaS) platform that allows users to:</P>
-                  <BulletList items={[
-                    "Connect multiple cloud storage accounts (Google Drive, Dropbox, OneDrive, Box, Amazon S3 and others)",
-                    "Transfer, copy and move files and folders between different storage services",
-                    "Schedule automatic synchronization and transfer tasks",
-                    "Explore and manage files from multiple clouds from a single interface",
-                    "View detailed history, statistics and analysis of operations performed",
-                    "Receive email notifications about operation status",
-                  ]} />
-                  <P>TERA operates as an authorized technical intermediary. <strong>We do not store the content of your files.</strong> Files only pass through our infrastructure during transfer and are not permanently stored on our servers.</P>
-                  <Callout color="yellow" icon="⚠️">
-                    TERA is not a cloud storage service. We only transfer and sync files between third-party services you connect.
-                  </Callout>
-                </>
-              )}
+            {/* 02 */}
+            <Section id="servicio" number="02" icon={<FileText className="w-5 h-5" />} title={sections[1].title}>
+              {lang === "es" && <>
+                <P><strong>TERA</strong> es una plataforma SaaS que permite conectar múltiples cuentas de almacenamiento en la nube y transferir archivos entre ellas. <strong>No almacenamos el contenido de tus archivos</strong> — solo los movemos según tus instrucciones.</P>
+                <BulletList items={["Conectar Google Drive, Dropbox, OneDrive, Box, Amazon S3", "Transferir y copiar archivos entre servicios de nube", "Programar tareas automáticas de sincronización", "Ver historial, estadísticas y análisis de operaciones"]} />
+                <Callout color="yellow" icon="⚠️">TERA no es un servicio de almacenamiento — solo transferimos archivos entre los servicios que vos conectás.</Callout>
+              </>}
+              {lang === "en" && <>
+                <P><strong>TERA</strong> is a SaaS platform that allows connecting multiple cloud storage accounts and transferring files between them. <strong>We do not store the content of your files</strong> — we only move them according to your instructions.</P>
+                <BulletList items={["Connect Google Drive, Dropbox, OneDrive, Box, Amazon S3", "Transfer and copy files between cloud services", "Schedule automatic synchronization tasks", "View history, statistics and operation analytics"]} />
+                <Callout color="yellow" icon="⚠️">TERA is not a storage service — we only transfer files between the services you connect.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <P><strong>TERA</strong> é uma plataforma SaaS que permite conectar várias contas de armazenamento em nuvem e transferir arquivos entre elas. <strong>Não armazenamos o conteúdo dos seus arquivos</strong> — apenas os movemos conforme suas instruções.</P>
+                <BulletList items={["Conectar Google Drive, Dropbox, OneDrive, Box, Amazon S3", "Transferir e copiar arquivos entre serviços de nuvem", "Agendar tarefas automáticas de sincronização", "Ver histórico, estatísticas e análises de operações"]} />
+                <Callout color="yellow" icon="⚠️">A TERA não é um serviço de armazenamento — apenas transferimos arquivos entre os serviços que você conecta.</Callout>
+              </>}
             </Section>
 
-            {/* 03 — Cuenta */}
-            <Section id="cuenta" number="03" icon={<Shield className="w-5 h-5" />} title={es ? "Registro y cuenta de usuario" : "Registration and user account"}>
-              {es ? (
-                <>
-                  <SubHeading>Requisitos para registrarse</SubHeading>
-                  <BulletList items={[
-                    "Tener al menos <strong>16 años de edad</strong> (o la edad mínima requerida por la ley de tu país)",
-                    "Proporcionar información veraz, completa y actualizada al momento del registro",
-                    "Ser una persona física o representar legalmente a la entidad por la que actuás",
-                    "No tener una cuenta previamente suspendida o cancelada por violación de estos Términos",
-                  ]} />
-
-                  <SubHeading>Responsabilidades del usuario</SubHeading>
-                  <BulletList items={[
-                    "Mantener la confidencialidad de tus credenciales de acceso (email y contraseña)",
-                    "Notificarnos inmediatamente si sospechás un acceso no autorizado a tu cuenta",
-                    "Ser responsable de toda actividad que ocurra bajo tu cuenta, autorizada o no",
-                    "Mantener actualizada tu dirección de email para recibir comunicaciones importantes",
-                    "No compartir tu cuenta con otras personas",
-                  ]} />
-
-                  <Callout color="yellow" icon="⚠️">
-                    Sos responsable de cualquier actividad que ocurra bajo tu cuenta. Si descubrís un uso no autorizado, contactanos inmediatamente en <strong>{CONTACT_EMAIL}</strong>.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <SubHeading>Requirements to register</SubHeading>
-                  <BulletList items={[
-                    "Be at least <strong>16 years of age</strong> (or the minimum age required by your country's law)",
-                    "Provide truthful, complete and up-to-date information at the time of registration",
-                    "Be a natural person or legally represent the entity on whose behalf you act",
-                    "Not have a previously suspended or cancelled account due to violation of these Terms",
-                  ]} />
-
-                  <SubHeading>User responsibilities</SubHeading>
-                  <BulletList items={[
-                    "Maintain the confidentiality of your access credentials (email and password)",
-                    "Notify us immediately if you suspect unauthorized access to your account",
-                    "Be responsible for all activity that occurs under your account, authorized or not",
-                    "Keep your email address updated to receive important communications",
-                    "Not share your account with other people",
-                  ]} />
-
-                  <Callout color="yellow" icon="⚠️">
-                    You are responsible for any activity that occurs under your account. If you discover unauthorized use, contact us immediately at <strong>{CONTACT_EMAIL}</strong>.
-                  </Callout>
-                </>
-              )}
+            {/* 03 */}
+            <Section id="cuenta" number="03" icon={<Shield className="w-5 h-5" />} title={sections[2].title}>
+              {lang === "es" && <>
+                <SubHeading>Requisitos</SubHeading>
+                <BulletList items={["Tener al menos <strong>16 años</strong>", "Proporcionar información veraz al registrarte", "No tener cuenta previamente suspendida por violación de estos Términos"]} />
+                <SubHeading>Responsabilidades</SubHeading>
+                <BulletList items={["Mantener la confidencialidad de tus credenciales", "Notificarnos ante cualquier acceso no autorizado", "Ser responsable de toda actividad bajo tu cuenta", "No compartir tu cuenta con terceros"]} />
+                <Callout color="yellow" icon="⚠️">Ante acceso no autorizado, contactanos inmediatamente en <strong>{CONTACT_EMAIL}</strong>.</Callout>
+              </>}
+              {lang === "en" && <>
+                <SubHeading>Requirements</SubHeading>
+                <BulletList items={["Be at least <strong>16 years old</strong>", "Provide truthful information when registering", "Not have a previously suspended account for violating these Terms"]} />
+                <SubHeading>Responsibilities</SubHeading>
+                <BulletList items={["Maintain confidentiality of your credentials", "Notify us of any unauthorized access", "Be responsible for all activity under your account", "Do not share your account with third parties"]} />
+                <Callout color="yellow" icon="⚠️">Upon unauthorized access, contact us immediately at <strong>{CONTACT_EMAIL}</strong>.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <SubHeading>Requisitos</SubHeading>
+                <BulletList items={["Ter pelo menos <strong>16 anos</strong>", "Fornecer informações verdadeiras ao se cadastrar", "Não ter conta previamente suspensa por violação destes Termos"]} />
+                <SubHeading>Responsabilidades</SubHeading>
+                <BulletList items={["Manter a confidencialidade das suas credenciais", "Nos notificar sobre qualquer acesso não autorizado", "Ser responsável por toda atividade na sua conta", "Não compartilhar sua conta com terceiros"]} />
+                <Callout color="yellow" icon="⚠️">Em caso de acesso não autorizado, entre em contato imediatamente em <strong>{CONTACT_EMAIL}</strong>.</Callout>
+              </>}
             </Section>
 
-            {/* 04 — Uso aceptable */}
-            <Section id="uso" number="04" icon={<Shield className="w-5 h-5" />} title={es ? "Uso aceptable" : "Acceptable use"}>
-              {es ? (
-                <>
-                  <P>Podés usar TERA para cualquier propósito legítimo que sea consistente con estos Términos. En particular:</P>
-                  <BulletList items={[
-                    "Transferir archivos personales y profesionales entre tus propias cuentas de almacenamiento",
-                    "Automatizar respaldos y sincronizaciones entre servicios de tu propiedad o en los que tenés autorización",
-                    "Gestionar y organizar archivos en múltiples plataformas de nube",
-                    "Compartir el acceso con colaboradores en los que tenés autorización de compartir",
-                    "Usar las funciones de análisis e historial para controlar tus propias transferencias",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>You may use TERA for any legitimate purpose that is consistent with these Terms. In particular:</P>
-                  <BulletList items={[
-                    "Transfer personal and professional files between your own storage accounts",
-                    "Automate backups and synchronizations between services you own or are authorized to use",
-                    "Manage and organize files across multiple cloud platforms",
-                    "Share access with collaborators you are authorized to share with",
-                    "Use analytics and history features to monitor your own transfers",
-                  ]} />
-                </>
-              )}
+            {/* 04 */}
+            <Section id="uso" number="04" icon={<Shield className="w-5 h-5" />} title={sections[3].title}>
+              {lang === "es" && <BulletList items={["Transferir archivos personales y profesionales entre tus propias cuentas", "Automatizar respaldos y sincronizaciones entre servicios de tu propiedad", "Gestionar y organizar archivos en múltiples plataformas de nube", "Usar las funciones de análisis e historial para controlar tus transferencias"]} />}
+              {lang === "en" && <BulletList items={["Transfer personal and professional files between your own accounts", "Automate backups and syncs between services you own", "Manage and organize files across multiple cloud platforms", "Use analytics and history features to monitor your transfers"]} />}
+              {lang === "pt" && <BulletList items={["Transferir arquivos pessoais e profissionais entre suas próprias contas", "Automatizar backups e sincronizações entre serviços de sua propriedade", "Gerenciar e organizar arquivos em várias plataformas de nuvem", "Usar as funções de análise e histórico para monitorar suas transferências"]} />}
             </Section>
 
-            {/* 05 — Prohibido */}
-            <Section id="prohibido" number="05" icon={<AlertTriangle className="w-5 h-5" />} title={es ? "Usos prohibidos" : "Prohibited uses"}>
-              {es ? (
-                <>
-                  <P>Al usar TERA, te comprometés a <strong>NO</strong> realizar ninguna de las siguientes acciones:</P>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { icon: "⚖️", title: "Actividades ilegales", desc: "Violar leyes locales, nacionales o internacionales, incluyendo leyes de propiedad intelectual, privacidad y exportación." },
-                      { icon: "🦠", title: "Contenido malicioso", desc: "Transferir, almacenar o distribuir virus, malware, ransomware, spyware u otro software malicioso." },
-                      { icon: "🔓", title: "Acceso no autorizado", desc: "Intentar acceder a sistemas, cuentas o datos que no te pertenecen sin autorización expresa." },
-                      { icon: "📧", title: "Spam y phishing", desc: "Usar TERA para enviar correos masivos no solicitados, mensajes de phishing u otras comunicaciones engañosas." },
-                      { icon: "🏴‍☠️", title: "Piratería de contenido", desc: "Transferir o distribuir contenido protegido por derechos de autor sin la debida autorización del titular." },
-                      { icon: "💣", title: "Sobrecarga del sistema", desc: "Realizar ataques de denegación de servicio, sobrecargar intencionalmente la infraestructura o intentar degradar el servicio." },
-                      { icon: "🔍", title: "Ingeniería inversa", desc: "Descompilar, desensamblar o intentar obtener el código fuente de TERA por cualquier medio." },
-                      { icon: "🤖", title: "Scraping automatizado", desc: "Usar bots, scrapers o herramientas automatizadas para extraer datos del servicio sin autorización expresa." },
-                      { icon: "👥", title: "Suplantación de identidad", desc: "Hacerse pasar por otra persona o entidad, o tergiversar tu afiliación con cualquier persona o entidad." },
-                    ].map(({ icon, title, desc }) => (
-                      <div key={title} className="flex gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div>
-                          <p className="font-bold text-red-900 text-sm mb-0.5">{title}</p>
-                          <p className="text-red-700 text-sm leading-relaxed">{desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Callout color="yellow" icon="⚠️">
-                    La violación de cualquiera de estas prohibiciones puede resultar en la suspensión o cancelación inmediata de tu cuenta, sin reembolso, y puede dar lugar a acciones legales.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>When using TERA, you agree <strong>NOT</strong> to perform any of the following actions:</P>
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      { icon: "⚖️", title: "Illegal activities", desc: "Violate local, national or international laws, including intellectual property, privacy and export laws." },
-                      { icon: "🦠", title: "Malicious content", desc: "Transfer, store or distribute viruses, malware, ransomware, spyware or other malicious software." },
-                      { icon: "🔓", title: "Unauthorized access", desc: "Attempt to access systems, accounts or data that do not belong to you without express authorization." },
-                      { icon: "📧", title: "Spam and phishing", desc: "Use TERA to send unsolicited bulk emails, phishing messages or other deceptive communications." },
-                      { icon: "🏴‍☠️", title: "Content piracy", desc: "Transfer or distribute copyright-protected content without proper authorization from the rights holder." },
-                      { icon: "💣", title: "System overload", desc: "Conduct denial of service attacks, intentionally overload infrastructure, or attempt to degrade the service." },
-                      { icon: "🔍", title: "Reverse engineering", desc: "Decompile, disassemble or attempt to obtain TERA's source code by any means." },
-                      { icon: "🤖", title: "Automated scraping", desc: "Use bots, scrapers or automated tools to extract data from the service without express authorization." },
-                      { icon: "👥", title: "Identity impersonation", desc: "Impersonate another person or entity, or misrepresent your affiliation with any person or entity." },
-                    ].map(({ icon, title, desc }) => (
-                      <div key={title} className="flex gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
-                        <span className="text-lg flex-shrink-0">{icon}</span>
-                        <div>
-                          <p className="font-bold text-red-900 text-sm mb-0.5">{title}</p>
-                          <p className="text-red-700 text-sm leading-relaxed">{desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Callout color="yellow" icon="⚠️">
-                    Violation of any of these prohibitions may result in immediate suspension or cancellation of your account, without refund, and may give rise to legal action.
-                  </Callout>
-                </>
-              )}
-            </Section>
-
-            {/* 06 — Planes y pagos */}
-            <Section id="planes" number="06" icon={<CreditCard className="w-5 h-5" />} title={es ? "Planes y pagos" : "Plans and payments"}>
-              {es ? (
-                <>
-                  <SubHeading>Planes disponibles</SubHeading>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-                    <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🆓</span>
-                        <h4 className="font-black text-slate-900">Plan Gratuito</h4>
-                      </div>
-                      <BulletList items={[
-                        "100 transferencias por día",
-                        "5 operaciones simultáneas",
-                        "Historial de últimas 30 operaciones",
-                        "Google Drive + Dropbox",
-                        "Soporte por email",
-                      ]} />
-                    </div>
-                    <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">⚡</span>
-                        <h4 className="font-black text-[#0061D5]">Plan PRO</h4>
-                      </div>
-                      <BulletList items={[
-                        "500 transferencias por día",
-                        "20 operaciones simultáneas",
-                        "Historial completo ilimitado",
-                        "Todos los servicios (Drive, Dropbox, OneDrive, Box, S3)",
-                        "Tareas programadas automáticas",
-                        "Notificaciones por email",
-                        "Soporte prioritario",
-                      ]} />
+            {/* 05 */}
+            <Section id="prohibido" number="05" icon={<AlertTriangle className="w-5 h-5" />} title={sections[4].title}>
+              <div className="grid grid-cols-1 gap-3">
+                {(lang === "es" ? [
+                  ["⚖️", "Actividades ilegales", "Violar leyes locales, nacionales o internacionales, incluyendo propiedad intelectual y privacidad."],
+                  ["🦠", "Contenido malicioso", "Transferir virus, malware, ransomware u otro software malicioso."],
+                  ["🔓", "Acceso no autorizado", "Intentar acceder a cuentas o datos que no te pertenecen."],
+                  ["📧", "Spam y phishing", "Usar TERA para actividades fraudulentas o comunicaciones engañosas."],
+                  ["🏴‍☠️", "Piratería", "Transferir contenido protegido por derechos de autor sin autorización."],
+                  ["💣", "Sobrecarga del sistema", "Ataques DDoS o sobrecarga intencional de la infraestructura."],
+                  ["🔍", "Ingeniería inversa", "Descompilar o intentar obtener el código fuente de TERA."],
+                  ["🤖", "Scraping", "Usar bots para extraer datos del servicio sin autorización."],
+                ] : lang === "en" ? [
+                  ["⚖️", "Illegal activities", "Violate local, national or international laws, including intellectual property and privacy."],
+                  ["🦠", "Malicious content", "Transfer viruses, malware, ransomware or other malicious software."],
+                  ["🔓", "Unauthorized access", "Attempt to access accounts or data that do not belong to you."],
+                  ["📧", "Spam and phishing", "Use TERA for fraudulent activities or deceptive communications."],
+                  ["🏴‍☠️", "Piracy", "Transfer copyright-protected content without authorization."],
+                  ["💣", "System overload", "DDoS attacks or intentional infrastructure overloading."],
+                  ["🔍", "Reverse engineering", "Decompile or attempt to obtain TERA's source code."],
+                  ["🤖", "Scraping", "Use bots to extract data from the service without authorization."],
+                ] : [
+                  ["⚖️", "Atividades ilegais", "Violar leis locais, nacionais ou internacionais, incluindo propriedade intelectual e privacidade."],
+                  ["🦠", "Conteúdo malicioso", "Transferir vírus, malware, ransomware ou outros softwares maliciosos."],
+                  ["🔓", "Acesso não autorizado", "Tentar acessar contas ou dados que não lhe pertencem."],
+                  ["📧", "Spam e phishing", "Usar a TERA para atividades fraudulentas ou comunicações enganosas."],
+                  ["🏴‍☠️", "Pirataria", "Transferir conteúdo protegido por direitos autorais sem autorização."],
+                  ["💣", "Sobrecarga do sistema", "Ataques DDoS ou sobrecarga intencional da infraestrutura."],
+                  ["🔍", "Engenharia reversa", "Descompilar ou tentar obter o código-fonte da TERA."],
+                  ["🤖", "Scraping", "Usar bots para extrair dados do serviço sem autorização."],
+                ]).map(([icon, title, desc]) => (
+                  <div key={title} className="flex gap-3 p-4 bg-red-50 rounded-xl border border-red-100">
+                    <span className="text-lg flex-shrink-0">{icon}</span>
+                    <div>
+                      <p className="font-bold text-red-900 text-sm mb-0.5">{title}</p>
+                      <p className="text-red-700 text-sm leading-relaxed">{desc}</p>
                     </div>
                   </div>
+                ))}
+              </div>
+              <Callout color="yellow" icon="⚠️">
+                {{ es: "Violar estas prohibiciones puede resultar en suspensión inmediata de la cuenta y acciones legales.", en: "Violating these prohibitions may result in immediate account suspension and legal action.", pt: "Violar essas proibições pode resultar em suspensão imediata da conta e ação legal." }[lang]}
+              </Callout>
+            </Section>
 
-                  <SubHeading>Condiciones de pago</SubHeading>
-                  <BulletList items={[
-                    "Los pagos son procesados de forma segura a través de nuestro proveedor de pagos",
-                    "No almacenamos datos de tarjetas de crédito en nuestros servidores",
-                    "Las suscripciones se renuevan automáticamente al final del período contratado",
-                    "Los precios están sujetos a cambios con un aviso previo de <strong>30 días</strong>",
-                    "Podés cancelar tu suscripción en cualquier momento desde tu perfil",
-                  ]} />
-
-                  <SubHeading>Reembolsos</SubHeading>
-                  <BulletList items={[
-                    "Ofrecemos un período de prueba de 14 días para el Plan PRO",
-                    "Dentro de los primeros 14 días: reembolso completo sin preguntas",
-                    "Después de los 14 días: no se ofrecen reembolsos salvo casos excepcionales",
-                    "Para solicitar un reembolso: enviá un email a <strong>{CONTACT_EMAIL}</strong>",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <SubHeading>Available plans</SubHeading>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-                    <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">🆓</span>
-                        <h4 className="font-black text-slate-900">Free Plan</h4>
-                      </div>
-                      <BulletList items={[
-                        "100 transfers per day",
-                        "5 concurrent operations",
-                        "History of last 30 operations",
-                        "Google Drive + Dropbox",
-                        "Email support",
-                      ]} />
-                    </div>
-                    <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-2xl">⚡</span>
-                        <h4 className="font-black text-[#0061D5]">PRO Plan</h4>
-                      </div>
-                      <BulletList items={[
-                        "500 transfers per day",
-                        "20 concurrent operations",
-                        "Complete unlimited history",
-                        "All services (Drive, Dropbox, OneDrive, Box, S3)",
-                        "Automatic scheduled tasks",
-                        "Email notifications",
-                        "Priority support",
-                      ]} />
-                    </div>
+            {/* 06 */}
+            <Section id="planes" number="06" icon={<CreditCard className="w-5 h-5" />} title={sections[5].title}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2">
+                <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">🆓</span>
+                    <h4 className="font-black text-slate-900">{{ es: "Plan Gratuito", en: "Free Plan", pt: "Plano Gratuito" }[lang]}</h4>
                   </div>
-
-                  <SubHeading>Payment conditions</SubHeading>
-                  <BulletList items={[
-                    "Payments are processed securely through our payment provider",
-                    "We do not store credit card data on our servers",
-                    "Subscriptions renew automatically at the end of the contracted period",
-                    "Prices are subject to change with <strong>30 days</strong> prior notice",
-                    "You can cancel your subscription at any time from your profile",
-                  ]} />
-
-                  <SubHeading>Refunds</SubHeading>
-                  <BulletList items={[
-                    "We offer a 14-day trial period for the PRO Plan",
-                    "Within the first 14 days: full refund, no questions asked",
-                    "After 14 days: no refunds are offered except in exceptional cases",
-                    "To request a refund: send an email to <strong>{CONTACT_EMAIL}</strong>",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 07 — Propiedad intelectual */}
-            <Section id="propiedad" number="07" icon={<Scale className="w-5 h-5" />} title={es ? "Propiedad intelectual" : "Intellectual property"}>
-              {es ? (
-                <>
-                  <SubHeading>Propiedad de TERA</SubHeading>
-                  <P>TERA, su nombre, logotipo, interfaz, código fuente, diseño, funcionalidades y documentación son propiedad exclusiva de sus creadores y están protegidos por las leyes de propiedad intelectual aplicables. Queda prohibida su reproducción, distribución o modificación sin autorización expresa.</P>
-
-                  <SubHeading>Tus archivos son tuyos</SubHeading>
-                  <P>Tus archivos y el contenido que manejás a través de TERA siguen siendo de tu propiedad en todo momento. Al usar TERA, nos otorgás únicamente una licencia técnica limitada, no exclusiva y revocable para acceder y operar con tus archivos <strong>exclusivamente</strong> según tus instrucciones. Esta licencia:</P>
-                  <BulletList items={[
-                    "No nos otorga ningún derecho de propiedad sobre tu contenido",
-                    "Solo existe para ejecutar las operaciones que vos configurás",
-                    "Se revoca automáticamente al desconectar un servicio o eliminar tu cuenta",
-                    "Nunca usamos tu contenido para entrenamiento de IA, análisis comercial ni ningún otro propósito",
-                  ]} />
-
-                  <Callout color="green" icon="✅">
-                    TERA nunca lee, analiza ni utiliza el contenido de tus archivos más allá de lo técnicamente necesario para ejecutar la operación que vos solicitaste.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <SubHeading>TERA's property</SubHeading>
-                  <P>TERA, its name, logo, interface, source code, design, features and documentation are the exclusive property of its creators and are protected by applicable intellectual property laws. Reproduction, distribution or modification without express authorization is prohibited.</P>
-
-                  <SubHeading>Your files are yours</SubHeading>
-                  <P>Your files and the content you handle through TERA remain your property at all times. By using TERA, you grant us only a limited, non-exclusive, revocable technical license to access and operate with your files <strong>exclusively</strong> according to your instructions. This license:</P>
-                  <BulletList items={[
-                    "Does not grant us any ownership rights over your content",
-                    "Only exists to execute the operations you configure",
-                    "Is automatically revoked when you disconnect a service or delete your account",
-                    "We never use your content for AI training, commercial analysis or any other purpose",
-                  ]} />
-
-                  <Callout color="green" icon="✅">
-                    TERA never reads, analyzes or uses the content of your files beyond what is technically necessary to execute the operation you requested.
-                  </Callout>
-                </>
-              )}
-            </Section>
-
-            {/* 08 — Privacidad */}
-            <Section id="privacidad" number="08" icon={<Shield className="w-5 h-5" />} title={es ? "Privacidad y datos" : "Privacy and data"}>
-              {es ? (
-                <>
-                  <P>El uso de TERA implica el procesamiento de ciertos datos personales. El tratamiento de estos datos está descrito en detalle en nuestra <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidad</span></Link>, que forma parte integral de estos Términos.</P>
-                  <P>En resumen:</P>
-                  <BulletList items={[
-                    "Recopilamos solo los datos mínimos necesarios para prestar el servicio",
-                    "No vendemos, alquilamos ni compartimos tus datos con terceros con fines comerciales",
-                    "Todos los tokens OAuth y credenciales se almacenan cifrados con AES-256-GCM",
-                    "Podés eliminar tu cuenta y todos tus datos en cualquier momento",
-                    "Respetamos el GDPR para usuarios europeos y la Ley 25.326 para usuarios argentinos",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>Using TERA involves the processing of certain personal data. The processing of this data is described in detail in our <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Privacy Policy</span></Link>, which forms an integral part of these Terms.</P>
-                  <P>In summary:</P>
-                  <BulletList items={[
-                    "We collect only the minimum data necessary to provide the service",
-                    "We do not sell, rent or share your data with third parties for commercial purposes",
-                    "All OAuth tokens and credentials are stored encrypted with AES-256-GCM",
-                    "You can delete your account and all your data at any time",
-                    "We respect GDPR for European users and Law 25,326 for Argentine users",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 09 — Limitación */}
-            <Section id="limitacion" number="09" icon={<AlertTriangle className="w-5 h-5" />} title={es ? "Limitación de responsabilidad" : "Limitation of liability"}>
-              {es ? (
-                <>
-                  <P>TERA se proporciona <strong>"tal cual"</strong> y <strong>"según disponibilidad"</strong>. En la máxima medida permitida por la ley aplicable:</P>
-                  <BulletList items={[
-                    "No garantizamos que el servicio sea ininterrumpido, libre de errores, seguro o exento de virus",
-                    "No nos responsabilizamos por pérdidas de datos causadas por errores de terceros (Google, Dropbox, etc.) o por interrupciones del servicio",
-                    "No nos responsabilizamos por daños indirectos, incidentales, especiales, consecuentes o punitivos",
-                    "No nos responsabilizamos por el contenido de los archivos que transferís a través de TERA",
-                    "Nuestra responsabilidad máxima total hacia vos no excederá el monto que pagaste por el servicio en los últimos <strong>12 meses</strong>",
-                  ]} />
-                  <Callout color="yellow" icon="⚠️">
-                    Te recomendamos mantener copias de respaldo de tus archivos importantes en todo momento. TERA es una herramienta de transferencia, no un servicio de respaldo garantizado.
-                  </Callout>
-                </>
-              ) : (
-                <>
-                  <P>TERA is provided <strong>"as is"</strong> and <strong>"as available"</strong>. To the maximum extent permitted by applicable law:</P>
-                  <BulletList items={[
-                    "We do not guarantee that the service will be uninterrupted, error-free, secure or virus-free",
-                    "We are not responsible for data loss caused by third-party errors (Google, Dropbox, etc.) or service interruptions",
-                    "We are not responsible for indirect, incidental, special, consequential or punitive damages",
-                    "We are not responsible for the content of files you transfer through TERA",
-                    "Our maximum total liability to you shall not exceed the amount you paid for the service in the last <strong>12 months</strong>",
-                  ]} />
-                  <Callout color="yellow" icon="⚠️">
-                    We recommend keeping backup copies of your important files at all times. TERA is a transfer tool, not a guaranteed backup service.
-                  </Callout>
-                </>
-              )}
-            </Section>
-
-            {/* 10 — Disponibilidad */}
-            <Section id="disponib" number="10" icon={<RefreshCw className="w-5 h-5" />} title={es ? "Disponibilidad del servicio" : "Service availability"}>
-              {es ? (
-                <>
-                  <P>Nos esforzamos por mantener TERA disponible con la mayor continuidad posible. Sin embargo:</P>
-                  <BulletList items={[
-                    "No garantizamos disponibilidad ininterrumpida 24/7/365",
-                    "Podemos realizar mantenimientos programados notificando con al menos 24 horas de anticipación",
-                    "En caso de interrupciones no planificadas, trabajaremos para restablecer el servicio lo antes posible",
-                    "Las interrupciones en servicios de terceros (Google, Dropbox, etc.) están fuera de nuestro control",
-                    "Nos reservamos el derecho de modificar, suspender o discontinuar cualquier parte del servicio en cualquier momento",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>We strive to keep TERA available with the greatest continuity possible. However:</P>
-                  <BulletList items={[
-                    "We do not guarantee uninterrupted 24/7/365 availability",
-                    "We may perform scheduled maintenance with at least 24 hours notice",
-                    "In case of unplanned outages, we will work to restore service as soon as possible",
-                    "Interruptions in third-party services (Google, Dropbox, etc.) are outside our control",
-                    "We reserve the right to modify, suspend or discontinue any part of the service at any time",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 11 — Terminación */}
-            <Section id="terminacion" number="11" icon={<UserX className="w-5 h-5" />} title={es ? "Terminación de la cuenta" : "Account termination"}>
-              {es ? (
-                <>
-                  <SubHeading>Cancelación voluntaria</SubHeading>
-                  <P>Podés cancelar tu cuenta en cualquier momento desde tu perfil de usuario o contactándonos. Al cancelar:</P>
-                  <BulletList items={[
-                    "Perderás acceso inmediato al servicio",
-                    "Tus datos personales se eliminarán según nuestra Política de Privacidad",
-                    "Los tokens de acceso a servicios de terceros se revocarán",
-                    "Tus archivos en Google Drive, Dropbox y otros servicios <strong>no se ven afectados</strong>",
-                  ]} />
-
-                  <SubHeading>Suspensión por violación de términos</SubHeading>
-                  <P>Podemos suspender o cancelar tu cuenta inmediatamente, sin previo aviso, si:</P>
-                  <BulletList items={[
-                    "Violás estos Términos y Condiciones",
-                    "Detectamos actividad fraudulenta, maliciosa o abusiva",
-                    "Tu suscripción de pago vence sin renovación (acceso degradado a plan gratuito)",
-                    "Recibimos un requerimiento legal para hacerlo",
-                    "TERA cesa operaciones (con aviso previo de 30 días en este caso)",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <SubHeading>Voluntary cancellation</SubHeading>
-                  <P>You can cancel your account at any time from your user profile or by contacting us. Upon cancellation:</P>
-                  <BulletList items={[
-                    "You will lose immediate access to the service",
-                    "Your personal data will be deleted according to our Privacy Policy",
-                    "Access tokens to third-party services will be revoked",
-                    "Your files in Google Drive, Dropbox and other services <strong>are not affected</strong>",
-                  ]} />
-
-                  <SubHeading>Suspension for terms violation</SubHeading>
-                  <P>We may suspend or cancel your account immediately, without prior notice, if:</P>
-                  <BulletList items={[
-                    "You violate these Terms and Conditions",
-                    "We detect fraudulent, malicious or abusive activity",
-                    "Your paid subscription expires without renewal (access degraded to free plan)",
-                    "We receive a legal requirement to do so",
-                    "TERA ceases operations (with 30 days prior notice in this case)",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 12 — Indemnización */}
-            <Section id="indemniz" number="12" icon={<Scale className="w-5 h-5" />} title={es ? "Indemnización" : "Indemnification"}>
-              {es ? (
-                <>
-                  <P>Aceptás indemnizar, defender y mantener indemne a TERA, sus fundadores, empleados, colaboradores, licenciantes y proveedores de servicios de y contra cualquier reclamación, responsabilidad, daño, sentencia, recompensa, pérdida, costo, gasto u honorario (incluidos honorarios legales razonables) que surjan de o en relación con:</P>
-                  <BulletList items={[
-                    "Tu violación de estos Términos y Condiciones",
-                    "Tu uso del servicio TERA de forma no autorizada o prohibida",
-                    "Tu violación de cualquier derecho de terceros, incluidos derechos de propiedad intelectual o privacidad",
-                    "El contenido de los archivos que transferís o gestionás a través de TERA",
-                    "Cualquier declaración falsa o engañosa que hagas en relación con TERA",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>You agree to indemnify, defend and hold harmless TERA, its founders, employees, collaborators, licensors and service providers from and against any claims, liabilities, damages, judgments, awards, losses, costs, expenses or fees (including reasonable legal fees) arising out of or in connection with:</P>
-                  <BulletList items={[
-                    "Your violation of these Terms and Conditions",
-                    "Your use of the TERA service in an unauthorized or prohibited manner",
-                    "Your violation of any third-party rights, including intellectual property or privacy rights",
-                    "The content of the files you transfer or manage through TERA",
-                    "Any false or misleading statement you make in connection with TERA",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 13 — Cambios */}
-            <Section id="cambios" number="13" icon={<RefreshCw className="w-5 h-5" />} title={es ? "Cambios en los términos" : "Changes to terms"}>
-              {es ? (
-                <>
-                  <P>Podemos modificar estos Términos en cualquier momento. Cuando realicemos cambios significativos:</P>
-                  <BulletList items={[
-                    "Te notificaremos por email con al menos <strong>30 días de anticipación</strong>",
-                    "Mostraremos un aviso destacado dentro de la aplicación",
-                    "Actualizaremos la fecha de 'Última actualización' en este documento",
-                    "En caso de cambios menores (correcciones tipográficas, clarificaciones), los publicaremos sin aviso previo",
-                  ]} />
-                  <P>El uso continuado de TERA después de que los cambios entren en vigor constituirá tu aceptación de los nuevos Términos. Si no aceptás los cambios, debés dejar de usar el servicio y eliminar tu cuenta.</P>
-                </>
-              ) : (
-                <>
-                  <P>We may modify these Terms at any time. When we make significant changes:</P>
-                  <BulletList items={[
-                    "We will notify you by email with at least <strong>30 days notice</strong>",
-                    "We will display a prominent notice within the application",
-                    "We will update the 'Last updated' date on this document",
-                    "For minor changes (typographical corrections, clarifications), we will post them without prior notice",
-                  ]} />
-                  <P>Continued use of TERA after changes take effect will constitute your acceptance of the new Terms. If you do not accept the changes, you must stop using the service and delete your account.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 14 — Disputas */}
-            <Section id="disputas" number="14" icon={<Scale className="w-5 h-5" />} title={es ? "Resolución de disputas" : "Dispute resolution"}>
-              {es ? (
-                <>
-                  <P>Ante cualquier disputa, reclamación o controversia relacionada con estos Términos o el uso de TERA:</P>
-                  <BulletList items={[
-                    "<strong>Paso 1 — Resolución amistosa:</strong> Las partes acuerdan intentar resolver el conflicto de forma directa mediante comunicación escrita a {CONTACT_EMAIL} dentro de los primeros 30 días",
-                    "<strong>Paso 2 — Mediación:</strong> Si no se llega a un acuerdo, las partes pueden optar por mediación ante una institución neutral acordada por ambas partes",
-                    "<strong>Paso 3 — Arbitraje o litigio:</strong> De persistir el conflicto, se someterá a la jurisdicción de los tribunales ordinarios de la Ciudad Autónoma de Buenos Aires",
-                  ]} />
-                  <P>Para usuarios de la Unión Europea: tenés el derecho adicional de acudir a la plataforma de resolución de disputas en línea de la Comisión Europea.</P>
-                </>
-              ) : (
-                <>
-                  <P>For any dispute, claim or controversy related to these Terms or the use of TERA:</P>
-                  <BulletList items={[
-                    "<strong>Step 1 — Friendly resolution:</strong> The parties agree to attempt to resolve the conflict directly through written communication to {CONTACT_EMAIL} within the first 30 days",
-                    "<strong>Step 2 — Mediation:</strong> If no agreement is reached, the parties may opt for mediation before a neutral institution agreed upon by both parties",
-                    "<strong>Step 3 — Arbitration or litigation:</strong> If the conflict persists, it will be submitted to the jurisdiction of the ordinary courts of the Autonomous City of Buenos Aires",
-                  ]} />
-                  <P>For European Union users: you have the additional right to access the European Commission's online dispute resolution platform.</P>
-                </>
-              )}
-            </Section>
-
-            {/* 15 — Ley */}
-            <Section id="ley" number="15" icon={<Scale className="w-5 h-5" />} title={es ? "Ley aplicable" : "Applicable law"}>
-              {es ? (
-                <>
-                  <P>Estos Términos y Condiciones se rigen e interpretan de conformidad con las leyes de la <strong>República Argentina</strong>, sin dar efecto a ninguna disposición sobre conflicto de leyes.</P>
-                  <BulletList items={[
-                    "Ley general: Legislación civil y comercial de la República Argentina",
-                    "Protección al consumidor: Ley 24.240 de Defensa del Consumidor (Argentina)",
-                    "Privacidad de datos: Ley 25.326 de Protección de Datos Personales (Argentina)",
-                    "Usuarios europeos: Reglamento (UE) 2016/679 (GDPR) en lo que corresponda",
-                    "Jurisdicción: Tribunales ordinarios de la Ciudad Autónoma de Buenos Aires",
-                  ]} />
-                </>
-              ) : (
-                <>
-                  <P>These Terms and Conditions are governed by and construed in accordance with the laws of the <strong>Republic of Argentina</strong>, without giving effect to any conflict of law provisions.</P>
-                  <BulletList items={[
-                    "General law: Civil and commercial legislation of the Republic of Argentina",
-                    "Consumer protection: Law 24,240 on Consumer Defense (Argentina)",
-                    "Data privacy: Law 25,326 on Personal Data Protection (Argentina)",
-                    "European users: Regulation (EU) 2016/679 (GDPR) where applicable",
-                    "Jurisdiction: Ordinary courts of the Autonomous City of Buenos Aires",
-                  ]} />
-                </>
-              )}
-            </Section>
-
-            {/* 16 — Contacto */}
-            <Section id="contacto" number="16" icon={<FileText className="w-5 h-5" />} title={es ? "Contacto" : "Contact"}>
-              {es ? (
-                <>
-                  <P>Para consultas, solicitudes o reclamos relacionados con estos Términos y Condiciones:</P>
-                  <div className="mt-4 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Scale className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 text-lg mb-1">TERA · Equipo Legal</p>
-                        <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
-                        <p className="text-sm text-slate-500 mt-2">Respondemos en un máximo de 15 días hábiles.</p>
-                      </div>
-                    </div>
+                  <BulletList items={{ es: ["100 transferencias por día", "5 operaciones simultáneas", "Google Drive + Dropbox", "Soporte por email"], en: ["100 transfers per day", "5 concurrent operations", "Google Drive + Dropbox", "Email support"], pt: ["100 transferências por dia", "5 operações simultâneas", "Google Drive + Dropbox", "Suporte por email"] }[lang]} />
+                </div>
+                <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">⚡</span>
+                    <h4 className="font-black text-[#0061D5]">Plan PRO</h4>
                   </div>
-                  <P className="mt-4">Para consultas de privacidad: <a href="mailto:privacy@mytera.app" className="text-[#0061D5] hover:underline">privacy@mytera.app</a></P>
-                </>
-              ) : (
-                <>
-                  <P>For inquiries, requests or complaints related to these Terms and Conditions:</P>
-                  <div className="mt-4 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Scale className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900 text-lg mb-1">TERA · Legal Team</p>
-                        <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
-                        <p className="text-sm text-slate-500 mt-2">We respond within a maximum of 15 business days.</p>
-                      </div>
-                    </div>
+                  <BulletList items={{ es: ["500 transferencias por día", "20 operaciones simultáneas", "Todos los servicios (Drive, Dropbox, OneDrive, Box, S3)", "Tareas programadas automáticas", "Notificaciones por email", "Soporte prioritario"], en: ["500 transfers per day", "20 concurrent operations", "All services (Drive, Dropbox, OneDrive, Box, S3)", "Automatic scheduled tasks", "Email notifications", "Priority support"], pt: ["500 transferências por dia", "20 operações simultâneas", "Todos os serviços (Drive, Dropbox, OneDrive, Box, S3)", "Tarefas agendadas automáticas", "Notificações por email", "Suporte prioritário"] }[lang]} />
+                </div>
+              </div>
+              <SubHeading>{{ es: "Condiciones de pago", en: "Payment conditions", pt: "Condições de pagamento" }[lang]}</SubHeading>
+              {lang === "es" && <BulletList items={["No almacenamos datos de tarjetas de crédito", "Las suscripciones se renuevan automáticamente", "Precios sujetos a cambios con 30 días de aviso previo", "Cancelación disponible en cualquier momento desde tu perfil"]} />}
+              {lang === "en" && <BulletList items={["We do not store credit card data", "Subscriptions renew automatically", "Prices subject to change with 30 days prior notice", "Cancellation available at any time from your profile"]} />}
+              {lang === "pt" && <BulletList items={["Não armazenamos dados de cartão de crédito", "As assinaturas são renovadas automaticamente", "Preços sujeitos a alterações com 30 dias de aviso prévio", "Cancelamento disponível a qualquer momento no seu perfil"]} />}
+              <SubHeading>{{ es: "Reembolsos", en: "Refunds", pt: "Reembolsos" }[lang]}</SubHeading>
+              {lang === "es" && <BulletList items={["Período de prueba de 14 días para el Plan PRO", "Reembolso completo dentro de los primeros 14 días", "Sin reembolsos después de 14 días (salvo casos excepcionales)"]} />}
+              {lang === "en" && <BulletList items={["14-day trial period for PRO Plan", "Full refund within the first 14 days", "No refunds after 14 days (except exceptional cases)"]} />}
+              {lang === "pt" && <BulletList items={["Período de teste de 14 dias para o Plano PRO", "Reembolso total nos primeiros 14 dias", "Sem reembolsos após 14 dias (exceto casos excepcionais)"]} />}
+            </Section>
+
+            {/* 07 */}
+            <Section id="propiedad" number="07" icon={<Scale className="w-5 h-5" />} title={sections[6].title}>
+              {lang === "es" && <>
+                <SubHeading>Propiedad de TERA</SubHeading>
+                <P>TERA, su nombre, logotipo, código fuente y diseño son propiedad de sus creadores y están protegidos por leyes de propiedad intelectual. Queda prohibida su reproducción sin autorización expresa.</P>
+                <SubHeading>Tus archivos son tuyos</SubHeading>
+                <P>Tus archivos siguen siendo de tu propiedad. Solo te pedimos una licencia técnica limitada para ejecutar las operaciones que vos configurás. <strong>Nunca usamos tu contenido para entrenamiento de IA ni análisis comercial.</strong></P>
+                <Callout color="green" icon="✅">TERA nunca lee ni analiza el contenido de tus archivos más allá de lo técnicamente necesario para ejecutar la operación solicitada.</Callout>
+              </>}
+              {lang === "en" && <>
+                <SubHeading>TERA's property</SubHeading>
+                <P>TERA, its name, logo, source code and design are the property of its creators and protected by intellectual property laws. Reproduction without express authorization is prohibited.</P>
+                <SubHeading>Your files are yours</SubHeading>
+                <P>Your files remain your property. We only ask for a limited technical license to execute the operations you configure. <strong>We never use your content for AI training or commercial analysis.</strong></P>
+                <Callout color="green" icon="✅">TERA never reads or analyzes the content of your files beyond what is technically necessary to execute the requested operation.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <SubHeading>Propriedade da TERA</SubHeading>
+                <P>A TERA, seu nome, logotipo, código-fonte e design são propriedade de seus criadores e protegidos pelas leis de propriedade intelectual. A reprodução sem autorização expressa é proibida.</P>
+                <SubHeading>Seus arquivos são seus</SubHeading>
+                <P>Seus arquivos permanecem de sua propriedade. Solicitamos apenas uma licença técnica limitada para executar as operações que você configura. <strong>Nunca usamos seu conteúdo para treinamento de IA ou análise comercial.</strong></P>
+                <Callout color="green" icon="✅">A TERA nunca lê nem analisa o conteúdo dos seus arquivos além do tecnicamente necessário para executar a operação solicitada.</Callout>
+              </>}
+            </Section>
+
+            {/* 08 */}
+            <Section id="privacidad" number="08" icon={<Shield className="w-5 h-5" />} title={sections[7].title}>
+              {lang === "es" && <><P>El uso de TERA implica el procesamiento de datos personales. Consultá nuestra <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidad</span></Link> para el detalle completo.</P><BulletList items={["Solo recopilamos datos mínimos necesarios", "No vendemos ni compartimos datos con fines comerciales", "Tokens OAuth cifrados con AES-256-GCM", "Podés eliminar tu cuenta y datos en cualquier momento"]} /></>}
+              {lang === "en" && <><P>Using TERA involves processing personal data. See our <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Privacy Policy</span></Link> for full details.</P><BulletList items={["We only collect minimum necessary data", "We do not sell or share data for commercial purposes", "OAuth tokens encrypted with AES-256-GCM", "You can delete your account and data at any time"]} /></>}
+              {lang === "pt" && <><P>O uso da TERA implica o processamento de dados pessoais. Consulte nossa <Link href="/privacy"><span className="text-[#0061D5] hover:underline cursor-pointer">Política de Privacidade</span></Link> para detalhes completos.</P><BulletList items={["Coletamos apenas os dados mínimos necessários", "Não vendemos nem compartilhamos dados para fins comerciais", "Tokens OAuth criptografados com AES-256-GCM", "Você pode excluir sua conta e dados a qualquer momento"]} /></>}
+            </Section>
+
+            {/* 09 */}
+            <Section id="limitacion" number="09" icon={<AlertTriangle className="w-5 h-5" />} title={sections[8].title}>
+              {lang === "es" && <>
+                <P>TERA se proporciona <strong>"tal cual"</strong> y <strong>"según disponibilidad"</strong>. En la máxima medida permitida por ley:</P>
+                <BulletList items={["No garantizamos disponibilidad ininterrumpida", "No nos responsabilizamos por pérdidas de datos causadas por servicios de terceros", "No nos responsabilizamos por daños indirectos o consecuentes", "Nuestra responsabilidad máxima no excederá lo pagado en los últimos 12 meses"]} />
+                <Callout color="yellow" icon="⚠️">Recomendamos mantener copias de respaldo de tus archivos importantes. TERA es una herramienta de transferencia, no de respaldo garantizado.</Callout>
+              </>}
+              {lang === "en" && <>
+                <P>TERA is provided <strong>"as is"</strong> and <strong>"as available"</strong>. To the maximum extent permitted by law:</P>
+                <BulletList items={["We do not guarantee uninterrupted availability", "We are not responsible for data loss caused by third-party services", "We are not responsible for indirect or consequential damages", "Our maximum liability will not exceed what you paid in the last 12 months"]} />
+                <Callout color="yellow" icon="⚠️">We recommend keeping backup copies of your important files. TERA is a transfer tool, not a guaranteed backup service.</Callout>
+              </>}
+              {lang === "pt" && <>
+                <P>A TERA é fornecida <strong>"como está"</strong> e <strong>"conforme disponibilidade"</strong>. Na medida máxima permitida por lei:</P>
+                <BulletList items={["Não garantimos disponibilidade ininterrupta", "Não nos responsabilizamos por perda de dados causada por serviços de terceiros", "Não nos responsabilizamos por danos indiretos ou consequentes", "Nossa responsabilidade máxima não excederá o valor pago nos últimos 12 meses"]} />
+                <Callout color="yellow" icon="⚠️">Recomendamos manter cópias de backup dos seus arquivos importantes. A TERA é uma ferramenta de transferência, não de backup garantido.</Callout>
+              </>}
+            </Section>
+
+            {/* 10 */}
+            <Section id="disponib" number="10" icon={<RefreshCw className="w-5 h-5" />} title={sections[9].title}>
+              {lang === "es" && <BulletList items={["No garantizamos disponibilidad 24/7/365", "Mantenimientos programados con al menos 24h de aviso", "Trabajamos para restablecer el servicio lo antes posible ante interrupciones", "Interrupciones en servicios de terceros están fuera de nuestro control"]} />}
+              {lang === "en" && <BulletList items={["We do not guarantee 24/7/365 availability", "Scheduled maintenance with at least 24h notice", "We work to restore service as soon as possible upon outages", "Third-party service interruptions are outside our control"]} />}
+              {lang === "pt" && <BulletList items={["Não garantimos disponibilidade 24/7/365", "Manutenções agendadas com pelo menos 24h de aviso", "Trabalhamos para restaurar o serviço o mais rápido possível em caso de interrupções", "Interrupções em serviços de terceiros estão fora do nosso controle"]} />}
+            </Section>
+
+            {/* 11 */}
+            <Section id="terminacion" number="11" icon={<UserX className="w-5 h-5" />} title={sections[10].title}>
+              {lang === "es" && <>
+                <SubHeading>Cancelación voluntaria</SubHeading>
+                <BulletList items={["Podés cancelar en cualquier momento desde tu perfil", "Los tokens OAuth se revocan inmediatamente", "Tus archivos en los servicios de terceros no se ven afectados"]} />
+                <SubHeading>Suspensión por incumplimiento</SubHeading>
+                <BulletList items={["Violación de estos Términos", "Detección de actividad fraudulenta o maliciosa", "Requerimiento legal", "TERA cesa operaciones (con 30 días de aviso)"]} />
+              </>}
+              {lang === "en" && <>
+                <SubHeading>Voluntary cancellation</SubHeading>
+                <BulletList items={["You can cancel at any time from your profile", "OAuth tokens are immediately revoked", "Your files in third-party services are not affected"]} />
+                <SubHeading>Suspension for non-compliance</SubHeading>
+                <BulletList items={["Violation of these Terms", "Detection of fraudulent or malicious activity", "Legal requirement", "TERA ceases operations (with 30 days notice)"]} />
+              </>}
+              {lang === "pt" && <>
+                <SubHeading>Cancelamento voluntário</SubHeading>
+                <BulletList items={["Você pode cancelar a qualquer momento no seu perfil", "Os tokens OAuth são revogados imediatamente", "Seus arquivos nos serviços de terceiros não são afetados"]} />
+                <SubHeading>Suspensão por descumprimento</SubHeading>
+                <BulletList items={["Violação destes Termos", "Detecção de atividade fraudulenta ou maliciosa", "Exigência legal", "A TERA encerra as operações (com 30 dias de aviso)"]} />
+              </>}
+            </Section>
+
+            {/* 12 */}
+            <Section id="indemniz" number="12" icon={<Scale className="w-5 h-5" />} title={sections[11].title}>
+              {lang === "es" && <P>Aceptás indemnizar a TERA, sus fundadores y colaboradores de cualquier reclamación, daño o gasto (incluidos honorarios legales) que surjan de: tu violación de estos Términos, tu uso no autorizado del servicio, o la violación de derechos de terceros a través de tu uso de TERA.</P>}
+              {lang === "en" && <P>You agree to indemnify TERA, its founders and collaborators from any claims, damages or expenses (including legal fees) arising from: your violation of these Terms, your unauthorized use of the service, or violation of third-party rights through your use of TERA.</P>}
+              {lang === "pt" && <P>Você concorda em indenizar a TERA, seus fundadores e colaboradores de quaisquer reclamações, danos ou despesas (incluindo honorários advocatícios) decorrentes de: sua violação destes Termos, seu uso não autorizado do serviço ou violação de direitos de terceiros por meio do seu uso da TERA.</P>}
+            </Section>
+
+            {/* 13 */}
+            <Section id="cambios" number="13" icon={<RefreshCw className="w-5 h-5" />} title={sections[12].title}>
+              {lang === "es" && <BulletList items={["Notificamos por email con al menos <strong>30 días de anticipación</strong> ante cambios significativos", "Mostramos aviso destacado dentro de la app", "El uso continuado implica aceptación de los nuevos términos", "Si no aceptás los cambios, podés cancelar tu cuenta"]} />}
+              {lang === "en" && <BulletList items={["We notify by email at least <strong>30 days in advance</strong> for significant changes", "We display a prominent notice in the app", "Continued use implies acceptance of the new terms", "If you don't accept the changes, you can cancel your account"]} />}
+              {lang === "pt" && <BulletList items={["Notificamos por email com pelo menos <strong>30 dias de antecedência</strong> para alterações significativas", "Exibimos aviso destacado no app", "O uso continuado implica aceitação dos novos termos", "Se não aceitar as alterações, você pode cancelar sua conta"]} />}
+            </Section>
+
+            {/* 14 */}
+            <Section id="disputas" number="14" icon={<Scale className="w-5 h-5" />} title={sections[13].title}>
+              {lang === "es" && <BulletList items={["<strong>Paso 1:</strong> Resolución amistosa — contactarnos en " + CONTACT_EMAIL + " dentro de los 30 días", "<strong>Paso 2:</strong> Mediación ante institución neutral acordada por ambas partes", "<strong>Paso 3:</strong> Tribunales ordinarios de la Ciudad Autónoma de Buenos Aires, Argentina"]} />}
+              {lang === "en" && <BulletList items={["<strong>Step 1:</strong> Friendly resolution — contact us at " + CONTACT_EMAIL + " within 30 days", "<strong>Step 2:</strong> Mediation before a neutral institution agreed by both parties", "<strong>Step 3:</strong> Ordinary courts of the Autonomous City of Buenos Aires, Argentina"]} />}
+              {lang === "pt" && <BulletList items={["<strong>Passo 1:</strong> Resolução amigável — entre em contato em " + CONTACT_EMAIL + " dentro de 30 dias", "<strong>Passo 2:</strong> Mediação perante instituição neutra acordada pelas partes", "<strong>Passo 3:</strong> Tribunais ordinários da Cidade Autônoma de Buenos Aires, Argentina"]} />}
+            </Section>
+
+            {/* 15 */}
+            <Section id="ley" number="15" icon={<Scale className="w-5 h-5" />} title={sections[14].title}>
+              {lang === "es" && <BulletList items={["Ley general: Legislación civil y comercial de la República Argentina", "Consumidor: Ley 24.240 de Defensa del Consumidor", "Privacidad: Ley 25.326 de Protección de Datos Personales", "Usuarios europeos: GDPR en lo que corresponda", "Jurisdicción: Tribunales de la Ciudad Autónoma de Buenos Aires"]} />}
+              {lang === "en" && <BulletList items={["General law: Civil and commercial legislation of Argentina", "Consumer: Law 24,240 on Consumer Defense", "Privacy: Law 25,326 on Personal Data Protection", "European users: GDPR where applicable", "Jurisdiction: Courts of the Autonomous City of Buenos Aires"]} />}
+              {lang === "pt" && <BulletList items={["Lei geral: Legislação civil e comercial da República Argentina", "Consumidor: Lei 24.240 de Defesa do Consumidor (Argentina)", "Privacidade: Lei 25.326 de Proteção de Dados Pessoais + LGPD para usuários brasileiros", "Usuários europeus: GDPR quando aplicável", "Jurisdição: Tribunais da Cidade Autônoma de Buenos Aires, Argentina"]} />}
+            </Section>
+
+            {/* 16 */}
+            <Section id="contacto" number="16" icon={<FileText className="w-5 h-5" />} title={sections[15].title}>
+              <div className="mt-2 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Scale className="w-5 h-5 text-white" />
                   </div>
-                  <P className="mt-4">For privacy inquiries: <a href="mailto:privacy@mytera.app" className="text-[#0061D5] hover:underline">privacy@mytera.app</a></P>
-                </>
-              )}
+                  <div>
+                    <p className="font-bold text-slate-900 text-lg mb-1">TERA · {{ es: "Equipo Legal", en: "Legal Team", pt: "Equipe Jurídica" }[lang]}</p>
+                    <a href={`mailto:${CONTACT_EMAIL}`} className="text-[#0061D5] font-semibold text-lg hover:underline">{CONTACT_EMAIL}</a>
+                    <p className="text-sm text-slate-500 mt-2">{{ es: "Respondemos en máximo 15 días hábiles.", en: "We respond within 15 business days.", pt: "Respondemos em no máximo 15 dias úteis." }[lang]}</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-slate-500 mt-4">
+                {{ es: "Para consultas de privacidad:", en: "For privacy inquiries:", pt: "Para consultas de privacidade:" }[lang]}{" "}
+                <a href={`mailto:${PRIVACY_EMAIL}`} className="text-[#0061D5] hover:underline">{PRIVACY_EMAIL}</a>
+              </p>
             </Section>
 
           </main>
@@ -812,9 +456,9 @@ export default function TermsOfService() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm text-slate-500">© 2025 TERA · {es ? "Todos los derechos reservados" : "All rights reserved"}</span>
+          <span className="text-sm text-slate-500">© 2025 TERA · {{ es: "Todos los derechos reservados", en: "All rights reserved", pt: "Todos os direitos reservados" }[lang]}</span>
           <div className="flex items-center gap-6 text-sm">
-            <Link href="/privacy"><span className="text-slate-500 hover:text-[#0061D5] cursor-pointer transition-colors">{es ? "Política de Privacidad" : "Privacy Policy"}</span></Link>
+            <Link href="/privacy"><span className="text-slate-500 hover:text-[#0061D5] cursor-pointer transition-colors">{{ es: "Política de Privacidad", en: "Privacy Policy", pt: "Política de Privacidade" }[lang]}</span></Link>
             <a href={`mailto:${CONTACT_EMAIL}`} className="text-slate-500 hover:text-[#0061D5] transition-colors">{CONTACT_EMAIL}</a>
           </div>
         </div>
@@ -822,8 +466,6 @@ export default function TermsOfService() {
     </div>
   );
 }
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function Section({ id, number, icon, title, children }: { id: string; number: string; icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
@@ -839,15 +481,12 @@ function Section({ id, number, icon, title, children }: { id: string; number: st
     </section>
   );
 }
-
-function P({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <p className={`text-slate-600 leading-relaxed text-[15px] ${className}`}>{children}</p>;
+function P({ children }: { children: React.ReactNode }) {
+  return <p className="text-slate-600 leading-relaxed text-[15px]">{children}</p>;
 }
-
 function SubHeading({ children }: { children: React.ReactNode }) {
-  return <h3 className="font-bold text-slate-900 text-[15px] mt-6 mb-2 pb-1 border-b border-slate-100">{children}</h3>;
+  return <h3 className="font-bold text-slate-900 text-[15px] mt-5 mb-2 pb-1 border-b border-slate-100">{children}</h3>;
 }
-
 function BulletList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-2">
@@ -860,13 +499,8 @@ function BulletList({ items }: { items: string[] }) {
     </ul>
   );
 }
-
 function Callout({ children, color, icon }: { children: React.ReactNode; color: "blue" | "green" | "yellow"; icon: string }) {
-  const colors = {
-    blue:   "bg-blue-50 border-blue-200 text-blue-800",
-    green:  "bg-green-50 border-green-200 text-green-800",
-    yellow: "bg-amber-50 border-amber-200 text-amber-800",
-  };
+  const colors = { blue: "bg-blue-50 border-blue-200 text-blue-800", green: "bg-green-50 border-green-200 text-green-800", yellow: "bg-amber-50 border-amber-200 text-amber-800" };
   return (
     <div className={`flex gap-3 p-4 rounded-xl border text-sm leading-relaxed ${colors[color]}`}>
       <span className="text-base flex-shrink-0">{icon}</span>
