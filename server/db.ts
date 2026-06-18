@@ -196,6 +196,16 @@ async function ensureTablesExist() {
       // Columns might already exist, ignore
     }
 
+    // Add Box columns if they don't exist (migration)
+    try {
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS box_access_token TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS box_refresh_token TEXT`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS box_token_expiry TIMESTAMP`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS box_connected BOOLEAN DEFAULT false`);
+    } catch (error) {
+      // Columns might already exist, ignore
+    }
+
     // Create scheduled_task_runs table
     await database.execute(sql`
       CREATE TABLE IF NOT EXISTS scheduled_task_runs (

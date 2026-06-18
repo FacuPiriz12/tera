@@ -65,6 +65,11 @@ export interface IStorage {
     refreshToken?: string | null;
     expiry?: Date | null;
   }): Promise<User>;
+  updateUserBoxTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User>;
 
   // Stripe integration methods - for Stripe payment processing
   updateUserStripeInfo(userId: string, stripeData: {
@@ -304,6 +309,25 @@ export class DatabaseStorage implements IStorage {
         onedriveRefreshToken: encryptToken(tokens.refreshToken || null),
         onedriveTokenExpiry: tokens.expiry || null,
         onedriveConnected: !!(tokens.accessToken || tokens.refreshToken),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return decryptUserTokens(user);
+  }
+
+  async updateUserBoxTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User> {
+    const [user] = await getDb()
+      .update(users)
+      .set({
+        boxAccessToken: encryptToken(tokens.accessToken),
+        boxRefreshToken: encryptToken(tokens.refreshToken || null),
+        boxTokenExpiry: tokens.expiry || null,
+        boxConnected: !!(tokens.accessToken || tokens.refreshToken),
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))
@@ -1218,6 +1242,10 @@ class MemoryStorage implements IStorage {
       onedriveRefreshToken: existingUser?.onedriveRefreshToken || null,
       onedriveTokenExpiry: existingUser?.onedriveTokenExpiry || null,
       onedriveConnected: existingUser?.onedriveConnected || false,
+      boxAccessToken: existingUser?.boxAccessToken || null,
+      boxRefreshToken: existingUser?.boxRefreshToken || null,
+      boxTokenExpiry: existingUser?.boxTokenExpiry || null,
+      boxConnected: existingUser?.boxConnected || false,
     };
     this.users.set(userData.id, user);
     return user;
@@ -1305,6 +1333,25 @@ class MemoryStorage implements IStorage {
       onedriveRefreshToken: tokens.refreshToken || null,
       onedriveTokenExpiry: tokens.expiry || null,
       onedriveConnected: !!(tokens.accessToken || tokens.refreshToken),
+      updatedAt: new Date(),
+    };
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async updateUserBoxTokens(userId: string, tokens: {
+    accessToken: string | null;
+    refreshToken?: string | null;
+    expiry?: Date | null;
+  }): Promise<User> {
+    const existingUser = this.users.get(userId);
+    if (!existingUser) throw new Error('User not found');
+    const user: User = {
+      ...existingUser,
+      boxAccessToken: tokens.accessToken,
+      boxRefreshToken: tokens.refreshToken || null,
+      boxTokenExpiry: tokens.expiry || null,
+      boxConnected: !!(tokens.accessToken || tokens.refreshToken),
       updatedAt: new Date(),
     };
     this.users.set(userId, user);

@@ -5,9 +5,11 @@ import Sidebar from "@/components/Sidebar";
 import GoogleDriveConnection from "@/components/GoogleDriveConnection";
 import DropboxConnection from "@/components/DropboxConnection";
 import OneDriveConnection from "@/components/OneDriveConnection";
+import BoxConnection from "@/components/BoxConnection";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
 import OneDriveLogo from "@/components/OneDriveLogo";
+import BoxLogo from "@/components/BoxLogo";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
@@ -226,6 +228,60 @@ export default function Integrations() {
               </Card>
             </motion.div>
 
+            {/* Box Integration */}
+            <motion.div variants={item} className="h-full">
+              <Card className="group h-full flex flex-col border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden relative bg-white">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#0061D5] to-[#0075DB] rounded-l-xl" />
+
+                <CardHeader className="pb-3 pl-5 pt-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300 shadow-inner">
+                      <BoxLogo className="w-5 h-5" />
+                    </div>
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-bold text-gray-900 mb-0.5">Box</CardTitle>
+                    <p className="text-[11px] font-medium text-[#0061D5]">{t('pages.integrations.enterpriseStorage', 'Almacenamiento Empresarial')}</p>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="pt-0 pl-5 flex-1 flex flex-col pb-5 pr-5">
+                  <p className="text-gray-500 text-xs mb-4 leading-relaxed">
+                    {t('pages.integrations.boxDesc', 'Conecta tu cuenta de Box para gestionar archivos empresariales con seguridad avanzada y colaboración en equipo.')}
+                  </p>
+
+                  <div className="bg-gray-50/80 rounded-lg p-2.5 mb-4 flex-1">
+                    <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-2">{t('pages.integrations.features', 'Características')}</h4>
+                    <ul className="space-y-1.5">
+                      <li className="flex items-start gap-2 text-[11px] text-gray-700 group/item">
+                        <CheckCircle className="w-3.5 h-3.5 text-[#0061D5] flex-shrink-0 mt-0.5 group-hover/item:text-blue-700 transition-colors" />
+                        <span>{t('pages.integrations.enterpriseSecurity', 'Seguridad empresarial avanzada')}</span>
+                      </li>
+                      <li className="flex items-start gap-2 text-[11px] text-gray-700 group/item">
+                        <CheckCircle className="w-3.5 h-3.5 text-[#0061D5] flex-shrink-0 mt-0.5 group-hover/item:text-blue-700 transition-colors" />
+                        <span>{t('pages.integrations.realTimeCollab', 'Colaboración en tiempo real')}</span>
+                      </li>
+                      <li className="flex items-start gap-2 text-[11px] text-gray-700 group/item">
+                        <CheckCircle className="w-3.5 h-3.5 text-[#0061D5] flex-shrink-0 mt-0.5 group-hover/item:text-blue-700 transition-colors" />
+                        <span>{t('pages.integrations.complianceTools', 'Herramientas de cumplimiento')}</span>
+                      </li>
+                    </ul>
+                    <div className="mt-3 pt-2 border-t border-gray-100">
+                      <h4 className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">{t('pages.integrations.maxSupport', 'Soporte máximo')}</h4>
+                      <div className="flex items-center gap-2 text-[11px] text-gray-700">
+                        <Shield className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        <span className="font-semibold">150GB {t('pages.integrations.perFile', 'por archivo')}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto">
+                    <BoxConnection variant="card" />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
             {/* Coming Soon Card */}
             <motion.div variants={item} className="h-full">
               <Card className="h-full flex flex-col border-2 border-dashed border-gray-200 bg-gray-50/50 hover:bg-gray-50 transition-colors relative overflow-hidden">
@@ -246,9 +302,9 @@ export default function Integrations() {
                 <CardContent className="pt-0 flex-1 flex flex-col relative z-10 pb-5 pr-5 pl-5">
                   <div className="space-y-2 mt-1">
                     {[
-                      { name: "Box", icon: Cloud },
                       { name: "Amazon S3", icon: Cloud },
-                      { name: "iCloud Drive", icon: Cloud },
+                      { name: "MEGA", icon: Cloud },
+                      { name: "pCloud", icon: Cloud },
                     ].map((integration, idx) => (
                       <div key={idx} className="flex items-center gap-3 p-2.5 bg-white rounded-lg border border-gray-100 opacity-60">
                         <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">

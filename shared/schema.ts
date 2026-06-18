@@ -57,6 +57,11 @@ export const users = pgTable("users", {
   onedriveRefreshToken: text("onedrive_refresh_token"),
   onedriveTokenExpiry: timestamp("onedrive_token_expiry"),
   onedriveConnected: boolean("onedrive_connected").default(false),
+  // Box OAuth fields
+  boxAccessToken: text("box_access_token"),
+  boxRefreshToken: text("box_refresh_token"),
+  boxTokenExpiry: timestamp("box_token_expiry"),
+  boxConnected: boolean("box_connected").default(false),
   // Membership fields
   membershipPlan: varchar("membership_plan").notNull().default('free'), // 'free', 'pro'
   membershipExpiry: timestamp("membership_expiry"),

@@ -6,6 +6,7 @@ import { sendPasswordResetEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
+import { BoxService } from "./services/boxService";
 import { DuplicateDetectionService } from "./services/duplicateDetectionService";
 import { SyncService } from "./services/syncService";
 import { getQueueWorker } from "./queueWorker";
@@ -3866,6 +3867,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error listing OneDrive files:', error);
       if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
       res.status(500).json({ message: 'Failed to list OneDrive files' });
+    }
+  });
+
+  // ── Box OAuth routes ──────────────────────────────────────────────────────
+
+  app.get('/api/auth/box', async (req: any, res) => {
+    try {
+      let userId: string | null = null;
+
+      const token = req.query.token as string;
+      if (token) {
+        const user = await validateSupabaseToken(token);
+        if (user) { userId = user.id; req.session.supabaseUserId = user.id; }
+      }
+      if (!userId && req.user?.claims?.sub) userId = req.user.claims.sub;
+      if (!userId && req.session?.supabaseUserId) userId = req.session.supabaseUserId;
+
+      if (!userId) return res.redirect('/login?redirect=/integrations&error=auth_required');
+
+      if (!process.env.BOX_CLIENT_ID || !process.env.BOX_CLIENT_SECRET) {
+        console.error('Box OAuth not configured');
+        return res.redirect('/integrations?box_auth=error&reason=not_configured');
+      }
+
+      const redirectUri = getOAuthRedirectUri(req, '/api/auth/box/callback');
+      const state = crypto.randomBytes(16).toString('hex');
+      req.session.boxOAuthState = state;
+      req.session.boxUserId = userId;
+
+      await new Promise<void>((resolve) => req.session.save((err: any) => resolve()));
+
+      const authUrl = BoxService.getAuthUrl(redirectUri, state);
+      res.redirect(authUrl);
+    } catch (error) {
+      console.error('Error starting Box OAuth:', error);
+      res.redirect('/integrations?box_auth=error&reason=server_error');
+    }
+  });
+
+  app.get('/api/auth/box/callback', async (req: any, res) => {
+    try {
+      const { code, state, error: oauthError } = req.query;
+
+      if (oauthError) {
+        delete req.session.boxOAuthState;
+        delete req.session.boxUserId;
+        return res.redirect(`/integrations?box_auth=error&reason=${oauthError === 'access_denied' ? 'denied' : 'error'}`);
+      }
+
+      if (!code) {
+        delete req.session.boxOAuthState;
+        delete req.session.boxUserId;
+        return res.redirect('/integrations?box_auth=error&reason=no_code');
+      }
+
+      const expectedState = req.session.boxOAuthState;
+      const sessionUserId = req.session.boxUserId;
+
+      if (state !== expectedState) {
+        delete req.session.boxOAuthState;
+        delete req.session.boxUserId;
+        return res.redirect('/integrations?box_auth=error&reason=invalid_state');
+      }
+
+      if (!sessionUserId) return res.redirect('/integrations?box_auth=error&reason=no_session');
+
+      delete req.session.boxOAuthState;
+      delete req.session.boxUserId;
+
+      const redirectUri = getOAuthRedirectUri(req, '/api/auth/box/callback');
+      const { accessToken, refreshToken, expiresIn } = await BoxService.exchangeCode(code as string, redirectUri);
+      const expiry = new Date(Date.now() + expiresIn * 1000);
+
+      await storage.updateUserBoxTokens(sessionUserId, { accessToken, refreshToken, expiry });
+
+      console.log('Box OAuth completed for user:', sessionUserId);
+      res.redirect('/integrations?box_auth=success');
+    } catch (error) {
+      console.error('Error in Box OAuth callback:', error);
+      delete req.session.boxOAuthState;
+      delete req.session.boxUserId;
+      res.redirect('/integrations?box_auth=error&reason=unknown');
+    }
+  });
+
+  app.get('/api/auth/box/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) return res.status(404).json({ connected: false, hasValidToken: false });
+
+      const hasAccessToken = !!user.boxAccessToken;
+      const hasRefreshToken = !!user.boxRefreshToken;
+      const isExpired = user.boxTokenExpiry && new Date(user.boxTokenExpiry) <= new Date();
+      res.json({
+        connected: hasAccessToken || hasRefreshToken,
+        hasValidToken: (hasAccessToken && !isExpired) || !!hasRefreshToken,
+      });
+    } catch (error) {
+      console.error('Error checking Box status:', error);
+      res.status(500).json({ connected: false, hasValidToken: false });
+    }
+  });
+
+  app.delete('/api/auth/box', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      await storage.updateUserBoxTokens(userId, { accessToken: null, refreshToken: null, expiry: null });
+      res.json({ message: 'Box disconnected successfully' });
+    } catch (error) {
+      console.error('Error disconnecting Box:', error);
+      res.status(500).json({ message: 'Failed to disconnect Box' });
+    }
+  });
+
+  // ── Box API routes ────────────────────────────────────────────────────────
+
+  app.get('/api/box/files', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folderId = req.query.folderId as string | undefined;
+      const service = new BoxService(userId);
+      const files = await service.listFolder(folderId);
+      res.json(files);
+    } catch (error: any) {
+      console.error('Error listing Box files:', error);
+      if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
+      res.status(500).json({ message: 'Failed to list Box files' });
     }
   });
 
