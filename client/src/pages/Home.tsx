@@ -81,7 +81,7 @@ export default function Home() {
                   <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Primeros pasos</p>
                   <h2 className="text-xl font-bold mb-2">¡Bienvenido a TERA!</h2>
                   <p className="text-sm text-blue-100 mb-5 max-w-lg">
-                    Conectá tus cuentas de Google Drive o Dropbox y empezá a mover archivos entre la nube en segundos.
+                    Conectá tus cuentas de Google Drive, Dropbox, OneDrive, Box y más, y empezá a mover archivos entre tus nubes en segundos.
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <button onClick={() => setLocation('/integrations')} className="flex items-center gap-2 px-4 py-2 bg-white text-[#0061D5] rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors">
