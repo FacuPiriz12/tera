@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./replitAuth";
-import { sendPasswordResetEmail } from "./lib/email";
+import { sendPasswordResetEmail, sendWelcomeEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
@@ -201,6 +201,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Try to save to database, but don't fail if it doesn't work
         try {
           user = await storage.upsertUser(userData);
+          // New user — send welcome email in background (don't await)
+          sendWelcomeEmail(userEmail, userData.firstName).catch(() => {});
         } catch (dbError) {
           console.log('Database upsert failed, returning claims data directly');
           user = userData;
