@@ -162,14 +162,22 @@ export default function PricingPage() {
   const { toast } = useToast();
 
   const handleCheckout = async (priceId: string) => {
-    if (priceId === '0') return;
+    if (priceId === '0') {
+      window.location.href = '/';
+      return;
+    }
     try {
       setLoading(priceId);
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId }),
       });
+      if (res.status === 401) {
+        window.location.href = '/api/login';
+        return;
+      }
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.message || 'Error al crear la sesión de pago');
