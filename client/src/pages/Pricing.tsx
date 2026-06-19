@@ -206,7 +206,7 @@ export default function PricingPage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, currency: currency.toLowerCase() }),
       });
       if (res.status === 401) {
         window.location.href = '/';

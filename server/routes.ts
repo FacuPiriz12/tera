@@ -114,11 +114,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/stripe/create-checkout', isAuthenticated, async (req: any, res) => {
     if (!stripe) return res.status(500).json({ message: "Stripe not configured" });
     try {
-      const { priceId } = req.body;
+      const { priceId, currency } = req.body;
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
+        ...(currency ? { currency } : {}),
         success_url: `${req.protocol}://${req.get('host')}/settings?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/settings`,
         client_reference_id: req.user.claims.sub,
