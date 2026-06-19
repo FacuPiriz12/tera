@@ -20,9 +20,18 @@ import Stripe from "stripe";
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 
 const PLAN_LIMITS = {
-  free: { maxDailyOperations: 100,  maxConcurrentOperations: 5,  maxStorageBytes: 16106127360  }, // 15 GB
-  pro:  { maxDailyOperations: 500,  maxConcurrentOperations: 20, maxStorageBytes: 107374182400 }, // 100 GB
+  free:     { maxDailyOperations: 20,   maxConcurrentOperations: 2,  maxStorageBytes: 5368709120   }, // 5 GB traffic
+  pro:      { maxDailyOperations: 300,  maxConcurrentOperations: 10, maxStorageBytes: 214748364800 }, // 200 GB traffic
+  business: { maxDailyOperations: 9999, maxConcurrentOperations: 30, maxStorageBytes: 2199023255552 }, // 2 TB traffic
 } as const;
+
+// Map a Stripe price ID to a plan name — update these after creating new prices in Stripe dashboard
+const STRIPE_PRICE_TO_PLAN: Record<string, 'pro' | 'business'> = {
+  'price_1Rapr1GMtCDZ5sKaT1LJRKZv': 'pro',      // Pro monthly (old $12 — replace after Stripe update)
+  'price_1RapoMGMtCDZ5sKa2LbGdPBj': 'pro',      // Pro annual  (old $10 — replace after Stripe update)
+  'price_1Rb6mvGMtCDZ5sKaDaIwMjcC': 'business', // Business monthly (old $25 — replace after Stripe update)
+  'price_1Rb6kNGMtCDZ5sKaNIIpe6Gy': 'business', // Business annual  (old $20.75 — replace after Stripe update)
+};
 
 // Utility function to compute redirect URI consistently across all OAuth flows
 function getOAuthRedirectUri(req: any, path: string): string {
@@ -129,15 +138,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.client_reference_id && session.subscription) {
+          // Determine plan from the price ID on the line item
+          const fullSession = await stripe!.checkout.sessions.retrieve(session.id, {
+            expand: ['line_items'],
+          });
+          const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? '';
+          const plan = STRIPE_PRICE_TO_PLAN[priceId] ?? 'pro';
+
           await storage.updateUserStripeInfo(session.client_reference_id, {
             subscriptionId: session.subscription as string,
-            customerId: session.customer as string
+            customerId: session.customer as string,
           });
           await storage.updateUser(session.client_reference_id, {
-            membershipPlan: 'pro',
-            ...PLAN_LIMITS.pro,
+            membershipPlan: plan,
+            ...PLAN_LIMITS[plan],
           });
-          console.log(`User ${session.client_reference_id} upgraded to PRO via Stripe`);
+          console.log(`User ${session.client_reference_id} upgraded to ${plan.toUpperCase()} via Stripe`);
         }
       } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
         const subscription = event.data.object as Stripe.Subscription;
