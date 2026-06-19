@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, X, ArrowRight, Star, Zap, Shield, RefreshCw, Clock, BarChart2, Bell, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
@@ -9,15 +9,33 @@ import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
 
-// TODO: Create new Stripe prices at $7.99/month and $19.99/month and replace these IDs
+type Currency = 'USD' | 'BRL' | 'EUR';
+
+const EUROZONE = new Set(['AT','BE','CY','EE','FI','FR','DE','GR','IE','IT','LV','LT','LU','MT','NL','PT','SK','SI','ES']);
+
+function detectCurrency(): Currency {
+  if (typeof navigator === 'undefined') return 'USD';
+  const region = (navigator.language || 'en-US').split('-')[1]?.toUpperCase();
+  if (region === 'BR') return 'BRL';
+  if (region && EUROZONE.has(region)) return 'EUR';
+  return 'USD';
+}
+
+const CURRENCY_CONFIG: Record<Currency, { symbol: string }> = {
+  USD: { symbol: '$' },
+  BRL: { symbol: 'R$' },
+  EUR: { symbol: '€' },
+};
 const PLANS = [
   {
     id: 'free',
     name: 'Free',
     tagline: 'Para empezar sin costo',
-    priceMonthly: 0,
-    priceAnnual: 0,
-    annualTotal: null as number | null,
+    prices: {
+      USD: { monthly: 0, annual: 0, annualTotal: null as number | null },
+      BRL: { monthly: 0, annual: 0, annualTotal: null as number | null },
+      EUR: { monthly: 0, annual: 0, annualTotal: null as number | null },
+    },
     priceId: { monthly: '0', annual: '0' },
     cta: 'Empezar gratis',
     highlight: false,
@@ -38,9 +56,11 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     tagline: 'Para uso regular y profesional',
-    priceMonthly: 7.99,
-    priceAnnual: 5.42,
-    annualTotal: 65 as number | null,
+    prices: {
+      USD: { monthly: 7.99,  annual: 5.42,  annualTotal: 65  as number | null },
+      BRL: { monthly: 39.90, annual: 29.92, annualTotal: 359 as number | null },
+      EUR: { monthly: 7.99,  annual: 4.92,  annualTotal: 59  as number | null },
+    },
     priceId: { monthly: 'price_1Tk1ozGMtCDZ5sKadebYpBII', annual: 'price_1Tk1uAGMtCDZ5sKaHHyc8KGc' },
     cta: 'Comenzar Pro',
     highlight: true,
@@ -62,9 +82,11 @@ const PLANS = [
     id: 'business',
     name: 'Business',
     tagline: 'Para uso intensivo',
-    priceMonthly: 19.99,
-    priceAnnual: 13.25,
-    annualTotal: 159 as number | null,
+    prices: {
+      USD: { monthly: 19.99, annual: 13.25, annualTotal: 159 as number | null },
+      BRL: { monthly: 99.90, annual: 74.92, annualTotal: 899 as number | null },
+      EUR: { monthly: 17.99, annual: 11.58, annualTotal: 139 as number | null },
+    },
     priceId: { monthly: 'price_1Tk1viGMtCDZ5sKaWGPYSJfA', annual: 'price_1Tk1xwGMtCDZ5sKaBukVmyZb' },
     cta: 'Comenzar Business',
     highlight: false,
@@ -163,6 +185,8 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
+  const [currency, setCurrency] = useState<Currency>('USD');
+  useEffect(() => { setCurrency(detectCurrency()); }, []);
 
   const handleCheckout = async (priceId: string) => {
     if (priceId === '0') {
@@ -267,7 +291,10 @@ export default function PricingPage() {
         <section className="max-w-6xl mx-auto px-6 mb-12">
           <div className="grid lg:grid-cols-3 gap-5 items-stretch">
             {PLANS.map((plan, idx) => {
-              const price = billing === 'annual' && plan.priceAnnual > 0 ? plan.priceAnnual : plan.priceMonthly;
+              const planPrices = plan.prices[currency];
+              const price = billing === 'annual' && planPrices.annual > 0 ? planPrices.annual : planPrices.monthly;
+              const annualTotal = planPrices.annualTotal;
+              const sym = CURRENCY_CONFIG[currency].symbol;
               const priceId = plan.priceId[billing];
               const isLoading = loading === priceId;
 
@@ -307,7 +334,7 @@ export default function PricingPage() {
                     {/* Price */}
                     <div className="mb-8">
                       <div className="flex items-end gap-1">
-                        <span className={`text-2xl font-black mt-1 ${plan.highlight ? 'text-blue-100' : 'text-gray-400'}`}>$</span>
+                        <span className={`text-2xl font-black mt-1 ${plan.highlight ? 'text-blue-100' : 'text-gray-400'}`}>{sym}</span>
                         <AnimatePresence mode="wait">
                           <motion.span
                             key={`${plan.id}-${billing}`}
@@ -322,9 +349,9 @@ export default function PricingPage() {
                         </AnimatePresence>
                         <span className={`text-sm font-bold mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/mes</span>
                       </div>
-                      {billing === 'annual' && plan.annualTotal && (
+                      {billing === 'annual' && annualTotal && (
                         <p className={`mt-2 text-xs font-semibold ${plan.highlight ? 'text-blue-200' : 'text-emerald-600'}`}>
-                          Facturado ${plan.annualTotal}/año · ahorrás ${(plan.priceMonthly * 12 - plan.annualTotal).toFixed(0)}
+                          Facturado {sym}{annualTotal}/año · ahorrás {sym}{(planPrices.monthly * 12 - annualTotal).toFixed(0)}
                         </p>
                       )}
                       {price === 0 && (
