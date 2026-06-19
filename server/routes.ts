@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./replitAuth";
-import { sendPasswordResetEmail, sendWelcomeEmail } from "./lib/email";
+import { sendPasswordResetEmail, sendWelcomeEmail, sendVerificationCodeEmail, sendEmailChangeEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
@@ -253,27 +253,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Usuario no encontrado" });
       }
 
-      // Update user information
-      const updatedUser = await storage.updateUser(userId, validation.data);
-      
+      const { email: newEmail, ...otherFields } = validation.data;
+      const isEmailChange = newEmail && newEmail !== existingUser.email;
+
+      // Update non-email fields immediately
+      if (Object.keys(otherFields).length > 0) {
+        await storage.updateUser(userId, otherFields);
+      }
+
+      // Email change requires OTP verification
+      if (isEmailChange) {
+        const taken = await storage.getUserByEmail(newEmail);
+        if (taken && taken.id !== userId) {
+          return res.status(409).json({ message: "El email ya está en uso por otro usuario", code: "EMAIL_ALREADY_EXISTS" });
+        }
+
+        const code = String(crypto.randomInt(100000, 999999));
+        const expiry = Date.now() + 10 * 60 * 1000; // 10 min
+
+        const supabase = createSupabaseClient();
+        if (supabase) {
+          await supabase.auth.admin.updateUserById(userId, {
+            user_metadata: { pending_email: newEmail, pending_email_code: code, pending_email_expiry: expiry }
+          });
+        }
+
+        sendVerificationCodeEmail(newEmail, code, 10).catch(() => {});
+
+        return res.json({ requiresEmailVerification: true, pendingEmail: newEmail });
+      }
+
+      const updatedUser = await storage.getUser(userId);
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating user:", error);
-      
-      // Handle specific database errors
       if (error instanceof Error) {
         if (error.message.includes('unique constraint') || error.message.includes('UNIQUE constraint')) {
-          return res.status(409).json({ 
-            message: "El email ya está en uso por otro usuario",
-            code: "EMAIL_ALREADY_EXISTS"
-          });
+          return res.status(409).json({ message: "El email ya está en uso por otro usuario", code: "EMAIL_ALREADY_EXISTS" });
         }
         if (error.message.includes('User not found')) {
           return res.status(404).json({ message: "Usuario no encontrado" });
         }
       }
-      
       res.status(500).json({ message: "Error al actualizar la información del usuario" });
+    }
+  });
+
+  app.post('/api/user/verify-email-change', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { code } = req.body;
+      if (!code) return res.status(400).json({ message: "Código requerido" });
+
+      const supabase = createSupabaseClient();
+      if (!supabase) return res.status(500).json({ message: "Servicio no disponible" });
+
+      const { data: supaData, error: supaErr } = await supabase.auth.admin.getUserById(userId);
+      if (supaErr || !supaData?.user) return res.status(404).json({ message: "Usuario no encontrado" });
+
+      const meta = supaData.user.user_metadata || {};
+      const { pending_email, pending_email_code, pending_email_expiry } = meta;
+
+      if (!pending_email || !pending_email_code) {
+        return res.status(400).json({ message: "No hay un cambio de email pendiente" });
+      }
+      if (Date.now() > Number(pending_email_expiry)) {
+        return res.status(400).json({ message: "El código expiró. Solicitá uno nuevo." });
+      }
+      if (String(code) !== String(pending_email_code)) {
+        return res.status(400).json({ message: "Código incorrecto" });
+      }
+
+      const currentUser = await storage.getUser(userId);
+
+      // Apply the email change
+      await storage.updateUser(userId, { email: pending_email });
+      await supabase.auth.admin.updateUserById(userId, {
+        email: pending_email,
+        user_metadata: { pending_email: null, pending_email_code: null, pending_email_expiry: null }
+      });
+
+      // Notify old email that the change happened
+      if (currentUser?.email) {
+        sendEmailChangeEmail(pending_email, currentUser.email, '').catch(() => {});
+      }
+
+      const updatedUser = await storage.getUser(userId);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error verifying email change:", error);
+      res.status(500).json({ message: "Error al verificar el código" });
     }
   });
 
