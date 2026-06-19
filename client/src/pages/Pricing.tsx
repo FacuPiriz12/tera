@@ -6,6 +6,7 @@ import logoUrl from '../assets/logo.png';
 import Footer from '../components/Footer';
 import LanguageSelector from '../components/LanguageSelector';
 import { useToast } from "@/hooks/use-toast";
+import { getAuthHeaders } from "@/lib/queryClient";
 
 // TODO: Create new Stripe prices at $7.99/month and $19.99/month and replace these IDs
 const PLANS = [
@@ -168,14 +169,15 @@ export default function PricingPage() {
     }
     try {
       setLoading(priceId);
+      const authHeaders = await getAuthHeaders();
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ priceId }),
       });
       if (res.status === 401) {
-        window.location.href = '/api/login';
+        window.location.href = '/';
         return;
       }
       if (!res.ok) {
