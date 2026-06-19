@@ -8,16 +8,21 @@ import LanguageSelector from '../components/LanguageSelector';
 import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from 'react-i18next';
 
 type Currency = 'USD' | 'BRL' | 'EUR';
 
 const EUROZONE = new Set(['AT','BE','CY','EE','FI','FR','DE','GR','IE','IT','LV','LT','LU','MT','NL','PT','SK','SI','ES']);
 
-function detectCurrency(): Currency {
-  if (typeof navigator === 'undefined') return 'USD';
-  const region = (navigator.language || 'en-US').split('-')[1]?.toUpperCase();
-  if (region === 'BR') return 'BRL';
-  if (region && EUROZONE.has(region)) return 'EUR';
+function langToCurrency(lang: string): Currency {
+  const [language, region] = lang.split('-');
+  if (language === 'pt' && region?.toUpperCase() === 'BR') return 'BRL';
+  if (language === 'pt') return 'BRL';
+  if (region && EUROZONE.has(region.toUpperCase())) return 'EUR';
+  // fallback: use navigator locale
+  const navRegion = (navigator.language || '').split('-')[1]?.toUpperCase();
+  if (navRegion === 'BR') return 'BRL';
+  if (navRegion && EUROZONE.has(navRegion)) return 'EUR';
   return 'USD';
 }
 
@@ -185,8 +190,9 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
+  const { i18n } = useTranslation();
   const [currency, setCurrency] = useState<Currency>('USD');
-  useEffect(() => { setCurrency(detectCurrency()); }, []);
+  useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
 
   const handleCheckout = async (priceId: string) => {
     if (priceId === '0') {
