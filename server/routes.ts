@@ -27,10 +27,10 @@ const PLAN_LIMITS = {
 
 // Map a Stripe price ID to a plan name — update these after creating new prices in Stripe dashboard
 const STRIPE_PRICE_TO_PLAN: Record<string, 'pro' | 'business'> = {
-  'price_1Rapr1GMtCDZ5sKaT1LJRKZv': 'pro',      // Pro monthly (old $12 — replace after Stripe update)
-  'price_1RapoMGMtCDZ5sKa2LbGdPBj': 'pro',      // Pro annual  (old $10 — replace after Stripe update)
-  'price_1Rb6mvGMtCDZ5sKaDaIwMjcC': 'business', // Business monthly (old $25 — replace after Stripe update)
-  'price_1Rb6kNGMtCDZ5sKaNIIpe6Gy': 'business', // Business annual  (old $20.75 — replace after Stripe update)
+  'price_1Tk1ozGMtCDZ5sKadebYpBII': 'pro',      // Pro $7.99/month
+  'price_1Tk1uAGMtCDZ5sKaHHyc8KGc': 'pro',      // Pro $65/year
+  'price_1Tk1viGMtCDZ5sKaWGPYSJfA': 'business', // Business $19.99/month
+  'price_1Tk1xwGMtCDZ5sKaBukVmyZb': 'business', // Business $159/year
 };
 
 // Utility function to compute redirect URI consistently across all OAuth flows
