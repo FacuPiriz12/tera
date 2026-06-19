@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import LanguageSelector from '../components/LanguageSelector';
 import { useToast } from "@/hooks/use-toast";
 import { getAuthHeaders } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
 
 // TODO: Create new Stripe prices at $7.99/month and $19.99/month and replace these IDs
 const PLANS = [
@@ -161,6 +162,7 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
   const handleCheckout = async (priceId: string) => {
     if (priceId === '0') {
@@ -210,10 +212,18 @@ export default function PricingPage() {
               </div>
               <div className="h-6 w-px bg-gray-200" />
               <div className="flex items-center gap-6">
-                <Link href="/login" className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors">Iniciar sesión</Link>
-                <Link href="/login?mode=register" className="bg-[#0061D5] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:-translate-y-0.5">
-                  Comenzar gratis
-                </Link>
+                {!authLoading && (user ? (
+                  <Link href="/dashboard" className="bg-[#0061D5] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:-translate-y-0.5">
+                    Ir a la app
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors">Iniciar sesión</Link>
+                    <Link href="/login?mode=register" className="bg-[#0061D5] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:-translate-y-0.5">
+                      Comenzar gratis
+                    </Link>
+                  </>
+                ))}
                 <LanguageSelector />
               </div>
             </div>
