@@ -131,6 +131,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/stripe/cancel-subscription', isAuthenticated, async (req: any, res) => {
+    if (!stripe) return res.status(500).json({ message: "Stripe not configured" });
+    const userId = req.user.claims.sub;
+    try {
+      const user = await storage.getUser(userId);
+      if (!user?.stripeSubscriptionId) return res.status(400).json({ message: "No active subscription" });
+      await stripe.subscriptions.update(user.stripeSubscriptionId, { cancel_at_period_end: true });
+      res.json({ message: "Subscription will be cancelled at end of billing period" });
+    } catch (error: any) {
+      console.error("Stripe cancel error:", error);
+      res.status(500).json({ message: "Failed to cancel subscription" });
+    }
+  });
+
   app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(500).send("Stripe not configured");
     const sig = req.headers['stripe-signature'];
