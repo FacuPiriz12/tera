@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +25,7 @@ const PLAN_DETAILS = {
 
 export default function Profile() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
 
   const { data: operations, isLoading: statsLoading } = useQuery<CopyOperation[]>({
@@ -36,7 +38,7 @@ export default function Profile() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-sm">Cargando perfil...</p>
+          <p className="text-muted-foreground text-sm">{t("profilePage.loading")}</p>
         </div>
       </div>
     );
@@ -54,10 +56,10 @@ export default function Profile() {
   const displayName =
     user.firstName && user.lastName
       ? `${user.firstName} ${user.lastName}`
-      : user.email?.split("@")[0] || "Usuario";
+      : user.email?.split("@")[0] || "—";
 
   const formatDate = (date: string | Date) =>
-    new Date(date).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" });
+    new Date(date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
@@ -85,7 +87,7 @@ export default function Profile() {
                   {user.createdAt && (
                     <div className="flex items-center gap-1.5 text-gray-400 text-xs mt-0.5">
                       <Calendar className="h-3 w-3" />
-                      <span>Miembro desde {formatDate(user.createdAt)}</span>
+                      <span>{t("profilePage.memberSince")} {formatDate(user.createdAt)}</span>
                     </div>
                   )}
                 </div>
@@ -97,12 +99,11 @@ export default function Profile() {
                 </Badge>
                 <Button size="sm" onClick={() => setLocation("/settings")}>
                   <Settings className="h-3.5 w-3.5 mr-1.5" />
-                  Editar perfil
+                  {t("profilePage.editProfile")}
                 </Button>
               </div>
             </div>
 
-            {/* Connected services chips */}
             <div className="flex flex-wrap gap-2 mt-4">
               {user.googleConnected && (
                 <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
@@ -120,9 +121,9 @@ export default function Profile() {
               )}
               {!user.googleConnected && !user.dropboxConnected && (
                 <span className="text-xs text-gray-400">
-                  Sin servicios conectados ·{" "}
+                  {t("profilePage.noServices")}{" "}
                   <button onClick={() => setLocation("/integrations")} className="text-blue-500 hover:underline">
-                    conectar ahora
+                    {t("profilePage.connectNow")}
                   </button>
                 </span>
               )}
@@ -139,9 +140,9 @@ export default function Profile() {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
                   <Activity className="h-4 w-4 text-blue-600" />
-                  Resumen de Actividad
+                  {t("profilePage.activity.title")}
                 </CardTitle>
-                <CardDescription>Estadísticas de tus operaciones en TERA</CardDescription>
+                <CardDescription>{t("profilePage.activity.description")}</CardDescription>
               </CardHeader>
               <CardContent>
                 {statsLoading ? (
@@ -152,10 +153,10 @@ export default function Profile() {
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
                       {[
-                        { label: "Totales", value: totalOps, color: "text-gray-900" },
-                        { label: "Completadas", value: completedOps, color: "text-green-600" },
-                        { label: "Fallidas", value: failedOps, color: "text-red-500" },
-                        { label: "Éxito", value: `${successRate}%`, color: "text-blue-600" },
+                        { label: t("profilePage.activity.total"), value: totalOps, color: "text-gray-900" },
+                        { label: t("profilePage.activity.completed"), value: completedOps, color: "text-green-600" },
+                        { label: t("profilePage.activity.failed"), value: failedOps, color: "text-red-500" },
+                        { label: t("profilePage.activity.success"), value: `${successRate}%`, color: "text-blue-600" },
                       ].map(({ label, value, color }) => (
                         <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-center">
                           <p className={`text-2xl font-black ${color}`}>{value}</p>
@@ -166,7 +167,7 @@ export default function Profile() {
                     {totalOps > 0 && (
                       <div>
                         <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-                          <span>Tasa de éxito</span>
+                          <span>{t("profilePage.activity.successLabel")}</span>
                           <span className="font-semibold">{successRate}%</span>
                         </div>
                         <Progress value={successRate} className="h-1.5" />
@@ -182,9 +183,9 @@ export default function Profile() {
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
                   <Clock className="h-4 w-4 text-blue-600" />
-                  Actividad Reciente
+                  {t("profilePage.recent.title")}
                 </CardTitle>
-                <CardDescription>Tus últimas operaciones de transferencia</CardDescription>
+                <CardDescription>{t("profilePage.recent.description")}</CardDescription>
               </CardHeader>
               <CardContent>
                 {statsLoading ? (
@@ -217,16 +218,16 @@ export default function Profile() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-800 truncate">
-                            {op.copiedFileName || "Operación de copia"}
+                            {op.copiedFileName || t("profilePage.recent.copyOp")}
                           </p>
                           <p className="text-xs text-gray-400">
                             {formatDate(op.createdAt)} ·{" "}
                             {op.status === "completed"
-                              ? "Completado"
+                              ? t("profilePage.recent.completedStatus")
                               : op.status === "failed"
-                              ? "Falló"
+                              ? t("profilePage.recent.failedStatus")
                               : op.status === "in_progress"
-                              ? "En progreso"
+                              ? t("profilePage.recent.inProgress")
                               : op.status}
                           </p>
                         </div>
@@ -241,14 +242,14 @@ export default function Profile() {
                       onClick={() => setLocation("/operations")}
                       className="w-full text-center text-xs text-blue-600 hover:underline pt-1 font-medium"
                     >
-                      Ver todas las operaciones →
+                      {t("profilePage.recent.viewAll")}
                     </button>
                   </div>
                 ) : (
                   <div className="text-center py-10 text-gray-400">
                     <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-medium">Sin actividad todavía</p>
-                    <p className="text-xs mt-1">Empezá copiando archivos para ver tu historial aquí</p>
+                    <p className="text-sm font-medium">{t("profilePage.recent.empty")}</p>
+                    <p className="text-xs mt-1">{t("profilePage.recent.emptySub")}</p>
                   </div>
                 )}
               </CardContent>
@@ -263,31 +264,21 @@ export default function Profile() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
                   <PlanIcon className="h-4 w-4 text-blue-600" />
-                  Tu Plan
+                  {t("profilePage.plan.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div
-                  className={`rounded-xl p-3 text-center ${
-                    plan === "business"
-                      ? "bg-gradient-to-br from-violet-50 to-violet-100"
-                      : plan === "pro"
-                      ? "bg-gradient-to-br from-blue-50 to-blue-100"
-                      : "bg-gray-50"
-                  }`}
-                >
-                  <PlanIcon
-                    className={`w-7 h-7 mx-auto mb-1 ${
-                      plan === "business"
-                        ? "text-violet-600"
-                        : plan === "pro"
-                        ? "text-blue-600"
-                        : "text-gray-400"
-                    }`}
-                  />
+                <div className={`rounded-xl p-3 text-center ${
+                  plan === "business" ? "bg-gradient-to-br from-violet-50 to-violet-100"
+                  : plan === "pro" ? "bg-gradient-to-br from-blue-50 to-blue-100"
+                  : "bg-gray-50"
+                }`}>
+                  <PlanIcon className={`w-7 h-7 mx-auto mb-1 ${
+                    plan === "business" ? "text-violet-600" : plan === "pro" ? "text-blue-600" : "text-gray-400"
+                  }`} />
                   <p className="font-black text-gray-900">{planInfo.label}</p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {plan === "free" ? "Gratis" : plan === "pro" ? "$7.99 USD/mes" : "$19.99 USD/mes"}
+                    {plan === "free" ? t("profilePage.plan.freeLabel") : plan === "pro" ? t("profilePage.plan.proPrice") : t("profilePage.plan.businessPrice")}
                   </p>
                 </div>
                 <Button
@@ -296,7 +287,7 @@ export default function Profile() {
                   size="sm"
                   onClick={() => setLocation(plan === "free" ? "/pricing" : "/settings")}
                 >
-                  {plan === "free" ? "Mejorar plan" : "Gestionar suscripción"}
+                  {plan === "free" ? t("profilePage.plan.upgrade") : t("profilePage.plan.manage")}
                 </Button>
               </CardContent>
             </Card>
@@ -306,22 +297,20 @@ export default function Profile() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
                   <Shield className="h-4 w-4 text-blue-600" />
-                  Cuenta
+                  {t("profilePage.account.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Estado</span>
+                  <span className="text-xs text-gray-500">{t("profilePage.account.status")}</span>
                   <Badge className="bg-green-100 text-green-700 border-0 text-xs font-semibold">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5" />
-                    Activa
+                    {t("profilePage.account.active")}
                   </Badge>
                 </div>
                 <div>
-                  <span className="text-xs text-gray-500 block mb-1">ID de usuario</span>
-                  <p className="text-[10px] font-mono text-gray-500 bg-gray-50 border border-gray-100 rounded p-1.5 truncate">
-                    {user.id}
-                  </p>
+                  <span className="text-xs text-gray-500 block mb-1">{t("profilePage.account.userId")}</span>
+                  <p className="text-[10px] font-mono text-gray-500 bg-gray-50 border border-gray-100 rounded p-1.5 truncate">{user.id}</p>
                 </div>
               </CardContent>
             </Card>
@@ -331,7 +320,7 @@ export default function Profile() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
                   <Network className="h-4 w-4 text-blue-600" />
-                  Servicios
+                  {t("profilePage.services.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -341,10 +330,11 @@ export default function Profile() {
                 ].map(({ logo, name, connected }) => (
                   <div key={name} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center">
-                        {logo}
+                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center">{logo}</div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-700">{name}</span>
+                        <p className="text-xs text-gray-400">{connected ? t("profilePage.services.connected") : t("profilePage.services.notConnected")}</p>
                       </div>
-                      <span className="text-sm font-medium text-gray-700">{name}</span>
                     </div>
                     <div className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-gray-200"}`} />
                   </div>
@@ -353,7 +343,7 @@ export default function Profile() {
                   onClick={() => setLocation("/integrations")}
                   className="w-full text-center text-xs text-blue-600 hover:underline pt-1 font-medium"
                 >
-                  Gestionar integraciones →
+                  {t("profilePage.services.manage")}
                 </button>
               </CardContent>
             </Card>
@@ -361,13 +351,13 @@ export default function Profile() {
             {/* Quick actions */}
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-black">Accesos rápidos</CardTitle>
+                <CardTitle className="text-base font-black">{t("profilePage.quickActions.title")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1.5">
                 {[
-                  { icon: Activity, label: "Operaciones", path: "/operations" },
-                  { icon: HardDrive, label: "Mis archivos", path: "/my-files" },
-                  { icon: Settings, label: "Configuraciones", path: "/settings" },
+                  { icon: Activity, label: t("profilePage.quickActions.operations"), path: "/operations" },
+                  { icon: HardDrive, label: t("profilePage.quickActions.files"), path: "/my-files" },
+                  { icon: Settings, label: t("profilePage.quickActions.settings"), path: "/settings" },
                 ].map(({ icon: Icon, label, path }) => (
                   <button
                     key={path}
