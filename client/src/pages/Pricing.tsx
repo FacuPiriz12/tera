@@ -127,6 +127,7 @@ export default function PricingPage() {
   const { i18n, t } = useTranslation();
   const [currency, setCurrency] = useState<Currency>('USD');
   useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
+  const sym = CURRENCY_CONFIG[currency].symbol;
 
   const COMPARISON = useMemo(() => [
     { category: t('pricingPage.comparison.cat1'), icon: RefreshCw, rows: [
@@ -270,7 +271,6 @@ export default function PricingPage() {
               const planPrices = plan.prices[currency];
               const price = billing === 'annual' && planPrices.annual > 0 ? planPrices.annual : planPrices.monthly;
               const annualTotal = planPrices.annualTotal;
-              const sym = CURRENCY_CONFIG[currency].symbol;
               const priceId = plan.priceId[billing];
               const isLoading = loading === priceId;
 
