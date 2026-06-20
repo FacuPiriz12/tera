@@ -769,6 +769,24 @@ const esTranslations = {
         email: "legal@tera.app"
       }
     }
+  },
+  pricingPage: {
+    nav: { products: "Productos", pricing: "Precios", security: "Seguridad", goToApp: "Ir a la app", signIn: "Iniciar sesión", startFree: "Comenzar gratis" },
+    hero: { badge: "Planes y Precios", title: "Simple y transparente", subtitle: "Empieza gratis. Pagá solo cuando realmente lo necesites." },
+    toggle: { monthly: "Mensual", annual: "Anual" },
+    perMonth: "/mes",
+    freeForever: "Gratis para siempre",
+    billedAnnual: "Facturado {{sym}}{{total}}/año · ahorrás {{sym}}{{savings}}",
+    plans: {
+      free: { tagline: "Para empezar sin costo", cta: "Empezar gratis", f1: "5 GB tráfico cross-cloud/mes", f2: "20 transferencias/mes", f3: "100 MB máximo por archivo", f4: "2 servicios conectados", f5: "Google Drive + Dropbox", f6: "7 días de historial", f7: "Tareas programadas", f8: "Analytics", f9: "Notificaciones por email" },
+      pro: { tagline: "Para uso regular y profesional", cta: "Comenzar Pro", badge: "Más popular", f1: "200 GB tráfico cross-cloud/mes", f2: "300 transferencias/mes", f3: "5 GB máximo por archivo", f4: "5 servicios conectados", f5: "Todos los proveedores (OneDrive, Box, S3…)", f6: "90 días de historial", f7: "5 tareas programadas", f8: "Analytics básico", f9: "Notificaciones por email", f10: "Soporte prioritario 24h" },
+      business: { tagline: "Para uso intensivo", cta: "Comenzar Business", badge: "Mayor valor", f1: "2 TB tráfico cross-cloud/mes", f2: "Transferencias ilimitadas", f3: "50 GB máximo por archivo", f4: "Servicios ilimitados", f5: "Todos los proveedores", f6: "Historial completo", f7: "Tareas programadas ilimitadas", f8: "Analytics avanzado + versioning", f9: "Notificaciones por email", f10: "Soporte prioritario 4h" }
+    },
+    traffic: { title: "¿Qué es el tráfico cross-cloud?", text: "Cuando transferís un archivo entre servicios distintos (ej: Google Drive → Dropbox), los datos pasan por nuestros servidores — eso consume tráfico. Si movés archivos dentro del mismo servicio (Drive→Drive), el tráfico es siempre ilimitado y gratis." },
+    trust: { encrypted: "Datos cifrados", encryptedSub: "AES-256-GCM", cancel: "Cancela cuando quieras", cancelSub: "Sin permanencia", refund: "Garantía de devolución", refundSub: "14 días", noCard: "Sin tarjeta de crédito", noCardSub: "Para el plan Free" },
+    comparison: { label: "Comparación completa", title: "Todo detallado", feature: "Característica", monthlyPrice: "Precio mensual", cat1: "Tráfico y Transferencias", cat2: "Integraciones", cat3: "Automatización", cat4: "Soporte", r1f1: "Tráfico cross-cloud/mes", r1f2: "Transferencias/mes", r1f3: "Máximo por archivo", r1f4: "Same-provider (Drive→Drive)", r2f1: "Servicios conectados", r3f1: "Tareas programadas", r3f2: "Historial de operaciones", r3f3: "Versioning de archivos", r3f4: "Analytics", r4f1: "Notificaciones email", r4f2: "Canal de soporte", r4f3: "Garantía de devolución", unlimited: "Ilimitadas", unlimitedM: "Ilimitados", basic: "Básico", advanced: "Avanzado", complete: "Completo", docs: "Documentación", email24h: "Email (24h)", priority4h: "Prioritario (4h)", tasks5: "5 tareas", days7: "7 días", days90: "90 días" },
+    faq: { label: "Preguntas frecuentes", title: "¿Tenés dudas?", q1: "¿Qué es el tráfico cross-cloud?", a1: "Es la cantidad de datos que se transfieren entre servicios de nube distintos (por ejemplo, de Google Drive a Dropbox). Cuando movés archivos dentro del mismo proveedor (Drive→Drive), no consume tráfico y es siempre ilimitado.", q2: "¿Puedo cambiar de plan cuando quiera?", a2: "Sí. Al subir de plan el cambio es inmediato. Al bajarlo, se aplica al terminar el ciclo de facturación actual. Sin penalizaciones ni permanencia.", q3: "¿Qué pasa si supero el tráfico del mes?", a3: "Las transferencias cross-cloud se pausan hasta el próximo ciclo. Las transferencias same-provider (mismo servicio) nunca se ven afectadas. Podés subir de plan en cualquier momento para continuar.", q4: "¿Hay prueba gratuita para Pro o Business?", a4: "El plan Free es permanente y no requiere tarjeta de crédito. Para Pro y Business ofrecemos garantía de devolución de 14 días: si no quedás conforme, te devolvemos el dinero sin preguntas.", q5: "¿Cómo se factura el plan anual?", a5: "Se cobra en un solo pago al inicio del año. Pro anual: $65/año (ahorrás $30 vs mensual). Business anual: $159/año (ahorrás $81 vs mensual)." },
+    cta: { title: "Conectá tus nubes hoy", subtitle: "Empieza gratis, sin tarjeta. Tu primera transferencia en menos de 2 minutos.", startFree: "Empezar gratis", compare: "Ver comparación" }
   }
 };
 
@@ -1065,6 +1083,24 @@ const enTranslations = {
       section13: { title: "Applicable Law", content: "These Terms are governed by the laws of the Argentine Republic." },
       section14: { title: "Contact", content: "For inquiries about these Terms and Conditions, contact us at:", email: "legal@tera.app" }
     }
+  },
+  pricingPage: {
+    nav: { products: "Products", pricing: "Pricing", security: "Security", goToApp: "Go to app", signIn: "Sign in", startFree: "Start free" },
+    hero: { badge: "Plans & Pricing", title: "Simple and transparent", subtitle: "Start free. Pay only when you really need to." },
+    toggle: { monthly: "Monthly", annual: "Annual" },
+    perMonth: "/mo",
+    freeForever: "Free forever",
+    billedAnnual: "Billed {{sym}}{{total}}/year · save {{sym}}{{savings}}",
+    plans: {
+      free: { tagline: "Get started at no cost", cta: "Start free", f1: "5 GB cross-cloud traffic/month", f2: "20 transfers/month", f3: "100 MB max per file", f4: "2 connected services", f5: "Google Drive + Dropbox", f6: "7-day history", f7: "Scheduled tasks", f8: "Analytics", f9: "Email notifications" },
+      pro: { tagline: "For regular and professional use", cta: "Start Pro", badge: "Most popular", f1: "200 GB cross-cloud traffic/month", f2: "300 transfers/month", f3: "5 GB max per file", f4: "5 connected services", f5: "All providers (OneDrive, Box, S3…)", f6: "90-day history", f7: "5 scheduled tasks", f8: "Basic analytics", f9: "Email notifications", f10: "Priority support 24h" },
+      business: { tagline: "For intensive use", cta: "Start Business", badge: "Best value", f1: "2 TB cross-cloud traffic/month", f2: "Unlimited transfers", f3: "50 GB max per file", f4: "Unlimited services", f5: "All providers", f6: "Complete history", f7: "Unlimited scheduled tasks", f8: "Advanced analytics + versioning", f9: "Email notifications", f10: "Priority support 4h" }
+    },
+    traffic: { title: "What is cross-cloud traffic?", text: "When you transfer a file between different services (e.g. Google Drive → Dropbox), the data passes through our servers — that uses traffic. If you move files within the same service (Drive→Drive), traffic is always unlimited and free." },
+    trust: { encrypted: "Encrypted data", encryptedSub: "AES-256-GCM", cancel: "Cancel anytime", cancelSub: "No commitment", refund: "Money-back guarantee", refundSub: "14 days", noCard: "No credit card", noCardSub: "For the Free plan" },
+    comparison: { label: "Full comparison", title: "All the details", feature: "Feature", monthlyPrice: "Monthly price", cat1: "Traffic & Transfers", cat2: "Integrations", cat3: "Automation", cat4: "Support", r1f1: "Cross-cloud traffic/month", r1f2: "Transfers/month", r1f3: "Max per file", r1f4: "Same-provider (Drive→Drive)", r2f1: "Connected services", r3f1: "Scheduled tasks", r3f2: "Operations history", r3f3: "File versioning", r3f4: "Analytics", r4f1: "Email notifications", r4f2: "Support channel", r4f3: "Money-back guarantee", unlimited: "Unlimited", unlimitedM: "Unlimited", basic: "Basic", advanced: "Advanced", complete: "Complete", docs: "Documentation", email24h: "Email (24h)", priority4h: "Priority (4h)", tasks5: "5 tasks", days7: "7 days", days90: "90 days" },
+    faq: { label: "Frequently asked questions", title: "Have questions?", q1: "What is cross-cloud traffic?", a1: "It's the amount of data transferred between different cloud services (e.g. Google Drive to Dropbox). When you move files within the same provider (Drive→Drive), it doesn't consume traffic and is always unlimited.", q2: "Can I change plans anytime?", a2: "Yes. Upgrading takes effect immediately. Downgrading applies at the end of the current billing cycle. No penalties or commitments.", q3: "What happens if I exceed my monthly traffic?", a3: "Cross-cloud transfers are paused until the next cycle. Same-provider transfers (same service) are never affected. You can upgrade at any time to continue.", q4: "Is there a free trial for Pro or Business?", a4: "The Free plan is permanent and requires no credit card. For Pro and Business we offer a 14-day money-back guarantee: if you're not satisfied, we refund you no questions asked.", q5: "How is the annual plan billed?", a5: "It's charged in a single payment at the start of the year. Pro annual: $65/year (save $30 vs monthly). Business annual: $159/year (save $81 vs monthly)." },
+    cta: { title: "Connect your clouds today", subtitle: "Start free, no card required. Your first transfer in under 2 minutes.", startFree: "Start free", compare: "See comparison" }
   }
 };
 
@@ -1361,6 +1397,24 @@ const ptTranslations = {
       section13: { title: "Lei Aplicável", content: "Estes Termos são regidos pelas leis da República Argentina." },
       section14: { title: "Contato", content: "Para dúvidas sobre estes Termos e Condições, entre em contato em:", email: "legal@tera.app" }
     }
+  },
+  pricingPage: {
+    nav: { products: "Produtos", pricing: "Preços", security: "Segurança", goToApp: "Ir para o app", signIn: "Entrar", startFree: "Começar grátis" },
+    hero: { badge: "Planos e Preços", title: "Simples e transparente", subtitle: "Comece de graça. Pague só quando realmente precisar." },
+    toggle: { monthly: "Mensal", annual: "Anual" },
+    perMonth: "/mês",
+    freeForever: "Grátis para sempre",
+    billedAnnual: "Cobrado {{sym}}{{total}}/ano · economize {{sym}}{{savings}}",
+    plans: {
+      free: { tagline: "Para começar sem custo", cta: "Começar grátis", f1: "5 GB tráfego cross-cloud/mês", f2: "20 transferências/mês", f3: "100 MB máximo por arquivo", f4: "2 serviços conectados", f5: "Google Drive + Dropbox", f6: "7 dias de histórico", f7: "Tarefas agendadas", f8: "Analytics", f9: "Notificações por email" },
+      pro: { tagline: "Para uso regular e profissional", cta: "Começar Pro", badge: "Mais popular", f1: "200 GB tráfego cross-cloud/mês", f2: "300 transferências/mês", f3: "5 GB máximo por arquivo", f4: "5 serviços conectados", f5: "Todos os provedores (OneDrive, Box, S3…)", f6: "90 dias de histórico", f7: "5 tarefas agendadas", f8: "Analytics básico", f9: "Notificações por email", f10: "Suporte prioritário 24h" },
+      business: { tagline: "Para uso intensivo", cta: "Começar Business", badge: "Melhor valor", f1: "2 TB tráfego cross-cloud/mês", f2: "Transferências ilimitadas", f3: "50 GB máximo por arquivo", f4: "Serviços ilimitados", f5: "Todos os provedores", f6: "Histórico completo", f7: "Tarefas agendadas ilimitadas", f8: "Analytics avançado + versioning", f9: "Notificações por email", f10: "Suporte prioritário 4h" }
+    },
+    traffic: { title: "O que é tráfego cross-cloud?", text: "Quando você transfere um arquivo entre serviços diferentes (ex: Google Drive → Dropbox), os dados passam pelos nossos servidores — isso consome tráfego. Se mover arquivos dentro do mesmo serviço (Drive→Drive), o tráfego é sempre ilimitado e gratuito." },
+    trust: { encrypted: "Dados criptografados", encryptedSub: "AES-256-GCM", cancel: "Cancele quando quiser", cancelSub: "Sem fidelidade", refund: "Garantia de devolução", refundSub: "14 dias", noCard: "Sem cartão de crédito", noCardSub: "Para o plano Free" },
+    comparison: { label: "Comparação completa", title: "Tudo detalhado", feature: "Recurso", monthlyPrice: "Preço mensal", cat1: "Tráfego e Transferências", cat2: "Integrações", cat3: "Automação", cat4: "Suporte", r1f1: "Tráfego cross-cloud/mês", r1f2: "Transferências/mês", r1f3: "Máximo por arquivo", r1f4: "Same-provider (Drive→Drive)", r2f1: "Serviços conectados", r3f1: "Tarefas agendadas", r3f2: "Histórico de operações", r3f3: "Versionamento de arquivos", r3f4: "Analytics", r4f1: "Notificações email", r4f2: "Canal de suporte", r4f3: "Garantia de devolução", unlimited: "Ilimitadas", unlimitedM: "Ilimitados", basic: "Básico", advanced: "Avançado", complete: "Completo", docs: "Documentação", email24h: "Email (24h)", priority4h: "Prioritário (4h)", tasks5: "5 tarefas", days7: "7 dias", days90: "90 dias" },
+    faq: { label: "Perguntas frequentes", title: "Tem dúvidas?", q1: "O que é tráfego cross-cloud?", a1: "É a quantidade de dados transferidos entre serviços de nuvem diferentes (ex: Google Drive para o Dropbox). Quando você move arquivos dentro do mesmo provedor (Drive→Drive), não consome tráfego e é sempre ilimitado.", q2: "Posso mudar de plano quando quiser?", a2: "Sim. Ao fazer upgrade o plano é imediato. Ao fazer downgrade, aplica-se no fim do ciclo de faturamento atual. Sem penalidades nem fidelidade.", q3: "O que acontece se eu ultrapassar o tráfego do mês?", a3: "As transferências cross-cloud são pausadas até o próximo ciclo. As transferências same-provider (mesmo serviço) nunca são afetadas. Você pode fazer upgrade a qualquer momento para continuar.", q4: "Tem teste gratuito para Pro ou Business?", a4: "O plano Free é permanente e não requer cartão de crédito. Para Pro e Business oferecemos garantia de devolução de 14 dias: se não ficar satisfeito, devolvemos o dinheiro sem perguntas.", q5: "Como é cobrado o plano anual?", a5: "É cobrado em um único pagamento no início do ano. Pro anual: R$359/ano (economize R$120 vs mensal). Business anual: R$899/ano (economize R$300 vs mensal)." },
+    cta: { title: "Conecte suas nuvens hoje", subtitle: "Comece grátis, sem cartão. Sua primeira transferência em menos de 2 minutos.", startFree: "Começar grátis", compare: "Ver comparação" }
   }
 };
 

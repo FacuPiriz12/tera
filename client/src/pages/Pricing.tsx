@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Check, X, ArrowRight, Star, Zap, Shield, RefreshCw, Clock, BarChart2, Bell, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
@@ -35,148 +35,82 @@ const PLANS = [
   {
     id: 'free',
     name: 'Free',
-    tagline: 'Para empezar sin costo',
+    tagline: 'pricingPage.plans.free.tagline',
     prices: {
       USD: { monthly: 0, annual: 0, annualTotal: null as number | null },
       BRL: { monthly: 0, annual: 0, annualTotal: null as number | null },
       EUR: { monthly: 0, annual: 0, annualTotal: null as number | null },
     },
     priceId: { monthly: '0', annual: '0' },
-    cta: 'Empezar gratis',
+    cta: 'pricingPage.plans.free.cta',
     highlight: false,
     badge: null as string | null,
     features: [
-      { label: '5 GB tráfico cross-cloud/mes', highlight: true },
-      { label: '20 transferencias/mes' },
-      { label: '100 MB máximo por archivo' },
-      { label: '2 servicios conectados' },
-      { label: 'Google Drive + Dropbox' },
-      { label: '7 días de historial' },
-      { label: 'Tareas programadas', disabled: true },
-      { label: 'Analytics', disabled: true },
-      { label: 'Notificaciones por email', disabled: true },
+      { label: 'pricingPage.plans.free.f1', highlight: true },
+      { label: 'pricingPage.plans.free.f2' },
+      { label: 'pricingPage.plans.free.f3' },
+      { label: 'pricingPage.plans.free.f4' },
+      { label: 'pricingPage.plans.free.f5' },
+      { label: 'pricingPage.plans.free.f6' },
+      { label: 'pricingPage.plans.free.f7', disabled: true },
+      { label: 'pricingPage.plans.free.f8', disabled: true },
+      { label: 'pricingPage.plans.free.f9', disabled: true },
     ],
   },
   {
     id: 'pro',
     name: 'Pro',
-    tagline: 'Para uso regular y profesional',
+    tagline: 'pricingPage.plans.pro.tagline',
     prices: {
       USD: { monthly: 7.99,  annual: 5.42,  annualTotal: 65  as number | null },
       BRL: { monthly: 39.90, annual: 29.92, annualTotal: 359 as number | null },
       EUR: { monthly: 7.99,  annual: 4.92,  annualTotal: 59  as number | null },
     },
     priceId: { monthly: 'price_1Tk1ozGMtCDZ5sKadebYpBII', annual: 'price_1Tk1uAGMtCDZ5sKaHHyc8KGc' },
-    cta: 'Comenzar Pro',
+    cta: 'pricingPage.plans.pro.cta',
     highlight: true,
-    badge: 'Más popular',
+    badge: 'pricingPage.plans.pro.badge' as string | null,
     features: [
-      { label: '200 GB tráfico cross-cloud/mes', highlight: true },
-      { label: '300 transferencias/mes' },
-      { label: '5 GB máximo por archivo' },
-      { label: '5 servicios conectados' },
-      { label: 'Todos los proveedores (OneDrive, Box, S3…)' },
-      { label: '90 días de historial' },
-      { label: '5 tareas programadas' },
-      { label: 'Analytics básico' },
-      { label: 'Notificaciones por email' },
-      { label: 'Soporte prioritario 24h' },
+      { label: 'pricingPage.plans.pro.f1', highlight: true },
+      { label: 'pricingPage.plans.pro.f2' },
+      { label: 'pricingPage.plans.pro.f3' },
+      { label: 'pricingPage.plans.pro.f4' },
+      { label: 'pricingPage.plans.pro.f5' },
+      { label: 'pricingPage.plans.pro.f6' },
+      { label: 'pricingPage.plans.pro.f7' },
+      { label: 'pricingPage.plans.pro.f8' },
+      { label: 'pricingPage.plans.pro.f9' },
+      { label: 'pricingPage.plans.pro.f10' },
     ],
   },
   {
     id: 'business',
     name: 'Business',
-    tagline: 'Para uso intensivo',
+    tagline: 'pricingPage.plans.business.tagline',
     prices: {
       USD: { monthly: 19.99, annual: 13.25, annualTotal: 159 as number | null },
       BRL: { monthly: 99.90, annual: 74.92, annualTotal: 899 as number | null },
       EUR: { monthly: 17.99, annual: 11.58, annualTotal: 139 as number | null },
     },
     priceId: { monthly: 'price_1Tk1viGMtCDZ5sKaWGPYSJfA', annual: 'price_1Tk1xwGMtCDZ5sKaBukVmyZb' },
-    cta: 'Comenzar Business',
+    cta: 'pricingPage.plans.business.cta',
     highlight: false,
-    badge: 'Mayor valor',
+    badge: 'pricingPage.plans.business.badge' as string | null,
     features: [
-      { label: '2 TB tráfico cross-cloud/mes', highlight: true },
-      { label: 'Transferencias ilimitadas' },
-      { label: '50 GB máximo por archivo' },
-      { label: 'Servicios ilimitados' },
-      { label: 'Todos los proveedores' },
-      { label: 'Historial completo' },
-      { label: 'Tareas programadas ilimitadas' },
-      { label: 'Analytics avanzado + versioning' },
-      { label: 'Notificaciones por email' },
-      { label: 'Soporte prioritario 4h' },
+      { label: 'pricingPage.plans.business.f1', highlight: true },
+      { label: 'pricingPage.plans.business.f2' },
+      { label: 'pricingPage.plans.business.f3' },
+      { label: 'pricingPage.plans.business.f4' },
+      { label: 'pricingPage.plans.business.f5' },
+      { label: 'pricingPage.plans.business.f6' },
+      { label: 'pricingPage.plans.business.f7' },
+      { label: 'pricingPage.plans.business.f8' },
+      { label: 'pricingPage.plans.business.f9' },
+      { label: 'pricingPage.plans.business.f10' },
     ],
   },
 ];
 
-const COMPARISON = [
-  {
-    category: 'Tráfico y Transferencias',
-    icon: RefreshCw,
-    rows: [
-      { feature: 'Tráfico cross-cloud/mes', free: '5 GB', pro: '200 GB', business: '2 TB' },
-      { feature: 'Transferencias/mes', free: '20', pro: '300', business: 'Ilimitadas' },
-      { feature: 'Máximo por archivo', free: '100 MB', pro: '5 GB', business: '50 GB' },
-      { feature: 'Same-provider (Drive→Drive)', free: true, pro: true, business: true },
-    ],
-  },
-  {
-    category: 'Integraciones',
-    icon: Zap,
-    rows: [
-      { feature: 'Servicios conectados', free: '2', pro: '5', business: 'Ilimitados' },
-      { feature: 'Google Drive', free: true, pro: true, business: true },
-      { feature: 'Dropbox', free: true, pro: true, business: true },
-      { feature: 'Microsoft OneDrive', free: false, pro: true, business: true },
-      { feature: 'Box', free: false, pro: true, business: true },
-      { feature: 'Amazon S3', free: false, pro: true, business: true },
-    ],
-  },
-  {
-    category: 'Automatización',
-    icon: Clock,
-    rows: [
-      { feature: 'Tareas programadas', free: false, pro: '5 tareas', business: 'Ilimitadas' },
-      { feature: 'Historial de operaciones', free: '7 días', pro: '90 días', business: 'Completo' },
-      { feature: 'Versioning de archivos', free: false, pro: false, business: true },
-      { feature: 'Analytics', free: false, pro: 'Básico', business: 'Avanzado' },
-    ],
-  },
-  {
-    category: 'Soporte',
-    icon: Shield,
-    rows: [
-      { feature: 'Notificaciones email', free: false, pro: true, business: true },
-      { feature: 'Canal de soporte', free: 'Documentación', pro: 'Email (24h)', business: 'Prioritario (4h)' },
-      { feature: 'Garantía de devolución', free: '—', pro: '14 días', business: '14 días' },
-    ],
-  },
-];
-
-const FAQS = [
-  {
-    q: '¿Qué es el tráfico cross-cloud?',
-    a: 'Es la cantidad de datos que se transfieren entre servicios de nube distintos (por ejemplo, de Google Drive a Dropbox). Cuando movés archivos dentro del mismo proveedor (Drive→Drive), no consume tráfico y es siempre ilimitado.',
-  },
-  {
-    q: '¿Puedo cambiar de plan cuando quiera?',
-    a: 'Sí. Al subir de plan el cambio es inmediato. Al bajarlo, se aplica al terminar el ciclo de facturación actual. Sin penalizaciones ni permanencia.',
-  },
-  {
-    q: '¿Qué pasa si supero el tráfico del mes?',
-    a: 'Las transferencias cross-cloud se pausan hasta el próximo ciclo. Las transferencias same-provider (mismo servicio) nunca se ven afectadas. Podés subir de plan en cualquier momento para continuar.',
-  },
-  {
-    q: '¿Hay prueba gratuita para Pro o Business?',
-    a: 'El plan Free es permanente y no requiere tarjeta de crédito. Para Pro y Business ofrecemos garantía de devolución de 14 días: si no quedás conforme, te devolvemos el dinero sin preguntas.',
-  },
-  {
-    q: '¿Cómo se factura el plan anual?',
-    a: 'Se cobra en un solo pago al inicio del año. Pro anual: $65/año (ahorrás $30 vs mensual). Business anual: $159/año (ahorrás $81 vs mensual).',
-  },
-];
 
 function CellValue({ val }: { val: boolean | string }) {
   if (val === true) return <Check className="w-5 h-5 text-emerald-500 mx-auto" />;
@@ -190,9 +124,45 @@ export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [currency, setCurrency] = useState<Currency>('USD');
   useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
+
+  const COMPARISON = useMemo(() => [
+    { category: t('pricingPage.comparison.cat1'), icon: RefreshCw, rows: [
+      { feature: t('pricingPage.comparison.r1f1'), free: '5 GB', pro: '200 GB', business: '2 TB' },
+      { feature: t('pricingPage.comparison.r1f2'), free: '20', pro: '300', business: t('pricingPage.comparison.unlimited') },
+      { feature: t('pricingPage.comparison.r1f3'), free: '100 MB', pro: '5 GB', business: '50 GB' },
+      { feature: t('pricingPage.comparison.r1f4'), free: true, pro: true, business: true },
+    ]},
+    { category: t('pricingPage.comparison.cat2'), icon: Zap, rows: [
+      { feature: t('pricingPage.comparison.r2f1'), free: '2', pro: '5', business: t('pricingPage.comparison.unlimitedM') },
+      { feature: 'Google Drive', free: true, pro: true, business: true },
+      { feature: 'Dropbox', free: true, pro: true, business: true },
+      { feature: 'Microsoft OneDrive', free: false, pro: true, business: true },
+      { feature: 'Box', free: false, pro: true, business: true },
+      { feature: 'Amazon S3', free: false, pro: true, business: true },
+    ]},
+    { category: t('pricingPage.comparison.cat3'), icon: Clock, rows: [
+      { feature: t('pricingPage.comparison.r3f1'), free: false, pro: t('pricingPage.comparison.tasks5'), business: t('pricingPage.comparison.unlimited') },
+      { feature: t('pricingPage.comparison.r3f2'), free: t('pricingPage.comparison.days7'), pro: t('pricingPage.comparison.days90'), business: t('pricingPage.comparison.complete') },
+      { feature: t('pricingPage.comparison.r3f3'), free: false, pro: false, business: true },
+      { feature: t('pricingPage.comparison.r3f4'), free: false, pro: t('pricingPage.comparison.basic'), business: t('pricingPage.comparison.advanced') },
+    ]},
+    { category: t('pricingPage.comparison.cat4'), icon: Shield, rows: [
+      { feature: t('pricingPage.comparison.r4f1'), free: false, pro: true, business: true },
+      { feature: t('pricingPage.comparison.r4f2'), free: t('pricingPage.comparison.docs'), pro: t('pricingPage.comparison.email24h'), business: t('pricingPage.comparison.priority4h') },
+      { feature: t('pricingPage.comparison.r4f3'), free: '—', pro: t('pricingPage.comparison.days7').replace('7', '14'), business: t('pricingPage.comparison.days7').replace('7', '14') },
+    ]},
+  ], [t]);
+
+  const FAQS = useMemo(() => [
+    { q: t('pricingPage.faq.q1'), a: t('pricingPage.faq.a1') },
+    { q: t('pricingPage.faq.q2'), a: t('pricingPage.faq.a2') },
+    { q: t('pricingPage.faq.q3'), a: t('pricingPage.faq.a3') },
+    { q: t('pricingPage.faq.q4'), a: t('pricingPage.faq.a4') },
+    { q: t('pricingPage.faq.q5'), a: t('pricingPage.faq.a5') },
+  ], [t]);
 
   const handleCheckout = async (priceId: string) => {
     if (priceId === '0') {
@@ -236,21 +206,21 @@ export default function PricingPage() {
             </Link>
             <div className="hidden md:flex items-center gap-10">
               <div className="flex items-center gap-8">
-                <Link href="/#productos" className="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Productos</Link>
-                <Link href="/pricing" className="text-sm font-bold text-blue-600">Precios</Link>
-                <Link href="/#seguridad" className="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Seguridad</Link>
+                <Link href="/#productos" className="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">{t('pricingPage.nav.products')}</Link>
+                <Link href="/pricing" className="text-sm font-bold text-blue-600">{t('pricingPage.nav.pricing')}</Link>
+                <Link href="/#seguridad" className="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">{t('pricingPage.nav.security')}</Link>
               </div>
               <div className="h-6 w-px bg-gray-200" />
               <div className="flex items-center gap-6">
                 {!authLoading && (user ? (
                   <Link href="/dashboard" className="bg-[#0061D5] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:-translate-y-0.5">
-                    Ir a la app
+                    {t('pricingPage.nav.goToApp')}
                   </Link>
                 ) : (
                   <>
-                    <Link href="/login" className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors">Iniciar sesión</Link>
+                    <Link href="/login" className="text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors">{t('pricingPage.nav.signIn')}</Link>
                     <Link href="/login?mode=register" className="bg-[#0061D5] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-blue-700 transition-all shadow-md shadow-blue-200 hover:-translate-y-0.5">
-                      Comenzar gratis
+                      {t('pricingPage.nav.startFree')}
                     </Link>
                   </>
                 ))}
@@ -266,13 +236,13 @@ export default function PricingPage() {
         <section className="text-center px-6 mb-16">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest mb-6">
             <Star className="w-3.5 h-3.5 fill-current" />
-            Planes y Precios
+            {t('pricingPage.hero.badge')}
           </motion.div>
           <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight mb-5">
-            Simple y transparente
+            {t('pricingPage.hero.title')}
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="text-lg text-gray-500 font-medium max-w-xl mx-auto mb-10">
-            Empieza gratis. Pagá solo cuando realmente lo necesites.
+            {t('pricingPage.hero.subtitle')}
           </motion.p>
 
           {/* Toggle */}
@@ -281,13 +251,13 @@ export default function PricingPage() {
               onClick={() => setBilling('monthly')}
               className={`px-7 py-2.5 rounded-full text-sm font-black transition-all duration-300 ${billing === 'monthly' ? 'bg-gray-900 text-white shadow' : 'text-gray-500 hover:text-gray-800'}`}
             >
-              Mensual
+              {t('pricingPage.toggle.monthly')}
             </button>
             <button
               onClick={() => setBilling('annual')}
               className={`px-7 py-2.5 rounded-full text-sm font-black transition-all duration-300 flex items-center gap-2 ${billing === 'annual' ? 'bg-gray-900 text-white shadow' : 'text-gray-500 hover:text-gray-800'}`}
             >
-              Anual
+              {t('pricingPage.toggle.annual')}
               <span className="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">−34%</span>
             </button>
           </motion.div>
@@ -322,7 +292,7 @@ export default function PricingPage() {
                     <div className={`absolute top-5 right-5 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider ${
                       plan.highlight ? 'bg-white/20 text-white' : 'bg-slate-900 text-white'
                     }`}>
-                      {plan.badge}
+                      {plan.badge ? t(plan.badge) : null}
                     </div>
                   )}
 
@@ -330,7 +300,7 @@ export default function PricingPage() {
                     {/* Header */}
                     <div className="mb-8">
                       <p className={`text-[11px] font-black uppercase tracking-[0.18em] mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>
-                        {plan.tagline}
+                        {t(plan.tagline)}
                       </p>
                       <h2 className={`text-3xl font-black tracking-tight ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>
                         {plan.name}
@@ -353,16 +323,16 @@ export default function PricingPage() {
                             {price === 0 ? '0' : price.toFixed(2)}
                           </motion.span>
                         </AnimatePresence>
-                        <span className={`text-sm font-bold mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>/mes</span>
+                        <span className={`text-sm font-bold mb-1.5 ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>{t('pricingPage.perMonth')}</span>
                       </div>
                       {billing === 'annual' && annualTotal && (
                         <p className={`mt-2 text-xs font-semibold ${plan.highlight ? 'text-blue-200' : 'text-emerald-600'}`}>
-                          Facturado {sym}{annualTotal}/año · ahorrás {sym}{(planPrices.monthly * 12 - annualTotal).toFixed(0)}
+                          {t('pricingPage.billedAnnual', { sym, total: annualTotal, savings: (planPrices.monthly * 12 - annualTotal).toFixed(0) })}
                         </p>
                       )}
                       {price === 0 && (
                         <p className={`mt-2 text-xs font-semibold ${plan.highlight ? 'text-blue-200' : 'text-gray-400'}`}>
-                          Gratis para siempre
+                          {t('pricingPage.freeForever')}
                         </p>
                       )}
                     </div>
@@ -380,7 +350,7 @@ export default function PricingPage() {
                       } ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
                       {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                      {plan.cta}
+                      {t(plan.cta)}
                       {!isLoading && <ArrowRight className="w-4 h-4" />}
                     </button>
 
@@ -411,7 +381,7 @@ export default function PricingPage() {
                                 ? plan.highlight ? 'text-white font-black' : 'text-blue-700 font-black'
                                 : plan.highlight ? 'text-blue-50' : 'text-gray-700'
                             }`}>
-                              {f.label}
+                              {t(f.label)}
                             </span>
                             {highlighted && <Zap className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${plan.highlight ? 'text-yellow-300' : 'text-blue-500'}`} />}
                           </li>
@@ -432,11 +402,8 @@ export default function PricingPage() {
               <Info className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm font-black text-gray-900 mb-1">¿Qué es el tráfico cross-cloud?</p>
-              <p className="text-sm text-gray-500 font-medium leading-relaxed">
-                Cuando transferís un archivo entre servicios <em>distintos</em> (ej: Google Drive → Dropbox), los datos pasan por nuestros servidores — eso consume tráfico.
-                Si movés archivos dentro del <em>mismo</em> servicio (Drive→Drive), el tráfico es <strong className="text-gray-700">siempre ilimitado y gratis</strong>.
-              </p>
+              <p className="text-sm font-black text-gray-900 mb-1">{t('pricingPage.traffic.title')}</p>
+              <p className="text-sm text-gray-500 font-medium leading-relaxed">{t('pricingPage.traffic.text')}</p>
             </div>
           </div>
         </section>
@@ -445,10 +412,10 @@ export default function PricingPage() {
         <section className="max-w-5xl mx-auto px-6 mb-24">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { icon: Shield, label: 'Datos cifrados', sub: 'AES-256-GCM' },
-              { icon: RefreshCw, label: 'Cancela cuando quieras', sub: 'Sin permanencia' },
-              { icon: BarChart2, label: 'Garantía de devolución', sub: '14 días' },
-              { icon: Bell, label: 'Sin tarjeta de crédito', sub: 'Para el plan Free' },
+              { icon: Shield, label: t('pricingPage.trust.encrypted'), sub: t('pricingPage.trust.encryptedSub') },
+              { icon: RefreshCw, label: t('pricingPage.trust.cancel'), sub: t('pricingPage.trust.cancelSub') },
+              { icon: BarChart2, label: t('pricingPage.trust.refund'), sub: t('pricingPage.trust.refundSub') },
+              { icon: Bell, label: t('pricingPage.trust.noCard'), sub: t('pricingPage.trust.noCardSub') },
             ].map(({ icon: Icon, label, sub }) => (
               <div key={label} className="bg-white rounded-2xl border border-gray-100 px-5 py-4 flex items-center gap-3 shadow-sm">
                 <div className="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -466,8 +433,8 @@ export default function PricingPage() {
         {/* ── Comparison table ── */}
         <section className="max-w-6xl mx-auto px-6 mb-24">
           <div className="text-center mb-12">
-            <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-3">Comparación completa</p>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Todo detallado</h2>
+            <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-3">{t('pricingPage.comparison.label')}</p>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight">{t('pricingPage.comparison.title')}</h2>
           </div>
 
           <div className="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
@@ -475,7 +442,7 @@ export default function PricingPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100">
-                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest w-2/5">Característica</th>
+                    <th className="px-8 py-6 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest w-2/5">{t('pricingPage.comparison.feature')}</th>
                     <th className="px-6 py-6 text-center text-sm font-black text-gray-700 uppercase tracking-wider">Free</th>
                     <th className="px-6 py-6 text-center text-sm font-black text-[#0061D5] bg-blue-50/50 uppercase tracking-wider">Pro</th>
                     <th className="px-6 py-6 text-center text-sm font-black text-gray-700 uppercase tracking-wider">Business</th>
@@ -503,10 +470,10 @@ export default function PricingPage() {
                     </React.Fragment>
                   ))}
                   <tr className="border-t-2 border-gray-100">
-                    <td className="px-8 py-6 text-sm font-black text-gray-900">Precio mensual</td>
-                    <td className="px-6 py-6 text-center font-black text-gray-700">$0</td>
-                    <td className="px-6 py-6 text-center font-black text-[#0061D5] bg-blue-50/20 text-lg">$7.99</td>
-                    <td className="px-6 py-6 text-center font-black text-gray-700">$19.99</td>
+                    <td className="px-8 py-6 text-sm font-black text-gray-900">{t('pricingPage.comparison.monthlyPrice')}</td>
+                    <td className="px-6 py-6 text-center font-black text-gray-700">{sym}0</td>
+                    <td className="px-6 py-6 text-center font-black text-[#0061D5] bg-blue-50/20 text-lg">{sym}{PLANS[1].prices[currency].monthly}</td>
+                    <td className="px-6 py-6 text-center font-black text-gray-700">{sym}{PLANS[2].prices[currency].monthly}</td>
                   </tr>
                 </tbody>
               </table>
@@ -517,8 +484,8 @@ export default function PricingPage() {
         {/* ── FAQ ── */}
         <section className="max-w-3xl mx-auto px-6 mb-24">
           <div className="text-center mb-12">
-            <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-3">Preguntas frecuentes</p>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight">¿Tenés dudas?</h2>
+            <p className="text-[11px] font-black text-blue-600 uppercase tracking-widest mb-3">{t('pricingPage.faq.label')}</p>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight">{t('pricingPage.faq.title')}</h2>
           </div>
           <div className="space-y-3">
             {FAQS.map((faq, idx) => (
@@ -562,18 +529,18 @@ export default function PricingPage() {
             <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl" />
             <div className="relative z-10">
               <h2 className="text-4xl lg:text-5xl font-black text-white mb-5 tracking-tight leading-tight">
-                Conectá tus nubes hoy
+                {t('pricingPage.cta.title')}
               </h2>
               <p className="text-blue-100 font-medium mb-10 max-w-lg mx-auto leading-relaxed">
-                Empieza gratis, sin tarjeta. Tu primera transferencia en menos de 2 minutos.
+                {t('pricingPage.cta.subtitle')}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link href="/login?mode=register" className="bg-white text-[#0061D5] font-black px-10 py-4 rounded-2xl hover:bg-blue-50 transition-all shadow-lg hover:-translate-y-0.5 text-sm uppercase tracking-wide inline-flex items-center gap-2 group">
-                  Empezar gratis
+                  {t('pricingPage.cta.startFree')}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link href="/#planes" className="bg-white/10 text-white font-bold px-10 py-4 rounded-2xl hover:bg-white/20 transition-all text-sm">
-                  Ver comparación
+                  {t('pricingPage.cta.compare')}
                 </Link>
               </div>
             </div>
