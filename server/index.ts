@@ -267,4 +267,18 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('❌ Failed to start scheduler service:', error);
   }
+
+  // Keep-alive ping on Render to prevent the free-tier instance from sleeping.
+  // Pings /api/health every 10 minutes so the scheduler keeps running.
+  if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+    const appUrl = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`;
+    setInterval(async () => {
+      try {
+        await fetch(`${appUrl}/api/health`);
+      } catch {
+        // Silently ignore — network hiccups are non-fatal
+      }
+    }, 10 * 60 * 1000); // 10 minutes
+    console.log('⏰ Keep-alive ping enabled (every 10 min)');
+  }
 })();

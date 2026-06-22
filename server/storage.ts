@@ -84,6 +84,7 @@ export interface IStorage {
   
   // Admin user operations
   getAllUsers(page?: number, limit?: number): Promise<{ users: User[]; total: number; totalPages: number }>;
+  getUserByStripeSubscriptionId(subscriptionId: string): Promise<User | undefined>;
   updateUserLimits(userId: string, limits: {
     maxStorageBytes?: number;
     maxConcurrentOperations?: number;
@@ -393,6 +394,15 @@ export class DatabaseStorage implements IStorage {
     const totalPages = Math.ceil(Number(total) / limit);
     
     return { users: allUsers, total: Number(total), totalPages };
+  }
+
+  async getUserByStripeSubscriptionId(subscriptionId: string): Promise<User | undefined> {
+    const [user] = await getDb()
+      .select()
+      .from(users)
+      .where(eq(users.stripeSubscriptionId, subscriptionId))
+      .limit(1);
+    return user ? decryptUserTokens(user) : undefined;
   }
 
   async updateUserLimits(userId: string, limits: {

@@ -107,9 +107,12 @@ async function enforceOperationLimits(userId: string): Promise<{ status: number;
 export async function registerRoutes(app: Express): Promise<Server> {
   // Trust proxy for correct protocol/host detection behind load balancers
   app.set('trust proxy', 1);
-  
 
-  
+  // Public health check — used by uptime monitors and Render keep-alive
+  app.get('/api/health', (_req, res) => {
+    res.json({ status: 'ok', ts: Date.now() });
+  });
+
   // Stripe routes
   app.post('/api/stripe/create-checkout', isAuthenticated, async (req: any, res) => {
     if (!stripe) return res.status(500).json({ message: "Stripe not configured" });
@@ -172,8 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else if (event.type === 'customer.subscription.deleted' || event.type === 'customer.subscription.updated') {
         const subscription = event.data.object as Stripe.Subscription;
-        const users = await storage.getAllUsers();
-        const user = users.users.find(u => u.stripeSubscriptionId === subscription.id);
+        const user = await storage.getUserByStripeSubscriptionId(subscription.id);
 
         if (user) {
           if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
@@ -689,10 +691,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "No permission to access this file. Make sure the link is publicly shared." });
         }
         
-        // Return actual error message for debugging (remove in production if too verbose)
-        return res.status(500).json({ 
+        return res.status(500).json({
           message: "Failed to get operation preview",
-          details: errorMessage
+          ...(process.env.NODE_ENV !== 'production' && { details: errorMessage })
         });
       }
       
