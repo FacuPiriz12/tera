@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
+import OneDriveLogo from "@/components/OneDriveLogo";
+import BoxLogo from "@/components/BoxLogo";
+import S3Logo from "@/components/S3Logo";
 
 const PLAN_DETAILS = {
   free:     { label: "Free",     color: "bg-gray-100 text-gray-700",     icon: Package, border: "border-gray-200" },
@@ -43,6 +46,14 @@ export default function Profile() {
       </div>
     );
   }
+
+  const allServices = [
+    { logoBadge: <GoogleDriveLogo className="w-3.5 h-3.5" />, logoCard: <GoogleDriveLogo className="w-4 h-4" />, name: "Google Drive", connected: user.googleConnected },
+    { logoBadge: <DropboxLogo className="w-3.5 h-3.5" />, logoCard: <DropboxLogo className="w-4 h-4" />, name: "Dropbox", connected: user.dropboxConnected },
+    { logoBadge: <OneDriveLogo className="w-3.5 h-3.5" />, logoCard: <OneDriveLogo className="w-4 h-4" />, name: "OneDrive", connected: user.onedriveConnected },
+    { logoBadge: <BoxLogo className="w-3.5 h-3.5" />, logoCard: <BoxLogo className="w-4 h-4" />, name: "Box", connected: user.boxConnected },
+    { logoBadge: <S3Logo className="w-3.5 h-3.5" />, logoCard: <S3Logo className="w-4 h-4" />, name: "Amazon S3", connected: user.s3Connected },
+  ];
 
   const plan = (user.membershipPlan as keyof typeof PLAN_DETAILS) || "free";
   const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.free;
@@ -105,21 +116,14 @@ export default function Profile() {
             </div>
 
             <div className="flex flex-wrap gap-2 mt-4">
-              {user.googleConnected && (
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
-                  <GoogleDriveLogo className="w-3.5 h-3.5" />
-                  Google Drive
+              {allServices.filter(s => s.connected).map(({ logoBadge, name }) => (
+                <div key={name} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
+                  {logoBadge}
+                  {name}
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                 </div>
-              )}
-              {user.dropboxConnected && (
-                <div className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
-                  <DropboxLogo className="w-3.5 h-3.5" />
-                  Dropbox
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                </div>
-              )}
-              {!user.googleConnected && !user.dropboxConnected && (
+              ))}
+              {!allServices.some(s => s.connected) && (
                 <span className="text-xs text-gray-400">
                   {t("profilePage.noServices")}{" "}
                   <button onClick={() => setLocation("/integrations")} className="text-blue-500 hover:underline">
@@ -324,13 +328,10 @@ export default function Profile() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {[
-                  { logo: <GoogleDriveLogo className="w-4 h-4" />, name: "Google Drive", connected: user.googleConnected },
-                  { logo: <DropboxLogo className="w-4 h-4" />, name: "Dropbox", connected: user.dropboxConnected },
-                ].map(({ logo, name, connected }) => (
+                {allServices.map(({ logoCard, name, connected }) => (
                   <div key={name} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center">{logo}</div>
+                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center">{logoCard}</div>
                       <div>
                         <span className="text-sm font-medium text-gray-700">{name}</span>
                         <p className="text-xs text-gray-400">{connected ? t("profilePage.services.connected") : t("profilePage.services.notConnected")}</p>

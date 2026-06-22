@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { getAuthHeaders } from "@/lib/queryClient";
+import { apiRequest, getAuthHeaders } from "@/lib/queryClient";
+import { supabasePromise } from "@/lib/supabase";
 import Header from "@/components/Header";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useState, useEffect } from "react";
@@ -22,10 +23,13 @@ import { Link } from "wouter";
 import {
   User, Camera, Save, Shield, Trash2, CheckCircle2, AlertCircle,
   Loader2, Crown, Zap, Globe, CreditCard, ArrowUpRight, XCircle,
-  Star, Package
+  Star, Package, Lock, Eye, EyeOff, Bell, Moon, Sun, ExternalLink
 } from "lucide-react";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
+import OneDriveLogo from "@/components/OneDriveLogo";
+import BoxLogo from "@/components/BoxLogo";
+import S3Logo from "@/components/S3Logo";
 
 const settingsSchema = z.object({
   firstName: z.string().min(1).max(50),
@@ -40,16 +44,59 @@ const PLAN_DETAILS = {
   business: { label: "Business", color: "bg-violet-100 text-violet-700", icon: Crown,    monthlyUSD: 19.99 },
 } as const;
 
+function useTheme() {
+  const [dark, setDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("tera-theme") === "dark" ||
+      (!localStorage.getItem("tera-theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("tera-theme", dark ? "dark" : "light");
+  }, [dark]);
+
+  return { dark, toggle: () => setDark(d => !d) };
+}
+
+function useNotifications() {
+  const [enabled, setEnabled] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const v = localStorage.getItem("tera-email-notif");
+    return v === null ? true : v === "true";
+  });
+
+  const toggle = () => setEnabled(prev => {
+    const next = !prev;
+    localStorage.setItem("tera-email-notif", String(next));
+    return next;
+  });
+
+  return { enabled, toggle };
+}
+
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { dark, toggle: toggleDark } = useTheme();
+  const { enabled: notifEnabled, toggle: toggleNotif } = useNotifications();
+
   const [isEditing, setIsEditing] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [otpCode, setOtpCode] = useState("");
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  // Password change state
+  const [currentPw, setCurrentPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [pwChanging, setPwChanging] = useState(false);
+  const [pwError, setPwError] = useState("");
 
   const form = useForm<SettingsFormData>({
     resolver: zodResolver(settingsSchema),
@@ -80,9 +127,7 @@ export default function Settings() {
         setIsEditing(false);
       }
     },
-    onError: () => {
-      toast({ title: "Error", variant: "destructive" });
-    },
+    onError: () => toast({ title: "Error", variant: "destructive" }),
   });
 
   const verifyEmailMutation = useMutation({
@@ -93,9 +138,7 @@ export default function Settings() {
       setPendingEmail(null);
       setOtpCode("");
     },
-    onError: () => {
-      toast({ title: "Error", variant: "destructive" });
-    },
+    onError: () => toast({ title: "Error", variant: "destructive" }),
   });
 
   const cancelSubscriptionMutation = useMutation({
@@ -104,9 +147,7 @@ export default function Settings() {
       setCancelConfirm(false);
       toast({ title: t("settingsPage.plan.cancelLink") });
     },
-    onError: () => {
-      toast({ title: "Error", variant: "destructive" });
-    },
+    onError: () => toast({ title: "Error", variant: "destructive" }),
   });
 
   const handleCheckout = async (priceId: string) => {
@@ -140,9 +181,46 @@ export default function Settings() {
     form.setValue("email", user?.email || "");
   };
 
+  const handlePasswordChange = async () => {
+    setPwError("");
+    if (newPw.length < 8) { setPwError(t("settingsPage.password.minLength")); return; }
+    if (newPw !== confirmPw) { setPwError(t("settingsPage.password.mismatch")); return; }
+
+    setPwChanging(true);
+    try {
+      const supabase = await supabasePromise;
+      if (!supabase) throw new Error("Auth not configured");
+
+      // Re-authenticate with current password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user!.email!,
+        password: currentPw,
+      });
+      if (signInError) { setPwError(t("settingsPage.password.wrongCurrent")); return; }
+
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) throw error;
+
+      setCurrentPw(""); setNewPw(""); setConfirmPw("");
+      toast({ title: t("settingsPage.password.successMsg") });
+    } catch (e: any) {
+      if (!pwError) toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setPwChanging(false);
+    }
+  };
+
   const plan = (user?.membershipPlan as keyof typeof PLAN_DETAILS) || "free";
   const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.free;
   const PlanIcon = planInfo.icon;
+
+  const allServices = [
+    { logo: <GoogleDriveLogo className="w-5 h-5" />, name: "Google Drive", connected: user?.googleConnected, href: "/integrations" },
+    { logo: <DropboxLogo className="w-5 h-5" />, name: "Dropbox", connected: user?.dropboxConnected, href: "/integrations" },
+    { logo: <OneDriveLogo className="w-5 h-5" />, name: "OneDrive", connected: user?.onedriveConnected, href: "/integrations" },
+    { logo: <BoxLogo className="w-5 h-5" />, name: "Box", connected: user?.boxConnected, href: "/integrations" },
+    { logo: <S3Logo className="w-5 h-5" />, name: "Amazon S3", connected: user?.s3Connected, href: "/integrations" },
+  ];
 
   if (!user) {
     return (
@@ -285,6 +363,93 @@ export default function Settings() {
                   </div>
                 </form>
               </Form>
+            </CardContent>
+          </Card>
+
+          {/* ── Contraseña y Seguridad ── */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-base font-black">
+                <Lock className="h-4 w-4 text-blue-600" />
+                {t("settingsPage.password.title")}
+              </CardTitle>
+              <CardDescription>{t("settingsPage.password.description")}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">
+                    {t("settingsPage.password.currentLabel")}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type={showCurrent ? "text" : "password"}
+                      value={currentPw}
+                      onChange={e => setCurrentPw(e.target.value)}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrent(s => !s)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">
+                      {t("settingsPage.password.newLabel")}
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showNew ? "text" : "password"}
+                        value={newPw}
+                        onChange={e => setNewPw(e.target.value)}
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNew(s => !s)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1.5 block">
+                      {t("settingsPage.password.confirmLabel")}
+                    </Label>
+                    <Input
+                      type="password"
+                      value={confirmPw}
+                      onChange={e => setConfirmPw(e.target.value)}
+                      autoComplete="new-password"
+                      className={confirmPw && newPw !== confirmPw ? "border-red-300" : ""}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {pwError && (
+                <p className="text-xs text-red-600 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" /> {pwError}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  onClick={handlePasswordChange}
+                  disabled={!currentPw || !newPw || !confirmPw || pwChanging}
+                >
+                  {pwChanging ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Lock className="h-3.5 w-3.5 mr-1.5" />}
+                  {pwChanging ? t("settingsPage.password.changingBtn") : t("settingsPage.password.changeBtn")}
+                </Button>
+                <p className="text-xs text-gray-400">{t("settingsPage.password.minLength")}</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -449,13 +614,42 @@ export default function Settings() {
               </CardTitle>
               <CardDescription>{t("settingsPage.preferences.description")}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              {/* Idioma */}
               <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">{t("settingsPage.preferences.languageLabel")}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{t("settingsPage.preferences.languageSub")}</p>
                 </div>
                 <LanguageSelector />
+              </div>
+
+              {/* Notificaciones */}
+              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t("settingsPage.preferences.notificationsLabel")}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t("settingsPage.preferences.notificationsSub")}</p>
+                  </div>
+                </div>
+                <Switch checked={notifEnabled} onCheckedChange={toggleNotif} />
+              </div>
+
+              {/* Modo oscuro */}
+              <div className="flex items-center justify-between py-3 px-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                    {dark ? <Moon className="w-4 h-4 text-slate-600" /> : <Sun className="w-4 h-4 text-amber-500" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t("settingsPage.preferences.darkModeLabel")}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{t("settingsPage.preferences.darkModeSub")}</p>
+                  </div>
+                </div>
+                <Switch checked={dark} onCheckedChange={toggleDark} />
               </div>
             </CardContent>
           </Card>
@@ -485,12 +679,15 @@ export default function Settings() {
               <Separator />
 
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("settingsPage.account.servicesTitle")}</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {[
-                    { logo: <GoogleDriveLogo className="w-5 h-5" />, name: "Google Drive", connected: user.googleConnected },
-                    { logo: <DropboxLogo className="w-5 h-5" />, name: "Dropbox", connected: user.dropboxConnected },
-                  ].map(({ logo, name, connected }) => (
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("settingsPage.account.servicesTitle")}</p>
+                  <Link href="/integrations" className="text-xs text-blue-600 hover:underline font-medium flex items-center gap-1">
+                    <ExternalLink className="w-3 h-3" />
+                    {t("settingsPage.account.manageLink")}
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {allServices.map(({ logo, name, connected }) => (
                     <div key={name} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-white rounded-lg border border-gray-100 flex items-center justify-center">{logo}</div>
