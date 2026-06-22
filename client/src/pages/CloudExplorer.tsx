@@ -141,6 +141,7 @@ function CloudPanel({
   onDragLeave,
   onRequestMultiTransfer,
 }: CloudPanelProps) {
+  const { t } = useTranslation();
   const currentPath = panelState.provider === 'google'
     ? panelState.googleFolderId
     : panelState.dropboxPath;
@@ -273,7 +274,7 @@ function CloudPanel({
         <div className="absolute inset-0 rounded-2xl pointer-events-none z-10 border-2 border-dashed border-blue-400 flex items-center justify-center">
           <div className="bg-blue-500 text-white text-sm font-bold px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg">
             <MoveRight className="w-4 h-4" />
-            Soltar para transferir
+            {t('pages.cloudExplorer.dropToTransfer', 'Soltar para transferir')}
           </div>
         </div>
       )}
@@ -327,7 +328,7 @@ function CloudPanel({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar..."
+                placeholder={t('pages.cloudExplorer.search', 'Buscar...')}
                 value={panelState.search}
                 onChange={(e) => setPanelState({ ...panelState, search: e.target.value })}
                 className="pl-8 pr-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all w-28"
@@ -369,7 +370,7 @@ function CloudPanel({
             <Home className="w-3 h-3" />
           </button>
           {panelState.breadcrumbs.length === 0 && (
-            <span className="text-[11px] text-gray-400 font-medium ml-1">Raíz</span>
+            <span className="text-[11px] text-gray-400 font-medium ml-1">{t('pages.cloudExplorer.root', 'Raíz')}</span>
           )}
           {panelState.breadcrumbs.map((crumb, i) => (
             <React.Fragment key={i}>
@@ -404,15 +405,15 @@ function CloudPanel({
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-700">
-                    {panelState.provider === 'google' ? 'Google Drive' : 'Dropbox'} no conectado
+                    {t('pages.cloudExplorer.notConnected', '{{provider}} no conectado', { provider: panelState.provider === 'google' ? 'Google Drive' : 'Dropbox' })}
                   </p>
                   <p className="text-xs text-gray-400 mt-1 max-w-[200px]">
-                    Conectá tu cuenta para explorar y transferir archivos
+                    {t('pages.cloudExplorer.connectAccount', 'Conectá tu cuenta para explorar y transferir archivos')}
                   </p>
                 </div>
                 <Link href="/integrations">
                   <button className="text-xs text-blue-600 hover:text-blue-700 font-semibold transition-colors px-4 py-2 bg-blue-50 hover:bg-blue-100 rounded-xl">
-                    Ir a Integraciones →
+                    {t('pages.cloudExplorer.goToIntegrations', 'Ir a Integraciones →')}
                   </button>
                 </Link>
               </div>
@@ -422,13 +423,13 @@ function CloudPanel({
             <div className="flex flex-col items-center justify-center h-40 gap-3 text-center">
               <AlertCircle className="w-8 h-8 text-red-300" />
               <p className="text-sm text-gray-500 max-w-[220px]">
-                {msg || 'Error al cargar los archivos'}
+                {msg || t('pages.cloudExplorer.loadError', 'Error al cargar los archivos')}
               </p>
               <button
                 onClick={() => refetch()}
                 className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
               >
-                Reintentar
+                {t('pages.cloudExplorer.retry', 'Reintentar')}
               </button>
             </div>
           );
@@ -454,7 +455,7 @@ function CloudPanel({
           <div className="flex flex-col items-center justify-center h-40 gap-2">
             <Folder className="w-8 h-8 text-gray-200" />
             <p className="text-sm text-gray-400">
-              {panelState.search ? 'Sin resultados' : 'Carpeta vacía'}
+              {panelState.search ? t('pages.cloudExplorer.noResults', 'Sin resultados') : t('pages.cloudExplorer.emptyFolder', 'Carpeta vacía')}
             </p>
           </div>
         )}
@@ -501,7 +502,7 @@ function CloudPanel({
                       {item.name}
                     </p>
                     <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      {item.isFolder ? 'Carpeta' : (formatSize(item.size) || '—')}
+                      {item.isFolder ? t('pages.cloudExplorer.folder', 'Carpeta') : (formatSize(item.size) || '—')}
                     </p>
                   </div>
                 </div>
@@ -513,17 +514,17 @@ function CloudPanel({
         {/* Barra de selección múltiple */}
         {selectedItems.length > 0 && (
           <div className="sticky bottom-2 mt-3 flex items-center justify-between bg-blue-600 text-white rounded-xl px-4 py-2.5 shadow-lg shadow-blue-200">
-            <span className="text-xs font-bold">{selectedItems.length} archivo{selectedItems.length !== 1 ? 's' : ''} seleccionado{selectedItems.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs font-bold">{t('pages.cloudExplorer.filesSelected', '{{count}} archivos seleccionados', { count: selectedItems.length })}</span>
             <div className="flex items-center gap-2">
               <button onClick={clearSelection} className="text-[11px] text-blue-200 hover:text-white font-semibold transition-colors">
-                Cancelar
+                {t('pages.cloudExplorer.cancel', 'Cancelar')}
               </button>
               <button
                 onClick={() => onRequestMultiTransfer(selectedItems, panelState.provider, currentPath)}
                 className="flex items-center gap-1.5 text-xs font-bold bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <SendHorizontal className="w-3.5 h-3.5" />
-                Transferir
+                {t('pages.cloudExplorer.transfer', 'Transferir')}
               </button>
             </div>
           </div>
@@ -580,7 +581,7 @@ export default function CloudExplorer() {
     if (!draggedItem) return;
     const targetProvider = targetPanel === 1 ? panel1.provider : panel2.provider;
     if (draggedItem.provider === targetProvider) {
-      toast({ title: 'Mismo proveedor', description: 'Arrastrá al panel del otro proveedor para transferir.' });
+      toast({ title: t('pages.cloudExplorer.sameProvider', 'Mismo proveedor'), description: t('pages.cloudExplorer.sameProviderDesc', 'Arrastrá al panel del otro proveedor para transferir.') });
     } else {
       setPendingTransfer({
         items: [draggedItem.item],
@@ -649,11 +650,11 @@ export default function CloudExplorer() {
       toast({
         title: t('copy.transferInitiated', 'Transferencia iniciada'),
         description: count === 1
-          ? `"${pendingTransfer.items[0].name}" está en cola.`
-          : `${count} archivos en cola hacia ${pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox'}.`,
+          ? t('pages.cloudExplorer.fileQueued', '"{{name}}" está en cola.', { name: pendingTransfer.items[0].name })
+          : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox' }),
       });
     } catch (error: any) {
-      toast({ title: 'Error al iniciar transferencia', description: error.message || 'No se pudo iniciar la transferencia.', variant: 'destructive' });
+      toast({ title: t('pages.cloudExplorer.transferError', 'Error al iniciar transferencia'), description: error.message || t('pages.cloudExplorer.transferErrorDesc', 'No se pudo iniciar la transferencia.'), variant: 'destructive' });
     } finally {
       setIsTransferring(false);
       setShowSyncModal(false);
@@ -700,14 +701,14 @@ export default function CloudExplorer() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-bold text-slate-900 truncate">
-                          {count > 1 ? `${count} archivos seleccionados` : first.name}
+                          {count > 1 ? t('pages.cloudExplorer.filesSelected', '{{count}} archivos seleccionados', { count }) : first.name}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <img src={pendingTransfer.from === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
                           <ArrowRight className="w-3 h-3 text-gray-300" />
                           <img src={pendingTransfer.to === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
                           <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
-                            {count > 1 ? `${count} archivos` : first.isFolder ? 'Carpeta' : 'Archivo'}
+                            {count > 1 ? t('pages.cloudExplorer.countFiles', '{{count}} archivos', { count }) : first.isFolder ? t('pages.cloudExplorer.folder', 'Carpeta') : t('myFiles.fileTypes.file', 'Archivo')}
                           </span>
                         </div>
                       </div>
@@ -729,10 +730,10 @@ export default function CloudExplorer() {
                     className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
-                      Saltear existentes
+                      {t('pages.cloudExplorer.skip', 'Saltear existentes')}
                     </p>
                     <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
-                      Copia solo archivos nuevos, no sobreescribe
+                      {t('pages.cloudExplorer.skipDesc', 'Copia solo archivos nuevos, no sobreescribe')}
                     </p>
                   </button>
                   <button
@@ -741,10 +742,10 @@ export default function CloudExplorer() {
                     className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-blue-400 hover:bg-blue-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <p className="text-sm font-bold text-slate-700 group-hover:text-blue-600">
-                      Copiar con nuevo nombre
+                      {t('pages.cloudExplorer.copyWithSuffix', 'Copiar con nuevo nombre')}
                     </p>
                     <p className="text-[11px] text-slate-400 group-hover:text-blue-400 mt-0.5">
-                      Si ya existe, crea una copia con sufijo (_1, _2…)
+                      {t('pages.cloudExplorer.copyWithSuffixDesc', 'Si ya existe, crea una copia con sufijo (_1, _2…)')}
                     </p>
                   </button>
                   <button
@@ -753,10 +754,10 @@ export default function CloudExplorer() {
                     className="w-full p-3.5 rounded-2xl border-2 border-slate-100 hover:border-red-300 hover:bg-red-50/40 transition-all group text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <p className="text-sm font-bold text-slate-700 group-hover:text-red-600">
-                      Reemplazar
+                      {t('pages.cloudExplorer.replace', 'Reemplazar')}
                     </p>
                     <p className="text-[11px] text-slate-400 group-hover:text-red-400 mt-0.5">
-                      Sobreescribe el archivo existente con el mismo nombre
+                      {t('pages.cloudExplorer.replaceDesc', 'Sobreescribe el archivo existente con el mismo nombre')}
                     </p>
                   </button>
                 </div>
@@ -764,7 +765,7 @@ export default function CloudExplorer() {
                 {isTransferring && (
                   <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs font-medium">Iniciando transferencia...</span>
+                    <span className="text-xs font-medium">{t('pages.cloudExplorer.transferring', 'Iniciando transferencia...')}</span>
                   </div>
                 )}
 
@@ -803,7 +804,7 @@ export default function CloudExplorer() {
                 className="flex-shrink-0 flex items-center justify-center gap-2 py-2 px-4 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-600"
               >
                 <MoveRight className="w-3.5 h-3.5" />
-                Soltá "{draggedItem.item.name}" en el otro panel para transferir
+                {t('pages.cloudExplorer.dragHint', 'Soltá "{{name}}" en el otro panel para transferir', { name: draggedItem.item.name })}
               </motion.div>
             )}
           </AnimatePresence>

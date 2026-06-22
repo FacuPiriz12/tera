@@ -229,16 +229,16 @@ export default function MyFiles() {
   };
 
   const getFileType = (mimeType?: string): string => {
-    if (!mimeType) return 'Archivo';
-    if (mimeType.includes('folder')) return 'Carpeta';
-    if (mimeType.includes('image/')) return 'Imagen';
-    if (mimeType.includes('video/')) return 'Video';
-    if (mimeType.includes('audio/')) return 'Audio';
-    if (mimeType.includes('pdf')) return 'PDF';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Hoja de cálculo';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'Documento';
-    if (mimeType.includes('zip') || mimeType.includes('archive')) return 'Archivo comprimido';
-    return 'Archivo';
+    if (!mimeType) return t('myFiles.fileTypes.file', 'Archivo');
+    if (mimeType.includes('folder')) return t('myFiles.fileTypes.folder', 'Carpeta');
+    if (mimeType.includes('image/')) return t('myFiles.fileTypes.image', 'Imagen');
+    if (mimeType.includes('video/')) return t('myFiles.fileTypes.video', 'Video');
+    if (mimeType.includes('audio/')) return t('myFiles.fileTypes.audio', 'Audio');
+    if (mimeType.includes('pdf')) return t('myFiles.fileTypes.pdf', 'PDF');
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return t('myFiles.fileTypes.spreadsheet', 'Hoja de cálculo');
+    if (mimeType.includes('word') || mimeType.includes('document')) return t('myFiles.fileTypes.document', 'Documento');
+    if (mimeType.includes('zip') || mimeType.includes('archive')) return t('myFiles.fileTypes.archive', 'Archivo comprimido');
+    return t('myFiles.fileTypes.file', 'Archivo');
   };
 
   const getFileUrl = (file: CloudFile): string => {
@@ -276,8 +276,8 @@ export default function MyFiles() {
     const cloudUrl = getFileUrl(file);
     navigator.clipboard.writeText(cloudUrl);
     toast({
-      title: "Enlace copiado",
-      description: "El enlace se ha copiado al portapapeles",
+      title: t('myFiles.linkCopied', 'Enlace copiado'),
+      description: t('myFiles.linkCopiedDesc', 'El enlace se ha copiado al portapapeles'),
     });
   };
 
@@ -332,7 +332,7 @@ export default function MyFiles() {
               {t('myFiles.title', { defaultValue: 'Mis Archivos' })}
             </h1>
             <p className="text-muted-foreground">
-              Archivos y Carpetas
+              {t('myFiles.subtitle', 'Archivos y Carpetas')}
             </p>
           </div>
 
@@ -359,7 +359,7 @@ export default function MyFiles() {
                 className="rounded-r-none px-3"
                 data-testid="button-filter-all"
               >
-                Todos
+                {t('myFiles.all', 'Todos')}
               </Button>
               <Button
                 variant="ghost"
@@ -420,9 +420,9 @@ export default function MyFiles() {
                 {searchTerm 
                   ? t('myFiles.tryDifferentSearch', { defaultValue: 'Intenta con otros términos de búsqueda.' })
                   : platformFilter === 'dropbox'
-                    ? 'Los archivos y carpetas de Dropbox aparecerán aquí.'
+                    ? t('myFiles.filterDropbox', 'Los archivos y carpetas de Dropbox aparecerán aquí.')
                     : platformFilter === 'google'
-                      ? 'Los archivos y carpetas de Google Drive aparecerán aquí.'
+                      ? t('myFiles.filterGoogle', 'Los archivos y carpetas de Google Drive aparecerán aquí.')
                       : t('myFiles.filesWillAppearHere', { defaultValue: 'Tus archivos aparecerán aquí una vez copiados.' })
                 }
               </p>
@@ -468,7 +468,7 @@ export default function MyFiles() {
                     {viewMode === 'grid' && (
                       <div className="flex items-center justify-between">
                         <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                          Copiado
+                          {t('myFiles.copied', 'Copiado')}
                         </Badge>
                         <div className="flex space-x-1">
                           <Button
@@ -494,24 +494,24 @@ export default function MyFiles() {
                             <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)} data-testid={`menu-details-${file.id}`}>
                                 <Info className="w-4 h-4 mr-2" />
-                                Ver detalles
+                                {t('myFiles.viewDetails', 'Ver detalles')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)} data-testid={`menu-open-cloud-${file.id}`}>
                                 <ExternalLink className="w-4 h-4 mr-2" />
-                                Abrir en {getProviderName(file)}
+                                {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(file) })}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)} data-testid={`menu-download-${file.id}`}>
                                 <Download className="w-4 h-4 mr-2" />
-                                Descargar
+                                {t('myFiles.download', 'Descargar')}
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)} data-testid={`menu-copy-link-${file.id}`}>
                                 <Link2 className="w-4 h-4 mr-2" />
-                                Copiar enlace
+                                {t('myFiles.copyLink', 'Copiar enlace')}
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-${file.id}`}>
                                 <Share2 className="w-4 h-4 mr-2" />
-                                Compartir
+                                {t('myFiles.share', 'Compartir')}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -519,7 +519,7 @@ export default function MyFiles() {
                       </div>
                     )}
                   </div>
-                  
+
                   {viewMode === 'list' && (
                     <div className="flex items-center space-x-2">
                       <div className="w-4 h-4 flex-shrink-0">
@@ -530,7 +530,7 @@ export default function MyFiles() {
                         )}
                       </div>
                       <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                        Copiado
+                        {t('myFiles.copied', 'Copiado')}
                       </Badge>
                       <Button
                         variant="ghost"
@@ -553,24 +553,24 @@ export default function MyFiles() {
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)}>
                             <Info className="w-4 h-4 mr-2" />
-                            Ver detalles
+                            {t('myFiles.viewDetails', 'Ver detalles')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)}>
                             <ExternalLink className="w-4 h-4 mr-2" />
-                            Abrir en {getProviderName(file)}
+                            {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(file) })}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)}>
                             <Download className="w-4 h-4 mr-2" />
-                            Descargar
+                            {t('myFiles.download', 'Descargar')}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)}>
                             <Link2 className="w-4 h-4 mr-2" />
-                            Copiar enlace
+                            {t('myFiles.copyLink', 'Copiar enlace')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-list-${file.id}`}>
                             <Share2 className="w-4 h-4 mr-2" />
-                            Compartir
+                            {t('myFiles.share', 'Compartir')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -653,7 +653,7 @@ export default function MyFiles() {
             <div className="space-y-4">
               {/* File Name Full */}
               <div className="p-3 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Nombre completo</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('myFiles.fullName', 'Nombre completo')}</p>
                 <p className="text-sm font-medium break-all">{selectedFile.fileName}</p>
               </div>
 
@@ -662,23 +662,23 @@ export default function MyFiles() {
                 <div className="flex items-center gap-2">
                   <HardDrive className="w-4 h-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Tamaño</p>
+                    <p className="text-xs text-muted-foreground">{t('myFiles.size', 'Tamaño')}</p>
                     <p className="text-sm font-medium">{formatFileSize(selectedFile.fileSize || undefined)}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Tipo</p>
+                    <p className="text-xs text-muted-foreground">{t('myFiles.type', 'Tipo')}</p>
                     <p className="text-sm font-medium">{getFileType(selectedFile.mimeType || undefined)}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2 col-span-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <div>
-                    <p className="text-xs text-muted-foreground">Fecha de copia</p>
+                    <p className="text-xs text-muted-foreground">{t('myFiles.copyDate', 'Fecha de copia')}</p>
                     <p className="text-sm font-medium">{formatFullDate(selectedFile.createdAt!)}</p>
                   </div>
                 </div>
@@ -687,7 +687,7 @@ export default function MyFiles() {
               {/* Status */}
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  Copiado exitosamente
+                  {t('myFiles.copiedSuccessfully', 'Copiado exitosamente')}
                 </Badge>
               </div>
 
@@ -699,27 +699,27 @@ export default function MyFiles() {
                   <GoogleDriveLogo className="w-5 h-5" />
                 )}
                 <span className="text-sm text-muted-foreground">
-                  Almacenado en {getProviderName(selectedFile)}
+                  {t('myFiles.storedIn', 'Almacenado en {{provider}}', { provider: getProviderName(selectedFile) })}
                 </span>
               </div>
 
               {/* Actions */}
               <div className="flex gap-2 pt-2">
-                <Button 
-                  onClick={() => handleOpenInCloud(selectedFile)} 
+                <Button
+                  onClick={() => handleOpenInCloud(selectedFile)}
                   className="flex-1"
                   data-testid="button-dialog-open-cloud"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Abrir en {getProviderName(selectedFile)}
+                  {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(selectedFile) })}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handleDownload(selectedFile)}
                   data-testid="button-dialog-download"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Descargar
+                  {t('myFiles.download', 'Descargar')}
                 </Button>
                 <Button 
                   variant="outline" 

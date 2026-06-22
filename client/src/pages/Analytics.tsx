@@ -107,10 +107,10 @@ export default function Analytics() {
                 </div>
                 <div className="flex gap-3 mt-2">
                   <Button onClick={() => setLocation('/integrations')} variant="outline">
-                    Conectar cuentas
+                    {t('analytics.connectAccounts', 'Conectar cuentas')}
                   </Button>
                   <Button onClick={() => setLocation('/cloud-explorer')} className="gap-2">
-                    Explorar archivos <ArrowRight className="w-4 h-4" />
+                    {t('analytics.exploreFiles', 'Explorar archivos')} <ArrowRight className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

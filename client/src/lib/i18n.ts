@@ -110,6 +110,7 @@ const esTranslations = {
       viewAll: "Ver todo",
       viewDetails: "Ver detalles"
     },
+    table: { name: "Nombre", size: "Archivos", date: "Fecha" },
     forgotPassword: {
       successTitle: "Correo enviado",
       successDesc: "Revisá tu bandeja de entrada para restablecer tu contraseña",
@@ -207,18 +208,19 @@ const esTranslations = {
     storage: "Almacenamiento"
   },
   myFiles: {
-    title: "Mis Archivos",
-    searchPlaceholder: "Buscar archivos...",
-    noFilesFound: "No se encontraron archivos",
-    noFilesCopied: "Aún no copiaste ningún archivo",
-    tryDifferentSearch: "Intentá con otra búsqueda",
+    title: "Mis Archivos", searchPlaceholder: "Buscar archivos...", noFilesFound: "No se encontraron archivos",
+    noFilesCopied: "Aún no copiaste ningún archivo", tryDifferentSearch: "Intentá con otra búsqueda",
     filesWillAppearHere: "Tus archivos transferidos aparecerán acá",
-    showing: "Mostrando",
-    to: "a",
-    of: "de",
-    files: "archivos",
-    previous: "Anterior",
-    next: "Siguiente"
+    showing: "Mostrando", to: "a", of: "de", files: "archivos", previous: "Anterior", next: "Siguiente",
+    subtitle: "Archivos y Carpetas", all: "Todos",
+    filterDropbox: "Los archivos y carpetas de Dropbox aparecerán aquí.",
+    filterGoogle: "Los archivos y carpetas de Google Drive aparecerán aquí.",
+    copied: "Copiado", copiedSuccessfully: "Copiado exitosamente",
+    linkCopied: "Enlace copiado", linkCopiedDesc: "El enlace se ha copiado al portapapeles",
+    viewDetails: "Ver detalles", openIn: "Abrir en {{provider}}", download: "Descargar",
+    copyLink: "Copiar enlace", share: "Compartir", storedIn: "Almacenado en {{provider}}",
+    fullName: "Nombre completo", size: "Tamaño", type: "Tipo", copyDate: "Fecha de copia",
+    fileTypes: { file: "Archivo", folder: "Carpeta", image: "Imagen", video: "Video", audio: "Audio", pdf: "PDF", spreadsheet: "Hoja de cálculo", document: "Documento", archive: "Archivo comprimido" }
   },
   operations: {
     title: "Operaciones",
@@ -248,40 +250,45 @@ const esTranslations = {
     perCompletedOperation: "por operación completada",
     operationStatus: "Estado de Operaciones",
     activityLast7Days: "Actividad (últimos 7 días)",
-    noDataTitle: "Sin datos aún",
-    noDataMessage: "Realizá transferencias para ver tus estadísticas"
+    noDataTitle: "Sin datos aún", noDataMessage: "Realizá transferencias para ver tus estadísticas",
+    connectAccounts: "Conectar cuentas", exploreFiles: "Explorar archivos"
   },
   pages: {
     cloudExplorer: {
-      title: "Explorador Multi-nube",
-      subtitle: "Arrastrá archivos entre tus nubes",
-      syncMode: "Modo de transferencia",
-      cumulative: "Acumular",
-      cumulativeDesc: "Agrega archivos sin eliminar los existentes",
-      mirror: "Reemplazar",
-      mirrorDesc: "Reemplaza archivos con el mismo nombre",
-      syncDesc: "Seleccioná el modo antes de transferir"
+      title: "Explorador Multi-nube", subtitle: "Arrastrá archivos entre tus nubes",
+      syncMode: "Modo de transferencia", cumulative: "Acumular", cumulativeDesc: "Agrega archivos sin eliminar los existentes",
+      mirror: "Reemplazar", mirrorDesc: "Reemplaza archivos con el mismo nombre", syncDesc: "Seleccioná el modo antes de transferir",
+      dropToTransfer: "Soltar para transferir", search: "Buscar...", root: "Raíz",
+      notConnected: "{{provider}} no conectado", connectAccount: "Conectá tu cuenta para explorar y transferir archivos",
+      goToIntegrations: "Ir a Integraciones →", loadError: "Error al cargar los archivos", retry: "Reintentar",
+      noResults: "Sin resultados", emptyFolder: "Carpeta vacía", folder: "Carpeta",
+      cancel: "Cancelar", transfer: "Transferir",
+      sameProvider: "Mismo proveedor", sameProviderDesc: "Arrastrá al panel del otro proveedor para transferir.",
+      fileQueued: "\"{{name}}\" está en cola.", filesQueued: "{{count}} archivos en cola hacia {{provider}}.",
+      transferError: "Error al iniciar transferencia", transferErrorDesc: "No se pudo iniciar la transferencia.",
+      filesSelected: "{{count}} archivos seleccionados", countFiles: "{{count}} archivos",
+      skip: "Saltear existentes", skipDesc: "Copia solo archivos nuevos, no sobreescribe",
+      copyWithSuffix: "Copiar con nuevo nombre", copyWithSuffixDesc: "Si ya existe, crea una copia con sufijo (_1, _2…)",
+      replace: "Reemplazar", replaceDesc: "Sobreescribe el archivo existente con el mismo nombre",
+      transferring: "Iniciando transferencia...", dragHint: "Soltá \"{{name}}\" en el otro panel para transferir"
     },
     integrations: {
-      title: "Integraciones",
-      subtitle: "Conectá tus servicios de almacenamiento",
-      personalStorage: "Almacenamiento personal",
-      googleDriveDesc: "Almacenamiento en la nube de Google con colaboración en tiempo real",
+      title: "Integraciones", subtitle: "Conectá tus servicios de almacenamiento",
+      personalStorage: "Almacenamiento personal", googleDriveDesc: "Almacenamiento en la nube de Google con colaboración en tiempo real",
       dropboxDesc: "Almacenamiento en la nube con sincronización y uso compartido sencillo",
-      features: "Funcionalidades",
-      autoSync: "Sincronización automática",
-      sharedFolders: "Carpetas compartidas",
-      permissions: "Control de permisos",
-      maxSupport: "Archivos hasta 5TB",
-      perFile: "por archivo",
-      collabAndFiles: "Colaboración y archivos",
-      realTimeCollab: "Colaboración en tiempo real",
-      versionHistory: "Historial de versiones",
-      secureLinks: "Links de compartición seguros",
-      comingSoonTitle: "Próximamente",
-      comingSoonSubtitle: "Estamos trabajando en nuevas integraciones",
-      requestBtn: "Solicitar integración",
-      requestDesc: "¿No ves tu servicio? Podés solicitarlo"
+      features: "Funcionalidades", autoSync: "Sincronización automática", sharedFolders: "Carpetas compartidas",
+      permissions: "Control de permisos", maxSupport: "Archivos hasta 5TB", perFile: "por archivo",
+      collabAndFiles: "Colaboración y archivos", realTimeCollab: "Colaboración en tiempo real",
+      versionHistory: "Historial de versiones", secureLinks: "Links de compartición seguros",
+      comingSoonTitle: "Próximamente", comingSoonSubtitle: "Estamos trabajando en nuevas integraciones",
+      requestBtn: "Solicitar integración", requestDesc: "¿No ves tu servicio? Podés solicitarlo",
+      microsoftStorage: "Almacenamiento Microsoft", onedriveDesc: "Conecta tu cuenta de Microsoft OneDrive para acceder y sincronizar archivos desde la nube de Microsoft.",
+      microsoftIntegration: "Integración con Microsoft 365", enterpriseStorage: "Almacenamiento Empresarial",
+      boxDesc: "Conecta tu cuenta de Box para gestionar archivos empresariales con seguridad avanzada y colaboración en equipo.",
+      enterpriseSecurity: "Seguridad empresarial avanzada", complianceTools: "Herramientas de cumplimiento",
+      cloudInfrastructure: "Infraestructura Cloud", s3Desc: "Conecta tus buckets de Amazon S3 para acceder y transferir archivos desde la infraestructura cloud de AWS.",
+      infiniteStorage: "Almacenamiento ilimitado", globalRegions: "Múltiples regiones globales",
+      s3Compatible: "Compatible con Wasabi y Backblaze B2"
     }
   },
   quickCopy: {
@@ -321,27 +328,21 @@ const esTranslations = {
     }
   },
   dashboard: {
-    noAccountConnected: "No hay cuentas conectadas",
-    integrations: "Integraciones",
-    toStartWorking: "para empezar a trabajar",
-    totalFiles: "Archivos Totales",
-    filesManaged: "Archivos Gestionados",
-    activeOperations: "Operaciones Activas",
-    inProgress: "En Progreso",
-    totalOperations: "Operaciones Totales",
-    operationsPerformed: "Operaciones Realizadas",
-    completedOperations: "Operaciones Completadas",
-    successfully: "Exitosamente",
-    recentFiles: "Archivos Recientes",
-    noRecentFiles: "No hay archivos recientes",
-    addedOn: "Agregado el",
-    connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos.",
-    categories: {
-      documents: "Documentos",
-      images: "Imágenes",
-      media: "Multimedia",
-      others: "Otros"
-    }
+    noAccountConnected: "No hay cuentas conectadas", integrations: "Integraciones",
+    toStartWorking: "para empezar a trabajar", totalFiles: "Archivos Totales", filesManaged: "Archivos Gestionados",
+    activeOperations: "Operaciones Activas", inProgress: "En Progreso", totalOperations: "Operaciones Totales",
+    operationsPerformed: "Operaciones Realizadas", completedOperations: "Operaciones Completadas",
+    successfully: "Exitosamente", recentFiles: "Archivos Recientes", noRecentFiles: "No hay archivos recientes",
+    addedOn: "Agregado el", connectInstruction: "Conecta una cuenta para empezar a gestionar tus archivos.",
+    categories: { documents: "Documentos", images: "Imágenes", media: "Multimedia", others: "Otros" },
+    title: "Mi Unidad", quickAccess: "Acceso Rápido", recentTransfers: "Transferencias Recientes",
+    onboarding: { badge: "Primeros pasos", title: "¡Bienvenido a TERA!", desc: "Conectá tus cuentas de Google Drive, Dropbox, OneDrive, Box y más, y empezá a mover archivos entre tus nubes en segundos.", connectBtn: "Conectar cuentas", exploreBtn: "Explorar archivos", quickTransfer: "Transferencia rápida" },
+    stats: { completed: "Completadas", inProgress: "En progreso", failed: "Fallidas", files: "Archivos transferidos" },
+    actions: { explorer: "Explorador", explorerDesc: "Mover archivos entre nubes", operations: "Operaciones", operationsDesc: "Historial de transferencias", integrations: "Integraciones", integrationsDesc: "Conectar cuentas externas", analytics: "Analytics", analyticsDesc: "Ver estadísticas detalladas" },
+    empty: { noTransfers: "Todavía no hay transferencias", startTransfer: "Empezar a transferir" },
+    table: { status: "Estado", files: "archivos" },
+    status: { completed: "Completada", failed: "Fallida", inProgress: "En curso", pending: "Pendiente" },
+    performance: { title: "Rendimiento general", successRate: "Tasa de éxito", completed: "completadas", total: "totales", viewAnalytics: "Ver analytics completo" }
   },
   user: {
     profile: "Perfil",
@@ -814,7 +815,16 @@ const enTranslations = {
     title: "My Files", searchPlaceholder: "Search files...", noFilesFound: "No files found",
     noFilesCopied: "No files transferred yet", tryDifferentSearch: "Try a different search",
     filesWillAppearHere: "Your transferred files will appear here",
-    showing: "Showing", to: "to", of: "of", files: "files", previous: "Previous", next: "Next"
+    showing: "Showing", to: "to", of: "of", files: "files", previous: "Previous", next: "Next",
+    subtitle: "Files and Folders", all: "All",
+    filterDropbox: "Your Dropbox files and folders will appear here.",
+    filterGoogle: "Your Google Drive files and folders will appear here.",
+    copied: "Copied", copiedSuccessfully: "Copied successfully",
+    linkCopied: "Link copied", linkCopiedDesc: "The link has been copied to clipboard",
+    viewDetails: "View details", openIn: "Open in {{provider}}", download: "Download",
+    copyLink: "Copy link", share: "Share", storedIn: "Stored in {{provider}}",
+    fullName: "Full name", size: "Size", type: "Type", copyDate: "Copy date",
+    fileTypes: { file: "File", folder: "Folder", image: "Image", video: "Video", audio: "Audio", pdf: "PDF", spreadsheet: "Spreadsheet", document: "Document", archive: "Archive" }
   },
   operations: {
     title: "Operations", description: "History of all your transfers", copyOperation: "Transfer",
@@ -828,13 +838,27 @@ const enTranslations = {
     completed: "Completed", failed: "Failed", inProgress: "In Progress", inProgressStatus: "Running",
     successRate: "Success Rate", averageTime: "Average Time", perCompletedOperation: "per completed operation",
     operationStatus: "Operation Status", activityLast7Days: "Activity (last 7 days)",
-    noDataTitle: "No data yet", noDataMessage: "Make transfers to see your statistics"
+    noDataTitle: "No data yet", noDataMessage: "Make transfers to see your statistics",
+    connectAccounts: "Connect accounts", exploreFiles: "Explore files"
   },
   pages: {
     cloudExplorer: {
       title: "Multi-cloud Explorer", subtitle: "Drag files between your clouds",
       syncMode: "Transfer mode", cumulative: "Accumulate", cumulativeDesc: "Add files without removing existing ones",
-      mirror: "Replace", mirrorDesc: "Replace files with the same name", syncDesc: "Select a mode before transferring"
+      mirror: "Replace", mirrorDesc: "Replace files with the same name", syncDesc: "Select a mode before transferring",
+      dropToTransfer: "Drop to transfer", search: "Search...", root: "Root",
+      notConnected: "{{provider}} not connected", connectAccount: "Connect your account to explore and transfer files",
+      goToIntegrations: "Go to Integrations →", loadError: "Error loading files", retry: "Retry",
+      noResults: "No results", emptyFolder: "Empty folder", folder: "Folder",
+      cancel: "Cancel", transfer: "Transfer",
+      sameProvider: "Same provider", sameProviderDesc: "Drag to the other provider panel to transfer.",
+      fileQueued: "\"{{name}}\" is queued.", filesQueued: "{{count}} files queued to {{provider}}.",
+      transferError: "Error starting transfer", transferErrorDesc: "Could not start the transfer.",
+      filesSelected: "{{count}} files selected", countFiles: "{{count}} files",
+      skip: "Skip existing", skipDesc: "Copies only new files, doesn't overwrite",
+      copyWithSuffix: "Copy with new name", copyWithSuffixDesc: "If it exists, creates a copy with suffix (_1, _2…)",
+      replace: "Replace", replaceDesc: "Overwrites the existing file with the same name",
+      transferring: "Starting transfer...", dragHint: "Drop \"{{name}}\" on the other panel to transfer"
     },
     integrations: {
       title: "Integrations", subtitle: "Connect your storage services",
@@ -845,7 +869,14 @@ const enTranslations = {
       realTimeCollab: "Real-time collaboration", versionHistory: "Version history",
       secureLinks: "Secure sharing links", comingSoonTitle: "Coming Soon",
       comingSoonSubtitle: "We are working on new integrations",
-      requestBtn: "Request integration", requestDesc: "Don't see your service? You can request it"
+      requestBtn: "Request integration", requestDesc: "Don't see your service? You can request it",
+      microsoftStorage: "Microsoft Storage", onedriveDesc: "Connect your Microsoft OneDrive account to access and sync files from Microsoft's cloud.",
+      microsoftIntegration: "Microsoft 365 Integration", enterpriseStorage: "Enterprise Storage",
+      boxDesc: "Connect your Box account to manage enterprise files with advanced security and team collaboration.",
+      enterpriseSecurity: "Advanced enterprise security", complianceTools: "Compliance tools",
+      cloudInfrastructure: "Cloud Infrastructure", s3Desc: "Connect your Amazon S3 buckets to access and transfer files from AWS cloud infrastructure.",
+      infiniteStorage: "Unlimited storage", globalRegions: "Multiple global regions",
+      s3Compatible: "Compatible with Wasabi and Backblaze B2"
     }
   },
   quickCopy: {
@@ -867,7 +898,15 @@ const enTranslations = {
     operationsPerformed: "Operations Performed", completedOperations: "Completed Operations",
     successfully: "Successfully", recentFiles: "Recent Files", noRecentFiles: "No recent files",
     addedOn: "Added on", connectInstruction: "Connect an account to start managing your files.",
-    categories: { documents: "Documents", images: "Images", media: "Media", others: "Others" }
+    categories: { documents: "Documents", images: "Images", media: "Media", others: "Others" },
+    title: "My Drive", quickAccess: "Quick Access", recentTransfers: "Recent Transfers",
+    onboarding: { badge: "Getting started", title: "Welcome to TERA!", desc: "Connect your Google Drive, Dropbox, OneDrive, Box and more, and start moving files between your clouds in seconds.", connectBtn: "Connect accounts", exploreBtn: "Explore files", quickTransfer: "Quick transfer" },
+    stats: { completed: "Completed", inProgress: "In progress", failed: "Failed", files: "Files transferred" },
+    actions: { explorer: "Explorer", explorerDesc: "Move files between clouds", operations: "Operations", operationsDesc: "Transfer history", integrations: "Integrations", integrationsDesc: "Connect external accounts", analytics: "Analytics", analyticsDesc: "View detailed statistics" },
+    empty: { noTransfers: "No transfers yet", startTransfer: "Start transferring" },
+    table: { status: "Status", files: "files" },
+    status: { completed: "Completed", failed: "Failed", inProgress: "In progress", pending: "Pending" },
+    performance: { title: "Overall performance", successRate: "Success rate", completed: "completed", total: "total", viewAnalytics: "View full analytics" }
   },
   common: {
     new: "New",
@@ -883,6 +922,7 @@ const enTranslations = {
     sidebar: { storage: "Storage", storageUsed: "Used: {{used}} of {{total}}" },
     status: { loading: "Loading...", soon: "Coming Soon", completed: "Completed", inProgress: "In Progress", pending: "Pending" },
     actions: { searchPlaceholder: "Search files or folders...", cancel: "Cancel", viewAll: "View all", viewDetails: "View details" },
+    table: { name: "Name", size: "Files", date: "Date" },
     forgotPassword: { successTitle: "Email sent", successDesc: "Check your inbox to reset your password", backToLogin: "Back to login" },
     notifications: { copyOperation: "Copy operation", files: "files" },
     buttons: { cancel: "Cancel", confirm: "Confirm", save: "Save", close: "Close", retry: "Retry", back: "Back", next: "Next", change: "Change", select: "Select" },
@@ -1145,7 +1185,16 @@ const ptTranslations = {
     title: "Meus Arquivos", searchPlaceholder: "Buscar arquivos...", noFilesFound: "Nenhum arquivo encontrado",
     noFilesCopied: "Nenhum arquivo transferido ainda", tryDifferentSearch: "Tente outra busca",
     filesWillAppearHere: "Seus arquivos transferidos aparecerão aqui",
-    showing: "Mostrando", to: "a", of: "de", files: "arquivos", previous: "Anterior", next: "Próximo"
+    showing: "Mostrando", to: "a", of: "de", files: "arquivos", previous: "Anterior", next: "Próximo",
+    subtitle: "Arquivos e Pastas", all: "Todos",
+    filterDropbox: "Seus arquivos e pastas do Dropbox aparecerão aqui.",
+    filterGoogle: "Seus arquivos e pastas do Google Drive aparecerão aqui.",
+    copied: "Copiado", copiedSuccessfully: "Copiado com sucesso",
+    linkCopied: "Link copiado", linkCopiedDesc: "O link foi copiado para a área de transferência",
+    viewDetails: "Ver detalhes", openIn: "Abrir em {{provider}}", download: "Baixar",
+    copyLink: "Copiar link", share: "Compartilhar", storedIn: "Armazenado em {{provider}}",
+    fullName: "Nome completo", size: "Tamanho", type: "Tipo", copyDate: "Data de cópia",
+    fileTypes: { file: "Arquivo", folder: "Pasta", image: "Imagem", video: "Vídeo", audio: "Áudio", pdf: "PDF", spreadsheet: "Planilha", document: "Documento", archive: "Arquivo compactado" }
   },
   operations: {
     title: "Operações", description: "Histórico de todas as suas transferências", copyOperation: "Transferência",
@@ -1159,13 +1208,27 @@ const ptTranslations = {
     completed: "Concluído", failed: "Falhou", inProgress: "Em andamento", inProgressStatus: "Em execução",
     successRate: "Taxa de Sucesso", averageTime: "Tempo Médio", perCompletedOperation: "por operação concluída",
     operationStatus: "Status das Operações", activityLast7Days: "Atividade (últimos 7 dias)",
-    noDataTitle: "Sem dados ainda", noDataMessage: "Faça transferências para ver suas estatísticas"
+    noDataTitle: "Sem dados ainda", noDataMessage: "Faça transferências para ver suas estatísticas",
+    connectAccounts: "Conectar contas", exploreFiles: "Explorar arquivos"
   },
   pages: {
     cloudExplorer: {
       title: "Explorador Multi-nuvem", subtitle: "Arraste arquivos entre suas nuvens",
       syncMode: "Modo de transferência", cumulative: "Acumular", cumulativeDesc: "Adicionar arquivos sem remover os existentes",
-      mirror: "Substituir", mirrorDesc: "Substituir arquivos com o mesmo nome", syncDesc: "Selecione um modo antes de transferir"
+      mirror: "Substituir", mirrorDesc: "Substituir arquivos com o mesmo nome", syncDesc: "Selecione um modo antes de transferir",
+      dropToTransfer: "Soltar para transferir", search: "Buscar...", root: "Raiz",
+      notConnected: "{{provider}} não conectado", connectAccount: "Conecte sua conta para explorar e transferir arquivos",
+      goToIntegrations: "Ir para Integrações →", loadError: "Erro ao carregar arquivos", retry: "Tentar novamente",
+      noResults: "Sem resultados", emptyFolder: "Pasta vazia", folder: "Pasta",
+      cancel: "Cancelar", transfer: "Transferir",
+      sameProvider: "Mesmo provedor", sameProviderDesc: "Arraste para o painel do outro provedor para transferir.",
+      fileQueued: "\"{{name}}\" está na fila.", filesQueued: "{{count}} arquivos na fila para {{provider}}.",
+      transferError: "Erro ao iniciar transferência", transferErrorDesc: "Não foi possível iniciar a transferência.",
+      filesSelected: "{{count}} arquivos selecionados", countFiles: "{{count}} arquivos",
+      skip: "Ignorar existentes", skipDesc: "Copia apenas arquivos novos, não sobrescreve",
+      copyWithSuffix: "Copiar com novo nome", copyWithSuffixDesc: "Se já existe, cria uma cópia com sufixo (_1, _2…)",
+      replace: "Substituir", replaceDesc: "Sobrescreve o arquivo existente com o mesmo nome",
+      transferring: "Iniciando transferência...", dragHint: "Solte \"{{name}}\" no outro painel para transferir"
     },
     integrations: {
       title: "Integrações", subtitle: "Conecte seus serviços de armazenamento",
@@ -1176,7 +1239,14 @@ const ptTranslations = {
       realTimeCollab: "Colaboração em tempo real", versionHistory: "Histórico de versões",
       secureLinks: "Links de compartilhamento seguros", comingSoonTitle: "Em Breve",
       comingSoonSubtitle: "Estamos trabalhando em novas integrações",
-      requestBtn: "Solicitar integração", requestDesc: "Não encontrou seu serviço? Você pode solicitá-lo"
+      requestBtn: "Solicitar integração", requestDesc: "Não encontrou seu serviço? Você pode solicitá-lo",
+      microsoftStorage: "Armazenamento Microsoft", onedriveDesc: "Conecte sua conta do Microsoft OneDrive para acessar e sincronizar arquivos da nuvem da Microsoft.",
+      microsoftIntegration: "Integração com Microsoft 365", enterpriseStorage: "Armazenamento Empresarial",
+      boxDesc: "Conecte sua conta do Box para gerenciar arquivos empresariais com segurança avançada e colaboração em equipe.",
+      enterpriseSecurity: "Segurança empresarial avançada", complianceTools: "Ferramentas de conformidade",
+      cloudInfrastructure: "Infraestrutura Cloud", s3Desc: "Conecte seus buckets do Amazon S3 para acessar e transferir arquivos da infraestrutura cloud da AWS.",
+      infiniteStorage: "Armazenamento ilimitado", globalRegions: "Múltiplas regiões globais",
+      s3Compatible: "Compatível com Wasabi e Backblaze B2"
     }
   },
   quickCopy: {
@@ -1198,7 +1268,15 @@ const ptTranslations = {
     operationsPerformed: "Operações Realizadas", completedOperations: "Operações Concluídas",
     successfully: "Com sucesso", recentFiles: "Arquivos Recentes", noRecentFiles: "Sem arquivos recentes",
     addedOn: "Adicionado em", connectInstruction: "Conecte uma conta para começar a gerenciar seus arquivos.",
-    categories: { documents: "Documentos", images: "Imagens", media: "Mídia", others: "Outros" }
+    categories: { documents: "Documentos", images: "Imagens", media: "Mídia", others: "Outros" },
+    title: "Minha Unidade", quickAccess: "Acesso Rápido", recentTransfers: "Transferências Recentes",
+    onboarding: { badge: "Primeiros passos", title: "Bem-vindo ao TERA!", desc: "Conecte suas contas do Google Drive, Dropbox, OneDrive, Box e mais, e comece a mover arquivos entre suas nuvens em segundos.", connectBtn: "Conectar contas", exploreBtn: "Explorar arquivos", quickTransfer: "Transferência rápida" },
+    stats: { completed: "Concluídas", inProgress: "Em andamento", failed: "Falhas", files: "Arquivos transferidos" },
+    actions: { explorer: "Explorador", explorerDesc: "Mover arquivos entre nuvens", operations: "Operações", operationsDesc: "Histórico de transferências", integrations: "Integrações", integrationsDesc: "Conectar contas externas", analytics: "Análises", analyticsDesc: "Ver estatísticas detalhadas" },
+    empty: { noTransfers: "Nenhuma transferência ainda", startTransfer: "Começar a transferir" },
+    table: { status: "Status", files: "arquivos" },
+    status: { completed: "Concluída", failed: "Falhou", inProgress: "Em andamento", pending: "Pendente" },
+    performance: { title: "Desempenho geral", successRate: "Taxa de sucesso", completed: "concluídas", total: "total", viewAnalytics: "Ver análises completas" }
   },
   common: {
     new: "Novo",
@@ -1214,6 +1292,7 @@ const ptTranslations = {
     sidebar: { storage: "Armazenamento", storageUsed: "Usado: {{used}} de {{total}}" },
     status: { loading: "Carregando...", soon: "Em Breve", completed: "Concluído", inProgress: "Em andamento", pending: "Pendente" },
     actions: { searchPlaceholder: "Buscar arquivos ou pastas...", cancel: "Cancelar", viewAll: "Ver todos", viewDetails: "Ver detalhes" },
+    table: { name: "Nome", size: "Arquivos", date: "Data" },
     forgotPassword: { successTitle: "E-mail enviado", successDesc: "Verifique sua caixa de entrada para redefinir sua senha", backToLogin: "Voltar ao login" },
     notifications: { copyOperation: "Operação de cópia", files: "arquivos" },
     buttons: { cancel: "Cancelar", confirm: "Confirmar", save: "Salvar", close: "Fechar", retry: "Tentar novamente", back: "Voltar", next: "Próximo", change: "Alterar", select: "Selecionar" },

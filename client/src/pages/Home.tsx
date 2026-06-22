@@ -57,17 +57,17 @@ export default function Home() {
     }));
 
   const statCards = [
-    { label: 'Completadas',        value: completedOps.length, icon: CheckCircle, color: 'text-green-500', bg: 'bg-green-50' },
-    { label: 'En progreso',        value: activeOps.length,    icon: Loader2,     color: 'text-blue-500',  bg: 'bg-blue-50'  },
-    { label: 'Fallidas',           value: failedOps.length,    icon: XCircle,     color: 'text-red-500',   bg: 'bg-red-50'   },
-    { label: 'Archivos transferidos', value: totalFiles,        icon: FileText,    color: 'text-purple-500',bg: 'bg-purple-50'},
+    { label: t('dashboard.stats.completed', 'Completadas'),         value: completedOps.length, icon: CheckCircle, color: 'text-green-500',  bg: 'bg-green-50'  },
+    { label: t('dashboard.stats.inProgress', 'En progreso'),        value: activeOps.length,    icon: Loader2,     color: 'text-blue-500',   bg: 'bg-blue-50'   },
+    { label: t('dashboard.stats.failed', 'Fallidas'),               value: failedOps.length,    icon: XCircle,     color: 'text-red-500',    bg: 'bg-red-50'    },
+    { label: t('dashboard.stats.files', 'Archivos transferidos'),   value: totalFiles,          icon: FileText,    color: 'text-purple-500', bg: 'bg-purple-50' },
   ];
 
   const quickActions = [
-    { label: 'Explorador',      desc: 'Mover archivos entre nubes',  icon: Globe,      bg: 'bg-blue-50',   color: 'text-blue-500',   path: '/cloud-explorer' },
-    { label: 'Operaciones',     desc: 'Historial de transferencias',  icon: FileText,   bg: 'bg-indigo-50', color: 'text-indigo-500',  path: '/operations'     },
-    { label: 'Integraciones',   desc: 'Conectar cuentas externas',    icon: Settings,   bg: 'bg-green-50',  color: 'text-green-500',   path: '/integrations'   },
-    { label: 'Analytics',       desc: 'Ver estadísticas detalladas',  icon: BarChart3,  bg: 'bg-orange-50', color: 'text-orange-500',  path: '/analytics'      },
+    { label: t('dashboard.actions.explorer', 'Explorador'),       desc: t('dashboard.actions.explorerDesc', 'Mover archivos entre nubes'),      icon: Globe,     bg: 'bg-blue-50',   color: 'text-blue-500',   path: '/cloud-explorer' },
+    { label: t('dashboard.actions.operations', 'Operaciones'),    desc: t('dashboard.actions.operationsDesc', 'Historial de transferencias'),    icon: FileText,  bg: 'bg-indigo-50', color: 'text-indigo-500',  path: '/operations'     },
+    { label: t('dashboard.actions.integrations', 'Integraciones'),desc: t('dashboard.actions.integrationsDesc', 'Conectar cuentas externas'),   icon: Settings,  bg: 'bg-green-50',  color: 'text-green-500',   path: '/integrations'   },
+    { label: t('dashboard.actions.analytics', 'Analytics'),       desc: t('dashboard.actions.analyticsDesc', 'Ver estadísticas detalladas'),    icon: BarChart3, bg: 'bg-orange-50', color: 'text-orange-500',  path: '/analytics'      },
   ];
 
   return (
@@ -86,20 +86,20 @@ export default function Home() {
             {!hasAnyConnected && (
               <div className="relative overflow-hidden bg-gradient-to-r from-[#0061D5] to-blue-500 rounded-2xl p-6 text-white">
                 <div className="relative z-10">
-                  <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">Primeros pasos</p>
-                  <h2 className="text-xl font-bold mb-2">¡Bienvenido a TERA!</h2>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-200 mb-1">{t('dashboard.onboarding.badge', 'Primeros pasos')}</p>
+                  <h2 className="text-xl font-bold mb-2">{t('dashboard.onboarding.title', '¡Bienvenido a TERA!')}</h2>
                   <p className="text-sm text-blue-100 mb-5 max-w-lg">
-                    Conectá tus cuentas de Google Drive, Dropbox, OneDrive, Box y más, y empezá a mover archivos entre tus nubes en segundos.
+                    {t('dashboard.onboarding.desc', 'Conectá tus cuentas de Google Drive, Dropbox, OneDrive, Box y más, y empezá a mover archivos entre tus nubes en segundos.')}
                   </p>
                   <div className="flex flex-wrap gap-3">
                     <button onClick={() => setLocation('/integrations')} className="flex items-center gap-2 px-4 py-2 bg-white text-[#0061D5] rounded-xl text-sm font-bold hover:bg-blue-50 transition-colors">
-                      <HardDrive className="w-4 h-4" /> Conectar cuentas
+                      <HardDrive className="w-4 h-4" /> {t('dashboard.onboarding.connectBtn', 'Conectar cuentas')}
                     </button>
                     <button onClick={() => setLocation('/cloud-explorer')} className="flex items-center gap-2 px-4 py-2 bg-blue-600/40 text-white border border-white/20 rounded-xl text-sm font-bold hover:bg-blue-600/60 transition-colors">
-                      <Globe className="w-4 h-4" /> Explorar archivos <ArrowRight className="w-3.5 h-3.5" />
+                      <Globe className="w-4 h-4" /> {t('dashboard.onboarding.exploreBtn', 'Explorar archivos')} <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={() => setLocation('/copy-from-url')} className="flex items-center gap-2 px-4 py-2 bg-blue-600/40 text-white border border-white/20 rounded-xl text-sm font-bold hover:bg-blue-600/60 transition-colors">
-                      <Zap className="w-4 h-4" /> Transferencia rápida
+                      <Zap className="w-4 h-4" /> {t('dashboard.onboarding.quickTransfer', 'Transferencia rápida')}
                     </button>
                   </div>
                 </div>
@@ -162,8 +162,8 @@ export default function Home() {
                 <Card className="shadow-sm border-gray-100">
                   <CardContent className="flex flex-col items-center justify-center py-10 gap-3">
                     <Clock className="w-10 h-10 text-gray-200" />
-                    <p className="text-sm text-gray-400">Todavía no hay transferencias</p>
-                    <Button size="sm" onClick={() => setLocation('/cloud-explorer')}>Empezar a transferir</Button>
+                    <p className="text-sm text-gray-400">{t('dashboard.empty.noTransfers', 'Todavía no hay transferencias')}</p>
+                    <Button size="sm" onClick={() => setLocation('/cloud-explorer')}>{t('dashboard.empty.startTransfer', 'Empezar a transferir')}</Button>
                   </CardContent>
                 </Card>
               ) : (
@@ -175,7 +175,7 @@ export default function Home() {
                           <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">{t('common.table.name', 'Nombre')}</th>
                           <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden sm:table-cell">{t('common.table.size', 'Archivos')}</th>
                           <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">{t('common.table.date', 'Fecha')}</th>
-                          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Estado</th>
+                          <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">{t('dashboard.table.status', 'Estado')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -190,16 +190,16 @@ export default function Home() {
                               </div>
                             </td>
                             <td className="px-6 py-4 hidden sm:table-cell">
-                              <span className="text-sm text-gray-500">{file.files} archivos</span>
+                              <span className="text-sm text-gray-500">{file.files} {t('dashboard.table.files', 'archivos')}</span>
                             </td>
                             <td className="px-6 py-4 hidden md:table-cell">
                               <span className="text-sm text-gray-500">{file.date}</span>
                             </td>
                             <td className="px-6 py-4 text-right">
-                              {file.status === 'completed' && <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded-full"><CheckCircle className="w-3 h-3" /> Completada</span>}
-                              {file.status === 'failed'    && <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-1 rounded-full"><XCircle className="w-3 h-3" /> Fallida</span>}
-                              {file.status === 'in_progress' && <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-full"><Loader2 className="w-3 h-3 animate-spin" /> En curso</span>}
-                              {file.status === 'pending'   && <span className="inline-flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded-full"><Clock className="w-3 h-3" /> Pendiente</span>}
+                              {file.status === 'completed'  && <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-50 px-2 py-1 rounded-full"><CheckCircle className="w-3 h-3" /> {t('dashboard.status.completed', 'Completada')}</span>}
+                              {file.status === 'failed'     && <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 bg-red-50 px-2 py-1 rounded-full"><XCircle className="w-3 h-3" /> {t('dashboard.status.failed', 'Fallida')}</span>}
+                              {file.status === 'in_progress'&& <span className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2 py-1 rounded-full"><Loader2 className="w-3 h-3 animate-spin" /> {t('dashboard.status.inProgress', 'En curso')}</span>}
+                              {file.status === 'pending'    && <span className="inline-flex items-center gap-1 text-xs font-semibold text-yellow-700 bg-yellow-50 px-2 py-1 rounded-full"><Clock className="w-3 h-3" /> {t('dashboard.status.pending', 'Pendiente')}</span>}
                             </td>
                           </tr>
                         ))}
@@ -214,22 +214,22 @@ export default function Home() {
             {operations.length > 0 && (
               <Card className="shadow-sm border-gray-100">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-semibold text-gray-900">Rendimiento general</CardTitle>
+                  <CardTitle className="text-base font-semibold text-gray-900">{t('dashboard.performance.title', 'Rendimiento general')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Tasa de éxito</span>
+                    <span className="text-sm text-gray-600">{t('dashboard.performance.successRate', 'Tasa de éxito')}</span>
                     <span className="text-sm font-bold text-gray-900">{successRate}%</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2.5">
                     <div className="bg-blue-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${successRate}%` }} />
                   </div>
                   <div className="flex justify-between text-xs text-gray-400 mt-2">
-                    <span>{completedOps.length} completadas</span>
-                    <span>{operations.length} totales</span>
+                    <span>{completedOps.length} {t('dashboard.performance.completed', 'completadas')}</span>
+                    <span>{operations.length} {t('dashboard.performance.total', 'totales')}</span>
                   </div>
                   <Button variant="ghost" size="sm" className="mt-3 text-blue-600 hover:text-blue-700 px-0" onClick={() => setLocation('/analytics')}>
-                    Ver analytics completo <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    {t('dashboard.performance.viewAnalytics', 'Ver analytics completo')} <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </Button>
                 </CardContent>
               </Card>
