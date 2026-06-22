@@ -310,7 +310,7 @@ export class QueueWorker extends EventEmitter {
     if (job.duplicateAction === 'skip' && fileName) {
       const fileSize = undefined; // size not stored on the job; name match is sufficient
       const exists = await this.destFileExists(
-        destProvider,
+        destProvider || '',
         job.userId,
         destinationFolderId || 'root',
         fileName,
