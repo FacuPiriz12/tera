@@ -3748,16 +3748,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { fileId, versionId } = req.params;
-      
+
       // Get the version to restore
       const versions = await storage.getFileVersions(userId, fileId);
       const versionToRestore = versions.find(v => v.id === versionId);
-      
+
       if (!versionToRestore) {
         return res.status(404).json({ message: "Version not found" });
       }
 
-      // Create a new version entry recording this restore action
+      const targetDate = versionToRestore.createdAt ? new Date(versionToRestore.createdAt) : new Date();
+
+      // Find the provider revision closest in time to when this version was recorded
+      function pickClosest<T extends { time: string }>(revs: T[]): T | null {
+        if (!revs.length) return null;
+        return revs.reduce((best, r) =>
+          Math.abs(new Date(r.time).getTime() - targetDate.getTime()) <
+          Math.abs(new Date(best.time).getTime() - targetDate.getTime()) ? r : best
+        );
+      }
+
+      if (versionToRestore.provider === 'google') {
+        const driveService = new GoogleDriveService(userId);
+        const revisions = await driveService.listRevisions(fileId);
+        const closest = pickClosest(revisions.map(r => ({ ...r, time: r.modifiedTime })));
+        if (!closest) return res.status(422).json({ message: "No revisions found for this file in Google Drive" });
+        await driveService.restoreRevision(fileId, closest.revisionId, versionToRestore.mimeType || undefined);
+
+      } else if (versionToRestore.provider === 'dropbox') {
+        if (!versionToRestore.filePath) {
+          return res.status(422).json({ message: "File path not available for Dropbox version restore" });
+        }
+        const dropboxService = new DropboxService(userId);
+        const revisions = await dropboxService.listRevisions(versionToRestore.filePath);
+        const closest = pickClosest(revisions.map(r => ({ ...r, time: r.serverModified })));
+        if (!closest) return res.status(422).json({ message: "No revisions found for this file in Dropbox" });
+        await dropboxService.restoreRevision(versionToRestore.filePath, closest.rev);
+
+      } else {
+        return res.status(422).json({
+          message: `Version restore for ${versionToRestore.provider} is not yet supported. Please use the provider's file history directly.`,
+        });
+      }
+
+      // Record the restore action as a new version entry
       const newVersion = await storage.createFileVersion({
         userId,
         fileName: versionToRestore.fileName,
@@ -3775,7 +3809,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(newVersion);
     } catch (error: any) {
       console.error("Error restoring file version:", error);
-      res.status(500).json({ message: "Failed to restore version" });
+      res.status(500).json({ message: error.message || "Failed to restore version" });
     }
   });
 

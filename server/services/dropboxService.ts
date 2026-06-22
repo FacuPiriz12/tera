@@ -1199,4 +1199,49 @@ export class DropboxService {
   async startCopyOperation(operationId: string, sourceUrl: string): Promise<void> {
     return this.startCopyFromUrl(operationId, sourceUrl);
   }
+
+  async listRevisions(path: string): Promise<Array<{ rev: string; serverModified: string }>> {
+    await this.ensureValidToken();
+    const accessToken = this.dbx.auth.getAccessToken();
+    const normalizedPath = path.startsWith('/') ? path : '/' + path;
+
+    const response = await fetch('https://api.dropboxapi.com/2/files/list_revisions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ path: normalizedPath, mode: 'path', limit: 25 }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to list Dropbox revisions: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return (data.entries || []).map((e: any) => ({
+      rev: e.rev as string,
+      serverModified: e.server_modified as string,
+    }));
+  }
+
+  async restoreRevision(path: string, rev: string): Promise<void> {
+    await this.ensureValidToken();
+    const accessToken = this.dbx.auth.getAccessToken();
+    const normalizedPath = path.startsWith('/') ? path : '/' + path;
+
+    const response = await fetch('https://api.dropboxapi.com/2/files/restore', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ path: normalizedPath, rev }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to restore Dropbox revision: ${response.status} ${errorText}`);
+    }
+  }
 }

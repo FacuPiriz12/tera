@@ -1176,4 +1176,40 @@ export class GoogleDriveService {
       throw new Error('Failed to get folder path');
     }
   }
+
+  async listRevisions(fileId: string): Promise<Array<{ revisionId: string; modifiedTime: string }>> {
+    await this.ensureValidToken();
+    const response = await this.drive.revisions.list({
+      fileId,
+      fields: 'revisions(id,modifiedTime)',
+    });
+    return (response.data.revisions || []).map((r: any) => ({
+      revisionId: r.id as string,
+      modifiedTime: r.modifiedTime as string,
+    }));
+  }
+
+  async restoreRevision(fileId: string, revisionId: string, mimeType?: string): Promise<void> {
+    await this.ensureValidToken();
+
+    if (mimeType && mimeType.startsWith('application/vnd.google-apps.')) {
+      throw new Error('Google Workspace files cannot be restored via TERA — use Google Drive directly');
+    }
+
+    const revResponse = await (this.drive.revisions.get as any)(
+      { fileId, revisionId, alt: 'media' },
+      { responseType: 'arraybuffer' }
+    );
+
+    const content = Buffer.from(revResponse.data as ArrayBuffer);
+    const { Readable } = await import('stream');
+
+    await this.drive.files.update({
+      fileId,
+      media: {
+        mimeType: mimeType || 'application/octet-stream',
+        body: Readable.from(content),
+      },
+    });
+  }
 }
