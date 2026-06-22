@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 type Lang = "es" | "en" | "pt";
 
 const LAST_UPDATED: Record<Lang, string> = {
-  es: "18 de junio de 2025",
-  en: "June 18, 2025",
-  pt: "18 de junho de 2025",
+  es: "22 de junio de 2026",
+  en: "June 22, 2026",
+  pt: "22 de junho de 2026",
 };
 const CONTACT_EMAIL  = "legal@mytera.app";
 const PRIVACY_EMAIL  = "privacy@mytera.app";
@@ -295,30 +295,46 @@ export default function TermsOfService() {
 
             {/* 06 */}
             <Section id="planes" number="06" icon={<CreditCard className="w-5 h-5" />} title={sections[5].title}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-2">
+                {/* Free */}
                 <div className="p-5 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">🆓</span>
-                    <h4 className="font-black text-slate-900">{{ es: "Plan Gratuito", en: "Free Plan", pt: "Plano Gratuito" }[lang]}</h4>
+                    <h4 className="font-black text-slate-900">{{ es: "Gratuito", en: "Free", pt: "Gratuito" }[lang]}</h4>
                   </div>
-                  <BulletList items={{ es: ["100 transferencias por día", "5 operaciones simultáneas", "Google Drive + Dropbox", "Soporte por email"], en: ["100 transfers per day", "5 concurrent operations", "Google Drive + Dropbox", "Email support"], pt: ["100 transferências por dia", "5 operações simultâneas", "Google Drive + Dropbox", "Suporte por email"] }[lang]} />
+                  <p className="text-xl font-black text-slate-700 mb-3">$0</p>
+                  <BulletList items={{ es: ["20 operaciones/mes", "5 GB de tráfico", "Google Drive, Dropbox, OneDrive, Box, S3", "Soporte por email"], en: ["20 operations/month", "5 GB traffic", "Google Drive, Dropbox, OneDrive, Box, S3", "Email support"], pt: ["20 operações/mês", "5 GB de tráfego", "Google Drive, Dropbox, OneDrive, Box, S3", "Suporte por email"] }[lang]} />
                 </div>
+                {/* Pro */}
                 <div className="p-5 bg-blue-50 rounded-xl border border-blue-200">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-2xl">⚡</span>
-                    <h4 className="font-black text-[#0061D5]">Plan PRO</h4>
+                    <h4 className="font-black text-[#0061D5]">Pro</h4>
                   </div>
-                  <BulletList items={{ es: ["500 transferencias por día", "20 operaciones simultáneas", "Todos los servicios (Drive, Dropbox, OneDrive, Box, S3)", "Tareas programadas automáticas", "Notificaciones por email", "Soporte prioritario"], en: ["500 transfers per day", "20 concurrent operations", "All services (Drive, Dropbox, OneDrive, Box, S3)", "Automatic scheduled tasks", "Email notifications", "Priority support"], pt: ["500 transferências por dia", "20 operações simultâneas", "Todos os serviços (Drive, Dropbox, OneDrive, Box, S3)", "Tarefas agendadas automáticas", "Notificações por email", "Suporte prioritário"] }[lang]} />
+                  <p className="text-xl font-black text-blue-700 mb-3">$7.99<span className="text-sm font-semibold text-blue-400">{{ es: "/mes", en: "/mo", pt: "/mês" }[lang]}</span></p>
+                  <BulletList items={{ es: ["300 operaciones/mes", "200 GB de tráfico", "Google Drive, Dropbox, OneDrive, Box, S3", "Tareas programadas automáticas", "Notificaciones por email", "Soporte prioritario"], en: ["300 operations/month", "200 GB traffic", "Google Drive, Dropbox, OneDrive, Box, S3", "Automatic scheduled tasks", "Email notifications", "Priority support"], pt: ["300 operações/mês", "200 GB de tráfego", "Google Drive, Dropbox, OneDrive, Box, S3", "Tarefas agendadas automáticas", "Notificações por email", "Suporte prioritário"] }[lang]} />
+                </div>
+                {/* Business */}
+                <div className="p-5 bg-violet-50 rounded-xl border border-violet-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-2xl">👑</span>
+                    <h4 className="font-black text-violet-700">Business</h4>
+                  </div>
+                  <p className="text-xl font-black text-violet-700 mb-3">$19.99<span className="text-sm font-semibold text-violet-400">{{ es: "/mes", en: "/mo", pt: "/mês" }[lang]}</span></p>
+                  <BulletList items={{ es: ["Operaciones ilimitadas", "2 TB de tráfico", "Google Drive, Dropbox, OneDrive, Box, S3", "Todo lo de Pro incluido", "Soporte empresarial"], en: ["Unlimited operations", "2 TB traffic", "Google Drive, Dropbox, OneDrive, Box, S3", "Everything in Pro included", "Business support"], pt: ["Operações ilimitadas", "2 TB de tráfego", "Google Drive, Dropbox, OneDrive, Box, S3", "Tudo do Pro incluído", "Suporte empresarial"] }[lang]} />
                 </div>
               </div>
+              <Callout color="blue" icon="ℹ️">
+                {{ es: "Todos los planes incluyen acceso a los 5 servicios de nube compatibles: Google Drive, Dropbox, Microsoft OneDrive, Box y Amazon S3.", en: "All plans include access to all 5 supported cloud services: Google Drive, Dropbox, Microsoft OneDrive, Box and Amazon S3.", pt: "Todos os planos incluem acesso a todos os 5 serviços de nuvem compatíveis: Google Drive, Dropbox, Microsoft OneDrive, Box e Amazon S3." }[lang]}
+              </Callout>
               <SubHeading>{{ es: "Condiciones de pago", en: "Payment conditions", pt: "Condições de pagamento" }[lang]}</SubHeading>
-              {lang === "es" && <BulletList items={["No almacenamos datos de tarjetas de crédito", "Las suscripciones se renuevan automáticamente", "Precios sujetos a cambios con 30 días de aviso previo", "Cancelación disponible en cualquier momento desde tu perfil"]} />}
-              {lang === "en" && <BulletList items={["We do not store credit card data", "Subscriptions renew automatically", "Prices subject to change with 30 days prior notice", "Cancellation available at any time from your profile"]} />}
-              {lang === "pt" && <BulletList items={["Não armazenamos dados de cartão de crédito", "As assinaturas são renovadas automaticamente", "Preços sujeitos a alterações com 30 dias de aviso prévio", "Cancelamento disponível a qualquer momento no seu perfil"]} />}
+              {lang === "es" && <BulletList items={["No almacenamos datos de tarjetas de crédito — procesado por Stripe", "Las suscripciones se renuevan automáticamente cada mes", "Precios en USD, sujetos a cambios con 30 días de aviso previo", "Cancelación disponible en cualquier momento desde Configuración"]} />}
+              {lang === "en" && <BulletList items={["We do not store credit card data — processed by Stripe", "Subscriptions renew automatically each month", "Prices in USD, subject to change with 30 days prior notice", "Cancellation available at any time from Settings"]} />}
+              {lang === "pt" && <BulletList items={["Não armazenamos dados de cartão de crédito — processado pela Stripe", "As assinaturas são renovadas automaticamente a cada mês", "Preços em USD, sujeitos a alterações com 30 dias de aviso prévio", "Cancelamento disponível a qualquer momento em Configurações"]} />}
               <SubHeading>{{ es: "Reembolsos", en: "Refunds", pt: "Reembolsos" }[lang]}</SubHeading>
-              {lang === "es" && <BulletList items={["Período de prueba de 14 días para el Plan PRO", "Reembolso completo dentro de los primeros 14 días", "Sin reembolsos después de 14 días (salvo casos excepcionales)"]} />}
-              {lang === "en" && <BulletList items={["14-day trial period for PRO Plan", "Full refund within the first 14 days", "No refunds after 14 days (except exceptional cases)"]} />}
-              {lang === "pt" && <BulletList items={["Período de teste de 14 dias para o Plano PRO", "Reembolso total nos primeiros 14 dias", "Sem reembolsos após 14 dias (exceto casos excepcionais)"]} />}
+              {lang === "es" && <BulletList items={["Reembolso completo dentro de los primeros <strong>7 días</strong> tras la suscripción", "Sin reembolsos después de 7 días (salvo errores técnicos imputables a TERA)", "Al cancelar, el plan permanece activo hasta el fin del período facturado"]} />}
+              {lang === "en" && <BulletList items={["Full refund within the first <strong>7 days</strong> of subscription", "No refunds after 7 days (except technical errors attributable to TERA)", "Upon cancellation, the plan remains active until the end of the billing period"]} />}
+              {lang === "pt" && <BulletList items={["Reembolso total nos primeiros <strong>7 dias</strong> após a assinatura", "Sem reembolsos após 7 dias (exceto erros técnicos imputáveis à TERA)", "Ao cancelar, o plano permanece ativo até o fim do período faturado"]} />}
             </Section>
 
             {/* 07 */}

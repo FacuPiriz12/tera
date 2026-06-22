@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 type Lang = "es" | "en" | "pt";
 
 const LAST_UPDATED: Record<Lang, string> = {
-  es: "18 de junio de 2025",
-  en: "June 18, 2025",
-  pt: "18 de junho de 2025",
+  es: "22 de junio de 2026",
+  en: "June 22, 2026",
+  pt: "22 de junho de 2026",
 };
 const CONTACT_EMAIL = "privacy@mytera.app";
 const APP_URL = "https://mytera.app";
@@ -428,19 +428,40 @@ export default function PrivacyPolicy() {
             {/* 09 */}
             <Section id="cookies" number="09" icon={<Bell className="w-5 h-5" />} title={sections[8].title}>
               {lang === "es" && <>
-                <BulletList items={["Cookies de sesión autenticada (JWT — necesarias)", "localStorage para idioma y configuración visual", "Cookies de autenticación de Supabase"]} />
+                <BulletList items={[
+                  "Cookies de sesión autenticada (JWT — necesarias)",
+                  "localStorage para idioma (<code>i18nextLng</code>)",
+                  "localStorage para preferencias de apariencia: modo oscuro (<code>tera-theme</code>)",
+                  "localStorage para preferencias de notificaciones por email (<code>tera-email-notif</code>)",
+                  "Cookies de autenticación de Supabase",
+                ]} />
                 <SubHeading>Lo que NO hacemos</SubHeading>
                 <BulletList items={["No usamos cookies de publicidad ni retargeting", "No instalamos cookies de análisis de comportamiento de terceros", "No compartimos datos con redes publicitarias", "No usamos píxeles de seguimiento ni fingerprinting"]} />
+                <Callout color="blue" icon="ℹ️">Las preferencias guardadas en localStorage (<code>tera-theme</code>, <code>tera-email-notif</code>) permanecen en tu dispositivo y nunca se envían a nuestros servidores.</Callout>
               </>}
               {lang === "en" && <>
-                <BulletList items={["Authenticated session cookies (JWT — required)", "localStorage for language and visual settings", "Supabase authentication cookies"]} />
+                <BulletList items={[
+                  "Authenticated session cookies (JWT — required)",
+                  "localStorage for language (<code>i18nextLng</code>)",
+                  "localStorage for appearance preferences: dark mode (<code>tera-theme</code>)",
+                  "localStorage for email notification preferences (<code>tera-email-notif</code>)",
+                  "Supabase authentication cookies",
+                ]} />
                 <SubHeading>What we do NOT do</SubHeading>
                 <BulletList items={["No advertising or retargeting cookies", "No third-party behavioral analytics cookies", "No data sharing with ad networks", "No tracking pixels or fingerprinting"]} />
+                <Callout color="blue" icon="ℹ️">Preferences stored in localStorage (<code>tera-theme</code>, <code>tera-email-notif</code>) stay on your device and are never sent to our servers.</Callout>
               </>}
               {lang === "pt" && <>
-                <BulletList items={["Cookies de sessão autenticada (JWT — necessários)", "localStorage para idioma e configurações visuais", "Cookies de autenticação do Supabase"]} />
+                <BulletList items={[
+                  "Cookies de sessão autenticada (JWT — necessários)",
+                  "localStorage para idioma (<code>i18nextLng</code>)",
+                  "localStorage para preferências de aparência: modo escuro (<code>tera-theme</code>)",
+                  "localStorage para preferências de notificações por email (<code>tera-email-notif</code>)",
+                  "Cookies de autenticação do Supabase",
+                ]} />
                 <SubHeading>O que NÃO fazemos</SubHeading>
                 <BulletList items={["Sem cookies de publicidade ou retargeting", "Sem cookies de análise comportamental de terceiros", "Sem compartilhamento de dados com redes publicitárias", "Sem pixels de rastreamento ou fingerprinting"]} />
+                <Callout color="blue" icon="ℹ️">As preferências salvas no localStorage (<code>tera-theme</code>, <code>tera-email-notif</code>) ficam no seu dispositivo e nunca são enviadas para nossos servidores.</Callout>
               </>}
             </Section>
 
