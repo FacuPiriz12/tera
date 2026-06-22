@@ -1,19 +1,21 @@
 import { Home, Globe, FileText, Settings, BarChart3 } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 export default function BottomNav() {
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
 
   if (!isAuthenticated) return null;
 
   const items = [
-    { path: "/dashboard",      icon: Home,     label: "Inicio"      },
-    { path: "/cloud-explorer", icon: Globe,    label: "Explorador"  },
-    { path: "/operations",     icon: FileText, label: "Operaciones" },
-    { path: "/integrations",   icon: Settings, label: "Integrar"    },
-    { path: "/analytics",      icon: BarChart3,label: "Stats"       },
+    { path: "/dashboard",      icon: Home,     label: t('common.bottomNav.home')         },
+    { path: "/cloud-explorer", icon: Globe,    label: t('common.bottomNav.explorer')     },
+    { path: "/operations",     icon: FileText, label: t('common.bottomNav.operations')   },
+    { path: "/integrations",   icon: Settings, label: t('common.bottomNav.integrations') },
+    { path: "/analytics",      icon: BarChart3,label: t('common.bottomNav.analytics')    },
   ];
 
   return (

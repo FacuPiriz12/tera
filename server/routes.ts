@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userEmail = req.user.claims.email;
       
       // Check if this is the admin user
-      const isAdminEmail = userEmail === (process.env.ADMIN_EMAIL || 'facupiriz82@gmail.com');
+      const isAdminEmail = userEmail === (process.env.ADMIN_EMAIL || 'facupiriz87@gmail.com');
       
       // Try to get user from database first
       let user;
@@ -222,6 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: req.user.claims.last_name,
           profileImageUrl: req.user.claims.profile_image_url,
           role: isAdminEmail ? 'admin' : 'user',
+          ...PLAN_LIMITS.free,
         };
         
         // In development, dev-user-123 is always admin
@@ -1990,7 +1991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: job.status,
         fileName: job.fileName,
         sourceProvider: job.sourceProvider,
-        destinationProvider: job.destinationProvider,
+        destinationProvider: job.destProvider,
         progressPct: job.progressPct || 0,
         completedFiles: job.completedFiles || 0,
         totalFiles: job.totalFiles || 1,
@@ -2015,7 +2016,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: job.status,
         fileName: job.fileName,
         sourceProvider: job.sourceProvider,
-        destinationProvider: job.destinationProvider,
+        destinationProvider: job.destProvider,
         progressPct: job.progressPct || 0,
         errorMessage: job.errorMessage,
         createdAt: job.createdAt,

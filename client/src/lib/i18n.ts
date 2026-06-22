@@ -118,7 +118,21 @@ const esTranslations = {
     },
     notifications: {
       copyOperation: "Operación de copia",
-      files: "archivos"
+      files: "archivos",
+      transfers: "Transferencias",
+      seeAll: "Ver todas",
+      empty: "Sin notificaciones",
+      seeHistory: "Ver historial completo",
+      statusCompleted: "Completada",
+      statusFailed: "Falló",
+      statusInProgress: "En progreso"
+    },
+    bottomNav: {
+      home: "Inicio",
+      explorer: "Explorador",
+      operations: "Operaciones",
+      integrations: "Integrar",
+      analytics: "Stats"
     },
     dashboard: {
       noAccountConnected: "No hay cuentas conectadas",
@@ -925,7 +939,8 @@ const enTranslations = {
     actions: { searchPlaceholder: "Search files or folders...", cancel: "Cancel", viewAll: "View all", viewDetails: "View details" },
     table: { name: "Name", size: "Files", date: "Date" },
     forgotPassword: { successTitle: "Email sent", successDesc: "Check your inbox to reset your password", backToLogin: "Back to login" },
-    notifications: { copyOperation: "Copy operation", files: "files" },
+    notifications: { copyOperation: "Copy operation", files: "files", transfers: "Transfers", seeAll: "See all", empty: "No notifications", seeHistory: "See full history", statusCompleted: "Completed", statusFailed: "Failed", statusInProgress: "In progress" },
+    bottomNav: { home: "Home", explorer: "Explorer", operations: "Operations", integrations: "Connect", analytics: "Stats" },
     buttons: { cancel: "Cancel", confirm: "Confirm", save: "Save", close: "Close", retry: "Retry", back: "Back", next: "Next", change: "Change", select: "Select" },
     auth: {
       login: "Login", logout: "Log out",
@@ -1296,7 +1311,8 @@ const ptTranslations = {
     actions: { searchPlaceholder: "Buscar arquivos ou pastas...", cancel: "Cancelar", viewAll: "Ver todos", viewDetails: "Ver detalhes" },
     table: { name: "Nome", size: "Arquivos", date: "Data" },
     forgotPassword: { successTitle: "E-mail enviado", successDesc: "Verifique sua caixa de entrada para redefinir sua senha", backToLogin: "Voltar ao login" },
-    notifications: { copyOperation: "Operação de cópia", files: "arquivos" },
+    notifications: { copyOperation: "Operação de cópia", files: "arquivos", transfers: "Transferências", seeAll: "Ver todas", empty: "Sem notificações", seeHistory: "Ver histórico completo", statusCompleted: "Concluída", statusFailed: "Falhou", statusInProgress: "Em andamento" },
+    bottomNav: { home: "Início", explorer: "Explorador", operations: "Operações", integrations: "Conectar", analytics: "Stats" },
     buttons: { cancel: "Cancelar", confirm: "Confirmar", save: "Salvar", close: "Fechar", retry: "Tentar novamente", back: "Voltar", next: "Próximo", change: "Alterar", select: "Selecionar" },
     auth: {
       login: "Entrar", logout: "Sair",

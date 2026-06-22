@@ -24,15 +24,17 @@ function getUserInitials(user: any): string {
 }
 
 function NotificationItem({ job }: { job: TransferJob }) {
+  const { t } = useTranslation();
+
   const icon =
     job.status === 'completed' ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" /> :
     job.status === 'failed'    ? <XCircle className="w-4 h-4 text-red-500 flex-shrink-0" /> :
     <Loader2 className="w-4 h-4 text-blue-500 animate-spin flex-shrink-0" />;
 
   const label =
-    job.status === 'completed' ? 'Completada' :
-    job.status === 'failed'    ? 'Falló' :
-    'En progreso';
+    job.status === 'completed' ? t('common.notifications.statusCompleted') :
+    job.status === 'failed'    ? t('common.notifications.statusFailed') :
+    t('common.notifications.statusInProgress');
 
   return (
     <div className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-gray-50 transition-colors">
@@ -78,7 +80,7 @@ export default function Header() {
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && searchValue.trim()) {
-      setLocation(`/operations`);
+      setLocation(`/operations?q=${encodeURIComponent(searchValue.trim())}`);
       searchRef.current?.blur();
     }
   }
@@ -142,7 +144,7 @@ export default function Header() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <ArrowRightLeft className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-bold text-gray-800">Transferencias</span>
+                  <span className="text-sm font-bold text-gray-800">{t('common.notifications.transfers')}</span>
                   {activeJobsCount > 0 && (
                     <span className="text-xs font-bold bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">{activeJobsCount}</span>
                   )}
@@ -151,13 +153,13 @@ export default function Header() {
                   onClick={() => setLocation('/operations')}
                   className="text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors"
                 >
-                  Ver todas →
+                  {t('common.notifications.seeAll')} →
                 </button>
               </div>
               {recentJobs.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-2">
                   <Bell className="w-8 h-8 text-gray-200" />
-                  <p className="text-sm text-gray-400">Sin notificaciones</p>
+                  <p className="text-sm text-gray-400">{t('common.notifications.empty')}</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-50 max-h-72 overflow-y-auto">
@@ -170,7 +172,7 @@ export default function Header() {
                     onClick={() => setLocation('/operations')}
                     className="w-full text-center text-xs text-gray-400 hover:text-blue-600 font-medium transition-colors py-1"
                   >
-                    Ver historial completo
+                    {t('common.notifications.seeHistory')}
                   </button>
                 </div>
               )}
