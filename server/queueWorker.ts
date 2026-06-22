@@ -2,6 +2,9 @@ import { EventEmitter } from 'events';
 import { storage } from './storage';
 import { GoogleDriveService } from './services/googleDriveService';
 import { DropboxService } from './services/dropboxService';
+import { OneDriveService } from './services/oneDriveService';
+import { BoxService } from './services/boxService';
+import { S3Service } from './services/s3Service';
 import type { CopyOperation } from '@shared/schema';
 
 interface WorkerConfig {
@@ -30,7 +33,7 @@ export class QueueWorker extends EventEmitter {
   private currentPollInterval: number;
   private consecutiveEmptyPolls = 0;
   private lastHeartbeat = Date.now();
-  private servicePool = new Map<string, GoogleDriveService | DropboxService>();
+  private servicePool = new Map<string, GoogleDriveService | DropboxService | OneDriveService | BoxService | S3Service>();
   private wakeUpSignal: (() => void) | null = null;
 
   constructor(config: Partial<WorkerConfig> = {}) {
@@ -291,8 +294,11 @@ export class QueueWorker extends EventEmitter {
     // Detect if this is a folder operation — prefer the stored itemType, fall back to URL parsing
     let isFolder = job.itemType === 'folder';
     if (!isFolder && sourceUrl) {
-      // URL-based fallback (older jobs without itemType set)
       isFolder = sourceUrl.includes('/drive/folders/') || sourceUrl.includes('dropbox://folder:');
+    }
+    // S3 and OneDrive/Box don't support folder transfers via queueWorker yet; treat as file-only
+    if ((sourceProvider === 's3' || sourceProvider === 'onedrive' || sourceProvider === 'box') && isFolder) {
+      throw new Error(`Folder transfers are not yet supported for ${sourceProvider}. Please transfer individual files.`);
     }
 
     // Handle folder operations with progress callback
@@ -304,7 +310,7 @@ export class QueueWorker extends EventEmitter {
     if (job.duplicateAction === 'skip' && fileName) {
       const fileSize = undefined; // size not stored on the job; name match is sufficient
       const exists = await this.destFileExists(
-        destProvider as 'google' | 'dropbox',
+        destProvider,
         job.userId,
         destinationFolderId || 'root',
         fileName,
@@ -319,28 +325,38 @@ export class QueueWorker extends EventEmitter {
 
     // Step 1: Download file from source
     let fileContent: Buffer;
-    
+
     if (sourceProvider === 'google') {
-      if (!sourceFileId) {
-        throw new Error('Source file ID is required for Google Drive');
-      }
+      if (!sourceFileId) throw new Error('Source file ID is required for Google Drive');
       const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
       const download = await driveService.downloadFile(sourceFileId);
       fileContent = Buffer.from(download.content);
-      // Append the correct extension when a Google Workspace file was exported
       if (download.exportExtension && fileName && !fileName.includes('.')) {
         fileName = fileName + download.exportExtension;
       }
     } else if (sourceProvider === 'dropbox') {
-      if (!sourceFilePath) {
-        throw new Error('Source file path is required for Dropbox');
-      }
+      if (!sourceFilePath) throw new Error('Source file path is required for Dropbox');
       const dropboxService = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
       const downloadedContent = await dropboxService.downloadFile(sourceFilePath);
-      // Convert ArrayBuffer to Buffer if needed
-      fileContent = downloadedContent instanceof ArrayBuffer 
-        ? Buffer.from(downloadedContent) 
+      fileContent = downloadedContent instanceof ArrayBuffer
+        ? Buffer.from(downloadedContent)
         : downloadedContent as Buffer;
+    } else if (sourceProvider === 'onedrive') {
+      if (!sourceFileId) throw new Error('Source file ID is required for OneDrive');
+      const onedriveService = this.getServiceFromPool('onedrive', job.userId) as OneDriveService;
+      fileContent = await onedriveService.downloadFile(sourceFileId);
+    } else if (sourceProvider === 'box') {
+      if (!sourceFileId) throw new Error('Source file ID is required for Box');
+      const boxService = this.getServiceFromPool('box', job.userId) as BoxService;
+      fileContent = await boxService.downloadFile(sourceFileId);
+    } else if (sourceProvider === 's3') {
+      // sourceUrl is s3://bucket/key
+      if (!sourceUrl) throw new Error('Source URL is required for S3');
+      const s3Match = sourceUrl.match(/^s3:\/\/([^/]+)\/(.+)$/);
+      if (!s3Match) throw new Error(`Invalid S3 source URL: ${sourceUrl}`);
+      const [, s3SrcBucket, s3SrcKey] = s3Match;
+      const s3Service = this.getServiceFromPool('s3', job.userId) as S3Service;
+      fileContent = await s3Service.downloadFile(s3SrcBucket, s3SrcKey);
     } else {
       throw new Error(`Unsupported source provider: ${sourceProvider}`);
     }
@@ -360,7 +376,6 @@ export class QueueWorker extends EventEmitter {
 
     if (destProvider === 'google') {
       const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-      // Use destinationFolderId from job or fallback to 'root'
       const targetFolderId = destinationFolderId || 'root';
       const uploadResult = await driveService.uploadFile(fileName || 'untitled', fileContent, targetFolderId);
       result = {
@@ -370,38 +385,60 @@ export class QueueWorker extends EventEmitter {
       };
     } else if (destProvider === 'dropbox') {
       const dropboxService = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
-      // Convert Buffer to ArrayBuffer for Dropbox service
       const arrayBufferContent = fileContent.buffer.slice(
-        fileContent.byteOffset, 
+        fileContent.byteOffset,
         fileContent.byteOffset + fileContent.byteLength
       );
-      
-      // Use destinationFolderId as folder path (DropboxService constructs full path internally)
       const targetFolderPath = destinationFolderId || '';
       const uploadResult = await dropboxService.uploadFile(fileName || 'untitled', arrayBufferContent, targetFolderPath);
-      
-      // Construct the expected full path for shared link creation
-      // Normalize path to ensure it starts with /
       let normalizedFolderPath = targetFolderPath || '';
       if (normalizedFolderPath && !normalizedFolderPath.startsWith('/')) {
         normalizedFolderPath = '/' + normalizedFolderPath;
       }
       const fullFilePath = normalizedFolderPath ? `${normalizedFolderPath}/${fileName}` : `/${fileName}`;
-      
-      // Create shared link using the constructed path
       let sharedUrl: string | undefined;
       try {
         sharedUrl = await dropboxService.getSharedLink(fullFilePath);
-      } catch (error) {
-        console.warn(`Failed to create shared link for ${fullFilePath}:`, error);
-        // Fallback: try without shared link
+      } catch {
         sharedUrl = undefined;
       }
-      
       result = {
         copiedFileId: uploadResult.id,
         copiedFileName: uploadResult.name,
         copiedFileUrl: sharedUrl
+      };
+    } else if (destProvider === 'onedrive') {
+      const onedriveService = this.getServiceFromPool('onedrive', job.userId) as OneDriveService;
+      // destinationFolderId is the OneDrive folder ID ('' = root)
+      const targetFolderId = destinationFolderId && destinationFolderId !== 'root' ? destinationFolderId : null;
+      const uploadResult = await onedriveService.uploadFile(targetFolderId, fileName || 'untitled', fileContent);
+      result = {
+        copiedFileId: uploadResult.id,
+        copiedFileName: uploadResult.name,
+        copiedFileUrl: uploadResult.webUrl
+      };
+    } else if (destProvider === 'box') {
+      const boxService = this.getServiceFromPool('box', job.userId) as BoxService;
+      // destinationFolderId is the Box folder ID ('' = root → Box uses '0')
+      const targetFolderId = destinationFolderId && destinationFolderId !== 'root' ? destinationFolderId : null;
+      const uploadResult = await boxService.uploadFile(targetFolderId, fileName || 'untitled', fileContent);
+      result = {
+        copiedFileId: uploadResult.id,
+        copiedFileName: uploadResult.name,
+        copiedFileUrl: uploadResult.webUrl
+      };
+    } else if (destProvider === 's3') {
+      // destinationFolderId is encoded as "bucket/prefix"
+      const slashIdx = (destinationFolderId || '').indexOf('/');
+      const s3DestBucket = slashIdx >= 0 ? destinationFolderId!.slice(0, slashIdx) : destinationFolderId!;
+      const s3DestPrefix = slashIdx >= 0 ? destinationFolderId!.slice(slashIdx + 1) : '';
+      const s3Key = s3DestPrefix ? `${s3DestPrefix}${fileName || 'untitled'}` : (fileName || 'untitled');
+      const s3Service = this.getServiceFromPool('s3', job.userId) as S3Service;
+      const uploadResult = await s3Service.uploadFile(s3DestBucket, s3Key, fileContent);
+      result = {
+        copiedFileId: uploadResult.id,
+        copiedFileName: uploadResult.name,
+        copiedFileUrl: undefined
       };
     } else {
       throw new Error(`Unsupported destination provider: ${destProvider}`);
@@ -678,7 +715,7 @@ export class QueueWorker extends EventEmitter {
   }
 
   private async destFileExists(
-    provider: 'google' | 'dropbox',
+    provider: string,
     userId: string,
     folderIdOrPath: string,
     name: string,
@@ -688,12 +725,13 @@ export class QueueWorker extends EventEmitter {
       if (provider === 'google') {
         const svc = this.getServiceFromPool('google', userId) as GoogleDriveService;
         return await svc.fileExistsInFolder(name, folderIdOrPath || 'root', size);
-      } else {
+      } else if (provider === 'dropbox') {
         const svc = this.getServiceFromPool('dropbox', userId) as DropboxService;
         return await svc.fileExistsAtPath(folderIdOrPath, name, size);
       }
+      return false; // fail open for onedrive, box, s3
     } catch {
-      return false; // fail open
+      return false;
     }
   }
 
@@ -786,19 +824,25 @@ export class QueueWorker extends EventEmitter {
     }
   }
 
-  private getServiceFromPool(provider: string, userId: string): GoogleDriveService | DropboxService {
+  private getServiceFromPool(provider: string, userId: string): GoogleDriveService | DropboxService | OneDriveService | BoxService | S3Service {
     const poolKey = `${provider}-${userId}`;
-    
+
     if (!this.servicePool.has(poolKey)) {
       if (provider === 'google') {
         this.servicePool.set(poolKey, new GoogleDriveService(userId));
       } else if (provider === 'dropbox') {
         this.servicePool.set(poolKey, new DropboxService(userId));
+      } else if (provider === 'onedrive') {
+        this.servicePool.set(poolKey, new OneDriveService(userId));
+      } else if (provider === 'box') {
+        this.servicePool.set(poolKey, new BoxService(userId));
+      } else if (provider === 's3') {
+        this.servicePool.set(poolKey, new S3Service(userId));
       } else {
         throw new Error(`Unsupported provider: ${provider}`);
       }
     }
-    
+
     return this.servicePool.get(poolKey)!;
   }
 

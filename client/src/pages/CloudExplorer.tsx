@@ -14,11 +14,13 @@ import { useTransfer } from "@/contexts/TransferContext";
 import { Link } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import GoogleDriveLogo from "@/components/GoogleDriveLogo";
+import DropboxLogo from "@/components/DropboxLogo";
+import OneDriveLogo from "@/components/OneDriveLogo";
+import BoxLogo from "@/components/BoxLogo";
+import S3Logo from "@/components/S3Logo";
 
-const googleLogo = "https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg";
-const dropboxLogo = "https://upload.wikimedia.org/wikipedia/commons/7/78/Dropbox_Icon.svg";
-
-type Provider = 'google' | 'dropbox';
+type Provider = 'google' | 'dropbox' | 'onedrive' | 'box' | 's3';
 
 interface CloudItem {
   id: string;
@@ -37,6 +39,10 @@ interface PanelState {
   provider: Provider;
   googleFolderId: string;
   dropboxPath: string;
+  onedriveFolderId: string;
+  boxFolderId: string;
+  s3Bucket: string;
+  s3Prefix: string;
   breadcrumbs: BreadcrumbEntry[];
   search: string;
 }
@@ -90,6 +96,25 @@ function getFileColor(mimeType: string): string {
   return 'bg-gray-50 text-gray-400';
 }
 
+function getProviderName(provider: Provider): string {
+  const names: Record<Provider, string> = {
+    google: 'Google Drive',
+    dropbox: 'Dropbox',
+    onedrive: 'OneDrive',
+    box: 'Box',
+    s3: 'Amazon S3',
+  };
+  return names[provider];
+}
+
+function ProviderIcon({ provider, className }: { provider: Provider; className?: string }) {
+  if (provider === 'google') return <GoogleDriveLogo className={className} />;
+  if (provider === 'dropbox') return <DropboxLogo className={className} />;
+  if (provider === 'onedrive') return <OneDriveLogo className={className} />;
+  if (provider === 'box') return <BoxLogo className={className} />;
+  return <S3Logo className={className} />;
+}
+
 async function fetchGoogleFiles(folderId: string): Promise<CloudItem[]> {
   const res = await apiRequest('POST', '/api/drive/list-files', { fileId: folderId });
   const data = await res.json();
@@ -115,6 +140,55 @@ async function fetchDropboxFiles(path: string): Promise<CloudItem[]> {
   }));
 }
 
+async function fetchOnedriveFiles(folderId: string): Promise<CloudItem[]> {
+  const params = folderId ? `?folderId=${encodeURIComponent(folderId)}` : '';
+  const res = await apiRequest('GET', `/api/onedrive/files${params}`);
+  const data = await res.json();
+  return (Array.isArray(data) ? data : []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    mimeType: f.mimeType || '',
+    size: f.size,
+    isFolder: !!f.isFolder,
+  }));
+}
+
+async function fetchBoxFiles(folderId: string): Promise<CloudItem[]> {
+  const params = folderId ? `?folderId=${encodeURIComponent(folderId)}` : '';
+  const res = await apiRequest('GET', `/api/box/files${params}`);
+  const data = await res.json();
+  return (Array.isArray(data) ? data : []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    mimeType: f.mimeType || '',
+    size: f.size,
+    isFolder: !!f.isFolder,
+  }));
+}
+
+async function fetchS3Buckets(): Promise<CloudItem[]> {
+  const res = await apiRequest('GET', '/api/s3/buckets');
+  const data = await res.json();
+  return (Array.isArray(data) ? data : []).map((b: any) => ({
+    id: b.name,
+    name: b.name,
+    mimeType: 'application/vnd.s3.bucket',
+    isFolder: true,
+  }));
+}
+
+async function fetchS3Files(bucket: string, prefix: string): Promise<CloudItem[]> {
+  const res = await apiRequest('GET', `/api/s3/files?bucket=${encodeURIComponent(bucket)}&prefix=${encodeURIComponent(prefix)}`);
+  const data = await res.json();
+  return (Array.isArray(data) ? data : []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    mimeType: f.mimeType || '',
+    size: f.size,
+    isFolder: !!f.isFolder,
+  }));
+}
+
 interface CloudPanelProps {
   panelId: number;
   panelState: PanelState;
@@ -129,6 +203,8 @@ interface CloudPanelProps {
   onRequestMultiTransfer: (items: CloudItem[], provider: Provider, path: string) => void;
 }
 
+const ALL_PROVIDERS: Provider[] = ['google', 'dropbox', 'onedrive', 'box', 's3'];
+
 function CloudPanel({
   panelState,
   setPanelState,
@@ -142,19 +218,46 @@ function CloudPanel({
   onRequestMultiTransfer,
 }: CloudPanelProps) {
   const { t } = useTranslation();
-  const currentPath = panelState.provider === 'google'
-    ? panelState.googleFolderId
-    : panelState.dropboxPath;
 
-  const queryKey = panelState.provider === 'google'
-    ? ['drive-files', panelState.googleFolderId]
-    : ['dropbox-files', panelState.dropboxPath];
+  const isS3BucketSelector = panelState.provider === 's3' && panelState.s3Bucket === '';
+
+  const currentPath = (() => {
+    switch (panelState.provider) {
+      case 'google': return panelState.googleFolderId;
+      case 'dropbox': return panelState.dropboxPath;
+      case 'onedrive': return panelState.onedriveFolderId;
+      case 'box': return panelState.boxFolderId;
+      case 's3': return panelState.s3Prefix;
+    }
+  })();
+
+  const queryKey = (() => {
+    switch (panelState.provider) {
+      case 'google': return ['drive-files', panelState.googleFolderId];
+      case 'dropbox': return ['dropbox-files', panelState.dropboxPath];
+      case 'onedrive': return ['onedrive-files', panelState.onedriveFolderId];
+      case 'box': return ['box-files', panelState.boxFolderId];
+      case 's3': return panelState.s3Bucket
+        ? ['s3-files', panelState.s3Bucket, panelState.s3Prefix]
+        : ['s3-buckets'];
+    }
+  })();
+
+  const queryFn = () => {
+    switch (panelState.provider) {
+      case 'google': return fetchGoogleFiles(panelState.googleFolderId);
+      case 'dropbox': return fetchDropboxFiles(panelState.dropboxPath);
+      case 'onedrive': return fetchOnedriveFiles(panelState.onedriveFolderId);
+      case 'box': return fetchBoxFiles(panelState.boxFolderId);
+      case 's3': return panelState.s3Bucket
+        ? fetchS3Files(panelState.s3Bucket, panelState.s3Prefix)
+        : fetchS3Buckets();
+    }
+  };
 
   const { data: items = [], isLoading, error, refetch } = useQuery<CloudItem[]>({
     queryKey,
-    queryFn: () => panelState.provider === 'google'
-      ? fetchGoogleFiles(panelState.googleFolderId)
-      : fetchDropboxFiles(panelState.dropboxPath),
+    queryFn,
     retry: 1,
     staleTime: 30 * 1000,
   });
@@ -201,7 +304,7 @@ function CloudPanel({
         googleFolderId: item.id,
         breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: item.id }],
       });
-    } else {
+    } else if (panelState.provider === 'dropbox') {
       const newPath = panelState.dropboxPath === '' || panelState.dropboxPath === '/'
         ? `/${item.name}`
         : `${panelState.dropboxPath}/${item.name}`;
@@ -213,44 +316,115 @@ function CloudPanel({
         dropboxPath: newPath,
         breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: newPath }],
       });
+    } else if (panelState.provider === 'onedrive') {
+      saveRecentFolder('onedrive', { id: item.id, name: item.name, path: item.id });
+      setRecentFolders(getRecentFolders('onedrive'));
+      setPanelState({
+        ...panelState,
+        onedriveFolderId: item.id,
+        breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: item.id }],
+      });
+    } else if (panelState.provider === 'box') {
+      saveRecentFolder('box', { id: item.id, name: item.name, path: item.id });
+      setRecentFolders(getRecentFolders('box'));
+      setPanelState({
+        ...panelState,
+        boxFolderId: item.id,
+        breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: item.id }],
+      });
+    } else if (panelState.provider === 's3') {
+      if (panelState.s3Bucket === '') {
+        // Clicking a bucket — enter it (breadcrumb id = '' means bucket root)
+        setPanelState({
+          ...panelState,
+          s3Bucket: item.name,
+          s3Prefix: '',
+          breadcrumbs: [{ name: item.name, id: '' }],
+        });
+      } else {
+        // Clicking a virtual folder (prefix) — item.id is the full prefix e.g. 'photos/'
+        setPanelState({
+          ...panelState,
+          s3Prefix: item.id,
+          breadcrumbs: [...panelState.breadcrumbs, { name: item.name, id: item.id }],
+        });
+      }
     }
     clearSelection();
   }
 
   function navigateToRoot() {
-    setPanelState({ ...panelState, googleFolderId: 'root', dropboxPath: '', breadcrumbs: [] });
+    setPanelState({
+      ...panelState,
+      googleFolderId: 'root',
+      dropboxPath: '',
+      onedriveFolderId: '',
+      boxFolderId: '',
+      s3Bucket: '',
+      s3Prefix: '',
+      breadcrumbs: [],
+    });
     clearSelection();
   }
 
   function navigateToCrumb(index: number) {
     const crumb = panelState.breadcrumbs[index];
-    setPanelState({
-      ...panelState,
-      googleFolderId: panelState.provider === 'google' ? crumb.id : panelState.googleFolderId,
-      dropboxPath: panelState.provider === 'dropbox' ? crumb.id : panelState.dropboxPath,
-      breadcrumbs: panelState.breadcrumbs.slice(0, index + 1),
-    });
+    const newBreadcrumbs = panelState.breadcrumbs.slice(0, index + 1);
+    if (panelState.provider === 'google') {
+      setPanelState({ ...panelState, googleFolderId: crumb.id, breadcrumbs: newBreadcrumbs });
+    } else if (panelState.provider === 'dropbox') {
+      setPanelState({ ...panelState, dropboxPath: crumb.id, breadcrumbs: newBreadcrumbs });
+    } else if (panelState.provider === 'onedrive') {
+      setPanelState({ ...panelState, onedriveFolderId: crumb.id, breadcrumbs: newBreadcrumbs });
+    } else if (panelState.provider === 'box') {
+      setPanelState({ ...panelState, boxFolderId: crumb.id, breadcrumbs: newBreadcrumbs });
+    } else if (panelState.provider === 's3') {
+      // index 0 is the bucket (s3Prefix = ''), subsequent are prefixes
+      setPanelState({
+        ...panelState,
+        s3Prefix: index === 0 ? '' : crumb.id,
+        breadcrumbs: newBreadcrumbs,
+      });
+    }
     clearSelection();
   }
 
   function navigateToRecent(folder: RecentFolder) {
     if (panelState.provider === 'google') {
       setPanelState({ ...panelState, googleFolderId: folder.id, breadcrumbs: [{ name: folder.name, id: folder.id }] });
-    } else {
+    } else if (panelState.provider === 'dropbox') {
       setPanelState({ ...panelState, dropboxPath: folder.path, breadcrumbs: [{ name: folder.name, id: folder.path }] });
+    } else if (panelState.provider === 'onedrive') {
+      setPanelState({ ...panelState, onedriveFolderId: folder.id, breadcrumbs: [{ name: folder.name, id: folder.id }] });
+    } else if (panelState.provider === 'box') {
+      setPanelState({ ...panelState, boxFolderId: folder.id, breadcrumbs: [{ name: folder.name, id: folder.id }] });
     }
     clearSelection();
   }
 
   function switchProvider(p: Provider) {
-    setPanelState({ provider: p, googleFolderId: 'root', dropboxPath: '', breadcrumbs: [], search: '' });
+    setPanelState({
+      provider: p,
+      googleFolderId: 'root',
+      dropboxPath: '',
+      onedriveFolderId: '',
+      boxFolderId: '',
+      s3Bucket: '',
+      s3Prefix: '',
+      breadcrumbs: [],
+      search: '',
+    });
     setRecentFolders(getRecentFolders(p));
     clearSelection();
   }
 
-  const providerColor = panelState.provider === 'google'
-    ? 'from-blue-500/10 to-blue-600/5'
-    : 'from-blue-400/10 to-blue-500/5';
+  const providerColor: Record<Provider, string> = {
+    google: 'from-blue-500/10 to-blue-600/5',
+    dropbox: 'from-blue-400/10 to-blue-500/5',
+    onedrive: 'from-sky-500/10 to-sky-600/5',
+    box: 'from-blue-600/10 to-blue-700/5',
+    s3: 'from-orange-400/10 to-orange-500/5',
+  };
 
   const selectedItems = sorted.filter(i => selected.has(i.id));
 
@@ -280,44 +454,39 @@ function CloudPanel({
       )}
 
       {/* Panel header */}
-      <div className={`p-4 border-b border-gray-100 rounded-t-2xl bg-gradient-to-r ${providerColor}`}>
-        {/* Provider selector + location */}
+      <div className={`p-4 border-b border-gray-100 rounded-t-2xl bg-gradient-to-r ${providerColor[panelState.provider]}`}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 p-1 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <button
-                onClick={() => switchProvider('google')}
-                title="Google Drive"
-                className={`p-1.5 rounded-lg transition-all ${
-                  panelState.provider === 'google'
-                    ? 'bg-blue-50 shadow-sm'
-                    : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'
-                }`}
-              >
-                <img src={googleLogo} alt="Google Drive" className="w-4 h-4 object-contain" />
-              </button>
-              <button
-                onClick={() => switchProvider('dropbox')}
-                title="Dropbox"
-                className={`p-1.5 rounded-lg transition-all ${
-                  panelState.provider === 'dropbox'
-                    ? 'bg-blue-50 shadow-sm'
-                    : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'
-                }`}
-              >
-                <img src={dropboxLogo} alt="Dropbox" className="w-4 h-4 object-contain" />
-              </button>
+            {/* Provider selector — all 5 */}
+            <div className="flex items-center gap-0.5 p-1 bg-white rounded-xl border border-gray-200 shadow-sm">
+              {ALL_PROVIDERS.map(p => (
+                <button
+                  key={p}
+                  onClick={() => switchProvider(p)}
+                  title={getProviderName(p)}
+                  className={`p-1.5 rounded-lg transition-all ${
+                    panelState.provider === p
+                      ? 'bg-blue-50 shadow-sm'
+                      : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'
+                  }`}
+                >
+                  <ProviderIcon provider={p} className="w-4 h-4" />
+                </button>
+              ))}
             </div>
 
             <div>
-              <p className="text-xs font-bold text-gray-700">
-                {panelState.provider === 'google' ? 'Google Drive' : 'Dropbox'}
-              </p>
+              <p className="text-xs font-bold text-gray-700">{getProviderName(panelState.provider)}</p>
               {!isLoading && sorted.length > 0 && (
                 <p className="text-[10px] text-gray-400 font-medium">
-                  {folderCount > 0 && `${folderCount} carpeta${folderCount !== 1 ? 's' : ''}`}
-                  {folderCount > 0 && fileCount > 0 && ' · '}
-                  {fileCount > 0 && `${fileCount} archivo${fileCount !== 1 ? 's' : ''}`}
+                  {isS3BucketSelector
+                    ? `${sorted.length} bucket${sorted.length !== 1 ? 's' : ''}`
+                    : <>
+                        {folderCount > 0 && `${folderCount} carpeta${folderCount !== 1 ? 's' : ''}`}
+                        {folderCount > 0 && fileCount > 0 && ' · '}
+                        {fileCount > 0 && `${fileCount} archivo${fileCount !== 1 ? 's' : ''}`}
+                      </>
+                  }
                 </p>
               )}
             </div>
@@ -344,8 +513,8 @@ function CloudPanel({
           </div>
         </div>
 
-        {/* Carpetas recientes — solo en raíz */}
-        {isAtRoot && recentFolders.length > 0 && (
+        {/* Recent folders — only for non-S3 providers at root */}
+        {panelState.provider !== 's3' && isAtRoot && recentFolders.length > 0 && (
           <div className="flex items-center gap-1.5 mb-2 flex-wrap">
             <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
             {recentFolders.map(f => (
@@ -370,7 +539,9 @@ function CloudPanel({
             <Home className="w-3 h-3" />
           </button>
           {panelState.breadcrumbs.length === 0 && (
-            <span className="text-[11px] text-gray-400 font-medium ml-1">{t('pages.cloudExplorer.root', 'Raíz')}</span>
+            <span className="text-[11px] text-gray-400 font-medium ml-1">
+              {isS3BucketSelector ? 'Buckets' : t('pages.cloudExplorer.root', 'Raíz')}
+            </span>
           )}
           {panelState.breadcrumbs.map((crumb, i) => (
             <React.Fragment key={i}>
@@ -405,7 +576,7 @@ function CloudPanel({
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-gray-700">
-                    {t('pages.cloudExplorer.notConnected', '{{provider}} no conectado', { provider: panelState.provider === 'google' ? 'Google Drive' : 'Dropbox' })}
+                    {t('pages.cloudExplorer.notConnected', '{{provider}} no conectado', { provider: getProviderName(panelState.provider) })}
                   </p>
                   <p className="text-xs text-gray-400 mt-1 max-w-[200px]">
                     {t('pages.cloudExplorer.connectAccount', 'Conectá tu cuenta para explorar y transferir archivos')}
@@ -478,7 +649,7 @@ function CloudPanel({
                     isSelected
                       ? 'bg-blue-50 border-blue-400 shadow-sm'
                       : 'bg-white border-gray-100 hover:border-blue-300 hover:shadow-sm hover:-translate-y-px'
-                  } ${item.isFolder ? 'cursor-pointer' : 'cursor-pointer'}`}
+                  } cursor-pointer`}
                 >
                   {/* Checkbox for files */}
                   {!item.isFolder && (
@@ -502,7 +673,9 @@ function CloudPanel({
                       {item.name}
                     </p>
                     <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                      {item.isFolder ? t('pages.cloudExplorer.folder', 'Carpeta') : (formatSize(item.size) || '—')}
+                      {item.isFolder
+                        ? (isS3BucketSelector ? 'Bucket' : t('pages.cloudExplorer.folder', 'Carpeta'))
+                        : (formatSize(item.size) || '—')}
                     </p>
                   </div>
                 </div>
@@ -511,7 +684,7 @@ function CloudPanel({
           </div>
         )}
 
-        {/* Barra de selección múltiple */}
+        {/* Multi-select action bar */}
         {selectedItems.length > 0 && (
           <div className="sticky bottom-2 mt-3 flex items-center justify-between bg-blue-600 text-white rounded-xl px-4 py-2.5 shadow-lg shadow-blue-200">
             <span className="text-xs font-bold">{t('pages.cloudExplorer.filesSelected', '{{count}} archivos seleccionados', { count: selectedItems.length })}</span>
@@ -542,6 +715,10 @@ export default function CloudExplorer() {
     provider: 'google',
     googleFolderId: 'root',
     dropboxPath: '',
+    onedriveFolderId: '',
+    boxFolderId: '',
+    s3Bucket: '',
+    s3Prefix: '',
     breadcrumbs: [],
     search: '',
   });
@@ -550,6 +727,10 @@ export default function CloudExplorer() {
     provider: 'dropbox',
     googleFolderId: 'root',
     dropboxPath: '',
+    onedriveFolderId: '',
+    boxFolderId: '',
+    s3Bucket: '',
+    s3Prefix: '',
     breadcrumbs: [],
     search: '',
   });
@@ -607,13 +788,34 @@ export default function CloudExplorer() {
 
   async function confirmTransfer(duplicateAction: 'skip' | 'replace' | 'copy_with_suffix') {
     if (!pendingTransfer) return;
+
+    const destPanel = pendingTransfer.toPanel === 1 ? panel1 : panel2;
+    const sourcePanel = pendingTransfer.toPanel === 1 ? panel2 : panel1;
+
+    // S3 target requires a bucket to be selected
+    if (pendingTransfer.to === 's3' && !destPanel.s3Bucket) {
+      toast({
+        title: t('pages.cloudExplorer.s3NoBucket', 'Seleccioná un bucket S3 primero'),
+        description: t('pages.cloudExplorer.s3NoBucketDesc', 'Navegá dentro de un bucket en el panel de destino antes de transferir.'),
+        variant: 'destructive',
+      });
+      setShowSyncModal(false);
+      setPendingTransfer(null);
+      return;
+    }
+
     setIsTransferring(true);
 
     try {
-      const destPanel = pendingTransfer.toPanel === 1 ? panel1 : panel2;
-      const targetPath = pendingTransfer.to === 'google'
-        ? destPanel.googleFolderId
-        : (destPanel.dropboxPath || '/');
+      const targetPath = (() => {
+        switch (pendingTransfer.to) {
+          case 'google': return destPanel.googleFolderId;
+          case 'dropbox': return destPanel.dropboxPath || '/';
+          case 'onedrive': return destPanel.onedriveFolderId;
+          case 'box': return destPanel.boxFolderId;
+          case 's3': return destPanel.s3Prefix;
+        }
+      })();
 
       for (const item of pendingTransfer.items) {
         const payload: Record<string, any> = {
@@ -625,14 +827,30 @@ export default function CloudExplorer() {
           isFolder: item.isFolder,
         };
         if (item.size) payload.fileSize = Number(item.size);
-        if (pendingTransfer.from === 'google') {
-          payload.sourceFileId = item.id;
-        } else {
-          const folder = pendingTransfer.sourcePath;
-          payload.sourceFilePath = folder === '' || folder === '/'
-            ? `/${item.name}`
-            : `${folder}/${item.name}`;
+
+        switch (pendingTransfer.from) {
+          case 'google':
+          case 'onedrive':
+          case 'box':
+            payload.sourceFileId = item.id;
+            break;
+          case 'dropbox': {
+            const folder = pendingTransfer.sourcePath;
+            payload.sourceFilePath = folder === '' || folder === '/'
+              ? `/${item.name}`
+              : `${folder}/${item.name}`;
+            break;
+          }
+          case 's3':
+            payload.sourceFileId = item.id; // full S3 key
+            payload.sourceBucket = sourcePanel.s3Bucket;
+            break;
         }
+
+        if (pendingTransfer.to === 's3') {
+          payload.targetBucket = destPanel.s3Bucket;
+        }
+
         const res = await apiRequest('POST', '/api/transfer-files', payload);
         const job = await res.json();
         addJob({
@@ -651,7 +869,7 @@ export default function CloudExplorer() {
         title: t('copy.transferInitiated', 'Transferencia iniciada'),
         description: count === 1
           ? t('pages.cloudExplorer.fileQueued', '"{{name}}" está en cola.', { name: pendingTransfer.items[0].name })
-          : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: pendingTransfer.to === 'google' ? 'Google Drive' : 'Dropbox' }),
+          : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: getProviderName(pendingTransfer.to) }),
       });
     } catch (error: any) {
       toast({ title: t('pages.cloudExplorer.transferError', 'Error al iniciar transferencia'), description: error.message || t('pages.cloudExplorer.transferErrorDesc', 'No se pudo iniciar la transferencia.'), variant: 'destructive' });
@@ -662,7 +880,6 @@ export default function CloudExplorer() {
     }
   }
 
-  // Determine which panel is the drag source
   const dragSourcePanel = draggedItem
     ? (draggedItem.provider === panel1.provider ? 1 : 2)
     : null;
@@ -704,9 +921,9 @@ export default function CloudExplorer() {
                           {count > 1 ? t('pages.cloudExplorer.filesSelected', '{{count}} archivos seleccionados', { count }) : first.name}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <img src={pendingTransfer.from === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                          <ProviderIcon provider={pendingTransfer.from} className="w-3.5 h-3.5" />
                           <ArrowRight className="w-3 h-3 text-gray-300" />
-                          <img src={pendingTransfer.to === 'google' ? googleLogo : dropboxLogo} alt="" className="w-3.5 h-3.5 object-contain" />
+                          <ProviderIcon provider={pendingTransfer.to} className="w-3.5 h-3.5" />
                           <span className="text-[10px] text-slate-400 font-medium uppercase tracking-wide">
                             {count > 1 ? t('pages.cloudExplorer.countFiles', '{{count}} archivos', { count }) : first.isFolder ? t('pages.cloudExplorer.folder', 'Carpeta') : t('myFiles.fileTypes.file', 'Archivo')}
                           </span>

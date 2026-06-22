@@ -1721,29 +1721,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Strict validation with Zod schema
       const transferSchema = z.object({
-        sourceProvider: z.enum(['google', 'dropbox']),
-        targetProvider: z.enum(['google', 'dropbox']),
+        sourceProvider: z.enum(['google', 'dropbox', 'onedrive', 'box', 's3']),
+        targetProvider: z.enum(['google', 'dropbox', 'onedrive', 'box', 's3']),
         fileName: z.string().min(1, "File name is required").max(255, "File name too long"),
         fileSize: z.number().optional(),
         targetPath: z.string().optional(),
         duplicateAction: z.enum(['skip', 'replace', 'copy_with_suffix']).default('skip'),
         sourceFileId: z.string().optional(),
         sourceFilePath: z.string().optional(),
+        sourceBucket: z.string().optional(),  // S3 source bucket
+        targetBucket: z.string().optional(),  // S3 target bucket
         isFolder: z.boolean().optional().default(false)
       }).refine(data => data.sourceProvider !== data.targetProvider, {
         message: "Source and target providers must be different"
       }).refine(data => {
-        // Google Drive requires sourceFileId
-        if (data.sourceProvider === 'google') {
-          return !!data.sourceFileId;
-        }
-        // Dropbox requires sourceFilePath
-        if (data.sourceProvider === 'dropbox') {
-          return !!data.sourceFilePath;
-        }
+        if (data.sourceProvider === 'google') return !!data.sourceFileId;
+        if (data.sourceProvider === 'dropbox') return !!data.sourceFilePath;
+        if (data.sourceProvider === 'onedrive') return !!data.sourceFileId;
+        if (data.sourceProvider === 'box') return !!data.sourceFileId;
+        if (data.sourceProvider === 's3') return !!data.sourceFileId && !!data.sourceBucket;
         return true;
       }, {
         message: "Invalid source identifier for provider"
+      }).refine(data => {
+        if (data.targetProvider === 's3') return !!data.targetBucket;
+        return true;
+      }, {
+        message: "S3 target requires a bucket (targetBucket)"
       });
 
       const validation = transferSchema.safeParse(req.body);
@@ -1754,7 +1758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { sourceProvider, sourceFileId, sourceFilePath, targetProvider, targetPath, fileName, fileSize, duplicateAction, isFolder } = validation.data;
+      const { sourceProvider, sourceFileId, sourceFilePath, sourceBucket, targetBucket, targetProvider, targetPath, fileName, fileSize, duplicateAction, isFolder } = validation.data;
 
       // Check user membership in backend for security
       const user = await storage.getUser(userId);
@@ -1768,10 +1772,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isAdmin = user.role === 'admin';
 
       if (!isAdmin && (userMembership === 'free' || isExpired)) {
-        return res.status(403).json({ 
-          message: "Premium feature", 
-          detail: isExpired 
-            ? "Your PRO subscription has expired" 
+        return res.status(403).json({
+          message: "Premium feature",
+          detail: isExpired
+            ? "Your PRO subscription has expired"
             : "Cross-cloud transfers require a PRO subscription"
         });
       }
@@ -1780,7 +1784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (fileSize) {
         const duplicateService = new DuplicateDetectionService(userId);
         const dupCheck = await duplicateService.checkDuplicate(fileName, fileSize, undefined, targetProvider);
-        
+
         if (dupCheck.isDuplicate && duplicateAction === 'skip') {
           return res.status(409).json({
             message: "File already exists",
@@ -1792,18 +1796,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Create asynchronous transfer job in queue
-      // Build sourceUrl for cross-cloud transfers (folders get a different URL shape)
-      const sourceUrl = sourceProvider === 'google'
-        ? (isFolder
-            ? `https://drive.google.com/drive/folders/${sourceFileId}`
-            : `https://drive.google.com/file/d/${sourceFileId}`)
-        : (isFolder
-            ? `dropbox://folder:${sourceFilePath}`
-            : `dropbox://${sourceFilePath}`);
-      
+      // Build sourceUrl for cross-cloud transfers
+      let sourceUrl: string;
+      if (sourceProvider === 'google') {
+        sourceUrl = isFolder
+          ? `https://drive.google.com/drive/folders/${sourceFileId}`
+          : `https://drive.google.com/file/d/${sourceFileId}`;
+      } else if (sourceProvider === 'dropbox') {
+        sourceUrl = isFolder ? `dropbox://folder:${sourceFilePath}` : `dropbox://${sourceFilePath}`;
+      } else if (sourceProvider === 'onedrive') {
+        sourceUrl = `onedrive://${sourceFileId}`;
+      } else if (sourceProvider === 'box') {
+        sourceUrl = `box://${sourceFileId}`;
+      } else {
+        // s3
+        sourceUrl = `s3://${sourceBucket}/${sourceFileId}`;
+      }
+
+      // Build destinationFolderId — for S3 encode as "bucket/prefix"
+      const destinationFolderId = targetProvider === 's3'
+        ? `${targetBucket}/${targetPath || ''}`
+        : (targetPath || 'root');
+
       let finalFileName = fileName;
-      
+
       // Apply duplicate resolution if needed
       if (fileSize) {
         const duplicateService = new DuplicateDetectionService(userId);
@@ -1821,7 +1837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sourceFileId: sourceFileId || null,
         sourceFilePath: sourceFilePath || null,
         destProvider: targetProvider,
-        destinationFolderId: targetPath || 'root',
+        destinationFolderId,
         fileName: finalFileName,
         itemType: isFolder ? 'folder' : 'file',
         duplicateAction,
