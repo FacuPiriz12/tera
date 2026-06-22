@@ -45,13 +45,17 @@ export function decryptToken(value: string | null | undefined): string | null {
   }
 }
 
-// Decrypts all OAuth token fields on a user object.
-// Add new provider token fields here when integrating OneDrive, Box, etc.
 export function decryptUserTokens<T extends {
   googleAccessToken?: string | null;
   googleRefreshToken?: string | null;
   dropboxAccessToken?: string | null;
   dropboxRefreshToken?: string | null;
+  onedriveAccessToken?: string | null;
+  onedriveRefreshToken?: string | null;
+  boxAccessToken?: string | null;
+  boxRefreshToken?: string | null;
+  s3AccessKeyId?: string | null;
+  s3SecretAccessKey?: string | null;
 }>(user: T): T {
   return {
     ...user,
@@ -59,5 +63,11 @@ export function decryptUserTokens<T extends {
     googleRefreshToken: decryptToken(user.googleRefreshToken),
     dropboxAccessToken: decryptToken(user.dropboxAccessToken),
     dropboxRefreshToken: decryptToken(user.dropboxRefreshToken),
+    onedriveAccessToken: decryptToken(user.onedriveAccessToken),
+    onedriveRefreshToken: decryptToken(user.onedriveRefreshToken),
+    boxAccessToken: decryptToken(user.boxAccessToken),
+    boxRefreshToken: decryptToken(user.boxRefreshToken),
+    s3AccessKeyId: decryptToken(user.s3AccessKeyId),
+    s3SecretAccessKey: decryptToken(user.s3SecretAccessKey),
   };
 }
