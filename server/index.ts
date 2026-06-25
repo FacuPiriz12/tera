@@ -253,7 +253,8 @@ app.use((req, res, next) => {
   try {
     startQueueWorker({
       globalConcurrency: 5,
-      pollInterval: 2000
+      pollInterval: 2000,
+      connectionTimeout: 600000, // 10 minutes
     });
     console.log('🚀 Queue worker started successfully');
   } catch (error) {
