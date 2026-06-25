@@ -641,7 +641,7 @@ function CloudPanel({
               return (
                 <div
                   key={item.id}
-                  draggable={!item.isFolder}
+                  draggable
                   onDragStart={() => onDragStart(item, panelState.provider, currentPath)}
                   onDragEnd={onDragEnd}
                   onClick={(e) => item.isFolder ? enterFolder(item) : toggleSelect(item, e)}
@@ -651,16 +651,17 @@ function CloudPanel({
                       : 'bg-white border-gray-100 hover:border-blue-300 hover:shadow-sm hover:-translate-y-px'
                   } cursor-pointer`}
                 >
-                  {/* Checkbox for files */}
-                  {!item.isFolder && (
-                    <div className={`absolute top-1.5 left-1.5 transition-opacity ${isSelected || selected.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                      {isSelected
-                        ? <CheckSquare className="w-3.5 h-3.5 text-blue-500" />
-                        : <Square className="w-3.5 h-3.5 text-gray-300" />}
-                    </div>
-                  )}
-                  {/* Drag hint for files when nothing selected */}
-                  {!item.isFolder && selected.size === 0 && (
+                  {/* Checkbox — files toggle on click anywhere; folders need stopPropagation to avoid navigation */}
+                  <div
+                    className={`absolute top-1.5 left-1.5 transition-opacity ${isSelected || selected.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    onClick={item.isFolder ? (e) => { e.stopPropagation(); toggleSelect(item, e); } : undefined}
+                  >
+                    {isSelected
+                      ? <CheckSquare className="w-3.5 h-3.5 text-blue-500" />
+                      : <Square className="w-3.5 h-3.5 text-gray-300" />}
+                  </div>
+                  {/* Drag hint when nothing selected */}
+                  {selected.size === 0 && (
                     <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="w-3 h-3 text-gray-300" />
                     </div>
