@@ -225,7 +225,13 @@ export class QueueWorker extends EventEmitter {
   private async processJob(job: CopyOperation): Promise<void> {
     const startTime = Date.now();
     this.processingJobs.add(job.id);
-    
+
+    // Keep updatedAt fresh so stale-job reclaim never interrupts an active transfer,
+    // regardless of file size or transfer duration.
+    const heartbeat = setInterval(async () => {
+      try { await storage.touchJob(job.id); } catch { /* ignore — job may have completed */ }
+    }, 60_000);
+
     console.log(`🔄 Processing job ${job.id}: ${job.fileName} (${job.sourceProvider} -> ${job.destProvider})`);
 
     try {
@@ -277,6 +283,7 @@ export class QueueWorker extends EventEmitter {
         this.emit('jobRetry', job.id, job.userId, { attempts, nextRunAt, error: errorMessage });
       }
     } finally {
+      clearInterval(heartbeat);
       this.processingJobs.delete(job.id);
     }
   }

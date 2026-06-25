@@ -141,6 +141,7 @@ export interface IStorage {
   countUserActiveOperations(userId: string): Promise<number>;
   setJobProgress(id: string, completedFiles: number, totalFiles: number, progressPct: number): Promise<CopyOperation>;
   requestJobCancel(id: string): Promise<CopyOperation>;
+  touchJob(id: string): Promise<void>;
   reclaimStaleJobs(staleDurationMs: number): Promise<number>;
   
   // Cleanup operations for old completed/failed jobs
@@ -910,6 +911,13 @@ export class DatabaseStorage implements IStorage {
       .where(eq(copyOperations.id, id))
       .returning();
     return job;
+  }
+
+  async touchJob(id: string): Promise<void> {
+    await getDb()
+      .update(copyOperations)
+      .set({ updatedAt: new Date() })
+      .where(and(eq(copyOperations.id, id), eq(copyOperations.status, 'in_progress')));
   }
 
   async reclaimStaleJobs(staleDurationMs: number): Promise<number> {
@@ -1908,6 +1916,13 @@ class MemoryStorage implements IStorage {
     };
     this.copyOperations.set(id, updated);
     return updated;
+  }
+
+  async touchJob(id: string): Promise<void> {
+    const op = this.copyOperations.get(id);
+    if (op && op.status === 'in_progress') {
+      this.copyOperations.set(id, { ...op, updatedAt: new Date() });
+    }
   }
 
   async reclaimStaleJobs(staleDurationMs: number): Promise<number> {
