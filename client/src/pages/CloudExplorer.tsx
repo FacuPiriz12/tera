@@ -834,9 +834,11 @@ export default function CloudExplorer() {
 
         // Determine whether to use client-side path:
         // - Folders: always client-side (new)
-        // - Files: client-side unless Box destination > 500 MB
+        // - Files: client-side unless Box destination > 500 MB, or Dropbox is involved
+        //   (Dropbox content.dropboxapi.com blocks CORS preflight from browser)
         const isBoxLargeFile = !item.isFolder && pendingTransfer.to === 'box' && itemSize !== null && itemSize > CLIENT_TRANSFER_MAX_BYTES;
-        const useClientSide = !isBoxLargeFile;
+        const hasDropbox = pendingTransfer.from === 'dropbox' || pendingTransfer.to === 'dropbox';
+        const useClientSide = !isBoxLargeFile && !hasDropbox;
 
         if (useClientSide) {
           // ── Client-side transfer (browser downloads + uploads directly) ──
@@ -1067,7 +1069,7 @@ export default function CloudExplorer() {
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => !isTransferring && setShowSyncModal(false)}
+              onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
@@ -1190,9 +1192,8 @@ export default function CloudExplorer() {
                 )}
 
                 <button
-                  onClick={() => { if (!isTransferring) { setShowSyncModal(false); setPendingTransfer(null); } }}
-                  disabled={isTransferring}
-                  className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors disabled:opacity-50"
+                  onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
+                  className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {t('common.actions.cancel', 'Cancelar')}
                 </button>
