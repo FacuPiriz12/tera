@@ -389,7 +389,8 @@ export class QueueWorker extends EventEmitter {
         fileContent.byteOffset,
         fileContent.byteOffset + fileContent.byteLength
       );
-      const targetFolderPath = destinationFolderId || '';
+      let targetFolderPath = destinationFolderId || '';
+      if (targetFolderPath.endsWith('/')) targetFolderPath = targetFolderPath.slice(0, -1);
       const uploadResult = await dropboxService.uploadFile(fileName || 'untitled', arrayBufferContent, targetFolderPath);
       let normalizedFolderPath = targetFolderPath || '';
       if (normalizedFolderPath && !normalizedFolderPath.startsWith('/')) {

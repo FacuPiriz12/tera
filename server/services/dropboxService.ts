@@ -249,10 +249,13 @@ export class DropboxService {
     await this.ensureValidToken();
     
     try {
-      // Ensure path starts with / for Dropbox API
+      // Ensure path starts with / for Dropbox API, strip trailing slash
       let normalizedPath = destinationPath || '';
       if (normalizedPath && !normalizedPath.startsWith('/')) {
         normalizedPath = '/' + normalizedPath;
+      }
+      if (normalizedPath.endsWith('/')) {
+        normalizedPath = normalizedPath.slice(0, -1);
       }
       const fullPath = normalizedPath ? `${normalizedPath}/${filename}` : `/${filename}`;
       const fileSize = content.byteLength;
@@ -315,9 +318,11 @@ export class DropboxService {
         clientModified: response.result.client_modified,
         serverModified: response.result.server_modified,
       };
-    } catch (error) {
-      console.error('Error uploading file to Dropbox:', error);
-      throw new Error('Failed to upload file to Dropbox');
+    } catch (error: any) {
+      if (error?.isDuplicate) throw error;
+      const detail = error?.error?.error_summary || error?.message || String(error);
+      console.error('Error uploading file to Dropbox:', detail, error);
+      throw new Error(`Failed to upload file to Dropbox: ${detail}`);
     }
   }
 
