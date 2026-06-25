@@ -129,6 +129,11 @@ export class DropboxService {
     }
   }
 
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    return this.dbx.auth.getAccessToken() as string;
+  }
+
   async getAuthUrl(redirectUrl: string, state: string): Promise<string> {
     // Request offline access to get refresh tokens
     // SDK v6+ uses dbx.auth for authentication, v9+ returns a promise

@@ -127,6 +127,11 @@ export class GoogleDriveService {
     this.drive = google.drive({ version: 'v3', auth: this.auth });
   }
 
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    return this.auth.credentials.access_token as string;
+  }
+
   /**
    * Parse Google Drive URL to extract file/folder ID and optional resource key
    */

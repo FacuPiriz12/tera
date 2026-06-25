@@ -117,6 +117,11 @@ export class BoxService {
     }
   }
 
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    return this.accessToken!;
+  }
+
   private async apiGet(path: string): Promise<any> {
     await this.ensureValidToken();
     const res = await fetch(`${BOX_API}${path}`, {

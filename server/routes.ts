@@ -4228,6 +4228,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ── Client-side transfer — token vending & history recording ──────────────────
+
+  app.get('/api/client-transfer/tokens', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const sourceProvider = req.query.sourceProvider as string;
+      const destProvider = req.query.destProvider as string;
+
+      const result: Record<string, any> = {};
+      const providers = [...new Set([sourceProvider, destProvider])];
+
+      for (const p of providers) {
+        switch (p) {
+          case 'google': {
+            const svc = new GoogleDriveService(userId);
+            result[p] = { accessToken: await svc.getAccessToken() };
+            break;
+          }
+          case 'dropbox': {
+            const svc = new DropboxService(userId);
+            result[p] = { accessToken: await svc.getAccessToken() };
+            break;
+          }
+          case 'onedrive': {
+            const svc = new OneDriveService(userId);
+            result[p] = { accessToken: await svc.getAccessToken() };
+            break;
+          }
+          case 'box': {
+            const svc = new BoxService(userId);
+            result[p] = { accessToken: await svc.getAccessToken() };
+            break;
+          }
+          case 's3':
+            result[p] = { type: 's3' }; // S3 uses presigned URLs, not tokens
+            break;
+          default:
+            break;
+        }
+      }
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('Error vending transfer tokens:', error.message);
+      res.status(500).json({ message: error.message || 'Failed to get transfer tokens' });
+    }
+  });
+
+  app.post('/api/client-transfer/s3-presign', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { operation, bucket, key, contentType } = req.body;
+      const svc = new S3Service(userId);
+      let url: string;
+      if (operation === 'upload') {
+        url = await svc.getPresignedUploadUrl(bucket, key, contentType);
+      } else {
+        url = await svc.getPresignedDownloadUrl(bucket, key);
+      }
+      res.json({ url });
+    } catch (error: any) {
+      console.error('Error generating S3 presigned URL:', error.message);
+      res.status(500).json({ message: error.message || 'Failed to generate S3 URL' });
+    }
+  });
+
+  app.post('/api/client-transfer/record', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { fileName, sourceProvider, destProvider } = req.body;
+      // Create a completed job record for history/analytics
+      const job = await storage.createCopyOperation({
+        userId,
+        sourceProvider,
+        destProvider,
+        fileName,
+        sourceUrl: '',
+        destinationFolderId: '',
+        status: 'completed',
+      });
+      await storage.completeJob(job.id, { copiedFileName: fileName });
+      res.json({ success: true });
+    } catch (error: any) {
+      // Non-critical — don't fail the transfer if recording fails
+      console.error('Error recording client transfer:', error.message);
+      res.json({ success: false });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

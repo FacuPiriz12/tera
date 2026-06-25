@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTransfer } from "@/contexts/TransferContext";
 import { Link } from "wouter";
+import { performClientTransfer, CLIENT_TRANSFER_MAX_BYTES } from "@/lib/clientTransfer";
+import type { ProviderTokens, ClientTransferOptions } from "@/lib/clientTransfer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
@@ -745,6 +747,8 @@ export default function CloudExplorer() {
   const [dropTarget, setDropTarget] = useState<1 | 2 | null>(null);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [pendingTransfer, setPendingTransfer] = useState<{
     items: CloudItem[];
     from: Provider;
@@ -809,6 +813,8 @@ export default function CloudExplorer() {
     }
 
     setIsTransferring(true);
+    setDownloadProgress(0);
+    setUploadProgress(0);
 
     try {
       const targetPath = (() => {
@@ -822,50 +828,153 @@ export default function CloudExplorer() {
       })();
 
       for (const item of pendingTransfer.items) {
-        const payload: Record<string, any> = {
-          sourceProvider: pendingTransfer.from,
-          targetProvider: pendingTransfer.to,
-          fileName: item.name,
-          duplicateAction,
-          targetPath,
-          isFolder: item.isFolder,
-        };
-        if (item.size) payload.fileSize = Number(item.size);
+        const itemSize = item.size !== undefined && item.size !== null ? Number(item.size) : null;
+        const useClientSide = !item.isFolder && itemSize !== null && itemSize <= CLIENT_TRANSFER_MAX_BYTES;
 
-        switch (pendingTransfer.from) {
-          case 'google':
-          case 'onedrive':
-          case 'box':
-            payload.sourceFileId = item.id;
-            break;
-          case 'dropbox': {
-            const folder = pendingTransfer.sourcePath;
-            payload.sourceFilePath = folder === '' || folder === '/'
-              ? `/${item.name}`
-              : `${folder}/${item.name}`;
-            break;
+        if (useClientSide) {
+          // ── Client-side transfer (browser downloads + uploads directly) ──
+          const tokensRes = await apiRequest(
+            'GET',
+            `/api/client-transfer/tokens?sourceProvider=${pendingTransfer.from}&destProvider=${pendingTransfer.to}`,
+          );
+          const tokensData = await tokensRes.json();
+
+          const sourceTokens: ProviderTokens = {};
+          const destTokens: ProviderTokens = {};
+
+          // Build source tokens
+          if (pendingTransfer.from === 's3') {
+            const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
+              operation: 'download',
+              bucket: sourcePanel.s3Bucket,
+              key: item.id,
+            });
+            const { url } = await presignRes.json();
+            sourceTokens.presignedDownloadUrl = url;
+          } else {
+            sourceTokens.accessToken = tokensData[pendingTransfer.from]?.accessToken;
           }
-          case 's3':
-            payload.sourceFileId = item.id; // full S3 key
-            payload.sourceBucket = sourcePanel.s3Bucket;
-            break;
-        }
 
-        if (pendingTransfer.to === 's3') {
-          payload.targetBucket = destPanel.s3Bucket;
-        }
+          // Build dest tokens
+          if (pendingTransfer.to === 's3') {
+            const destKey = destPanel.s3Prefix
+              ? `${destPanel.s3Prefix.replace(/\/$/, '')}/${item.name}`
+              : item.name;
+            const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
+              operation: 'upload',
+              bucket: destPanel.s3Bucket,
+              key: destKey,
+              contentType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
+            });
+            const { url } = await presignRes.json();
+            destTokens.presignedUploadUrl = url;
+          } else {
+            destTokens.accessToken = tokensData[pendingTransfer.to]?.accessToken;
+          }
 
-        const res = await apiRequest('POST', '/api/transfer-files', payload);
-        const job = await res.json();
-        addJob({
-          id: job.jobId,
-          fileName: job.fileName || item.name,
-          status: 'queued',
-          progress: 0,
-          sourceProvider: pendingTransfer.from,
-          targetProvider: pendingTransfer.to,
-          createdAt: new Date().toISOString(),
-        });
+          // Build transfer options
+          const sourceFilePath = (() => {
+            if (pendingTransfer.from === 'dropbox') {
+              const folder = pendingTransfer.sourcePath;
+              return folder === '' || folder === '/'
+                ? `/${item.name}`
+                : `${folder}/${item.name}`;
+            }
+            return undefined;
+          })();
+
+          const opts: ClientTransferOptions = {
+            sourceProvider: pendingTransfer.from,
+            destProvider: pendingTransfer.to,
+            fileName: item.name,
+            fileSize: itemSize ?? undefined,
+            mimeType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
+            sourceFileId: ['google', 'onedrive', 'box', 's3'].includes(pendingTransfer.from) ? item.id : undefined,
+            sourceFilePath,
+            sourceBucket: pendingTransfer.from === 's3' ? sourcePanel.s3Bucket : undefined,
+            destFolderId: ['google', 'onedrive', 'box'].includes(pendingTransfer.to) ? targetPath : undefined,
+            destPath: pendingTransfer.to === 'dropbox' ? (destPanel.dropboxPath || '') : undefined,
+            destBucket: pendingTransfer.to === 's3' ? destPanel.s3Bucket : undefined,
+            destPrefix: pendingTransfer.to === 's3' ? destPanel.s3Prefix : undefined,
+          };
+
+          await performClientTransfer(sourceTokens, destTokens, opts, {
+            onDownloadProgress: setDownloadProgress,
+            onUploadProgress: setUploadProgress,
+          });
+
+          // Record in history (non-critical)
+          apiRequest('POST', '/api/client-transfer/record', {
+            fileName: item.name,
+            fileSize: itemSize,
+            sourceProvider: pendingTransfer.from,
+            destProvider: pendingTransfer.to,
+          }).catch(() => {});
+
+          // Add a synthetic completed job entry
+          addJob({
+            id: `client-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            fileName: item.name,
+            status: 'completed',
+            progress: 100,
+            sourceProvider: pendingTransfer.from,
+            targetProvider: pendingTransfer.to,
+            createdAt: new Date().toISOString(),
+          });
+        } else {
+          // ── Server-side transfer (existing flow) ──
+          if (!item.isFolder && itemSize !== null && itemSize > CLIENT_TRANSFER_MAX_BYTES) {
+            toast({
+              title: t('pages.cloudExplorer.largeFile', 'Archivo grande'),
+              description: t('pages.cloudExplorer.largeFileDesc', 'Archivo grande, usando servidor...'),
+            });
+          }
+
+          const payload: Record<string, any> = {
+            sourceProvider: pendingTransfer.from,
+            targetProvider: pendingTransfer.to,
+            fileName: item.name,
+            duplicateAction,
+            targetPath,
+            isFolder: item.isFolder,
+          };
+          if (item.size) payload.fileSize = Number(item.size);
+
+          switch (pendingTransfer.from) {
+            case 'google':
+            case 'onedrive':
+            case 'box':
+              payload.sourceFileId = item.id;
+              break;
+            case 'dropbox': {
+              const folder = pendingTransfer.sourcePath;
+              payload.sourceFilePath = folder === '' || folder === '/'
+                ? `/${item.name}`
+                : `${folder}/${item.name}`;
+              break;
+            }
+            case 's3':
+              payload.sourceFileId = item.id; // full S3 key
+              payload.sourceBucket = sourcePanel.s3Bucket;
+              break;
+          }
+
+          if (pendingTransfer.to === 's3') {
+            payload.targetBucket = destPanel.s3Bucket;
+          }
+
+          const res = await apiRequest('POST', '/api/transfer-files', payload);
+          const job = await res.json();
+          addJob({
+            id: job.jobId,
+            fileName: job.fileName || item.name,
+            status: 'queued',
+            progress: 0,
+            sourceProvider: pendingTransfer.from,
+            targetProvider: pendingTransfer.to,
+            createdAt: new Date().toISOString(),
+          });
+        }
       }
 
       const count = pendingTransfer.items.length;
@@ -984,9 +1093,27 @@ export default function CloudExplorer() {
                 </div>
 
                 {isTransferring && (
-                  <div className="flex items-center justify-center gap-2 mt-4 text-sm text-blue-500">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span className="text-xs font-medium">{t('pages.cloudExplorer.transferring', 'Iniciando transferencia...')}</span>
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-600">
+                      <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <span>{t('pages.cloudExplorer.transferring', 'Transfiriendo...')}</span>
+                    </div>
+                    {(downloadProgress > 0 || uploadProgress > 0) && (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{t('pages.cloudExplorer.downloading', 'Descargando')}</span><span>{downloadProgress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-400 transition-all" style={{ width: `${downloadProgress}%` }} />
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{t('pages.cloudExplorer.uploading', 'Subiendo')}</span><span>{uploadProgress}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-600 transition-all" style={{ width: `${uploadProgress}%` }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

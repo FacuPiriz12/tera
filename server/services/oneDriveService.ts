@@ -116,6 +116,11 @@ export class OneDriveService {
     }
   }
 
+  async getAccessToken(): Promise<string> {
+    await this.ensureValidToken();
+    return this.accessToken!;
+  }
+
   private async graphGet(path: string): Promise<any> {
     await this.ensureValidToken();
     const res = await fetch(`${GRAPH_BASE}${path}`, {

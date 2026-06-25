@@ -140,4 +140,18 @@ export class S3Service {
       lastModified: res.LastModified?.toISOString(),
     };
   }
+
+  async getPresignedDownloadUrl(bucket: string, key: string): Promise<string> {
+    const client = await this.getClient();
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    return getSignedUrl(client, command, { expiresIn: 3600 });
+  }
+
+  async getPresignedUploadUrl(bucket: string, key: string, contentType?: string): Promise<string> {
+    const client = await this.getClient();
+    const { getSignedUrl } = await import('@aws-sdk/s3-request-presigner');
+    const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
+    return getSignedUrl(client, command, { expiresIn: 3600 });
+  }
 }
