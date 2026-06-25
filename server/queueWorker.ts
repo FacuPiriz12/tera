@@ -62,7 +62,7 @@ export class QueueWorker extends EventEmitter {
 
     // Aggressively reclaim any stale jobs from previous worker instances (2 minutes threshold)
     try {
-      const reclaimedCount = await storage.reclaimStaleJobs(120000); // 2 minutes - more aggressive
+      const reclaimedCount = await storage.reclaimStaleJobs(600000); // 10 minutes — allow large file transfers to complete
       if (reclaimedCount > 0) {
         console.log(`🔄 Reclaimed ${reclaimedCount} stale jobs from previous worker instances`);
       }
@@ -148,7 +148,7 @@ export class QueueWorker extends EventEmitter {
     // Periodically reclaim stale jobs (every ~10 poll cycles) - more frequent cleanup
     if (Math.random() < 0.1) { // ~10% chance per poll
       try {
-        const reclaimedCount = await storage.reclaimStaleJobs(120000); // 2 minutes - more aggressive
+        const reclaimedCount = await storage.reclaimStaleJobs(600000); // 10 minutes — allow large file transfers to complete
         if (reclaimedCount > 0) {
           console.log(`🔄 Reclaimed ${reclaimedCount} stale jobs`);
         }
