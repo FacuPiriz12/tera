@@ -834,11 +834,9 @@ export default function CloudExplorer() {
 
         // Determine whether to use client-side path:
         // - Folders: always client-side (new)
-        // - Files: client-side unless Box destination > 500 MB, or Dropbox is involved
-        //   (Dropbox content.dropboxapi.com blocks CORS preflight from browser)
+        // - Files: client-side unless Box destination > 500 MB
         const isBoxLargeFile = !item.isFolder && pendingTransfer.to === 'box' && itemSize !== null && itemSize > CLIENT_TRANSFER_MAX_BYTES;
-        const hasDropbox = pendingTransfer.from === 'dropbox' || pendingTransfer.to === 'dropbox';
-        const useClientSide = !isBoxLargeFile && !hasDropbox;
+        const useClientSide = !isBoxLargeFile;
 
         if (useClientSide) {
           // ── Client-side transfer (browser downloads + uploads directly) ──
