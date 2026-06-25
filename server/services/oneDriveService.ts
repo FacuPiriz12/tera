@@ -126,16 +126,13 @@ export class OneDriveService {
       let message = `Graph API error (${res.status})`;
       try {
         const parsed = JSON.parse(body);
-        const code = parsed?.error?.code;
-        if (code === 'itemNotFound') {
-          throw new Error('OneDrive not provisioned — visit onedrive.com to activate your account first.');
-        }
         message = parsed?.error?.message || message;
-      } catch (e: any) {
-        if (e.message?.includes('OneDrive not provisioned')) throw e;
+      } catch {
         message = body || message;
       }
-      throw new Error(message);
+      const err = new Error(message) as any;
+      err.status = res.status;
+      throw err;
     }
     return res.json();
   }
@@ -152,8 +149,9 @@ export class OneDriveService {
       // @microsoft.graph.downloadUrl is not valid in $select for children listing — fetch it per-file when needed
       data = await this.graphGet(`${path}?$select=id,name,size,file,folder,lastModifiedDateTime&$top=200`);
     } catch (err: any) {
-      if (err.message?.includes('not provisioned')) throw err;
-      // folder not found or empty — treat as empty
+      // re-throw auth errors; for anything else (404, permissions, etc.) return empty list
+      if (err.message?.includes('not connected')) throw err;
+      console.warn('OneDrive listFolder error (returning empty):', err.message);
       data = { value: [] };
     }
 
