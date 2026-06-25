@@ -122,8 +122,20 @@ export class OneDriveService {
       headers: { Authorization: `Bearer ${this.accessToken}` },
     });
     if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Graph API error (${res.status}): ${err}`);
+      const body = await res.text();
+      let message = `Graph API error (${res.status})`;
+      try {
+        const parsed = JSON.parse(body);
+        const code = parsed?.error?.code;
+        if (code === 'itemNotFound') {
+          throw new Error('OneDrive not provisioned — visit onedrive.com to activate your account first.');
+        }
+        message = parsed?.error?.message || message;
+      } catch (e: any) {
+        if (e.message?.includes('OneDrive not provisioned')) throw e;
+        message = body || message;
+      }
+      throw new Error(message);
     }
     return res.json();
   }
@@ -135,8 +147,15 @@ export class OneDriveService {
       ? `/me/drive/items/${folderId}/children`
       : '/me/drive/root/children';
 
-    // @microsoft.graph.downloadUrl is not valid in $select for children listing — fetch it per-file when needed
-    const data = await this.graphGet(`${path}?$select=id,name,size,file,folder,lastModifiedDateTime&$top=200`);
+    let data: any;
+    try {
+      // @microsoft.graph.downloadUrl is not valid in $select for children listing — fetch it per-file when needed
+      data = await this.graphGet(`${path}?$select=id,name,size,file,folder,lastModifiedDateTime&$top=200`);
+    } catch (err: any) {
+      if (err.message?.includes('not provisioned')) throw err;
+      // folder not found or empty — treat as empty
+      data = { value: [] };
+    }
 
     return (data.value || []).map((item: any) => ({
       id: item.id,
