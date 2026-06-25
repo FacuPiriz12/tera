@@ -135,7 +135,8 @@ export class OneDriveService {
       ? `/me/drive/items/${folderId}/children`
       : '/me/drive/root/children';
 
-    const data = await this.graphGet(`${path}?$select=id,name,size,file,folder,lastModifiedDateTime,@microsoft.graph.downloadUrl&$top=200`);
+    // @microsoft.graph.downloadUrl is not valid in $select for children listing — fetch it per-file when needed
+    const data = await this.graphGet(`${path}?$select=id,name,size,file,folder,lastModifiedDateTime&$top=200`);
 
     return (data.value || []).map((item: any) => ({
       id: item.id,

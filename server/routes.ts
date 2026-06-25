@@ -4019,9 +4019,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const files = await service.listFolder(folderId);
       res.json(files);
     } catch (error: any) {
-      console.error('Error listing OneDrive files:', error);
+      console.error('Error listing OneDrive files:', error.message || error);
       if (error.message?.includes('not connected')) return res.status(401).json({ message: error.message });
-      res.status(500).json({ message: 'Failed to list OneDrive files' });
+      res.status(500).json({ message: error.message || 'Failed to list OneDrive files' });
     }
   });
 
