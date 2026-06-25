@@ -281,7 +281,6 @@ function CloudPanel({
   const isAtRoot = panelState.breadcrumbs.length === 0;
 
   function toggleSelect(item: CloudItem, e: React.MouseEvent) {
-    if (item.isFolder) return;
     e.stopPropagation();
     setSelected(prev => {
       const next = new Set(prev);
