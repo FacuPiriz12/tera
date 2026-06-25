@@ -31,12 +31,14 @@ export interface ClientTransferCallbacks {
   onUploadProgress: (pct: number) => void;
 }
 
-/** Size threshold: >= 500MB falls back to server-side */
+/** Size threshold: Box destination falls back to server-side above this */
 export const CLIENT_TRANSFER_MAX_BYTES = 500 * 1024 * 1024;
 
-const CHUNK = 10 * 1024 * 1024; // 10 MB upload chunks
+const CHUNK = 10 * 1024 * 1024; // 10 MB chunks
+// OneDrive requires chunks to be multiples of 320 KiB (327680 bytes)
+const ONEDRIVE_CHUNK = Math.floor(CHUNK / 327680) * 327680;
 
-// ─── Progress-tracked fetch ──────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function fetchBlob(
   url: string,
@@ -77,108 +79,311 @@ async function fetchBlob(
   return out.buffer;
 }
 
-// ─── Download from source provider ──────────────────────────────────────────
+/** Download a single Range chunk from a URL */
+async function fetchChunk(url: string, init: RequestInit, start: number, end: number): Promise<ArrayBuffer> {
+  const existingHeaders = (init.headers ?? {}) as Record<string, string>;
+  const headers: Record<string, string> = {
+    ...existingHeaders,
+    Range: `bytes=${start}-${end}`,
+  };
+  const res = await fetch(url, { ...init, headers });
+  // 206 = Partial Content (normal), 200 = server returned full body anyway
+  if (res.status !== 206 && res.status !== 200) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Range download failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  return res.arrayBuffer();
+}
 
-async function downloadFile(
+// ─── Upload session helpers ──────────────────────────────────────────────────
+
+interface GoogleSession { uploadUrl: string }
+interface DropboxSession { sessionId: string; offset: number }
+interface OneDriveSession { uploadUrl: string }
+
+async function openGoogleUploadSession(
+  accessToken: string,
+  fileName: string,
+  totalSize: number,
+  contentType: string,
+  destFolderId?: string,
+): Promise<GoogleSession> {
+  const parent = destFolderId && destFolderId !== 'root' ? destFolderId : undefined;
+  const metadata: Record<string, any> = { name: fileName };
+  if (parent) metadata.parents = [parent];
+
+  const sessionRes = await fetch(
+    'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Upload-Content-Type': contentType,
+        'X-Upload-Content-Length': String(totalSize),
+      },
+      body: JSON.stringify(metadata),
+    },
+  );
+  if (!sessionRes.ok) throw new Error(`Google Drive: could not start upload session (${sessionRes.status})`);
+  const uploadUrl = sessionRes.headers.get('Location');
+  if (!uploadUrl) throw new Error('Google Drive: no upload URL in session response');
+  return { uploadUrl };
+}
+
+async function uploadGoogleChunk(
+  session: GoogleSession,
+  chunk: ArrayBuffer,
+  offset: number,
+  totalSize: number,
+  contentType: string,
+): Promise<void> {
+  const end = offset + chunk.byteLength - 1;
+  const res = await fetch(session.uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': contentType,
+      'Content-Range': `bytes ${offset}-${end}/${totalSize}`,
+    },
+    body: chunk,
+  });
+  // 308 = Resume Incomplete (chunk accepted, continue); 200/201 = done
+  if (res.status !== 308 && res.status !== 200 && res.status !== 201) {
+    throw new Error(`Google Drive: chunk upload failed (${res.status})`);
+  }
+}
+
+async function openDropboxUploadSession(
+  accessToken: string,
+  firstChunk: ArrayBuffer,
+): Promise<DropboxSession> {
+  const startRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/start', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({ close: false }),
+    },
+    body: firstChunk,
+  });
+  if (!startRes.ok) throw new Error(`Dropbox: session start failed (${startRes.status})`);
+  const { session_id } = await startRes.json();
+  return { sessionId: session_id, offset: firstChunk.byteLength };
+}
+
+async function appendDropboxChunk(
+  accessToken: string,
+  session: DropboxSession,
+  chunk: ArrayBuffer,
+): Promise<void> {
+  const res = await fetch('https://content.dropboxapi.com/2/files/upload_session/append_v2', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({
+        cursor: { session_id: session.sessionId, offset: session.offset },
+        close: false,
+      }),
+    },
+    body: chunk,
+  });
+  if (!res.ok) throw new Error(`Dropbox: append failed (${res.status})`);
+  session.offset += chunk.byteLength;
+}
+
+async function finishDropboxUploadSession(
+  accessToken: string,
+  session: DropboxSession,
+  lastChunk: ArrayBuffer,
+  destPath: string,
+): Promise<void> {
+  const finishRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/finish', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({
+        cursor: { session_id: session.sessionId, offset: session.offset },
+        commit: { path: destPath, mode: 'add', autorename: true },
+      }),
+    },
+    body: lastChunk,
+  });
+  if (!finishRes.ok) throw new Error(`Dropbox: session finish failed (${finishRes.status})`);
+}
+
+async function openOneDriveUploadSession(
+  accessToken: string,
+  fileName: string,
+  destFolderId?: string,
+): Promise<OneDriveSession> {
+  const parentPath = destFolderId ? `/me/drive/items/${destFolderId}` : '/me/drive/root';
+  const sessionRes = await fetch(
+    `https://graph.microsoft.com/v1.0${parentPath}:/${encodeURIComponent(fileName)}:/createUploadSession`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'rename' } }),
+    },
+  );
+  if (!sessionRes.ok) throw new Error(`OneDrive: session creation failed (${sessionRes.status})`);
+  const { uploadUrl } = await sessionRes.json();
+  return { uploadUrl };
+}
+
+async function uploadOneDriveChunk(
+  session: OneDriveSession,
+  chunk: ArrayBuffer,
+  offset: number,
+  totalSize: number,
+): Promise<void> {
+  const end = offset + chunk.byteLength - 1;
+  const res = await fetch(session.uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Length': String(chunk.byteLength),
+      'Content-Range': `bytes ${offset}-${end}/${totalSize}`,
+    },
+    body: chunk,
+  });
+  if (res.status !== 200 && res.status !== 201 && res.status !== 202) {
+    throw new Error(`OneDrive: chunk upload failed (${res.status})`);
+  }
+}
+
+async function uploadDropboxSimple(accessToken: string, data: ArrayBuffer, destPath: string): Promise<void> {
+  const res = await fetch('https://content.dropboxapi.com/2/files/upload', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/octet-stream',
+      'Dropbox-API-Arg': JSON.stringify({ path: destPath, mode: 'add', autorename: true }),
+    },
+    body: data,
+  });
+  if (!res.ok) throw new Error(`Dropbox upload failed (${res.status})`);
+}
+
+// ─── Chunk download per provider ─────────────────────────────────────────────
+
+async function downloadChunk(
   provider: Provider,
   tokens: ProviderTokens,
   opts: ClientTransferOptions,
-  onProgress: (pct: number) => void,
-): Promise<{ data: ArrayBuffer; mimeType?: string }> {
-  const { sourceFileId, sourceFilePath, fileSize, mimeType } = opts;
-
+  start: number,
+  end: number,
+  onedriveCdnUrl?: string,
+): Promise<ArrayBuffer> {
   switch (provider) {
     case 'google': {
-      // Check if it's a Google Workspace document (needs export)
-      const metaRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${sourceFileId}?fields=mimeType`,
+      return fetchChunk(
+        `https://www.googleapis.com/drive/v3/files/${opts.sourceFileId}?alt=media`,
         { headers: { Authorization: `Bearer ${tokens.accessToken}` } },
+        start,
+        end,
       );
-      const meta = await metaRes.json();
-      const gMime: string = meta.mimeType ?? '';
-
-      let url: string;
-      let exportMime: string | undefined;
-      if (gMime.startsWith('application/vnd.google-apps.')) {
-        const exportMap: Record<string, string> = {
-          'application/vnd.google-apps.document':
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          'application/vnd.google-apps.spreadsheet':
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          'application/vnd.google-apps.presentation':
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-        };
-        exportMime = exportMap[gMime] ?? 'application/pdf';
-        url = `https://www.googleapis.com/drive/v3/files/${sourceFileId}/export?mimeType=${encodeURIComponent(exportMime)}`;
-      } else {
-        url = `https://www.googleapis.com/drive/v3/files/${sourceFileId}?alt=media`;
+    }
+    case 'dropbox': {
+      // Dropbox download uses POST; Range goes as a header
+      const res = await fetch('https://content.dropboxapi.com/2/files/download', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          'Dropbox-API-Arg': JSON.stringify({ path: opts.sourceFilePath }),
+          Range: `bytes=${start}-${end}`,
+        },
+      });
+      if (res.status !== 206 && res.status !== 200) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Dropbox chunk download failed (${res.status}): ${text.slice(0, 200)}`);
       }
+      return res.arrayBuffer();
+    }
+    case 'onedrive': {
+      if (!onedriveCdnUrl) throw new Error('OneDrive: CDN URL not initialized');
+      return fetchChunk(onedriveCdnUrl, {}, start, end);
+    }
+    case 'box': {
+      return fetchChunk(
+        `https://api.box.com/2.0/files/${opts.sourceFileId}/content`,
+        {
+          headers: { Authorization: `Bearer ${tokens.accessToken}` },
+          redirect: 'follow' as RequestRedirect,
+        },
+        start,
+        end,
+      );
+    }
+    case 's3': {
+      if (!tokens.presignedDownloadUrl) throw new Error('S3: no presigned download URL');
+      return fetchChunk(tokens.presignedDownloadUrl, {}, start, end);
+    }
+    default:
+      throw new Error(`Unsupported source provider for chunk download: ${provider}`);
+  }
+}
 
-      const data = await fetchBlob(
-        url,
+/** Download entire file in one shot (fallback for Workspace docs, Box source, unknown size). */
+async function downloadEntireFile(
+  provider: Provider,
+  tokens: ProviderTokens,
+  opts: ClientTransferOptions,
+  onedriveCdnUrl: string | undefined,
+  onProgress: (pct: number) => void,
+  knownSize: number,
+): Promise<ArrayBuffer> {
+  switch (provider) {
+    case 'google': {
+      return fetchBlob(
+        `https://www.googleapis.com/drive/v3/files/${opts.sourceFileId}?alt=media`,
         { headers: { Authorization: `Bearer ${tokens.accessToken}` } },
         onProgress,
-        fileSize,
+        knownSize || undefined,
       );
-      return { data, mimeType: exportMime ?? gMime ?? mimeType };
     }
-
     case 'dropbox': {
-      const data = await fetchBlob(
+      return fetchBlob(
         'https://content.dropboxapi.com/2/files/download',
         {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${tokens.accessToken}`,
-            'Dropbox-API-Arg': JSON.stringify({ path: sourceFilePath }),
+            'Dropbox-API-Arg': JSON.stringify({ path: opts.sourceFilePath }),
           },
         },
         onProgress,
-        fileSize,
+        knownSize || undefined,
       );
-      return { data };
     }
-
     case 'onedrive': {
-      // Get the temporary direct download URL (no auth needed for the CDN URL)
-      const metaRes = await fetch(
-        `https://graph.microsoft.com/v1.0/me/drive/items/${sourceFileId}?$select=@microsoft.graph.downloadUrl,file`,
-        { headers: { Authorization: `Bearer ${tokens.accessToken}` } },
-      );
-      if (!metaRes.ok) throw new Error(`OneDrive metadata failed: ${metaRes.status}`);
-      const meta = await metaRes.json();
-      const dlUrl: string = meta['@microsoft.graph.downloadUrl'];
-      if (!dlUrl) throw new Error('OneDrive: no download URL returned');
-
-      const data = await fetchBlob(dlUrl, {}, onProgress, fileSize);
-      return { data, mimeType: meta.file?.mimeType ?? mimeType };
+      if (!onedriveCdnUrl) throw new Error('OneDrive: CDN URL not initialized');
+      return fetchBlob(onedriveCdnUrl, {}, onProgress, knownSize || undefined);
     }
-
     case 'box': {
-      const data = await fetchBlob(
-        `https://api.box.com/2.0/files/${sourceFileId}/content`,
+      return fetchBlob(
+        `https://api.box.com/2.0/files/${opts.sourceFileId}/content`,
         {
           headers: { Authorization: `Bearer ${tokens.accessToken}` },
           redirect: 'follow' as RequestRedirect,
         },
         onProgress,
-        fileSize,
+        knownSize || undefined,
       );
-      return { data };
     }
-
     case 's3': {
       if (!tokens.presignedDownloadUrl) throw new Error('S3: no presigned download URL');
-      const data = await fetchBlob(tokens.presignedDownloadUrl, {}, onProgress, fileSize);
-      return { data };
+      return fetchBlob(tokens.presignedDownloadUrl, {}, onProgress, knownSize || undefined);
     }
-
     default:
       throw new Error(`Unsupported source provider: ${provider}`);
   }
 }
 
-// ─── Upload to destination provider ─────────────────────────────────────────
+// ─── Upload full buffer (used by Box, and as fallback) ───────────────────────
 
 async function uploadFile(
   provider: Provider,
@@ -187,50 +392,23 @@ async function uploadFile(
   opts: ClientTransferOptions,
   onProgress: (pct: number) => void,
 ): Promise<void> {
-  const { fileName, destFolderId, destPath, destBucket, destPrefix, mimeType } = opts;
+  const { fileName, destFolderId, destPath, mimeType } = opts;
   const contentType = mimeType || 'application/octet-stream';
   const size = data.byteLength;
 
   switch (provider) {
     case 'google': {
-      const parent = destFolderId && destFolderId !== 'root' ? destFolderId : undefined;
-      const metadata: Record<string, any> = { name: fileName };
-      if (parent) metadata.parents = [parent];
-
-      // Always use resumable upload (handles any file size, shows progress)
-      const sessionRes = await fetch(
-        'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-            'Content-Type': 'application/json',
-            'X-Upload-Content-Type': contentType,
-            'X-Upload-Content-Length': String(size),
-          },
-          body: JSON.stringify(metadata),
-        },
+      const session = await openGoogleUploadSession(
+        tokens.accessToken!,
+        fileName,
+        size,
+        contentType,
+        destFolderId,
       );
-      if (!sessionRes.ok) throw new Error(`Google Drive: could not start upload session (${sessionRes.status})`);
-      const uploadUrl = sessionRes.headers.get('Location');
-      if (!uploadUrl) throw new Error('Google Drive: no upload URL in session response');
-
       let offset = 0;
       while (offset < size) {
         const end = Math.min(offset + CHUNK, size);
-        const chunk = data.slice(offset, end);
-        const res = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': contentType,
-            'Content-Range': `bytes ${offset}-${end - 1}/${size}`,
-          },
-          body: chunk,
-        });
-        // 308 = Resume Incomplete (chunk accepted, continue); 200/201 = done
-        if (res.status !== 308 && res.status !== 200 && res.status !== 201) {
-          throw new Error(`Google Drive: chunk upload failed (${res.status})`);
-        }
+        await uploadGoogleChunk(session, data.slice(offset, end), offset, size, contentType);
         offset = end;
         onProgress(Math.round((offset / size) * 100));
       }
@@ -244,66 +422,21 @@ async function uploadFile(
       })();
 
       if (size <= 150 * 1024 * 1024) {
-        // Simple upload
-        const res = await fetch('https://content.dropboxapi.com/2/files/upload', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-            'Content-Type': 'application/octet-stream',
-            'Dropbox-API-Arg': JSON.stringify({ path: dropboxDest, mode: 'add', autorename: true }),
-          },
-          body: data,
-        });
-        if (!res.ok) throw new Error(`Dropbox upload failed (${res.status})`);
+        await uploadDropboxSimple(tokens.accessToken!, data, dropboxDest);
         onProgress(100);
       } else {
-        // Upload session for files > 150 MB
         const firstChunk = data.slice(0, CHUNK);
-        const startRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/start', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-            'Content-Type': 'application/octet-stream',
-            'Dropbox-API-Arg': JSON.stringify({ close: false }),
-          },
-          body: firstChunk,
-        });
-        if (!startRes.ok) throw new Error(`Dropbox: session start failed (${startRes.status})`);
-        const { session_id } = await startRes.json();
-        let offset = firstChunk.byteLength;
-        onProgress(Math.round((offset / size) * 100));
+        const session = await openDropboxUploadSession(tokens.accessToken!, firstChunk);
+        onProgress(Math.round((session.offset / size) * 100));
 
-        while (offset + CHUNK < size) {
-          const chunk = data.slice(offset, offset + CHUNK);
-          const res = await fetch('https://content.dropboxapi.com/2/files/upload_session/append_v2', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-              'Content-Type': 'application/octet-stream',
-              'Dropbox-API-Arg': JSON.stringify({ cursor: { session_id, offset }, close: false }),
-            },
-            body: chunk,
-          });
-          if (!res.ok) throw new Error(`Dropbox: append failed (${res.status})`);
-          offset += chunk.byteLength;
-          onProgress(Math.round((offset / size) * 100));
+        while (session.offset + CHUNK < size) {
+          const chunk = data.slice(session.offset, session.offset + CHUNK);
+          await appendDropboxChunk(tokens.accessToken!, session, chunk);
+          onProgress(Math.round((session.offset / size) * 100));
         }
 
-        // Finish
-        const lastChunk = data.slice(offset);
-        const finishRes = await fetch('https://content.dropboxapi.com/2/files/upload_session/finish', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${tokens.accessToken}`,
-            'Content-Type': 'application/octet-stream',
-            'Dropbox-API-Arg': JSON.stringify({
-              cursor: { session_id, offset },
-              commit: { path: dropboxDest, mode: 'add', autorename: true },
-            }),
-          },
-          body: lastChunk,
-        });
-        if (!finishRes.ok) throw new Error(`Dropbox: session finish failed (${finishRes.status})`);
+        const lastChunk = data.slice(session.offset);
+        await finishDropboxUploadSession(tokens.accessToken!, session, lastChunk, dropboxDest);
         onProgress(100);
       }
       break;
@@ -311,7 +444,6 @@ async function uploadFile(
 
     case 'onedrive': {
       const parentPath = destFolderId ? `/me/drive/items/${destFolderId}` : '/me/drive/root';
-
       if (size <= 4 * 1024 * 1024) {
         const res = await fetch(
           `https://graph.microsoft.com/v1.0${parentPath}:/${encodeURIComponent(fileName)}:/content`,
@@ -327,38 +459,11 @@ async function uploadFile(
         if (!res.ok) throw new Error(`OneDrive upload failed (${res.status})`);
         onProgress(100);
       } else {
-        // Upload session (required for > 4 MB)
-        const sessionRes = await fetch(
-          `https://graph.microsoft.com/v1.0${parentPath}:/${encodeURIComponent(fileName)}:/createUploadSession`,
-          {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'rename' } }),
-          },
-        );
-        if (!sessionRes.ok) throw new Error(`OneDrive: session creation failed (${sessionRes.status})`);
-        const { uploadUrl } = await sessionRes.json();
-
-        // OneDrive requires chunks to be multiples of 320 KiB (327680 bytes)
-        const onedriveChunk = Math.floor(CHUNK / 327680) * 327680; // nearest <= CHUNK multiple of 320 KiB
+        const session = await openOneDriveUploadSession(tokens.accessToken!, fileName, destFolderId);
         let offset = 0;
         while (offset < size) {
-          const end = Math.min(offset + onedriveChunk, size);
-          const chunk = data.slice(offset, end);
-          const res = await fetch(uploadUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Length': String(chunk.byteLength),
-              'Content-Range': `bytes ${offset}-${end - 1}/${size}`,
-            },
-            body: chunk,
-          });
-          if (res.status !== 200 && res.status !== 201 && res.status !== 202) {
-            throw new Error(`OneDrive: chunk upload failed (${res.status})`);
-          }
+          const end = Math.min(offset + ONEDRIVE_CHUNK, size);
+          await uploadOneDriveChunk(session, data.slice(offset, end), offset, size);
           offset = end;
           onProgress(Math.round((offset / size) * 100));
         }
@@ -381,7 +486,6 @@ async function uploadFile(
         if (!res.ok) throw new Error(`Box upload failed (${res.status})`);
         onProgress(100);
       } else {
-        // Chunked upload session
         const sessionRes = await fetch('https://upload.box.com/api/2.0/files/upload_sessions', {
           method: 'POST',
           headers: {
@@ -401,7 +505,6 @@ async function uploadFile(
         while (offset < size) {
           const end = Math.min(offset + partSize, size);
           const chunk = data.slice(offset, end);
-          // Box requires SHA1 digest of the chunk
           const hashBuf = await crypto.subtle.digest('SHA-1', chunk);
           const sha1b64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
@@ -424,7 +527,6 @@ async function uploadFile(
           onProgress(Math.round((offset / size) * 100));
         }
 
-        // Compute SHA1 of entire file for commit
         const fullHashBuf = await crypto.subtle.digest('SHA-1', data);
         const fullSha1 = btoa(String.fromCharCode(...new Uint8Array(fullHashBuf)));
 
@@ -463,6 +565,545 @@ async function uploadFile(
   }
 }
 
+// ─── Streaming transfer pipeline ─────────────────────────────────────────────
+
+async function streamingTransfer(
+  opts: ClientTransferOptions,
+  sourceTokens: ProviderTokens,
+  destTokens: ProviderTokens,
+  onDownloadProgress: (pct: number) => void,
+  onUploadProgress: (pct: number) => void,
+): Promise<void> {
+  const { sourceProvider, destProvider, fileName, fileSize, mimeType } = opts;
+  const totalSize = fileSize ?? 0;
+  const contentType = mimeType || 'application/octet-stream';
+
+  // ── Prepare source metadata ─────────────────────────────────────────────────
+
+  let googleIsWorkspace = false;
+  let googleExportMime: string | undefined;
+  let googleExportUrl: string | undefined;
+  let onedriveCdnUrl: string | undefined;
+
+  if (sourceProvider === 'google') {
+    const metaRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${opts.sourceFileId}?fields=mimeType`,
+      { headers: { Authorization: `Bearer ${sourceTokens.accessToken}` } },
+    );
+    const meta = await metaRes.json();
+    const gMime: string = meta.mimeType ?? '';
+    if (gMime.startsWith('application/vnd.google-apps.')) {
+      googleIsWorkspace = true;
+      const exportMap: Record<string, string> = {
+        'application/vnd.google-apps.document':
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.google-apps.spreadsheet':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.google-apps.presentation':
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      };
+      googleExportMime = exportMap[gMime] ?? 'application/pdf';
+      googleExportUrl = `https://www.googleapis.com/drive/v3/files/${opts.sourceFileId}/export?mimeType=${encodeURIComponent(googleExportMime)}`;
+    }
+  }
+
+  if (sourceProvider === 'onedrive') {
+    const metaRes = await fetch(
+      `https://graph.microsoft.com/v1.0/me/drive/items/${opts.sourceFileId}?$select=@microsoft.graph.downloadUrl,file`,
+      { headers: { Authorization: `Bearer ${sourceTokens.accessToken}` } },
+    );
+    if (!metaRes.ok) throw new Error(`OneDrive metadata failed: ${metaRes.status}`);
+    const meta = await metaRes.json();
+    onedriveCdnUrl = meta['@microsoft.graph.downloadUrl'];
+    if (!onedriveCdnUrl) throw new Error('OneDrive: no download URL returned');
+  }
+
+  // ── Google Workspace docs: export cannot use Range requests ────────────────
+  if (sourceProvider === 'google' && googleIsWorkspace) {
+    const data = await fetchBlob(
+      googleExportUrl!,
+      { headers: { Authorization: `Bearer ${sourceTokens.accessToken}` } },
+      onDownloadProgress,
+      totalSize || undefined,
+    );
+    onDownloadProgress(100);
+    await uploadFile(
+      destProvider,
+      destTokens,
+      data,
+      { ...opts, mimeType: googleExportMime ?? contentType },
+      onUploadProgress,
+    );
+    return;
+  }
+
+  // ── Box destination: full download then existing Box upload ─────────────────
+  if (destProvider === 'box') {
+    const data = await downloadEntireFile(sourceProvider, sourceTokens, opts, onedriveCdnUrl, onDownloadProgress, totalSize);
+    await uploadFile(destProvider, destTokens, data, opts, onUploadProgress);
+    return;
+  }
+
+  // ── S3 destination: stream download, accumulate, single PUT ────────────────
+  if (destProvider === 's3') {
+    if (!destTokens.presignedUploadUrl) throw new Error('S3: no presigned upload URL');
+
+    if (totalSize > 0) {
+      const collectedChunks: ArrayBuffer[] = [];
+      let downloaded = 0;
+      let offset = 0;
+      while (offset < totalSize) {
+        const end = Math.min(offset + CHUNK, totalSize) - 1;
+        const chunk = await downloadChunk(sourceProvider, sourceTokens, opts, offset, end, onedriveCdnUrl);
+        collectedChunks.push(chunk);
+        downloaded += chunk.byteLength;
+        onDownloadProgress(Math.min(99, Math.round((downloaded / totalSize) * 100)));
+        offset += chunk.byteLength;
+      }
+      onDownloadProgress(100);
+
+      const totalBytes = collectedChunks.reduce((s, c) => s + c.byteLength, 0);
+      const combined = new Uint8Array(totalBytes);
+      let off = 0;
+      for (const c of collectedChunks) { combined.set(new Uint8Array(c), off); off += c.byteLength; }
+
+      const res = await fetch(destTokens.presignedUploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: combined.buffer,
+      });
+      if (!res.ok) throw new Error(`S3 upload failed (${res.status})`);
+    } else {
+      // Unknown size — download all at once
+      const data = await downloadEntireFile(sourceProvider, sourceTokens, opts, onedriveCdnUrl, onDownloadProgress, 0);
+      onDownloadProgress(100);
+      const res = await fetch(destTokens.presignedUploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: data,
+      });
+      if (!res.ok) throw new Error(`S3 upload failed (${res.status})`);
+    }
+    onUploadProgress(100);
+    return;
+  }
+
+  // ── No size info: fallback to full download ─────────────────────────────────
+  if (totalSize === 0) {
+    const data = await downloadEntireFile(sourceProvider, sourceTokens, opts, onedriveCdnUrl, onDownloadProgress, 0);
+    await uploadFile(destProvider, destTokens, data, opts, onUploadProgress);
+    return;
+  }
+
+  // ── True streaming pipeline: Google / Dropbox / OneDrive destination ────────
+
+  const dropboxDest = (() => {
+    if (destProvider !== 'dropbox') return '';
+    const base = (opts.destPath ?? '').replace(/\/$/, '');
+    return base ? `${base}/${fileName}` : `/${fileName}`;
+  })();
+
+  const dropboxUseSession = destProvider === 'dropbox' && totalSize > 150 * 1024 * 1024;
+
+  // Dropbox small files: buffer all chunks then simple upload
+  if (destProvider === 'dropbox' && !dropboxUseSession) {
+    const collectedChunks: ArrayBuffer[] = [];
+    let downloaded = 0;
+    let offset = 0;
+    while (offset < totalSize) {
+      const end = Math.min(offset + CHUNK, totalSize) - 1;
+      const chunk = await downloadChunk(sourceProvider, sourceTokens, opts, offset, end, onedriveCdnUrl);
+      collectedChunks.push(chunk);
+      downloaded += chunk.byteLength;
+      onDownloadProgress(Math.min(99, Math.round((downloaded / totalSize) * 100)));
+      offset += chunk.byteLength;
+    }
+    onDownloadProgress(100);
+    const totalBytes = collectedChunks.reduce((s, c) => s + c.byteLength, 0);
+    const combined = new Uint8Array(totalBytes);
+    let off = 0;
+    for (const c of collectedChunks) { combined.set(new Uint8Array(c), off); off += c.byteLength; }
+    await uploadDropboxSimple(destTokens.accessToken!, combined.buffer, dropboxDest);
+    onUploadProgress(100);
+    return;
+  }
+
+  // Open upload session for Google or OneDrive
+  let googleSession: GoogleSession | undefined;
+  let oneDriveSession: OneDriveSession | undefined;
+  let dropboxSession: DropboxSession | undefined;
+
+  if (destProvider === 'google') {
+    googleSession = await openGoogleUploadSession(
+      destTokens.accessToken!,
+      fileName,
+      totalSize,
+      contentType,
+      opts.destFolderId,
+    );
+  } else if (destProvider === 'onedrive') {
+    oneDriveSession = await openOneDriveUploadSession(
+      destTokens.accessToken!,
+      fileName,
+      opts.destFolderId,
+    );
+  }
+
+  let offset = 0;
+  let isFirstDropboxChunk = true;
+
+  while (offset < totalSize) {
+    // Download one source chunk (always CHUNK = 10 MB, except last)
+    const srcEnd = Math.min(offset + CHUNK, totalSize) - 1;
+    const chunk = await downloadChunk(sourceProvider, sourceTokens, opts, offset, srcEnd, onedriveCdnUrl);
+    onDownloadProgress(Math.min(99, Math.round(((offset + chunk.byteLength) / totalSize) * 100)));
+
+    const isLastChunk = offset + chunk.byteLength >= totalSize;
+
+    if (destProvider === 'google') {
+      await uploadGoogleChunk(googleSession!, chunk, offset, totalSize, contentType);
+      onUploadProgress(Math.min(99, Math.round(((offset + chunk.byteLength) / totalSize) * 100)));
+
+    } else if (destProvider === 'dropbox') {
+      // Large file session path
+      if (isFirstDropboxChunk) {
+        dropboxSession = await openDropboxUploadSession(destTokens.accessToken!, chunk);
+        onUploadProgress(Math.min(99, Math.round((dropboxSession.offset / totalSize) * 100)));
+        isFirstDropboxChunk = false;
+      } else if (isLastChunk) {
+        await finishDropboxUploadSession(destTokens.accessToken!, dropboxSession!, chunk, dropboxDest);
+        onUploadProgress(100);
+      } else {
+        await appendDropboxChunk(destTokens.accessToken!, dropboxSession!, chunk);
+        onUploadProgress(Math.min(99, Math.round((dropboxSession!.offset / totalSize) * 100)));
+      }
+
+    } else if (destProvider === 'onedrive') {
+      // Slice each downloaded chunk into OneDrive-aligned sub-chunks
+      let chunkOffset = 0;
+      while (chunkOffset < chunk.byteLength) {
+        const sliceEnd = Math.min(chunkOffset + ONEDRIVE_CHUNK, chunk.byteLength);
+        const slice = chunk.slice(chunkOffset, sliceEnd);
+        await uploadOneDriveChunk(oneDriveSession!, slice, offset + chunkOffset, totalSize);
+        chunkOffset = sliceEnd;
+      }
+      onUploadProgress(Math.min(99, Math.round(((offset + chunk.byteLength) / totalSize) * 100)));
+    }
+
+    offset += chunk.byteLength;
+  }
+
+  // For Dropbox large files, if the file had exactly one chunk it went through
+  // the "isFirstDropboxChunk" branch only; we need to finalize it.
+  if (destProvider === 'dropbox' && dropboxUseSession && dropboxSession && isFirstDropboxChunk === false) {
+    // Already finalized in last-chunk branch above. Nothing to do.
+  }
+
+  onDownloadProgress(100);
+  onUploadProgress(100);
+}
+
+// ─── Folder transfer support ─────────────────────────────────────────────────
+
+export interface FolderItem {
+  id: string;
+  name: string;
+  isFolder: boolean;
+  size?: number;
+  mimeType?: string;
+}
+
+/**
+ * List contents of a remote folder using server-side listing endpoints (metadata only).
+ * Uses plain fetch with credentials so the session cookie is sent.
+ */
+export async function listFolderContents(
+  provider: Provider,
+  folderId?: string,
+  folderPath?: string,
+  bucket?: string,
+  prefix?: string,
+): Promise<FolderItem[]> {
+  let url: string;
+  switch (provider) {
+    case 'google':
+      url = `/api/google/files?folderId=${encodeURIComponent(folderId || 'root')}`;
+      break;
+    case 'dropbox':
+      url = `/api/dropbox/files?path=${encodeURIComponent(folderPath || '')}`;
+      break;
+    case 'onedrive':
+      url = `/api/onedrive/files?folderId=${encodeURIComponent(folderId || 'root')}`;
+      break;
+    case 'box':
+      url = `/api/box/files?folderId=${encodeURIComponent(folderId || '0')}`;
+      break;
+    case 's3':
+      url = `/api/s3/files?bucket=${encodeURIComponent(bucket || '')}&prefix=${encodeURIComponent(prefix || '')}`;
+      break;
+    default:
+      throw new Error(`Unsupported provider for listing: ${provider}`);
+  }
+
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Folder listing failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+/**
+ * Create a remote folder at the destination via direct provider API calls.
+ * Returns the new folder's ID (or path string for Dropbox/S3).
+ */
+export async function createRemoteFolder(
+  provider: Provider,
+  tokens: ProviderTokens,
+  name: string,
+  parentId?: string,
+  parentPath?: string,
+  bucket?: string,
+  prefix?: string,
+): Promise<string> {
+  switch (provider) {
+    case 'google': {
+      const body: Record<string, any> = {
+        name,
+        mimeType: 'application/vnd.google-apps.folder',
+      };
+      if (parentId && parentId !== 'root') body.parents = [parentId];
+      const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error(`Google: folder creation failed (${res.status})`);
+      const data = await res.json();
+      return data.id;
+    }
+
+    case 'dropbox': {
+      const folderPath = (() => {
+        const base = (parentPath ?? '').replace(/\/$/, '');
+        return base ? `${base}/${name}` : `/${name}`;
+      })();
+      const res = await fetch('https://api.dropboxapi.com/2/files/create_folder_v2', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ path: folderPath, autorename: true }),
+      });
+      if (!res.ok) throw new Error(`Dropbox: folder creation failed (${res.status})`);
+      const data = await res.json();
+      return data.metadata?.path_lower ?? folderPath;
+    }
+
+    case 'onedrive': {
+      const parentRef = parentId ? `/me/drive/items/${parentId}` : '/me/drive/root';
+      const res = await fetch(`https://graph.microsoft.com/v1.0${parentRef}/children`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          folder: {},
+          '@microsoft.graph.conflictBehavior': 'rename',
+        }),
+      });
+      if (!res.ok) throw new Error(`OneDrive: folder creation failed (${res.status})`);
+      const data = await res.json();
+      return data.id;
+    }
+
+    case 'box': {
+      const res = await fetch('https://api.box.com/2.0/folders', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, parent: { id: parentId || '0' } }),
+      });
+      if (res.status === 409) {
+        // Folder already exists — extract existing folder ID from conflict info
+        const data = await res.json();
+        const existingId = data?.context_info?.conflicts?.[0]?.id;
+        if (existingId) return existingId;
+        throw new Error('Box: folder already exists but could not get existing ID');
+      }
+      if (!res.ok) throw new Error(`Box: folder creation failed (${res.status})`);
+      const data = await res.json();
+      return data.id;
+    }
+
+    case 's3': {
+      // S3 has no real folders — return the new prefix string
+      const base = (prefix ?? '').replace(/\/$/, '');
+      return base ? `${base}/${name}/` : `${name}/`;
+    }
+
+    default:
+      throw new Error(`Unsupported provider for folder creation: ${provider}`);
+  }
+}
+
+/** Count total leaf files in a folder tree recursively (for progress tracking). */
+async function countFilesRecursive(
+  provider: Provider,
+  folderId?: string,
+  folderPath?: string,
+  bucket?: string,
+  prefix?: string,
+): Promise<number> {
+  const items = await listFolderContents(provider, folderId, folderPath, bucket, prefix);
+  let count = 0;
+  for (const item of items) {
+    if (item.isFolder) {
+      const childId = (provider === 'dropbox' || provider === 's3') ? undefined : item.id;
+      const childPath = provider === 'dropbox' ? item.id : undefined;
+      const childPrefix = provider === 's3' ? item.id : undefined;
+      count += await countFilesRecursive(provider, childId, childPath ?? childPrefix, bucket, childPrefix);
+    } else {
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * Transfer an entire folder client-side (browser ↔ cloud, no server for file data).
+ * Lists source via server metadata endpoints; creates folders and transfers files directly.
+ */
+export async function transferFolderClientSide(
+  sourceProvider: Provider,
+  destProvider: Provider,
+  sourceTokens: ProviderTokens,
+  destTokens: ProviderTokens,
+  /** Google/OneDrive/Box/S3: folder item ID; S3: use sourceFolderPath instead */
+  sourceFolderId: string | undefined,
+  /** Dropbox: full path string; S3: key prefix string */
+  sourceFolderPath: string | undefined,
+  /** Google/OneDrive/Box: parent folder ID at destination */
+  destParentId: string | undefined,
+  /** Dropbox: parent path at destination; S3: parent prefix at destination */
+  destParentPath: string | undefined,
+  folderName: string,
+  sourceBucket: string | undefined,
+  destBucket: string | undefined,
+  onProgress: (completed: number, total: number) => void,
+  /** Internal: shared mutable counter across recursive calls */
+  _counter?: { completed: number; total: number },
+): Promise<void> {
+  const isRoot = !_counter;
+
+  if (isRoot) {
+    // Count all leaf files first so we can report accurate progress
+    const sourcePrefix = sourceProvider === 's3' ? (sourceFolderPath || sourceFolderId) : undefined;
+    const total = await countFilesRecursive(
+      sourceProvider,
+      sourceFolderId,
+      sourceFolderPath,
+      sourceBucket,
+      sourcePrefix,
+    );
+    _counter = { completed: 0, total };
+    onProgress(0, total);
+  }
+
+  // List source folder contents
+  const sourcePrefix = sourceProvider === 's3' ? (sourceFolderPath || sourceFolderId) : undefined;
+  const items = await listFolderContents(
+    sourceProvider,
+    sourceFolderId,
+    sourceFolderPath,
+    sourceBucket,
+    sourcePrefix,
+  );
+
+  // Create the destination folder
+  const newDestId = await createRemoteFolder(
+    destProvider,
+    destTokens,
+    folderName,
+    destParentId,
+    destParentPath,
+    destBucket,
+    destParentPath,
+  );
+
+  // Determine new dest path/prefix for recursive calls
+  const newDestPath: string | undefined = (() => {
+    if (destProvider === 'dropbox') return typeof newDestId === 'string' ? newDestId : destParentPath;
+    if (destProvider === 's3') return newDestId; // already a prefix string
+    return undefined;
+  })();
+
+  // Transfer each item in the folder
+  for (const item of items) {
+    if (item.isFolder) {
+      const childId = (sourceProvider === 'dropbox' || sourceProvider === 's3') ? undefined : item.id;
+      const childPath = sourceProvider === 'dropbox' ? item.id : undefined;
+      const childPrefix = sourceProvider === 's3' ? item.id : undefined;
+
+      await transferFolderClientSide(
+        sourceProvider,
+        destProvider,
+        sourceTokens,
+        destTokens,
+        childId,
+        childPath ?? childPrefix,
+        destProvider === 's3' || destProvider === 'dropbox' ? undefined : newDestId,
+        newDestPath,
+        item.name,
+        sourceBucket,
+        destBucket,
+        onProgress,
+        _counter,
+      );
+    } else {
+      // Build per-file transfer options
+      const sourceFilePath = (() => {
+        if (sourceProvider === 'dropbox') return item.id; // Dropbox item.id is the full path
+        return undefined;
+      })();
+
+      const fileOpts: ClientTransferOptions = {
+        sourceProvider,
+        destProvider,
+        fileName: item.name,
+        fileSize: item.size,
+        mimeType: item.mimeType,
+        sourceFileId: ['google', 'onedrive', 'box', 's3'].includes(sourceProvider) ? item.id : undefined,
+        sourceFilePath,
+        sourceBucket,
+        destFolderId: ['google', 'onedrive', 'box'].includes(destProvider) ? newDestId : undefined,
+        destPath: destProvider === 'dropbox' ? (newDestPath || '') : undefined,
+        destBucket,
+        destPrefix: destProvider === 's3' ? newDestPath : undefined,
+      };
+
+      await streamingTransfer(
+        fileOpts,
+        sourceTokens,
+        destTokens,
+        () => {},  // per-file progress not surfaced; folder-level progress is what matters
+        () => {},
+      );
+
+      _counter!.completed++;
+      onProgress(_counter!.completed, _counter!.total);
+    }
+  }
+}
+
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 export async function performClientTransfer(
@@ -471,17 +1112,11 @@ export async function performClientTransfer(
   opts: ClientTransferOptions,
   callbacks: ClientTransferCallbacks,
 ): Promise<void> {
-  const { data, mimeType } = await downloadFile(
-    opts.sourceProvider,
-    sourceTokens,
+  await streamingTransfer(
     opts,
-    callbacks.onDownloadProgress,
-  );
-  await uploadFile(
-    opts.destProvider,
+    sourceTokens,
     destTokens,
-    data,
-    { ...opts, mimeType: mimeType ?? opts.mimeType },
+    callbacks.onDownloadProgress,
     callbacks.onUploadProgress,
   );
 }

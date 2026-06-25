@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTransfer } from "@/contexts/TransferContext";
 import { Link } from "wouter";
-import { performClientTransfer, CLIENT_TRANSFER_MAX_BYTES } from "@/lib/clientTransfer";
+import { performClientTransfer, CLIENT_TRANSFER_MAX_BYTES, transferFolderClientSide } from "@/lib/clientTransfer";
 import type { ProviderTokens, ClientTransferOptions } from "@/lib/clientTransfer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -749,6 +749,7 @@ export default function CloudExplorer() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [folderProgress, setFolderProgress] = useState<{ completed: number; total: number } | null>(null);
   const [pendingTransfer, setPendingTransfer] = useState<{
     items: CloudItem[];
     from: Provider;
@@ -815,6 +816,7 @@ export default function CloudExplorer() {
     setIsTransferring(true);
     setDownloadProgress(0);
     setUploadProgress(0);
+    setFolderProgress(null);
 
     try {
       const targetPath = (() => {
@@ -829,7 +831,12 @@ export default function CloudExplorer() {
 
       for (const item of pendingTransfer.items) {
         const itemSize = item.size !== undefined && item.size !== null ? Number(item.size) : null;
-        const useClientSide = !item.isFolder && itemSize !== null && itemSize <= CLIENT_TRANSFER_MAX_BYTES;
+
+        // Determine whether to use client-side path:
+        // - Folders: always client-side (new)
+        // - Files: client-side unless Box destination > 500 MB
+        const isBoxLargeFile = !item.isFolder && pendingTransfer.to === 'box' && itemSize !== null && itemSize > CLIENT_TRANSFER_MAX_BYTES;
+        const useClientSide = !isBoxLargeFile;
 
         if (useClientSide) {
           // ── Client-side transfer (browser downloads + uploads directly) ──
@@ -844,91 +851,142 @@ export default function CloudExplorer() {
 
           // Build source tokens
           if (pendingTransfer.from === 's3') {
-            const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
-              operation: 'download',
-              bucket: sourcePanel.s3Bucket,
-              key: item.id,
-            });
-            const { url } = await presignRes.json();
-            sourceTokens.presignedDownloadUrl = url;
+            if (!item.isFolder) {
+              const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
+                operation: 'download',
+                bucket: sourcePanel.s3Bucket,
+                key: item.id,
+              });
+              const { url } = await presignRes.json();
+              sourceTokens.presignedDownloadUrl = url;
+            }
+            // For folders, S3 tokens are not presigned per-item; the folder transfer function handles listing
           } else {
             sourceTokens.accessToken = tokensData[pendingTransfer.from]?.accessToken;
           }
 
           // Build dest tokens
           if (pendingTransfer.to === 's3') {
-            const destKey = destPanel.s3Prefix
-              ? `${destPanel.s3Prefix.replace(/\/$/, '')}/${item.name}`
-              : item.name;
-            const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
-              operation: 'upload',
-              bucket: destPanel.s3Bucket,
-              key: destKey,
-              contentType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
-            });
-            const { url } = await presignRes.json();
-            destTokens.presignedUploadUrl = url;
+            if (!item.isFolder) {
+              const destKey = destPanel.s3Prefix
+                ? `${destPanel.s3Prefix.replace(/\/$/, '')}/${item.name}`
+                : item.name;
+              const presignRes = await apiRequest('POST', '/api/client-transfer/s3-presign', {
+                operation: 'upload',
+                bucket: destPanel.s3Bucket,
+                key: destKey,
+                contentType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
+              });
+              const { url } = await presignRes.json();
+              destTokens.presignedUploadUrl = url;
+            }
+            // For folders, dest tokens not presigned per-item
           } else {
             destTokens.accessToken = tokensData[pendingTransfer.to]?.accessToken;
           }
 
-          // Build transfer options
-          const sourceFilePath = (() => {
-            if (pendingTransfer.from === 'dropbox') {
-              const folder = pendingTransfer.sourcePath;
-              return folder === '' || folder === '/'
-                ? `/${item.name}`
-                : `${folder}/${item.name}`;
-            }
-            return undefined;
-          })();
+          if (item.isFolder) {
+            // ── Client-side folder transfer ──
+            const sourceFolderId = ['google', 'onedrive', 'box'].includes(pendingTransfer.from) ? item.id : undefined;
+            const sourceFolderPath = (() => {
+              if (pendingTransfer.from === 'dropbox') return item.id; // Dropbox item.id is the full path
+              if (pendingTransfer.from === 's3') return item.id;       // S3 item.id is the prefix
+              return undefined;
+            })();
 
-          const opts: ClientTransferOptions = {
-            sourceProvider: pendingTransfer.from,
-            destProvider: pendingTransfer.to,
-            fileName: item.name,
-            fileSize: itemSize ?? undefined,
-            mimeType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
-            sourceFileId: ['google', 'onedrive', 'box', 's3'].includes(pendingTransfer.from) ? item.id : undefined,
-            sourceFilePath,
-            sourceBucket: pendingTransfer.from === 's3' ? sourcePanel.s3Bucket : undefined,
-            destFolderId: ['google', 'onedrive', 'box'].includes(pendingTransfer.to) ? targetPath : undefined,
-            destPath: pendingTransfer.to === 'dropbox' ? (destPanel.dropboxPath || '') : undefined,
-            destBucket: pendingTransfer.to === 's3' ? destPanel.s3Bucket : undefined,
-            destPrefix: pendingTransfer.to === 's3' ? destPanel.s3Prefix : undefined,
-          };
+            const destParentId = ['google', 'onedrive', 'box'].includes(pendingTransfer.to)
+              ? (targetPath || undefined)
+              : undefined;
+            const destParentPath = (() => {
+              if (pendingTransfer.to === 'dropbox') return destPanel.dropboxPath || '';
+              if (pendingTransfer.to === 's3') return destPanel.s3Prefix || '';
+              return undefined;
+            })();
 
-          await performClientTransfer(sourceTokens, destTokens, opts, {
-            onDownloadProgress: setDownloadProgress,
-            onUploadProgress: setUploadProgress,
-          });
+            setFolderProgress({ completed: 0, total: 0 });
 
-          // Record in history (non-critical)
-          apiRequest('POST', '/api/client-transfer/record', {
-            fileName: item.name,
-            fileSize: itemSize,
-            sourceProvider: pendingTransfer.from,
-            destProvider: pendingTransfer.to,
-          }).catch(() => {});
+            await transferFolderClientSide(
+              pendingTransfer.from,
+              pendingTransfer.to,
+              sourceTokens,
+              destTokens,
+              sourceFolderId,
+              sourceFolderPath,
+              destParentId,
+              destParentPath,
+              item.name,
+              sourcePanel.s3Bucket || undefined,
+              destPanel.s3Bucket || undefined,
+              (completed, total) => {
+                setFolderProgress({ completed, total });
+              },
+            );
 
-          // Add a synthetic completed job entry
-          addJob({
-            id: `client-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            fileName: item.name,
-            status: 'completed',
-            progress: 100,
-            sourceProvider: pendingTransfer.from,
-            targetProvider: pendingTransfer.to,
-            createdAt: new Date().toISOString(),
-          });
-        } else {
-          // ── Server-side transfer (existing flow) ──
-          if (!item.isFolder && itemSize !== null && itemSize > CLIENT_TRANSFER_MAX_BYTES) {
-            toast({
-              title: t('pages.cloudExplorer.largeFile', 'Archivo grande'),
-              description: t('pages.cloudExplorer.largeFileDesc', 'Archivo grande, usando servidor...'),
+            addJob({
+              id: `client-folder-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              fileName: item.name,
+              status: 'completed',
+              progress: 100,
+              sourceProvider: pendingTransfer.from,
+              targetProvider: pendingTransfer.to,
+              createdAt: new Date().toISOString(),
+            });
+          } else {
+            // ── Client-side file transfer (streaming) ──
+            const sourceFilePath = (() => {
+              if (pendingTransfer.from === 'dropbox') {
+                const folder = pendingTransfer.sourcePath;
+                return folder === '' || folder === '/'
+                  ? `/${item.name}`
+                  : `${folder}/${item.name}`;
+              }
+              return undefined;
+            })();
+
+            const opts: ClientTransferOptions = {
+              sourceProvider: pendingTransfer.from,
+              destProvider: pendingTransfer.to,
+              fileName: item.name,
+              fileSize: itemSize ?? undefined,
+              mimeType: typeof item.mimeType === 'string' ? item.mimeType : undefined,
+              sourceFileId: ['google', 'onedrive', 'box', 's3'].includes(pendingTransfer.from) ? item.id : undefined,
+              sourceFilePath,
+              sourceBucket: pendingTransfer.from === 's3' ? sourcePanel.s3Bucket : undefined,
+              destFolderId: ['google', 'onedrive', 'box'].includes(pendingTransfer.to) ? targetPath : undefined,
+              destPath: pendingTransfer.to === 'dropbox' ? (destPanel.dropboxPath || '') : undefined,
+              destBucket: pendingTransfer.to === 's3' ? destPanel.s3Bucket : undefined,
+              destPrefix: pendingTransfer.to === 's3' ? destPanel.s3Prefix : undefined,
+            };
+
+            await performClientTransfer(sourceTokens, destTokens, opts, {
+              onDownloadProgress: setDownloadProgress,
+              onUploadProgress: setUploadProgress,
+            });
+
+            // Record in history (non-critical)
+            apiRequest('POST', '/api/client-transfer/record', {
+              fileName: item.name,
+              fileSize: itemSize,
+              sourceProvider: pendingTransfer.from,
+              destProvider: pendingTransfer.to,
+            }).catch(() => {});
+
+            addJob({
+              id: `client-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+              fileName: item.name,
+              status: 'completed',
+              progress: 100,
+              sourceProvider: pendingTransfer.from,
+              targetProvider: pendingTransfer.to,
+              createdAt: new Date().toISOString(),
             });
           }
+        } else {
+          // ── Server-side transfer (Box large files only) ──
+          toast({
+            title: t('pages.cloudExplorer.largeFile', 'Archivo grande'),
+            description: t('pages.cloudExplorer.largeFileDesc', 'Archivo grande, usando servidor...'),
+          });
 
           const payload: Record<string, any> = {
             sourceProvider: pendingTransfer.from,
@@ -990,6 +1048,7 @@ export default function CloudExplorer() {
       setIsTransferring(false);
       setShowSyncModal(false);
       setPendingTransfer(null);
+      setFolderProgress(null);
     }
   }
 
@@ -1098,7 +1157,20 @@ export default function CloudExplorer() {
                       <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                       <span>{t('pages.cloudExplorer.transferring', 'Transfiriendo...')}</span>
                     </div>
-                    {(downloadProgress > 0 || uploadProgress > 0) && (
+                    {folderProgress ? (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{folderProgress.completed} {t('pages.cloudExplorer.of', 'de')} {folderProgress.total} {t('pages.cloudExplorer.filesTransferred', 'archivos transferidos')}</span>
+                          <span>{folderProgress.total > 0 ? Math.round((folderProgress.completed / folderProgress.total) * 100) : 0}%</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all"
+                            style={{ width: `${folderProgress.total > 0 ? Math.round((folderProgress.completed / folderProgress.total) * 100) : 0}%` }}
+                          />
+                        </div>
+                      </div>
+                    ) : (downloadProgress > 0 || uploadProgress > 0) && (
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs text-gray-500">
                           <span>{t('pages.cloudExplorer.downloading', 'Descargando')}</span><span>{downloadProgress}%</span>
