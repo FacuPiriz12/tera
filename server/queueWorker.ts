@@ -296,11 +296,6 @@ export class QueueWorker extends EventEmitter {
     if (!isFolder && sourceUrl) {
       isFolder = sourceUrl.includes('/drive/folders/') || sourceUrl.includes('dropbox://folder:');
     }
-    // S3 and OneDrive/Box don't support folder transfers via queueWorker yet; treat as file-only
-    if ((sourceProvider === 's3' || sourceProvider === 'onedrive' || sourceProvider === 'box') && isFolder) {
-      throw new Error(`Folder transfers are not yet supported for ${sourceProvider}. Please transfer individual files.`);
-    }
-
     // Handle folder operations with progress callback
     if (isFolder) {
       return await this.executefolderTransfer(job);
@@ -455,132 +450,134 @@ export class QueueWorker extends EventEmitter {
   private async executefolderTransfer(job: CopyOperation): Promise<{ copiedFileId?: string; copiedFileName?: string; copiedFileUrl?: string }> {
     const { sourceProvider, destProvider, sourceFileId, sourceFilePath, fileName, destinationFolderId, sourceUrl } = job;
 
-    // Create progress callback that emits real-time updates
     const progressCallback = async (completedFiles: number, totalFiles: number, progressPct: number) => {
       this.emit('jobProgress', job.id, job.userId, { completedFiles, totalFiles, progressPct });
     };
 
-    let result: { copiedFileId?: string; copiedFileName?: string; copiedFileUrl?: string } = {};
-
-    // Cross-cloud folder transfer (Drive→Dropbox or Dropbox→Drive)
-    if (sourceProvider !== destProvider) {
-      let actualSourceId = sourceFileId || sourceFilePath || '';
-      if (!actualSourceId && sourceUrl) {
-        if (sourceProvider === 'google') {
-          const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-          const parsed = driveService.parseGoogleDriveUrl(sourceUrl);
-          actualSourceId = parsed.fileId;
-        } else {
-          // Dropbox: extract path from dropbox:// URL or use as-is
-          actualSourceId = sourceUrl.replace('dropbox://folder:', '');
-        }
-      }
-
-      const totalFiles = await this.countFilesInSourceFolder(
-        sourceProvider as 'google' | 'dropbox', actualSourceId, job.userId
-      );
-      const progressCtx = { completed: 0, total: Math.max(totalFiles, 1) };
-      await storage.setJobProgress(job.id, 0, progressCtx.total, 0);
-      this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: progressCtx.total, progressPct: 0 });
-
-      const destParent = destProvider === 'dropbox' ? (destinationFolderId || '') : destinationFolderId;
-      await this.crossCloudFolderTransfer(
-        job, actualSourceId, destParent, fileName || 'Untitled', progressCtx, progressCallback
-      );
-
-      return {
-        copiedFileName: fileName,
-        copiedFileUrl: undefined
-      };
-    }
-
-    if (sourceProvider === 'google') {
-      if (!sourceUrl) {
-        throw new Error('Source URL is required for Google Drive folders');
-      }
+    // Native same-provider copies (use provider's own recursive copy API)
+    if (sourceProvider === 'google' && destProvider === 'google') {
       const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-      
-      // Parse sourceFileId from URL if not provided
       let actualSourceFileId = sourceFileId;
       if (!actualSourceFileId && sourceUrl) {
         const { fileId } = driveService.parseGoogleDriveUrl(sourceUrl);
         actualSourceFileId = fileId;
       }
-      
-      // Initial progress setup - let service handle counting for accuracy
       await storage.setJobProgress(job.id, 0, 1, 0);
       this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: 1, progressPct: 0 });
-
-      // Start folder copy with progress callback
-      const copiedFolder = await driveService.copyFolderRecursive(
-        actualSourceFileId, 
-        destinationFolderId, 
-        fileName, 
-        job.id,
-        progressCallback
-      );
-
-      result = {
-        copiedFileId: copiedFolder.id,
-        copiedFileName: copiedFolder.name,
-        copiedFileUrl: copiedFolder.webViewLink
-      };
-    } else if (sourceProvider === 'dropbox') {
-      if (!sourceUrl) {
-        throw new Error('Source URL is required for Dropbox folders');
-      }
-      const dropboxService = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
-      
-      // Initial progress setup - let service handle counting for accuracy
-      await storage.setJobProgress(job.id, 0, 1, 0);
-      this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: 1, progressPct: 0 });
-
-      // Start folder copy with progress callback
-      const copiedFolder = await dropboxService.copyFolderRecursive(
-        sourceUrl, 
-        destinationFolderId, 
-        fileName, 
-        job.id,
-        '', // relativePath - empty for root level call
-        progressCallback
-      );
-
-      result = {
-        copiedFileId: copiedFolder.id,
-        copiedFileName: copiedFolder.name,
-        copiedFileUrl: copiedFolder.url
-      };
-    } else {
-      throw new Error(`Unsupported source provider for folders: ${sourceProvider}`);
+      const copiedFolder = await driveService.copyFolderRecursive(actualSourceFileId, destinationFolderId, fileName, job.id, progressCallback);
+      return { copiedFileId: copiedFolder.id, copiedFileName: copiedFolder.name, copiedFileUrl: copiedFolder.webViewLink };
     }
 
-    return result;
+    if (sourceProvider === 'dropbox' && destProvider === 'dropbox') {
+      const dropboxService = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
+      await storage.setJobProgress(job.id, 0, 1, 0);
+      this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: 1, progressPct: 0 });
+      const copiedFolder = await dropboxService.copyFolderRecursive(sourceUrl!, destinationFolderId, fileName, job.id, '', progressCallback);
+      return { copiedFileId: copiedFolder.id, copiedFileName: copiedFolder.name, copiedFileUrl: copiedFolder.url };
+    }
+
+    // Generic path: all cross-cloud combinations + same-provider OneDrive/Box/S3
+    let actualSourceId: string;
+    let sourceBucket: string | undefined;
+
+    if (sourceProvider === 'google') {
+      actualSourceId = sourceFileId || '';
+      if (!actualSourceId && sourceUrl) {
+        const driveService = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
+        actualSourceId = driveService.parseGoogleDriveUrl(sourceUrl).fileId;
+      }
+    } else if (sourceProvider === 'dropbox') {
+      actualSourceId = sourceFilePath || (sourceUrl ? sourceUrl.replace('dropbox://folder:', '') : '');
+    } else if (sourceProvider === 's3') {
+      const m = (sourceUrl || '').match(/^s3:\/\/([^/]+)\/(.*)$/);
+      sourceBucket = m?.[1];
+      actualSourceId = m?.[2] || sourceFileId || '';
+    } else {
+      // onedrive / box
+      actualSourceId = sourceFileId || '';
+    }
+
+    let destParent: string;
+    let destBucket: string | undefined;
+
+    if (destProvider === 's3') {
+      const slashIdx = (destinationFolderId || '').indexOf('/');
+      destBucket = slashIdx >= 0 ? destinationFolderId!.slice(0, slashIdx) : (destinationFolderId || '');
+      destParent = slashIdx >= 0 ? destinationFolderId!.slice(slashIdx + 1) : '';
+    } else {
+      destParent = destinationFolderId || '';
+    }
+
+    const totalFiles = await this.countFilesInSourceFolder(sourceProvider, actualSourceId, job.userId, sourceBucket);
+    const progressCtx = { completed: 0, total: Math.max(totalFiles, 1) };
+    await storage.setJobProgress(job.id, 0, progressCtx.total, 0);
+    this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: progressCtx.total, progressPct: 0 });
+
+    await this.crossCloudFolderTransfer(
+      job, actualSourceId, destParent, fileName || 'Untitled',
+      progressCtx, progressCallback, sourceBucket, destBucket
+    );
+
+    return { copiedFileName: fileName, copiedFileUrl: undefined };
   }
 
   private async countFilesInSourceFolder(
-    provider: 'google' | 'dropbox',
+    provider: string,
     folderId: string,
-    userId: string
+    userId: string,
+    bucket?: string
   ): Promise<number> {
     try {
-      if (provider === 'google') {
-        const svc = this.getServiceFromPool('google', userId) as GoogleDriveService;
-        const files = await svc.listFiles(folderId);
-        let count = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder').length;
-        for (const sub of files.filter(f => f.mimeType === 'application/vnd.google-apps.folder')) {
-          count += await this.countFilesInSourceFolder('google', sub.id, userId);
+      switch (provider) {
+        case 'google': {
+          const svc = this.getServiceFromPool('google', userId) as GoogleDriveService;
+          const files = await svc.listFiles(folderId);
+          let count = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder').length;
+          for (const sub of files.filter(f => f.mimeType === 'application/vnd.google-apps.folder')) {
+            count += await this.countFilesInSourceFolder('google', sub.id, userId);
+          }
+          return count;
         }
-        return count;
-      } else {
-        const svc = this.getServiceFromPool('dropbox', userId) as DropboxService;
-        const path = folderId === '/' ? '' : folderId;
-        const items = await svc.listFiles(path);
-        let count = items.filter(f => f.mimeType !== 'application/vnd.dropbox.folder').length;
-        for (const sub of items.filter(f => f.mimeType === 'application/vnd.dropbox.folder')) {
-          const subPath = path ? `${path}/${sub.name}` : `/${sub.name}`;
-          count += await this.countFilesInSourceFolder('dropbox', subPath, userId);
+        case 'dropbox': {
+          const svc = this.getServiceFromPool('dropbox', userId) as DropboxService;
+          const path = folderId === '/' ? '' : folderId;
+          const items = await svc.listFiles(path);
+          let count = items.filter(f => f.mimeType !== 'application/vnd.dropbox.folder').length;
+          for (const sub of items.filter(f => f.mimeType === 'application/vnd.dropbox.folder')) {
+            const subPath = path ? `${path}/${sub.name}` : `/${sub.name}`;
+            count += await this.countFilesInSourceFolder('dropbox', subPath, userId);
+          }
+          return count;
         }
-        return count;
+        case 'onedrive': {
+          const svc = this.getServiceFromPool('onedrive', userId) as OneDriveService;
+          const items = await svc.listFolder(folderId || undefined);
+          let count = items.filter(f => !f.isFolder).length;
+          for (const sub of items.filter(f => f.isFolder)) {
+            count += await this.countFilesInSourceFolder('onedrive', sub.id, userId);
+          }
+          return count;
+        }
+        case 'box': {
+          const svc = this.getServiceFromPool('box', userId) as BoxService;
+          const items = await svc.listFolder(folderId || undefined);
+          let count = items.filter(f => !f.isFolder).length;
+          for (const sub of items.filter(f => f.isFolder)) {
+            count += await this.countFilesInSourceFolder('box', sub.id, userId);
+          }
+          return count;
+        }
+        case 's3': {
+          const svc = this.getServiceFromPool('s3', userId) as S3Service;
+          const items = await svc.listFolder(bucket!, folderId || undefined);
+          let count = items.filter(f => !f.isFolder).length;
+          for (const sub of items.filter(f => f.isFolder)) {
+            count += await this.countFilesInSourceFolder('s3', sub.id, userId, bucket);
+          }
+          return count;
+        }
+        default:
+          return 0;
       }
     } catch {
       return 0;
@@ -590,128 +587,181 @@ export class QueueWorker extends EventEmitter {
   private async crossCloudFolderTransfer(
     job: CopyOperation,
     sourceFolderId: string,
-    destParentPath: string,
+    destParent: string,
     folderName: string,
     progressCtx: { completed: number; total: number },
-    progressCallback: (c: number, t: number, pct: number) => Promise<void>
+    progressCallback: (c: number, t: number, pct: number) => Promise<void>,
+    sourceBucket?: string,
+    destBucket?: string,
   ): Promise<void> {
     const { sourceProvider, destProvider } = job;
     const CONCURRENCY = 5;
 
-    const skipIfExists = job.duplicateAction === 'skip';
+    // ── Services ────────────────────────────────────────────────────────────────
+    const drive    = (sourceProvider === 'google'   || destProvider === 'google')   ? this.getServiceFromPool('google',   job.userId) as GoogleDriveService : null;
+    const dbx      = (sourceProvider === 'dropbox'  || destProvider === 'dropbox')  ? this.getServiceFromPool('dropbox',  job.userId) as DropboxService      : null;
+    const onedrive = (sourceProvider === 'onedrive' || destProvider === 'onedrive') ? this.getServiceFromPool('onedrive', job.userId) as OneDriveService     : null;
+    const box      = (sourceProvider === 'box'      || destProvider === 'box')      ? this.getServiceFromPool('box',      job.userId) as BoxService           : null;
+    const s3       = (sourceProvider === 's3'       || destProvider === 's3')       ? this.getServiceFromPool('s3',       job.userId) as S3Service            : null;
 
-    if (sourceProvider === 'google' && destProvider === 'dropbox') {
-      const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-      const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
+    // ── List source items ────────────────────────────────────────────────────────
+    type FolderItem = { id: string; name: string; isFolder: boolean; mimeType?: string };
+    let sourceItems: FolderItem[];
 
-      const newPath = destParentPath ? `${destParentPath}/${folderName}` : `/${folderName}`;
-      try { await dbx.createFolder(newPath); } catch { /* folder may already exist */ }
-
-      const files = await drive.listFiles(sourceFolderId);
-      const subs = files.filter(f => f.mimeType === 'application/vnd.google-apps.folder');
-      const regular = files.filter(f => f.mimeType !== 'application/vnd.google-apps.folder');
-
-      // Build existing-files set for this destination folder (one API call, not N)
-      let existingAtDest = new Set<string>();
-      if (skipIfExists) {
-        try {
-          const existing = await dbx.listFiles(newPath);
-          existing.filter(f => f.mimeType !== 'application/vnd.dropbox.folder')
-            .forEach(f => existingAtDest.add(f.name));
-        } catch { /* ignore — proceed without skip optimization */ }
-      }
-
-      for (const sub of subs) {
-        await this.crossCloudFolderTransfer(job, sub.id, newPath, sub.name, progressCtx, progressCallback);
-      }
-
-      for (let i = 0; i < regular.length; i += CONCURRENCY) {
-        const batch = regular.slice(i, i + CONCURRENCY);
-        await Promise.allSettled(batch.map(async (file) => {
-          try {
-            let name = file.name;
-            // Pre-compute the export extension to check the final name against existing files
-            const exportExt = GoogleDriveService.getExportExtension(file.mimeType);
-            const finalName = exportExt && !name.includes('.') ? name + exportExt : name;
-            if (skipIfExists && existingAtDest.has(finalName)) {
-              console.log(`⏭️  Skipping "${finalName}" — already exists in Dropbox`);
-              progressCtx.completed++;
-              const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
-              await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
-              await progressCallback(progressCtx.completed, progressCtx.total, pct);
-              return;
-            }
-            const dl = await drive.downloadFile(file.id);
-            if (dl.exportExtension && !name.includes('.')) name += dl.exportExtension;
-            await dbx.uploadFile(name, dl.content, newPath, undefined, { skipDuplicateCheck: true });
-            progressCtx.completed++;
-            const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
-            await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
-            await progressCallback(progressCtx.completed, progressCtx.total, pct);
-          } catch (err) {
-            console.error(`Cross-cloud: error transferring ${file.name}:`, err);
-          }
+    switch (sourceProvider) {
+      case 'google':
+        sourceItems = (await drive!.listFiles(sourceFolderId)).map(f => ({
+          id: f.id, name: f.name, isFolder: f.mimeType === 'application/vnd.google-apps.folder', mimeType: f.mimeType
         }));
-      }
-
-    } else if (sourceProvider === 'dropbox' && destProvider === 'google') {
-      const drive = this.getServiceFromPool('google', job.userId) as GoogleDriveService;
-      const dbx = this.getServiceFromPool('dropbox', job.userId) as DropboxService;
-
-      // Reuse existing folder if it already exists (skip create only if folder transfer)
-      let newFolderId: string;
-      try {
-        const newFolder = await drive.createFolder(folderName, destParentPath || undefined);
-        newFolderId = newFolder.id!;
-      } catch (err: any) {
-        // If folder creation fails unexpectedly, rethrow
-        throw err;
-      }
-
-      // Build existing-files set for this destination Drive folder
-      let existingAtDest = new Set<string>();
-      if (skipIfExists) {
-        try {
-          const existing = await drive.listFiles(newFolderId);
-          existing.filter(f => f.mimeType !== 'application/vnd.google-apps.folder')
-            .forEach(f => existingAtDest.add(f.name));
-        } catch { /* ignore */ }
-      }
-
-      const dbxPath = sourceFolderId === '/' ? '' : sourceFolderId;
-      const items = await dbx.listFiles(dbxPath);
-      const subs = items.filter(f => f.mimeType === 'application/vnd.dropbox.folder');
-      const regular = items.filter(f => f.mimeType !== 'application/vnd.dropbox.folder');
-
-      for (const sub of subs) {
-        const subPath = dbxPath ? `${dbxPath}/${sub.name}` : `/${sub.name}`;
-        await this.crossCloudFolderTransfer(job, subPath, newFolderId, sub.name, progressCtx, progressCallback);
-      }
-
-      for (let i = 0; i < regular.length; i += CONCURRENCY) {
-        const batch = regular.slice(i, i + CONCURRENCY);
-        await Promise.allSettled(batch.map(async (file) => {
-          try {
-            if (skipIfExists && existingAtDest.has(file.name)) {
-              console.log(`⏭️  Skipping "${file.name}" — already exists in Drive`);
-              progressCtx.completed++;
-              const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
-              await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
-              await progressCallback(progressCtx.completed, progressCtx.total, pct);
-              return;
-            }
-            const filePath = dbxPath ? `${dbxPath}/${file.name}` : `/${file.name}`;
-            const content = await dbx.downloadFile(filePath);
-            await drive.uploadFile(file.name, content, newFolderId, undefined, undefined, { skipDuplicateCheck: true });
-            progressCtx.completed++;
-            const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
-            await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
-            await progressCallback(progressCtx.completed, progressCtx.total, pct);
-          } catch (err) {
-            console.error(`Cross-cloud: error transferring ${file.name}:`, err);
-          }
+        break;
+      case 'dropbox': {
+        const dbxPath = sourceFolderId === '/' ? '' : sourceFolderId;
+        sourceItems = (await dbx!.listFiles(dbxPath)).map(f => ({
+          id: f.id, name: f.name, isFolder: f.mimeType === 'application/vnd.dropbox.folder', mimeType: f.mimeType
         }));
+        break;
       }
+      case 'onedrive':
+        sourceItems = (await onedrive!.listFolder(sourceFolderId || undefined)).map(f => ({
+          id: f.id, name: f.name, isFolder: f.isFolder, mimeType: f.mimeType
+        }));
+        break;
+      case 'box':
+        sourceItems = (await box!.listFolder(sourceFolderId || undefined)).map(f => ({
+          id: f.id, name: f.name, isFolder: f.isFolder, mimeType: f.mimeType
+        }));
+        break;
+      case 's3':
+        sourceItems = (await s3!.listFolder(sourceBucket!, sourceFolderId || undefined)).map(f => ({
+          id: f.id, name: f.name, isFolder: f.isFolder
+        }));
+        break;
+      default:
+        throw new Error(`Unsupported source provider: ${sourceProvider}`);
+    }
+
+    // ── Create destination folder ────────────────────────────────────────────────
+    let newDestId: string;
+
+    switch (destProvider) {
+      case 'google': {
+        const parentId = destParent && destParent !== 'root' ? destParent : undefined;
+        const newFolder = await drive!.createFolder(folderName, parentId);
+        newDestId = newFolder.id!;
+        break;
+      }
+      case 'dropbox': {
+        const p = destParent.endsWith('/') ? destParent.slice(0, -1) : destParent;
+        newDestId = p ? `${p}/${folderName}` : `/${folderName}`;
+        try { await dbx!.createFolder(newDestId); } catch { /* may already exist */ }
+        break;
+      }
+      case 'onedrive': {
+        const parentId = destParent && destParent !== 'root' ? destParent : null;
+        const newFolder = await onedrive!.createFolder(parentId, folderName);
+        newDestId = newFolder.id;
+        break;
+      }
+      case 'box': {
+        const parentId = destParent && destParent !== 'root' ? destParent : null;
+        const newFolder = await box!.createFolder(parentId, folderName);
+        newDestId = newFolder.id;
+        break;
+      }
+      case 's3':
+        newDestId = `${destParent}${folderName}/`;
+        break;
+      default:
+        throw new Error(`Unsupported destination provider: ${destProvider}`);
+    }
+
+    // ── Recurse into subfolders ──────────────────────────────────────────────────
+    const subfolders = sourceItems.filter(i => i.isFolder);
+    const files      = sourceItems.filter(i => !i.isFolder);
+
+    for (const sub of subfolders) {
+      let subId: string;
+      if (sourceProvider === 'dropbox') {
+        const srcPath = sourceFolderId === '/' ? '' : sourceFolderId;
+        subId = srcPath ? `${srcPath}/${sub.name}` : `/${sub.name}`;
+      } else {
+        subId = sub.id;
+      }
+      await this.crossCloudFolderTransfer(
+        job, subId, newDestId, sub.name, progressCtx, progressCallback, sourceBucket, destBucket
+      );
+    }
+
+    // ── Transfer files in concurrent batches ────────────────────────────────────
+    for (let i = 0; i < files.length; i += CONCURRENCY) {
+      const batch = files.slice(i, i + CONCURRENCY);
+      await Promise.allSettled(batch.map(async (file) => {
+        try {
+          let content: Buffer;
+          let finalName = file.name;
+
+          // Download
+          switch (sourceProvider) {
+            case 'google': {
+              const dl = await drive!.downloadFile(file.id);
+              content = Buffer.from(dl.content);
+              if (dl.exportExtension && !finalName.includes('.')) finalName += dl.exportExtension;
+              break;
+            }
+            case 'dropbox': {
+              const srcPath = sourceFolderId === '/' ? '' : sourceFolderId;
+              const filePath = srcPath ? `${srcPath}/${file.name}` : `/${file.name}`;
+              content = Buffer.from(await dbx!.downloadFile(filePath));
+              break;
+            }
+            case 'onedrive':
+              content = await onedrive!.downloadFile(file.id);
+              break;
+            case 'box':
+              content = await box!.downloadFile(file.id);
+              break;
+            case 's3':
+              content = await s3!.downloadFile(sourceBucket!, file.id);
+              break;
+            default:
+              throw new Error(`Unknown source provider: ${sourceProvider}`);
+          }
+
+          // Upload
+          switch (destProvider) {
+            case 'google': {
+              const fid = newDestId === 'root' ? undefined : newDestId;
+              await drive!.uploadFile(finalName, content, fid, undefined, undefined, { skipDuplicateCheck: true });
+              break;
+            }
+            case 'dropbox': {
+              const ab = content.buffer.slice(content.byteOffset, content.byteOffset + content.byteLength);
+              await dbx!.uploadFile(finalName, ab, newDestId, undefined, { skipDuplicateCheck: true });
+              break;
+            }
+            case 'onedrive': {
+              const fid = newDestId === 'root' ? null : newDestId;
+              await onedrive!.uploadFile(fid, finalName, content, file.mimeType);
+              break;
+            }
+            case 'box': {
+              const fid = newDestId === 'root' ? null : newDestId;
+              await box!.uploadFile(fid, finalName, content, file.mimeType);
+              break;
+            }
+            case 's3':
+              await s3!.uploadFile(destBucket!, `${newDestId}${finalName}`, content, file.mimeType);
+              break;
+          }
+
+          progressCtx.completed++;
+          const pct = Math.min(100, Math.round((progressCtx.completed / Math.max(1, progressCtx.total)) * 100));
+          await storage.setJobProgress(job.id, progressCtx.completed, progressCtx.total, pct);
+          await progressCallback(progressCtx.completed, progressCtx.total, pct);
+        } catch (err) {
+          console.error(`Folder transfer: error with ${file.name}:`, err);
+        }
+      }));
     }
   }
 

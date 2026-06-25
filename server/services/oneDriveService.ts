@@ -254,6 +254,22 @@ export class OneDriveService {
     };
   }
 
+  async createFolder(parentId: string | null, name: string): Promise<OneDriveFile> {
+    await this.ensureValidToken();
+    const parentPath = parentId ? `/me/drive/items/${parentId}` : '/me/drive/root';
+    const res = await fetch(`${GRAPH_BASE}${parentPath}/children`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, folder: {}, '@microsoft.graph.conflictBehavior': 'rename' }),
+    });
+    if (!res.ok) throw new Error(`OneDrive createFolder failed: ${await res.text()}`);
+    const data = await res.json();
+    return { id: data.id, name: data.name, isFolder: true, webUrl: data.webUrl };
+  }
+
   async getUserInfo(): Promise<{ displayName: string; email: string }> {
     const data = await this.graphGet('/me?$select=displayName,mail,userPrincipalName');
     return {

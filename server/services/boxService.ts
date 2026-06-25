@@ -265,6 +265,28 @@ export class BoxService {
     };
   }
 
+  async createFolder(parentId: string | null, name: string): Promise<BoxFile> {
+    await this.ensureValidToken();
+    const parent_id = parentId || '0';
+    const res = await fetch(`${BOX_API}/folders`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, parent: { id: parent_id } }),
+    });
+    if (res.status === 409) {
+      // Folder already exists — return the existing one from conflict info
+      const data = await res.json();
+      const existing = data.context_info?.conflicts?.[0];
+      if (existing?.id) return { id: existing.id, name: existing.name || name, isFolder: true };
+    }
+    if (!res.ok) throw new Error(`Box createFolder failed: ${await res.text()}`);
+    const data = await res.json();
+    return { id: data.id, name: data.name, isFolder: true };
+  }
+
   async getUserInfo(): Promise<{ displayName: string; email: string }> {
     const data = await this.apiGet('/users/me?fields=name,login');
     return {
