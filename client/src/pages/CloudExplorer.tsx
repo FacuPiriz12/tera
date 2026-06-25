@@ -3,7 +3,7 @@ import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
   ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
-  CheckSquare, Square, Clock, SendHorizontal
+  CheckSquare, Square, Clock, SendHorizontal, Minus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
@@ -1064,13 +1064,41 @@ export default function CloudExplorer() {
       <Header />
       <Sidebar />
 
+      {/* Floating minimized transfer indicator */}
+      <AnimatePresence>
+        {isTransferring && !showSyncModal && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            onClick={() => setShowSyncModal(true)}
+            className="fixed bottom-6 right-6 z-[300] bg-white rounded-2xl shadow-xl border border-gray-100 px-4 py-3 flex items-center gap-3 cursor-pointer hover:shadow-2xl transition-shadow"
+          >
+            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-700 truncate max-w-[160px]">
+                {pendingTransfer?.items[0]?.name ?? t('pages.cloudExplorer.transferring', 'Transfiriendo...')}
+              </p>
+              {folderProgress ? (
+                <p className="text-[10px] text-slate-400">{folderProgress.completed}/{folderProgress.total} {t('pages.cloudExplorer.filesTransferred', 'archivos transferidos')}</p>
+              ) : (
+                <p className="text-[10px] text-slate-400">↓ {downloadProgress}% · ↑ {uploadProgress}%</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Transfer confirmation modal */}
       <AnimatePresence>
         {showSyncModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
+              onClick={() => {
+                if (isTransferring) { setShowSyncModal(false); }
+                else { setShowSyncModal(false); setPendingTransfer(null); }
+              }}
               className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
             />
             <motion.div
@@ -1079,6 +1107,15 @@ export default function CloudExplorer() {
               exit={{ opacity: 0, scale: 0.96, y: 16 }}
               className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100"
             >
+              {isTransferring && (
+                <button
+                  onClick={() => setShowSyncModal(false)}
+                  className="absolute top-4 right-4 z-10 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                  title="Minimizar"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              )}
               <div className="p-7">
                 {/* File info */}
                 {pendingTransfer && (() => {
@@ -1196,7 +1233,7 @@ export default function CloudExplorer() {
                   onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
                   className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  {t('common.actions.cancel', 'Cancelar')}
+                  {isTransferring ? t('common.actions.cancelTransfer', 'Cancelar transferencia') : t('common.actions.cancel', 'Cancelar')}
                 </button>
               </div>
             </motion.div>
