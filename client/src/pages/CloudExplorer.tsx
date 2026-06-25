@@ -642,26 +642,30 @@ function CloudPanel({
                 <div
                   key={item.id}
                   draggable
-                  onDragStart={() => onDragStart(item, panelState.provider, currentPath)}
+                  onDragStart={(e) => {
+                    // prevent scroll container from intercepting the drag gesture
+                    e.stopPropagation();
+                    onDragStart(item, panelState.provider, currentPath);
+                  }}
                   onDragEnd={onDragEnd}
                   onClick={(e) => item.isFolder ? enterFolder(item) : toggleSelect(item, e)}
-                  className={`relative p-3 border rounded-xl transition-all group flex flex-col items-center text-center gap-2 select-none ${
+                  className={`relative p-3 border rounded-xl transition-all group flex flex-col items-center text-center gap-2 select-none touch-none ${
                     isSelected
                       ? 'bg-blue-50 border-blue-400 shadow-sm'
                       : 'bg-white border-gray-100 hover:border-blue-300 hover:shadow-sm hover:-translate-y-px'
                   } cursor-pointer`}
                 >
-                  {/* Checkbox — files toggle on click anywhere; folders need stopPropagation to avoid navigation */}
+                  {/* Checkbox — large hit area, z-10, stopPropagation for folders to avoid navigation */}
                   <div
-                    className={`absolute top-1.5 left-1.5 transition-opacity ${isSelected || selected.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-                    onClick={item.isFolder ? (e) => { e.stopPropagation(); toggleSelect(item, e); } : undefined}
+                    className={`absolute top-0 left-0 z-10 w-8 h-8 flex items-center justify-center cursor-pointer transition-opacity ${isSelected || selected.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); toggleSelect(item, e); }}
                   >
                     {isSelected
-                      ? <CheckSquare className="w-3.5 h-3.5 text-blue-500" />
-                      : <Square className="w-3.5 h-3.5 text-gray-300" />}
+                      ? <CheckSquare className="w-4 h-4 text-blue-500" />
+                      : <Square className="w-4 h-4 text-gray-300" />}
                   </div>
-                  {/* Drag hint when nothing selected */}
-                  {selected.size === 0 && (
+                  {/* Drag hint — only for files when nothing selected */}
+                  {!item.isFolder && selected.size === 0 && (
                     <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                       <ArrowRight className="w-3 h-3 text-gray-300" />
                     </div>
