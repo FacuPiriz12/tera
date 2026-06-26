@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useTransfer } from "@/contexts/TransferContext";
@@ -713,9 +713,23 @@ function CloudPanel({
   );
 }
 
+function destQueryKey(provider: string, panel: PanelState) {
+  switch (provider) {
+    case 'google':   return ['drive-files', panel.googleFolderId];
+    case 'dropbox':  return ['dropbox-files', panel.dropboxPath];
+    case 'onedrive': return ['onedrive-files', panel.onedriveFolderId];
+    case 'box':      return ['box-files', panel.boxFolderId];
+    case 's3':       return panel.s3Bucket
+      ? ['s3-files', panel.s3Bucket, panel.s3Prefix]
+      : ['s3-buckets'];
+    default:         return [];
+  }
+}
+
 export default function CloudExplorer() {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [panel1, setPanel1] = useState<PanelState>({
     provider: 'google',
@@ -1037,6 +1051,9 @@ export default function CloudExplorer() {
           });
         }
       }
+
+      // Refresh destination panel so transferred files appear immediately
+      queryClient.invalidateQueries({ queryKey: destQueryKey(pendingTransfer.to, destPanel) });
 
       const count = pendingTransfer.items.length;
       toast({
