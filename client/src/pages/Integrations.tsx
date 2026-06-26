@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Settings, CheckCircle, ArrowRight, Cloud, Shield, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
@@ -16,6 +17,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 export default function Integrations() {
+  usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
   const { t } = useTranslation(['pages', 'common']);
 
   const container = {

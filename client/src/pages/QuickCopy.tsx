@@ -1,10 +1,14 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import QuickCopyDialog from "@/components/QuickCopyDialog";
 
 export default function QuickCopy() {
+  const { t } = useTranslation();
+  usePageTitle(t('pageTitles.quickCopy', 'TERA — Copy from URL'));
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(true);
 

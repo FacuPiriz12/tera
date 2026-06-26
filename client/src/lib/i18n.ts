@@ -820,6 +820,22 @@ const esTranslations = {
     account: { title: "Cuenta", status: "Estado", active: "Activa", userId: "ID de usuario" },
     services: { title: "Servicios", connected: "Conectado", notConnected: "No conectado", manage: "Gestionar integraciones →" },
     quickActions: { title: "Accesos rápidos", operations: "Operaciones", files: "Mis archivos", settings: "Configuraciones" }
+  },
+  pageTitles: {
+    landing: 'TERA — Transferencia Multi-nube',
+    login: 'TERA — Iniciar sesión',
+    signup: 'TERA — Crear cuenta',
+    dashboard: 'TERA — Dashboard',
+    explorer: 'TERA — Explorador de archivos',
+    integrations: 'TERA — Integraciones',
+    operations: 'TERA — Historial de transferencias',
+    pricing: 'TERA — Precios',
+    quickCopy: 'TERA — Copiar desde URL',
+    myFiles: 'TERA — Mis archivos',
+    tasks: 'TERA — Tareas programadas',
+    terms: 'TERA — Términos de servicio',
+    privacy: 'TERA — Política de privacidad',
+    forgotPassword: 'TERA — Recuperar contraseña',
   }
 };
 
@@ -1192,6 +1208,22 @@ const enTranslations = {
     account: { title: "Account", status: "Status", active: "Active", userId: "User ID" },
     services: { title: "Services", connected: "Connected", notConnected: "Not connected", manage: "Manage integrations →" },
     quickActions: { title: "Quick actions", operations: "Operations", files: "My files", settings: "Settings" }
+  },
+  pageTitles: {
+    landing: 'TERA — Multi-Cloud File Transfer',
+    login: 'TERA — Log In',
+    signup: 'TERA — Create Account',
+    dashboard: 'TERA — Dashboard',
+    explorer: 'TERA — File Explorer',
+    integrations: 'TERA — Integrations',
+    operations: 'TERA — Transfer History',
+    pricing: 'TERA — Pricing',
+    quickCopy: 'TERA — Copy from URL',
+    myFiles: 'TERA — My Files',
+    tasks: 'TERA — Scheduled Tasks',
+    terms: 'TERA — Terms of Service',
+    privacy: 'TERA — Privacy Policy',
+    forgotPassword: 'TERA — Forgot Password',
   }
 };
 
@@ -1564,6 +1596,22 @@ const ptTranslations = {
     account: { title: "Conta", status: "Status", active: "Ativa", userId: "ID do usuário" },
     services: { title: "Serviços", connected: "Conectado", notConnected: "Não conectado", manage: "Gerenciar integrações →" },
     quickActions: { title: "Ações rápidas", operations: "Operações", files: "Meus arquivos", settings: "Configurações" }
+  },
+  pageTitles: {
+    landing: 'TERA — Transferência Multi-nuvem',
+    login: 'TERA — Entrar',
+    signup: 'TERA — Criar conta',
+    dashboard: 'TERA — Dashboard',
+    explorer: 'TERA — Explorador de arquivos',
+    integrations: 'TERA — Integrações',
+    operations: 'TERA — Histórico de transferências',
+    pricing: 'TERA — Preços',
+    quickCopy: 'TERA — Copiar de URL',
+    myFiles: 'TERA — Meus arquivos',
+    tasks: 'TERA — Tarefas programadas',
+    terms: 'TERA — Termos de serviço',
+    privacy: 'TERA — Política de privacidade',
+    forgotPassword: 'TERA — Recuperar senha',
   }
 };
 

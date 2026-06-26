@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Clock, CheckCircle, XCircle, Loader2, Calendar, Files, Timer, ExternalLink, Eye, Zap, RotateCcw } from "lucide-react";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Operations() {
+  usePageTitle(t('pageTitles.operations', 'TERA — Transfer History'));
   const { t } = useTranslation(['pages', 'common']);
   const queryClient = useQueryClient();
   const { toast } = useToast();

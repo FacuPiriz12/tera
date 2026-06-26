@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Database, Zap, TrendingUp, Users, FileText, BarChart3, Globe } from 'lucide-react';
 import { useLocation, Link } from "wouter";
 import logoUrl from "@/assets/logo.png";
@@ -17,6 +18,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function AuthPage() {
   const { t, i18n } = useTranslation();
+  const [isRegistering, setIsRegistering] = useState(false);
+  usePageTitle(isRegistering ? t('pageTitles.signup', 'TERA — Create Account') : t('pageTitles.login', 'TERA — Log In'));
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,7 +62,6 @@ export default function AuthPage() {
 
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

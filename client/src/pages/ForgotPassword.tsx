@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Mail, ArrowLeft, Send } from 'lucide-react';
 import { useLocation } from "wouter";
 import { Link } from "@/components/ui/Link";
@@ -10,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function ForgotPasswordPage() {
+  usePageTitle(t('pageTitles.forgotPassword', 'TERA — Forgot Password'));
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

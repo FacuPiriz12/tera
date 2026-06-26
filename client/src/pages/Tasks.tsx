@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { 
@@ -147,6 +148,7 @@ const defaultFormData: TaskFormData = {
 };
 
 export default function Tasks() {
+  usePageTitle(t('pageTitles.tasks', 'TERA — Scheduled Tasks'));
   const { t } = useTranslation(['pages', 'common']);
   const { toast } = useToast();
   const queryClient = useQueryClient();

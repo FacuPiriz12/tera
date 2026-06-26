@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, Shield, Lock, Eye, Database, UserCheck, Bell, ExternalLink, ChevronRight, Globe } from "lucide-react";
@@ -68,6 +69,7 @@ const SECTIONS: Record<Lang, { id: string; title: string }[]> = {
 };
 
 export default function PrivacyPolicy() {
+  usePageTitle(t('pageTitles.privacy', 'TERA — Privacy Policy'));
   const { i18n } = useTranslation();
   const raw = i18n.language?.startsWith("pt") ? "pt" : i18n.language?.startsWith("en") ? "en" : "es";
   const [lang, setLang] = useState<Lang>(raw as Lang);

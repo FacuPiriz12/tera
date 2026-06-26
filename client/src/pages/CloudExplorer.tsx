@@ -14,6 +14,7 @@ import { useTransfer } from "@/contexts/TransferContext";
 import { Link } from "wouter";
 import { performClientTransfer, CLIENT_TRANSFER_MAX_BYTES, transferFolderClientSide } from "@/lib/clientTransfer";
 import type { ProviderTokens, ClientTransferOptions } from "@/lib/clientTransfer";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import FilePreviewModal from "@/components/FilePreviewModal";
@@ -736,6 +737,7 @@ function destQueryKey(provider: string, panel: PanelState) {
 
 export default function CloudExplorer() {
   const { t } = useTranslation();
+  usePageTitle(t('pageTitles.explorer', 'TERA — File Explorer'));
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   FileText,
   Globe,
@@ -23,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Home() {
+  usePageTitle(t('pageTitles.dashboard', 'TERA — Dashboard'));
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
 

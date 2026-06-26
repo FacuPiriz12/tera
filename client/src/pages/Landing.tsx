@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   ArrowRight, Menu, X, Shield, Lock, CheckCircle2, RefreshCw,
   Clock, Copy, Inbox, History, Zap, ChevronRight, Globe,
@@ -278,6 +279,7 @@ function FeatureCard({ icon: Icon, title, desc, badge, color, delay }: { icon: a
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Home() {
+  usePageTitle(t('pageTitles.landing', 'TERA — Multi-Cloud File Transfer'));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
   const { t } = useTranslation();

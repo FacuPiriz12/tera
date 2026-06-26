@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
@@ -55,6 +56,7 @@ import ShareFileDialog from "@/components/ShareFileDialog";
 type PlatformFilter = 'all' | 'google' | 'dropbox';
 
 export default function MyFiles() {
+  usePageTitle(t('pageTitles.myFiles', 'TERA — My Files'));
   const { t } = useTranslation(['pages', 'common']);
   const { toast } = useToast();
   const searchString = useSearch();

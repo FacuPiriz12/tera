@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Check, X, ArrowRight, Star, Zap, Shield, RefreshCw, Clock, BarChart2, Bell, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'wouter';
@@ -125,6 +126,7 @@ export default function PricingPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const { i18n, t } = useTranslation();
+  usePageTitle(t('pageTitles.pricing', 'TERA — Pricing'));
   const [currency, setCurrency] = useState<Currency>('USD');
   useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
   const sym = CURRENCY_CONFIG[currency].symbol;

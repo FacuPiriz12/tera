@@ -1,3 +1,4 @@
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, FileText, Shield, AlertTriangle, CreditCard, Scale, UserX, RefreshCw, ChevronRight } from "lucide-react";
@@ -71,6 +72,7 @@ const SECTIONS: Record<Lang, { id: string; title: string }[]> = {
 };
 
 export default function TermsOfService() {
+  usePageTitle(t('pageTitles.terms', 'TERA — Terms of Service'));
   const { i18n } = useTranslation();
   const raw = i18n.language?.startsWith("pt") ? "pt" : i18n.language?.startsWith("en") ? "en" : "es";
   const [lang, setLang] = useState<Lang>(raw as Lang);
