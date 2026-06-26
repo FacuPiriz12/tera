@@ -208,7 +208,7 @@ export class DropboxService {
 
   async listFiles(path: string = ''): Promise<DropboxFile[]> {
     await this.ensureValidToken();
-    
+
     try {
       const response = await this.dbx.filesListFolder({
         path: path || '',
@@ -250,6 +250,25 @@ export class DropboxService {
    * skipDuplicateCheck: if true, skips duplicate detection
    * forceOverwrite: if true, allows overwriting existing files
    */
+  async getThumbnail(dropboxFileId: string): Promise<Buffer> {
+    const token = await this.getAccessToken();
+    const res = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_v2', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Dropbox-API-Arg': JSON.stringify({
+          resource: { '.tag': 'id', id: dropboxFileId },
+          format: { '.tag': 'jpeg' },
+          size: { '.tag': 'w480h320' },
+          mode: { '.tag': 'strict' },
+        }),
+        'Content-Type': '',
+      },
+    });
+    if (!res.ok) throw new Error(`Dropbox thumbnail failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
   async uploadFile(filename: string, content: ArrayBuffer, destinationPath?: string, metadata?: DropboxFileMetadata, options?: { skipDuplicateCheck?: boolean; forceOverwrite?: boolean }): Promise<DropboxFile> {
     await this.ensureValidToken();
     

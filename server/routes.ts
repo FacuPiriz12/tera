@@ -113,6 +113,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: 'ok', ts: Date.now() });
   });
 
+  // ── File preview thumbnail proxy ──────────────────────────────────────────
+  app.get('/api/preview/thumbnail', isAuthenticated, async (req: any, res) => {
+    const { provider, fileId, bucket, key } = req.query as Record<string, string>;
+    const userId = req.user.claims.sub;
+    try {
+      switch (provider) {
+        case 'google': {
+          const svc = new GoogleDriveService(userId);
+          const url = await svc.getThumbnailUrl(fileId);
+          if (!url) return res.status(404).json({ message: 'No thumbnail' });
+          return res.redirect(url);
+        }
+        case 'onedrive': {
+          const svc = new OneDriveService(userId);
+          const url = await svc.getThumbnailUrl(fileId);
+          if (!url) return res.status(404).json({ message: 'No thumbnail' });
+          return res.redirect(url);
+        }
+        case 'dropbox': {
+          const svc = new DropboxService(userId);
+          const buf = await svc.getThumbnail(fileId);
+          res.setHeader('Content-Type', 'image/jpeg');
+          return res.send(buf);
+        }
+        case 'box': {
+          const svc = new BoxService(userId);
+          const buf = await svc.getThumbnail(fileId);
+          res.setHeader('Content-Type', 'image/png');
+          return res.send(buf);
+        }
+        case 's3': {
+          const svc = new S3Service(userId);
+          const url = await svc.getPresignedDownloadUrl(bucket, key);
+          return res.redirect(url);
+        }
+        default:
+          return res.status(400).json({ message: 'Unknown provider' });
+      }
+    } catch (err: any) {
+      console.error('Preview thumbnail error:', err.message);
+      res.status(404).json({ message: 'Thumbnail not available' });
+    }
+  });
+
   // Stripe routes
   app.post('/api/stripe/create-checkout', isAuthenticated, async (req: any, res) => {
     if (!stripe) return res.status(500).json({ message: "Stripe not configured" });

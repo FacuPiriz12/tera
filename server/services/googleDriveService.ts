@@ -221,6 +221,12 @@ export class GoogleDriveService {
     }
   }
 
+  async getThumbnailUrl(fileId: string): Promise<string | null> {
+    await this.ensureValidToken();
+    const res = await this.drive.files.get({ fileId, fields: 'thumbnailLink', supportsAllDrives: true });
+    return (res.data.thumbnailLink as string | undefined) ?? null;
+  }
+
   /**
    * List files in a folder with pagination
    */

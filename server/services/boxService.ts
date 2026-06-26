@@ -162,6 +162,16 @@ export class BoxService {
     };
   }
 
+  async getThumbnail(fileId: string): Promise<Buffer> {
+    const token = await this.getAccessToken();
+    const res = await fetch(
+      `${BOX_API}/files/${fileId}/thumbnail.png?min_height=240&min_width=240&max_height=480&max_width=480`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!res.ok) throw new Error(`Box thumbnail failed: ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
   async downloadFile(fileId: string): Promise<Buffer> {
     await this.ensureValidToken();
     // Box returns 302 redirect to actual download URL

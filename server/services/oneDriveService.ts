@@ -170,6 +170,16 @@ export class OneDriveService {
     }));
   }
 
+  async getThumbnailUrl(fileId: string): Promise<string | null> {
+    await this.ensureValidToken();
+    const res = await fetch(`${GRAPH_BASE}/me/drive/items/${fileId}/thumbnails/0/medium`, {
+      headers: { Authorization: `Bearer ${this.accessToken}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url ?? null;
+  }
+
   async getDownloadUrl(fileId: string): Promise<string> {
     await this.ensureValidToken();
     const res = await fetch(`${GRAPH_BASE}/me/drive/items/${fileId}?$select=@microsoft.graph.downloadUrl`, {

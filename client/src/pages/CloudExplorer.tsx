@@ -3,7 +3,7 @@ import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
   ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
-  CheckSquare, Square, Clock, SendHorizontal, Minus
+  CheckSquare, Square, Clock, SendHorizontal, Minus, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import { performClientTransfer, CLIENT_TRANSFER_MAX_BYTES, transferFolderClientS
 import type { ProviderTokens, ClientTransferOptions } from "@/lib/clientTransfer";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import FilePreviewModal from "@/components/FilePreviewModal";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
 import OneDriveLogo from "@/components/OneDriveLogo";
@@ -203,6 +204,7 @@ interface CloudPanelProps {
   onDragEnter: (e: React.DragEvent) => void;
   onDragLeave: () => void;
   onRequestMultiTransfer: (items: CloudItem[], provider: Provider, path: string) => void;
+  onPreview: (item: CloudItem) => void;
 }
 
 const ALL_PROVIDERS: Provider[] = ['google', 'dropbox', 'onedrive', 'box', 's3'];
@@ -218,6 +220,7 @@ function CloudPanel({
   onDragEnter,
   onDragLeave,
   onRequestMultiTransfer,
+  onPreview,
 }: CloudPanelProps) {
   const { t } = useTranslation();
 
@@ -665,10 +668,15 @@ function CloudPanel({
                       ? <CheckSquare className="w-4 h-4 text-blue-500" />
                       : <Square className="w-4 h-4 text-gray-300" />}
                   </div>
-                  {/* Drag hint — only for files when nothing selected */}
+                  {/* Preview button — only for files when nothing selected */}
                   {!item.isFolder && selected.size === 0 && (
-                    <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ArrowRight className="w-3 h-3 text-gray-300" />
+                    <div
+                      className="absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => { e.stopPropagation(); onPreview(item); }}
+                    >
+                      <div className="p-1 rounded-md hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-colors">
+                        <Eye className="w-3.5 h-3.5" />
+                      </div>
                     </div>
                   )}
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass} transition-transform group-hover:scale-105`}>
@@ -771,6 +779,7 @@ export default function CloudExplorer() {
     sourcePath: string;
     toPanel: 1 | 2;
   } | null>(null);
+  const [previewItem, setPreviewItem] = useState<{ item: CloudItem; provider: Provider; s3Bucket?: string } | null>(null);
 
   function handleDragStart(item: CloudItem, provider: Provider, sourcePath: string) {
     setDraggedItem({ item, provider, sourcePath });
@@ -1312,6 +1321,7 @@ export default function CloudExplorer() {
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(1); }}
               onDragLeave={() => setDropTarget(null)}
               onRequestMultiTransfer={handleMultiTransfer}
+              onPreview={(item) => setPreviewItem({ item, provider: panel1.provider, s3Bucket: panel1.s3Bucket })}
             />
             <CloudPanel
               panelId={2}
@@ -1325,10 +1335,21 @@ export default function CloudExplorer() {
               onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(2); }}
               onDragLeave={() => setDropTarget(null)}
               onRequestMultiTransfer={handleMultiTransfer}
+              onPreview={(item) => setPreviewItem({ item, provider: panel2.provider, s3Bucket: panel2.s3Bucket })}
             />
           </div>
         </div>
       </main>
+
+      {/* File preview modal */}
+      {previewItem && (
+        <FilePreviewModal
+          item={previewItem.item}
+          provider={previewItem.provider}
+          s3Bucket={previewItem.s3Bucket}
+          onClose={() => setPreviewItem(null)}
+        />
+      )}
     </div>
   );
 }
