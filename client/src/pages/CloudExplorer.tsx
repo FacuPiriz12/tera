@@ -831,6 +831,7 @@ export default function CloudExplorer() {
     setDownloadProgress(0);
     setUploadProgress(0);
     setFolderProgress(null);
+    let usedServerSide = false;
 
     try {
       const targetPath = (() => {
@@ -999,7 +1000,8 @@ export default function CloudExplorer() {
             });
           }
         } else {
-          // ── Server-side transfer (Box large files only) ──
+          // ── Server-side transfer (Dropbox / Box large files) ──
+          usedServerSide = true;
           toast({
             title: t('pages.cloudExplorer.largeFile', 'Archivo grande'),
             description: t('pages.cloudExplorer.largeFileDesc', 'Archivo grande, usando servidor...'),
@@ -1056,12 +1058,23 @@ export default function CloudExplorer() {
       queryClient.invalidateQueries({ queryKey: destQueryKey(pendingTransfer.to, destPanel) });
 
       const count = pendingTransfer.items.length;
-      toast({
-        title: t('copy.transferInitiated', 'Transferencia iniciada'),
-        description: count === 1
-          ? t('pages.cloudExplorer.fileQueued', '"{{name}}" está en cola.', { name: pendingTransfer.items[0].name })
-          : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: getProviderName(pendingTransfer.to) }),
-      });
+      const firstName = pendingTransfer.items[0].name;
+      const destName = getProviderName(pendingTransfer.to);
+      if (usedServerSide) {
+        toast({
+          title: t('copy.transferInitiated', 'Transferencia en cola'),
+          description: count === 1
+            ? t('pages.cloudExplorer.fileQueued', '"{{name}}" está siendo procesado en el servidor.', { name: firstName })
+            : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: destName }),
+        });
+      } else {
+        toast({
+          title: t('copy.transferComplete', '¡Transferencia completada!'),
+          description: count === 1
+            ? t('pages.cloudExplorer.fileTransferred', '"{{name}}" fue transferido a {{provider}}.', { name: firstName, provider: destName })
+            : t('pages.cloudExplorer.filesTransferred', '{{count}} archivos transferidos a {{provider}}.', { count, provider: destName }),
+        });
+      }
     } catch (error: any) {
       toast({ title: t('pages.cloudExplorer.transferError', 'Error al iniciar transferencia'), description: error.message || t('pages.cloudExplorer.transferErrorDesc', 'No se pudo iniciar la transferencia.'), variant: 'destructive' });
     } finally {
