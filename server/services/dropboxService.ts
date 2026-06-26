@@ -71,8 +71,8 @@ export class DropboxService {
       this.dbx.auth.setRefreshToken(user.dropboxRefreshToken);
     }
     
-    // Add small buffer (60s) to handle clock skew
-    const bufferTime = 60 * 1000; // 60 seconds in milliseconds
+    // Buffer of 10 min: proactively refresh before long transfers expire mid-way
+    const bufferTime = 10 * 60 * 1000; // 10 minutes in milliseconds
     const isTokenExpired = user.dropboxTokenExpiry && 
       new Date(user.dropboxTokenExpiry.getTime() - bufferTime) <= new Date();
     
