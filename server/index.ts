@@ -23,7 +23,8 @@ const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 
 app.use(helmet({
-  contentSecurityPolicy: isProd ? {
+  contentSecurityPolicy: false, // Temporarily disabled to diagnose blank screen issue
+  /* contentSecurityPolicy: isProd ? {
     directives: {
       defaultSrc:       ["'self'"],
       scriptSrc:        ["'self'"],
@@ -40,7 +41,7 @@ app.use(helmet({
       workerSrc:        ["'none'"],
       upgradeInsecureRequests: [],
     },
-  } : false, // Disabled in dev to allow Vite HMR
+  } : false, */ // Disabled in dev to allow Vite HMR
   crossOriginEmbedderPolicy: false,
 }));
 
