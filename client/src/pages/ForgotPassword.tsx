@@ -11,8 +11,8 @@ import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function ForgotPasswordPage() {
-  usePageTitle(t('pageTitles.forgotPassword', 'TERA — Forgot Password'));
   const { t } = useTranslation();
+  usePageTitle(t('pageTitles.forgotPassword', 'TERA — Forgot Password'));
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();

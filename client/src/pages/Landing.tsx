@@ -279,10 +279,10 @@ function FeatureCard({ icon: Icon, title, desc, badge, color, delay }: { icon: a
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Home() {
+  const { t } = useTranslation();
   usePageTitle(t('pageTitles.landing', 'TERA — Multi-Cloud File Transfer'));
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const { t } = useTranslation();
 
   const features = [
     { icon: Copy,       title: t('landing.features.f1Title'), desc: t('landing.features.f1Desc'), color: 'blue' },

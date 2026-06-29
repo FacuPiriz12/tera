@@ -24,8 +24,8 @@ import { useQuery } from "@tanstack/react-query";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Home() {
-  usePageTitle(t('pageTitles.dashboard', 'TERA — Dashboard'));
   const { t } = useTranslation();
+  usePageTitle(t('pageTitles.dashboard', 'TERA — Dashboard'));
   const [, setLocation] = useLocation();
 
   const { data: operations = [] } = useQuery<CopyOperation[]>({

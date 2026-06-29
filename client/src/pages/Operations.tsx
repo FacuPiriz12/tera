@@ -15,8 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Operations() {
-  usePageTitle(t('pageTitles.operations', 'TERA — Transfer History'));
   const { t } = useTranslation(['pages', 'common']);
+  usePageTitle(t('pageTitles.operations', 'TERA — Transfer History'));
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const prevCompletedCount = useRef<number>(0);

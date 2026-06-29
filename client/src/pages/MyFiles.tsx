@@ -56,8 +56,8 @@ import ShareFileDialog from "@/components/ShareFileDialog";
 type PlatformFilter = 'all' | 'google' | 'dropbox';
 
 export default function MyFiles() {
-  usePageTitle(t('pageTitles.myFiles', 'TERA — My Files'));
   const { t } = useTranslation(['pages', 'common']);
+  usePageTitle(t('pageTitles.myFiles', 'TERA — My Files'));
   const { toast } = useToast();
   const searchString = useSearch();
   const [searchTerm, setSearchTerm] = useState('');

@@ -17,8 +17,8 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 export default function Integrations() {
-  usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
   const { t } = useTranslation(['pages', 'common']);
+  usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
 
   const container = {
     hidden: { opacity: 0 },
