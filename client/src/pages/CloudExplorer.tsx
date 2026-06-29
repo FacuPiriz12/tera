@@ -1176,13 +1176,7 @@ export default function CloudExplorer() {
                     className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-5"
                   >
                     <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <motion.path
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 0.4, delay: 0.2 }}
-                        strokeLinecap="round" strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </motion.div>
                   <p className="text-lg font-black text-slate-800 mb-1">
