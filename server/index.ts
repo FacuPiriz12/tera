@@ -20,8 +20,27 @@ import { storage } from "./storage";
 const app = express();
 
 // Security headers
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(helmet({
-  contentSecurityPolicy: false, // Disabled to allow Vite HMR in dev
+  contentSecurityPolicy: isProd ? {
+    directives: {
+      defaultSrc:       ["'self'"],
+      scriptSrc:        ["'self'"],
+      scriptSrcAttr:    ["'none'"],
+      styleSrc:         ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc:          ["'self'", "data:", "https://fonts.gstatic.com"],
+      imgSrc:           ["'self'", "data:", "blob:", "https://*.googleusercontent.com"],
+      connectSrc:       ["'self'", "https://*.supabase.co", "wss://*.supabase.co"],
+      frameSrc:         ["'none'"],
+      frameAncestors:   ["'none'"],
+      objectSrc:        ["'none'"],
+      baseUri:          ["'self'"],
+      formAction:       ["'self'"],
+      workerSrc:        ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  } : false, // Disabled in dev to allow Vite HMR
   crossOriginEmbedderPolicy: false,
 }));
 
