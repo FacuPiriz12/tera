@@ -205,7 +205,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             expand: ['line_items'],
           });
           const priceId = fullSession.line_items?.data?.[0]?.price?.id ?? '';
-          const plan = STRIPE_PRICE_TO_PLAN[priceId] ?? 'pro';
+          const plan = STRIPE_PRICE_TO_PLAN[priceId];
+          if (!plan) {
+            console.error(`Unknown Stripe price ID: ${priceId} — ignoring webhook`);
+            return res.json({ received: true });
+          }
 
           await storage.updateUserStripeInfo(session.client_reference_id, {
             subscriptionId: session.subscription as string,
@@ -1731,11 +1735,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const { fileName, fileSize, provider } = req.body;
+      const VALID_PROVIDERS = ['google', 'dropbox', 'onedrive', 'box', 's3'];
 
       if (!fileName || fileSize === undefined) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "fileName and fileSize are required for duplicate check"
         });
+      }
+      if (provider && !VALID_PROVIDERS.includes(provider)) {
+        return res.status(400).json({ message: "Invalid provider" });
       }
 
       const duplicateService = new DuplicateDetectionService(userId);
@@ -2150,47 +2158,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/membership/upgrade', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // Validate request with Zod
-      const upgradeSchema = z.object({
-        plan: z.literal('pro'),
-        duration: z.number().int().positive().max(24, "Duration cannot exceed 24 months")
-      });
-      
-      const validation = upgradeSchema.safeParse(req.body);
-      if (!validation.success) {
-        return res.status(400).json({ 
-          message: "Invalid request data", 
-          errors: validation.error.errors 
-        });
-      }
-      
-      const { plan, duration } = validation.data;
-
-      // Calculate expiry (duration in months)
-      const expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + (duration || 1));
-
-      const updatedUser = await storage.updateUser(userId, {
-        membershipPlan: 'pro',
-        membershipExpiry: expiryDate,
-        ...PLAN_LIMITS.pro,
-      });
-
-      res.json({
-        success: true,
-        plan: updatedUser.membershipPlan,
-        expiry: updatedUser.membershipExpiry,
-        message: `Successfully upgraded to ${plan.toUpperCase()} plan`
-      });
-    } catch (error) {
-      console.error("Error upgrading membership:", error);
-      res.status(500).json({ message: "Failed to upgrade membership" });
-    }
-  });
 
   // Dropbox URL parsing and copy operations
   app.post('/api/dropbox/parse-url', isAuthenticated, async (req: any, res) => {
@@ -2668,14 +2635,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const senderId = req.user.claims.sub;
       const { recipientEmail, provider, fileId, filePath, fileName, fileType, fileSize, mimeType, message } = req.body;
 
+      const VALID_PROVIDERS = ['google', 'dropbox', 'onedrive', 'box', 's3'];
       if (!recipientEmail || !provider || !fileId || !fileName || !fileType) {
         return res.status(400).json({ message: "Missing required fields" });
+      }
+      if (!VALID_PROVIDERS.includes(provider)) {
+        return res.status(400).json({ message: "Invalid provider" });
       }
 
       // Find recipient by email
       const recipient = await storage.getUserByEmail(recipientEmail);
       if (!recipient) {
-        return res.status(404).json({ message: "User not found with this email" });
+        return res.status(404).json({ message: "No TERA account found with that email address." });
       }
 
       // Cannot share with yourself
