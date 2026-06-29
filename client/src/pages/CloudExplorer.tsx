@@ -782,6 +782,7 @@ export default function CloudExplorer() {
     toPanel: 1 | 2;
   } | null>(null);
   const [previewItem, setPreviewItem] = useState<{ item: CloudItem; provider: Provider; s3Bucket?: string } | null>(null);
+  const [transferSuccess, setTransferSuccess] = useState<{ fileName: string; destProvider: string } | null>(null);
 
   function handleDragStart(item: CloudItem, provider: Provider, sourcePath: string) {
     setDraggedItem({ item, provider, sourcePath });
@@ -1079,12 +1080,15 @@ export default function CloudExplorer() {
             : t('pages.cloudExplorer.filesQueued', '{{count}} archivos en cola hacia {{provider}}.', { count, provider: destName }),
         });
       } else {
-        toast({
-          title: t('copy.transferComplete', '¡Transferencia completada!'),
-          description: count === 1
-            ? t('pages.cloudExplorer.fileTransferred', '"{{name}}" fue transferido a {{provider}}.', { name: firstName, provider: destName })
-            : t('pages.cloudExplorer.filesTransferred', '{{count}} archivos transferidos a {{provider}}.', { count, provider: destName }),
-        });
+        const successMsg = count === 1 ? firstName : `${count} archivos`;
+        setTransferSuccess({ fileName: successMsg, destProvider: destName });
+        setTimeout(() => {
+          setTransferSuccess(null);
+          setIsTransferring(false);
+          setShowSyncModal(false);
+          setPendingTransfer(null);
+        }, 2500);
+        return;
       }
     } catch (error: any) {
       toast({ title: t('pages.cloudExplorer.transferError', 'Error al iniciar transferencia'), description: error.message || t('pages.cloudExplorer.transferErrorDesc', 'No se pudo iniciar la transferencia.'), variant: 'destructive' });
@@ -1148,7 +1152,7 @@ export default function CloudExplorer() {
               exit={{ opacity: 0, scale: 0.96, y: 16 }}
               className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100"
             >
-              {isTransferring && (
+              {isTransferring && !transferSuccess && (
                 <button
                   onClick={() => setShowSyncModal(false)}
                   className="absolute top-4 right-4 z-10 p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
@@ -1157,7 +1161,41 @@ export default function CloudExplorer() {
                   <Minus className="w-4 h-4" />
                 </button>
               )}
-              <div className="p-7">
+
+              {/* Success screen */}
+              {transferSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex flex-col items-center justify-center py-12 px-8 text-center"
+                >
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.1 }}
+                    className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-5"
+                  >
+                    <svg className="w-10 h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <motion.path
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                        strokeLinecap="round" strokeLinejoin="round"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </motion.div>
+                  <p className="text-lg font-black text-slate-800 mb-1">
+                    {t('copy.transferComplete', '¡Transferencia completada!')}
+                  </p>
+                  <p className="text-sm text-slate-400 font-medium">
+                    <span className="font-semibold text-slate-600">{transferSuccess.fileName}</span>
+                    {' → '}{transferSuccess.destProvider}
+                  </p>
+                </motion.div>
+              )}
+
+              <div className="p-7" style={{ display: transferSuccess ? 'none' : undefined }}>
                 {/* File info */}
                 {pendingTransfer && (() => {
                   const first = pendingTransfer.items[0];
@@ -1270,12 +1308,14 @@ export default function CloudExplorer() {
                   </div>
                 )}
 
-                <button
-                  onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
-                  className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  {isTransferring ? t('common.actions.cancelTransfer', 'Cancelar transferencia') : t('common.actions.cancel', 'Cancelar')}
-                </button>
+                {!transferSuccess && (
+                  <button
+                    onClick={() => { setShowSyncModal(false); setPendingTransfer(null); setIsTransferring(false); }}
+                    className="w-full mt-3 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {isTransferring ? t('common.actions.cancelTransfer', 'Cancelar transferencia') : t('common.actions.cancel', 'Cancelar')}
+                  </button>
+                )}
               </div>
             </motion.div>
           </div>
