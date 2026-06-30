@@ -4,6 +4,7 @@ import { supabasePromise } from "@/lib/supabase";
 import { useEffect, useState, useRef } from "react";
 import { getCachedSession, setCachedSession } from "@/lib/supabaseSession";
 import { useToast } from "@/hooks/use-toast";
+import i18n from "@/lib/i18n";
 
 export function useAuth() {
   const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
@@ -228,6 +229,7 @@ export function useAuth() {
           data: {
             first_name: credentials.firstName,
             last_name: credentials.lastName,
+            language: i18n.language?.split('-')[0],
           }
         }
       });

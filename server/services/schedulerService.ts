@@ -15,7 +15,7 @@ async function notifyTaskResult(
   const user = await storage.getUser(task.userId);
   if (!user?.email) return;
 
-  await sendTaskNotificationEmail(user.email, task.name, success, details);
+  await sendTaskNotificationEmail(user.email, task.name, success, details, user.language);
 }
 
 interface SchedulerConfig {

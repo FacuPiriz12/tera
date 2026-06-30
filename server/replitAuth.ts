@@ -152,12 +152,16 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
     console.log('✅ Authenticated:', user.email);
 
+    const claimedLang = user.user_metadata?.language;
+    const language = (claimedLang === 'en' || claimedLang === 'pt') ? claimedLang : 'es';
+
     req.user = {
       claims: {
         sub: user.id,
         email: user.email || '',
         first_name: user.user_metadata?.first_name || user.user_metadata?.name?.split(' ')[0] || '',
-        last_name: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || ''
+        last_name: user.user_metadata?.last_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+        language,
       },
       access_token: token,
       expires_at: Math.floor(Date.now() / 1000) + 3600
@@ -166,6 +170,7 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     // Upsert user in database (non-fatal)
     try {
       const isAdminEmail = user.email === (process.env.ADMIN_EMAIL || 'facupiriz87@gmail.com');
+      const isNewUser = !(await storage.getUser(user.id).catch(() => null));
       await storage.upsertUser({
         id: user.id,
         email: user.email || '',
@@ -173,8 +178,13 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
         lastName: req.user.claims.last_name,
         profileImageUrl: user.user_metadata?.avatar_url || '',
         authProvider: 'supabase',
-        role: isAdminEmail ? 'admin' : 'user'
+        role: isAdminEmail ? 'admin' : 'user',
+        language,
       });
+      if (isNewUser) {
+        const { sendWelcomeEmail } = await import('./lib/email');
+        sendWelcomeEmail(user.email || '', req.user.claims.first_name, language).catch(() => {});
+      }
     } catch (dbError) {
       console.error('Database upsert error (non-fatal):', dbError);
     }

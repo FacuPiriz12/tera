@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./replitAuth";
-import { sendPasswordResetEmail, sendWelcomeEmail, sendVerificationCodeEmail, sendEmailChangeEmail } from "./lib/email";
+import { sendPasswordResetEmail, sendVerificationCodeEmail, sendEmailChangeEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
@@ -265,6 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If user doesn't exist in database or database is unavailable, 
       // return user data from claims (Supabase auth)
       if (!user) {
+        const claimedLang = req.user.claims.language;
         const userData: any = {
           id: userId,
           email: userEmail,
@@ -272,19 +273,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: req.user.claims.last_name,
           profileImageUrl: req.user.claims.profile_image_url,
           role: isAdminEmail ? 'admin' : 'user',
+          language: (claimedLang === 'en' || claimedLang === 'pt') ? claimedLang : 'es',
           ...PLAN_LIMITS.free,
         };
-        
+
         // In development, dev-user-123 is always admin
         if (process.env.NODE_ENV === "development" && userId === "dev-user-123") {
           userData.role = 'admin';
         }
-        
-        // Try to save to database, but don't fail if it doesn't work
+
+        // Try to save to database, but don't fail if it doesn't work.
+        // (Normal Bearer-token requests already upsert + send the welcome email in
+        // isAuthenticated/replitAuth.ts before reaching here; this is only a fallback
+        // for the session-based SSE auth path, which doesn't go through that middleware.)
         try {
           user = await storage.upsertUser(userData);
-          // New user — send welcome email in background (don't await)
-          sendWelcomeEmail(userEmail, userData.firstName).catch(() => {});
         } catch (dbError) {
           console.log('Database upsert failed, returning claims data directly');
           user = userData;
@@ -360,7 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        sendVerificationCodeEmail(newEmail, code, 10).catch(() => {});
+        sendVerificationCodeEmail(newEmail, code, 10, existingUser.language).catch(() => {});
 
         return res.json({ requiresEmailVerification: true, pendingEmail: newEmail });
       }
@@ -378,6 +381,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       res.status(500).json({ message: "Error al actualizar la información del usuario" });
+    }
+  });
+
+  // Persist the user's preferred language so transactional emails match the app's language.
+  app.patch('/api/user/language', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { language } = req.body;
+      if (language !== 'es' && language !== 'en' && language !== 'pt') {
+        return res.status(400).json({ message: "Invalid language" });
+      }
+      await storage.updateUser(userId, { language });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error updating user language:", error);
+      res.status(500).json({ message: "Error al actualizar el idioma" });
     }
   });
 
@@ -417,7 +436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Notify old email that the change happened
       if (currentUser?.email) {
-        sendEmailChangeEmail(pending_email, currentUser.email, '').catch(() => {});
+        sendEmailChangeEmail(pending_email, currentUser.email, '', currentUser.language).catch(() => {});
       }
 
       const updatedUser = await storage.getUser(userId);
@@ -620,7 +639,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(genericResponse);
       }
 
-      await sendPasswordResetEmail(email, data.properties.action_link);
+      const userForLang = await storage.getUserByEmail(email).catch(() => null);
+      await sendPasswordResetEmail(email, data.properties.action_link, userForLang?.language);
       res.json(genericResponse);
     } catch (error) {
       console.error("Forgot password error:", error);

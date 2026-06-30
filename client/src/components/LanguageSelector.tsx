@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from '@/lib/queryClient';
 
 const languages = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -21,6 +22,8 @@ export default function LanguageSelector() {
   const changeLanguage = (lang: typeof languages[0]) => {
     i18n.changeLanguage(lang.code);
     setIsOpen(false);
+    // Best-effort: persist so transactional emails match, if logged in. No-ops with a 401 otherwise.
+    apiRequest('PATCH', '/api/user/language', { language: lang.code }).catch(() => {});
   };
 
   return (

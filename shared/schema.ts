@@ -37,6 +37,8 @@ export const users = pgTable("users", {
   authProvider: varchar("auth_provider").notNull().default('replit'),
   // User role - 'admin' or 'user'
   role: varchar("role").notNull().default('user'),
+  // Preferred language for transactional emails - 'es', 'en', or 'pt'
+  language: varchar("language").notNull().default('es'),
   // User limits
   maxStorageBytes: bigint("max_storage_bytes", { mode: "number" }).default(16106127360), // 15 GB default
   maxConcurrentOperations: integer("max_concurrent_operations").default(5),

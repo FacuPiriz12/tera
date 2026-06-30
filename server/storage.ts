@@ -49,6 +49,7 @@ export interface IStorage {
     membershipPlan?: string;
     membershipExpiry?: Date;
     membershipTrialUsed?: boolean;
+    language?: string;
   }): Promise<User>;
   updateUserGoogleTokens(userId: string, tokens: {
     accessToken: string | null;
@@ -249,6 +250,7 @@ export class DatabaseStorage implements IStorage {
     membershipPlan?: string;
     membershipExpiry?: Date;
     membershipTrialUsed?: boolean;
+    language?: string;
   }): Promise<User> {
     // Filter out undefined values to avoid overwriting existing data
     const cleanUpdates = Object.fromEntries(
@@ -1305,6 +1307,7 @@ class MemoryStorage implements IStorage {
     membershipPlan?: string;
     membershipExpiry?: Date;
     membershipTrialUsed?: boolean;
+    language?: string;
   }): Promise<User> {
     const existingUser = this.users.get(userId);
     if (!existingUser) {

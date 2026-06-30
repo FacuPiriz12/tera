@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Folder, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
-  ChevronRight, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
+  ChevronRight, ChevronLeft, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
   CheckSquare, Square, Clock, SendHorizontal, Minus, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -206,9 +206,24 @@ interface CloudPanelProps {
   onDragLeave: () => void;
   onRequestMultiTransfer: (items: CloudItem[], provider: Provider, path: string) => void;
   onPreview: (item: CloudItem) => void;
+  isDesktopLayout: boolean;
 }
 
 const ALL_PROVIDERS: Provider[] = ['google', 'dropbox', 'onedrive', 'box', 's3'];
+
+// Matches the `lg` breakpoint used by the panels grid (grid-cols-1 lg:grid-cols-2).
+function useIsDesktopLayout() {
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  );
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)');
+    const onChange = () => setIsDesktop(mql.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+  return isDesktop;
+}
 
 function CloudPanel({
   panelState,
@@ -222,6 +237,7 @@ function CloudPanel({
   onDragLeave,
   onRequestMultiTransfer,
   onPreview,
+  isDesktopLayout,
 }: CloudPanelProps) {
   const { t } = useTranslation();
 
@@ -711,8 +727,17 @@ function CloudPanel({
                 onClick={() => onRequestMultiTransfer(selectedItems, panelState.provider, currentPath)}
                 className="flex items-center gap-1.5 text-xs font-bold bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
               >
-                <SendHorizontal className="w-3.5 h-3.5" />
-                {t('pages.cloudExplorer.transfer', 'Transferir')}
+                {isDesktopLayout ? (
+                  <>
+                    <SendHorizontal className="w-3.5 h-3.5" />
+                    {t('pages.cloudExplorer.transfer', 'Transferir')}
+                  </>
+                ) : (
+                  <>
+                    {t('pages.cloudExplorer.continueBtn', 'Continuar')}
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -783,6 +808,51 @@ export default function CloudExplorer() {
   } | null>(null);
   const [previewItem, setPreviewItem] = useState<{ item: CloudItem; provider: Provider; s3Bucket?: string } | null>(null);
   const [transferSuccess, setTransferSuccess] = useState<{ fileName: string; destProvider: string } | null>(null);
+
+  // Mobile: a single panel is shown at a time instead of side-by-side, since
+  // HTML5 drag-and-drop doesn't work on touch screens. Selecting files and
+  // tapping "Continuar" switches the visible panel to the destination.
+  const isDesktop = useIsDesktopLayout();
+  const [mobileVisiblePanel, setMobileVisiblePanel] = useState<1 | 2>(1);
+  const [mobileStage, setMobileStage] = useState<'browse' | 'destination'>('browse');
+  const [mobilePendingSelection, setMobilePendingSelection] = useState<{
+    items: CloudItem[];
+    provider: Provider;
+    path: string;
+  } | null>(null);
+
+  function handleRequestTransfer(items: CloudItem[], provider: Provider, path: string) {
+    if (!isDesktop) {
+      setMobilePendingSelection({ items, provider, path });
+      setMobileStage('destination');
+      setMobileVisiblePanel(provider === panel1.provider ? 2 : 1);
+      return;
+    }
+    handleMultiTransfer(items, provider, path);
+  }
+
+  function handleMobileSendHere() {
+    if (!mobilePendingSelection) return;
+    handleMultiTransfer(mobilePendingSelection.items, mobilePendingSelection.provider, mobilePendingSelection.path);
+  }
+
+  function handleMobileBack() {
+    if (mobilePendingSelection) {
+      setMobileVisiblePanel(mobilePendingSelection.provider === panel1.provider ? 1 : 2);
+    }
+    setMobileStage('browse');
+    setMobilePendingSelection(null);
+  }
+
+  // Once the transfer modal closes (cancel, error, or success), drop back to browse mode.
+  const wasSyncModalOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasSyncModalOpenRef.current && !showSyncModal) {
+      setMobileStage('browse');
+      setMobilePendingSelection(null);
+    }
+    wasSyncModalOpenRef.current = showSyncModal;
+  }, [showSyncModal]);
 
   function handleDragStart(item: CloudItem, provider: Provider, sourcePath: string) {
     setDraggedItem({ item, provider, sourcePath });
@@ -1343,36 +1413,84 @@ export default function CloudExplorer() {
             )}
           </AnimatePresence>
 
+          {/* Mobile panel switcher — only while browsing/selecting */}
+          {mobileStage === 'browse' && (
+            <div className="flex lg:hidden items-center gap-2">
+              {([1, 2] as const).map((id) => {
+                const p = id === 1 ? panel1 : panel2;
+                const active = mobileVisiblePanel === id;
+                return (
+                  <button
+                    key={id}
+                    onClick={() => setMobileVisiblePanel(id)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
+                      active ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-400'
+                    }`}
+                  >
+                    <ProviderIcon provider={p.provider} className="w-3.5 h-3.5" />
+                    {getProviderName(p.provider)}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Mobile destination bar — only while choosing where to send the selection */}
+          {mobileStage === 'destination' && mobilePendingSelection && (
+            <div className="flex lg:hidden items-center justify-between bg-blue-600 text-white rounded-xl px-4 py-2.5 shadow-lg shadow-blue-200">
+              <button onClick={handleMobileBack} className="flex items-center gap-1 text-xs font-bold text-blue-100 hover:text-white transition-colors">
+                <ChevronLeft className="w-3.5 h-3.5" />
+                {t('pages.cloudExplorer.backBtn', 'Atrás')}
+              </button>
+              <span className="text-xs font-bold">
+                {t('pages.cloudExplorer.chooseDestination', 'Elegí dónde enviar {{count}} archivo(s)', { count: mobilePendingSelection.items.length })}
+              </span>
+              <button
+                onClick={handleMobileSendHere}
+                className="flex items-center gap-1.5 text-xs font-bold bg-white text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors flex-shrink-0"
+              >
+                <SendHorizontal className="w-3.5 h-3.5" />
+                {t('pages.cloudExplorer.sendHere', 'Enviar aquí')}
+              </button>
+            </div>
+          )}
+
           {/* Panels */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <CloudPanel
-              panelId={1}
-              panelState={panel1}
-              setPanelState={setPanel1}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDrop={(e) => { e.preventDefault(); handleDrop(1); }}
-              isDragTarget={dropTarget === 1}
-              isDragSource={dragSourcePanel === 1}
-              onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(1); }}
-              onDragLeave={() => setDropTarget(null)}
-              onRequestMultiTransfer={handleMultiTransfer}
-              onPreview={(item) => setPreviewItem({ item, provider: panel1.provider, s3Bucket: panel1.s3Bucket })}
-            />
-            <CloudPanel
-              panelId={2}
-              panelState={panel2}
-              setPanelState={setPanel2}
-              onDragStart={handleDragStart}
-              onDragEnd={handleDragEnd}
-              onDrop={(e) => { e.preventDefault(); handleDrop(2); }}
-              isDragTarget={dropTarget === 2}
-              isDragSource={dragSourcePanel === 2}
-              onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(2); }}
-              onDragLeave={() => setDropTarget(null)}
-              onRequestMultiTransfer={handleMultiTransfer}
-              onPreview={(item) => setPreviewItem({ item, provider: panel2.provider, s3Bucket: panel2.s3Bucket })}
-            />
+            <div className={`${mobileVisiblePanel === 1 ? 'block' : 'hidden'} lg:block`}>
+              <CloudPanel
+                panelId={1}
+                panelState={panel1}
+                setPanelState={setPanel1}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => { e.preventDefault(); handleDrop(1); }}
+                isDragTarget={dropTarget === 1}
+                isDragSource={dragSourcePanel === 1}
+                onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(1); }}
+                onDragLeave={() => setDropTarget(null)}
+                onRequestMultiTransfer={handleRequestTransfer}
+                onPreview={(item) => setPreviewItem({ item, provider: panel1.provider, s3Bucket: panel1.s3Bucket })}
+                isDesktopLayout={isDesktop}
+              />
+            </div>
+            <div className={`${mobileVisiblePanel === 2 ? 'block' : 'hidden'} lg:block`}>
+              <CloudPanel
+                panelId={2}
+                panelState={panel2}
+                setPanelState={setPanel2}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDrop={(e) => { e.preventDefault(); handleDrop(2); }}
+                isDragTarget={dropTarget === 2}
+                isDragSource={dragSourcePanel === 2}
+                onDragEnter={(e) => { e.preventDefault(); if (draggedItem) setDropTarget(2); }}
+                onDragLeave={() => setDropTarget(null)}
+                onRequestMultiTransfer={handleRequestTransfer}
+                onPreview={(item) => setPreviewItem({ item, provider: panel2.provider, s3Bucket: panel2.s3Bucket })}
+                isDesktopLayout={isDesktop}
+              />
+            </div>
           </div>
         </div>
       </main>
