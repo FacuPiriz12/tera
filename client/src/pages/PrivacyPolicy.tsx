@@ -69,8 +69,8 @@ const SECTIONS: Record<Lang, { id: string; title: string }[]> = {
 };
 
 export default function PrivacyPolicy() {
+  const { t, i18n } = useTranslation();
   usePageTitle(t('pageTitles.privacy', 'TERA — Privacy Policy'));
-  const { i18n } = useTranslation();
   const raw = i18n.language?.startsWith("pt") ? "pt" : i18n.language?.startsWith("en") ? "en" : "es";
   const [lang, setLang] = useState<Lang>(raw as Lang);
   const [activeSection, setActiveSection] = useState("intro");
