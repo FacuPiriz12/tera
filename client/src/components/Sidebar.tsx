@@ -1,12 +1,15 @@
 import { useState } from 'react';
-import { Home, FileText, Settings, Globe, Folder, BarChart3, Zap } from "lucide-react";
+import { Home, FileText, Settings, Globe, Folder, BarChart3, Zap, Shield, Users } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Sidebar() {
   const [location] = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   const menuItems = [
     { id: 'home',           path: "/dashboard",      icon: Home,      label: t('common.navigation.home') },
@@ -78,6 +81,23 @@ export default function Sidebar() {
             {toolItems.map(item => <NavItem key={item.id} {...item} />)}
           </div>
         </div>
+
+        {isAdmin && (
+          <>
+            <div className="h-px bg-slate-100 my-3 mx-3" />
+            <div>
+              {isExpanded && (
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-3 animate-in fade-in duration-300">
+                  Admin
+                </p>
+              )}
+              <div className="space-y-0.5">
+                <NavItem id="admin-users" path="/admin/users" icon={Users} label="Usuarios" />
+                <NavItem id="admin-ops" path="/admin/operations" icon={Shield} label="Operaciones" />
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </aside>
   );
