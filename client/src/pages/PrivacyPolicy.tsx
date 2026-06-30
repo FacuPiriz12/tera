@@ -238,17 +238,17 @@ export default function PrivacyPolicy() {
             <Section id="quienes" number="02" icon={<Eye className="w-5 h-5" />} title={sections[1].title}>
               {lang === "es" && <>
                 <P><strong>TERA</strong> es una plataforma SaaS para transferir y sincronizar archivos entre Google Drive, Dropbox, OneDrive, Box, Amazon S3 y otros servicios de almacenamiento en la nube.</P>
-                <InfoGrid items={[{ label: "Nombre comercial", value: "TERA" }, { label: "Sitio web", value: APP_URL }, { label: "Contacto", value: CONTACT_EMAIL }, { label: "País", value: "Argentina" }]} />
+                <InfoGrid items={[{ label: "Nombre comercial", value: "TERA" }, { label: "Sitio web", value: APP_URL }, { label: "Contacto", value: CONTACT_EMAIL }]} />
                 <P>Actuamos como intermediario técnico autorizado. <strong>No somos propietarios de tus archivos.</strong> No vendemos ni usamos tus datos para publicidad.</P>
               </>}
               {lang === "en" && <>
                 <P><strong>TERA</strong> is a SaaS platform for transferring and syncing files between Google Drive, Dropbox, OneDrive, Box, Amazon S3 and other cloud storage services.</P>
-                <InfoGrid items={[{ label: "Trade name", value: "TERA" }, { label: "Website", value: APP_URL }, { label: "Contact", value: CONTACT_EMAIL }, { label: "Country", value: "Argentina" }]} />
+                <InfoGrid items={[{ label: "Trade name", value: "TERA" }, { label: "Website", value: APP_URL }, { label: "Contact", value: CONTACT_EMAIL }]} />
                 <P>We act as an authorized technical intermediary. <strong>We do not own your files.</strong> We do not sell or use your data for advertising.</P>
               </>}
               {lang === "pt" && <>
                 <P><strong>TERA</strong> é uma plataforma SaaS para transferir e sincronizar arquivos entre Google Drive, Dropbox, OneDrive, Box, Amazon S3 e outros serviços de armazenamento em nuvem.</P>
-                <InfoGrid items={[{ label: "Nome comercial", value: "TERA" }, { label: "Site", value: APP_URL }, { label: "Contato", value: CONTACT_EMAIL }, { label: "País", value: "Argentina" }]} />
+                <InfoGrid items={[{ label: "Nome comercial", value: "TERA" }, { label: "Site", value: APP_URL }, { label: "Contato", value: CONTACT_EMAIL }]} />
                 <P>Atuamos como intermediário técnico autorizado. <strong>Não somos proprietários dos seus arquivos.</strong> Não vendemos nem usamos seus dados para publicidade.</P>
               </>}
             </Section>
@@ -476,9 +476,9 @@ export default function PrivacyPolicy() {
 
             {/* 11 */}
             <Section id="internac" number="11" icon={<Globe className="w-5 h-5" />} title={sections[10].title}>
-              {lang === "es" && <><P>TERA opera desde Argentina y procesa datos en <strong>EE.UU.</strong> (Render / AWS us-east-1) y en la infraestructura de Supabase. Al usar TERA, consentís esta transferencia. Implementamos Cláusulas Contractuales Estándar (SCCs) para transferencias desde el EEE y cifrado en tránsito para todos los datos sensibles.</P></>}
-              {lang === "en" && <><P>TERA operates from Argentina and processes data in the <strong>USA</strong> (Render / AWS us-east-1) and Supabase infrastructure. By using TERA, you consent to this transfer. We implement Standard Contractual Clauses (SCCs) for EEA transfers and in-transit encryption for all sensitive data.</P></>}
-              {lang === "pt" && <><P>A TERA opera a partir da Argentina e processa dados nos <strong>EUA</strong> (Render / AWS us-east-1) e na infraestrutura do Supabase. Ao usar a TERA, você consente com essa transferência. Implementamos Cláusulas Contratuais Padrão (SCCs) para transferências do EEE e criptografia em trânsito para todos os dados sensíveis.</P></>}
+              {lang === "es" && <><P>TERA procesa datos en <strong>EE.UU.</strong> (Render / AWS us-east-1) y en la infraestructura de Supabase. Al usar TERA, consentís esta transferencia. Implementamos Cláusulas Contractuales Estándar (SCCs) para transferencias desde el EEE y cifrado en tránsito para todos los datos sensibles.</P></>}
+              {lang === "en" && <><P>TERA processes data in the <strong>USA</strong> (Render / AWS us-east-1) and Supabase infrastructure. By using TERA, you consent to this transfer. We implement Standard Contractual Clauses (SCCs) for EEA transfers and in-transit encryption for all sensitive data.</P></>}
+              {lang === "pt" && <><P>A TERA processa dados nos <strong>EUA</strong> (Render / AWS us-east-1) e na infraestrutura do Supabase. Ao usar a TERA, você consente com essa transferência. Implementamos Cláusulas Contratuais Padrão (SCCs) para transferências do EEE e criptografia em trânsito para todos os dados sensíveis.</P></>}
             </Section>
 
             {/* 12 */}
@@ -513,9 +513,9 @@ export default function PrivacyPolicy() {
 
             {/* 15 */}
             <Section id="ley" number="15" icon={<Shield className="w-5 h-5" />} title={sections[14].title}>
-              {lang === "es" && <BulletList items={["Argentina: Ley 25.326 de Protección de Datos Personales", "Unión Europea: GDPR (Reglamento UE 2016/679)", "California: CCPA", "Brasil: LGPD (Lei 13.709/2018) — para usuarios brasileños", "Jurisdicción: Ciudad Autónoma de Buenos Aires, Argentina"]} />}
-              {lang === "en" && <BulletList items={["Argentina: Law 25,326 on Personal Data Protection", "European Union: GDPR (Regulation EU 2016/679)", "California: CCPA", "Brazil: LGPD (Law 13,709/2018) — for Brazilian users", "Jurisdiction: Autonomous City of Buenos Aires, Argentina"]} />}
-              {lang === "pt" && <BulletList items={["Argentina: Lei 25.326 de Proteção de Dados Pessoais", "União Europeia: GDPR (Regulamento UE 2016/679)", "Califórnia: CCPA", "Brasil: LGPD (Lei 13.709/2018) — aplicável a usuários brasileiros", "Jurisdição: Cidade Autônoma de Buenos Aires, Argentina"]} />}
+              {lang === "es" && <BulletList items={["Unión Europea: GDPR (Reglamento UE 2016/679)", "California: CCPA", "Brasil: LGPD (Lei 13.709/2018) — para usuarios brasileños", "Aplicamos además las leyes de protección de datos personales vigentes en la jurisdicción donde TERA opera"]} />}
+              {lang === "en" && <BulletList items={["European Union: GDPR (Regulation EU 2016/679)", "California: CCPA", "Brazil: LGPD (Law 13,709/2018) — for Brazilian users", "We also apply the personal data protection laws in force in the jurisdiction where TERA operates"]} />}
+              {lang === "pt" && <BulletList items={["União Europeia: GDPR (Regulamento UE 2016/679)", "Califórnia: CCPA", "Brasil: LGPD (Lei 13.709/2018) — aplicável a usuários brasileiros", "Também aplicamos as leis de proteção de dados pessoais vigentes na jurisdição onde a TERA opera"]} />}
             </Section>
 
           </main>

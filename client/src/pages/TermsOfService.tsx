@@ -435,16 +435,16 @@ export default function TermsOfService() {
 
             {/* 14 */}
             <Section id="disputas" number="14" icon={<Scale className="w-5 h-5" />} title={sections[13].title}>
-              {lang === "es" && <BulletList items={["<strong>Paso 1:</strong> Resolución amistosa — contactarnos en " + CONTACT_EMAIL + " dentro de los 30 días", "<strong>Paso 2:</strong> Mediación ante institución neutral acordada por ambas partes", "<strong>Paso 3:</strong> Tribunales ordinarios de la Ciudad Autónoma de Buenos Aires, Argentina"]} />}
-              {lang === "en" && <BulletList items={["<strong>Step 1:</strong> Friendly resolution — contact us at " + CONTACT_EMAIL + " within 30 days", "<strong>Step 2:</strong> Mediation before a neutral institution agreed by both parties", "<strong>Step 3:</strong> Ordinary courts of the Autonomous City of Buenos Aires, Argentina"]} />}
-              {lang === "pt" && <BulletList items={["<strong>Passo 1:</strong> Resolução amigável — entre em contato em " + CONTACT_EMAIL + " dentro de 30 dias", "<strong>Passo 2:</strong> Mediação perante instituição neutra acordada pelas partes", "<strong>Passo 3:</strong> Tribunais ordinários da Cidade Autônoma de Buenos Aires, Argentina"]} />}
+              {lang === "es" && <BulletList items={["<strong>Paso 1:</strong> Resolución amistosa — contactarnos en " + CONTACT_EMAIL + " dentro de los 30 días", "<strong>Paso 2:</strong> Mediación ante institución neutral acordada por ambas partes", "<strong>Paso 3:</strong> Tribunales ordinarios competentes según la jurisdicción de TERA"]} />}
+              {lang === "en" && <BulletList items={["<strong>Step 1:</strong> Friendly resolution — contact us at " + CONTACT_EMAIL + " within 30 days", "<strong>Step 2:</strong> Mediation before a neutral institution agreed by both parties", "<strong>Step 3:</strong> Ordinary courts with jurisdiction over TERA"]} />}
+              {lang === "pt" && <BulletList items={["<strong>Passo 1:</strong> Resolução amigável — entre em contato em " + CONTACT_EMAIL + " dentro de 30 dias", "<strong>Passo 2:</strong> Mediação perante instituição neutra acordada pelas partes", "<strong>Passo 3:</strong> Tribunais ordinários competentes conforme a jurisdição da TERA"]} />}
             </Section>
 
             {/* 15 */}
             <Section id="ley" number="15" icon={<Scale className="w-5 h-5" />} title={sections[14].title}>
-              {lang === "es" && <BulletList items={["Ley general: Legislación civil y comercial de la República Argentina", "Consumidor: Ley 24.240 de Defensa del Consumidor", "Privacidad: Ley 25.326 de Protección de Datos Personales", "Usuarios europeos: GDPR en lo que corresponda", "Jurisdicción: Tribunales de la Ciudad Autónoma de Buenos Aires"]} />}
-              {lang === "en" && <BulletList items={["General law: Civil and commercial legislation of Argentina", "Consumer: Law 24,240 on Consumer Defense", "Privacy: Law 25,326 on Personal Data Protection", "European users: GDPR where applicable", "Jurisdiction: Courts of the Autonomous City of Buenos Aires"]} />}
-              {lang === "pt" && <BulletList items={["Lei geral: Legislação civil e comercial da República Argentina", "Consumidor: Lei 24.240 de Defesa do Consumidor (Argentina)", "Privacidade: Lei 25.326 de Proteção de Dados Pessoais + LGPD para usuários brasileiros", "Usuários europeus: GDPR quando aplicável", "Jurisdição: Tribunais da Cidade Autônoma de Buenos Aires, Argentina"]} />}
+              {lang === "es" && <BulletList items={["Privacidad: Ley 25.326 de Protección de Datos Personales", "Usuarios europeos: GDPR en lo que corresponda", "Usuarios brasileños: LGPD en lo que corresponda", "Jurisdicción: Tribunales competentes según la legislación aplicable"]} />}
+              {lang === "en" && <BulletList items={["Privacy: Law 25,326 on Personal Data Protection", "European users: GDPR where applicable", "Brazilian users: LGPD where applicable", "Jurisdiction: Courts with applicable jurisdiction"]} />}
+              {lang === "pt" && <BulletList items={["Privacidade: Lei 25.326 de Proteção de Dados Pessoais", "Usuários europeus: GDPR quando aplicável", "Usuários brasileiros: LGPD quando aplicável", "Jurisdição: Tribunais competentes conforme a legislação aplicável"]} />}
             </Section>
 
             {/* 16 */}
