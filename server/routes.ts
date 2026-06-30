@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, createSupabaseClient } from "./replitAuth";
-import { sendPasswordResetEmail, sendVerificationCodeEmail, sendEmailChangeEmail } from "./lib/email";
+import { sendPasswordResetEmail, sendVerificationCodeEmail, sendEmailChangeEmail, sendAdminCustomEmail } from "./lib/email";
 import { GoogleDriveService } from "./services/googleDriveService";
 import { DropboxService } from "./services/dropboxService";
 import { OneDriveService } from "./services/oneDriveService";
@@ -2583,6 +2583,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error retrying operation:", error);
       res.status(500).json({ message: "Failed to retry operation" });
+    }
+  });
+
+  // Send custom email to a user (admin only)
+  app.post('/api/admin/send-email', isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const { to, subject, message, lang } = req.body;
+      if (!to || !subject || !message) {
+        return res.status(400).json({ message: "to, subject y message son requeridos" });
+      }
+      const sent = await sendAdminCustomEmail(to, subject, message, lang);
+      if (!sent) return res.status(500).json({ message: "No se pudo enviar el email" });
+      res.json({ message: "Email enviado correctamente" });
+    } catch (error) {
+      console.error("Error sending admin email:", error);
+      res.status(500).json({ message: "Error al enviar el email" });
     }
   });
 

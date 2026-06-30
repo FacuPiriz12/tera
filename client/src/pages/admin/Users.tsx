@@ -20,7 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Shield, Ban, CheckCircle, Trash2, Settings } from "lucide-react";
+import { Shield, Ban, CheckCircle, Trash2, Settings, Mail } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 
@@ -28,6 +29,10 @@ export default function AdminUsers() {
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailTarget, setEmailTarget] = useState<User | null>(null);
+  const [emailSubject, setEmailSubject] = useState('');
+  const [emailMessage, setEmailMessage] = useState('');
   const { toast } = useToast();
 
   const { data, isLoading } = useQuery<{
@@ -132,6 +137,35 @@ export default function AdminUsers() {
     },
   });
 
+  const sendEmailMutation = useMutation({
+    mutationFn: async ({ to, subject, message, lang }: { to: string; subject: string; message: string; lang?: string }) => {
+      const res = await fetch('/api/admin/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ to, subject, message, lang }),
+      });
+      if (!res.ok) throw new Error((await res.json()).message);
+      return res.json();
+    },
+    onSuccess: () => {
+      setEmailDialogOpen(false);
+      setEmailSubject('');
+      setEmailMessage('');
+      toast({ title: "Email enviado", description: `Mensaje enviado a ${emailTarget?.email}` });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "No se pudo enviar el email", variant: "destructive" });
+    },
+  });
+
+  const handleOpenEmail = (user: User) => {
+    setEmailTarget(user);
+    setEmailSubject('');
+    setEmailMessage('');
+    setEmailDialogOpen(true);
+  };
+
   const handleEditLimits = (user: User) => {
     setSelectedUser(user);
     setEditDialogOpen(true);
@@ -227,6 +261,14 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleOpenEmail(user)}
+                        title="Enviar email"
+                      >
+                        <Mail className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -349,6 +391,53 @@ export default function AdminUsers() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Enviar email a {emailTarget?.firstName || emailTarget?.email}</DialogTitle>
+            <DialogDescription>{emailTarget?.email}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label htmlFor="email-subject">Asunto</Label>
+              <Input
+                id="email-subject"
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="Asunto del mensaje"
+              />
+            </div>
+            <div>
+              <Label htmlFor="email-message">Mensaje</Label>
+              <Textarea
+                id="email-message"
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                placeholder="Escribí tu mensaje acá..."
+                rows={6}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                disabled={!emailSubject || !emailMessage || sendEmailMutation.isPending}
+                onClick={() => emailTarget && sendEmailMutation.mutate({
+                  to: emailTarget.email!,
+                  subject: emailSubject,
+                  message: emailMessage,
+                  lang: emailTarget.language || 'es',
+                })}
+              >
+                {sendEmailMutation.isPending ? "Enviando..." : "Enviar email"}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

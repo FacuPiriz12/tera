@@ -589,7 +589,36 @@ export async function sendTaskNotificationEmail(
   }
 }
 
-// ── 7. Acceso anticipado ──────────────────────────────────────────────────────
+// ── 7. Email manual desde admin ───────────────────────────────────────────────
+
+export async function sendAdminCustomEmail(
+  to: string,
+  subject: string,
+  message: string,
+  lang?: string
+): Promise<boolean> {
+  const resend = getResendClient();
+  if (!resend) return false;
+  const l = normLang(lang);
+
+  const html = layout(`
+    ${heading(subject)}
+    ${divider()}
+    ${message.split('\n').filter(Boolean).map(line => p(line)).join('')}
+    ${divider()}
+    ${note({ es: 'Este mensaje fue enviado por el equipo de TERA.', en: 'This message was sent by the TERA team.', pt: 'Esta mensagem foi enviada pela equipe TERA.' }[l])}
+  `, subject, l);
+
+  try {
+    await resend.emails.send({ from: FROM, to, subject, html });
+    return true;
+  } catch (err) {
+    console.error('sendAdminCustomEmail error:', err);
+    return false;
+  }
+}
+
+// ── 8. Acceso anticipado ──────────────────────────────────────────────────────
 
 export async function sendEarlyAccessEmail(email: string, firstName?: string, lang?: string): Promise<boolean> {
   const resend = getResendClient();
