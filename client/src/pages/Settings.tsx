@@ -15,9 +15,10 @@ import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest, getAuthHeaders } from "@/lib/queryClient";
 import { supabasePromise } from "@/lib/supabase";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import LanguageSelector from "@/components/LanguageSelector";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import {
@@ -43,6 +44,12 @@ const PLAN_DETAILS = {
   pro:      { label: "Pro",      color: "bg-blue-100 text-blue-700",     icon: Zap,      monthlyUSD: 7.99 },
   business: { label: "Business", color: "bg-violet-100 text-violet-700", icon: Crown,    monthlyUSD: 19.99 },
 } as const;
+
+const PRICE_ID_TO_PLAN: Record<string, "pro" | "business"> = {
+  price_1Tk1ozGMtCDZ5sKadebYpBII: "pro",
+  price_1Tk1viGMtCDZ5sKaWGPYSJfA: "business",
+};
+const PLAN_FEATURE_COUNT: Record<"pro" | "business", number> = { pro: 10, business: 10 };
 
 function useTheme() {
   const [dark, setDark] = useState(() => {
@@ -88,6 +95,8 @@ export default function Settings() {
   const [otpCode, setOtpCode] = useState("");
   const [cancelConfirm, setCancelConfirm] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [welcomePlan, setWelcomePlan] = useState<"pro" | "business" | null>(null);
+  const pendingPlanRef = useRef<"pro" | "business" | null>(null);
 
   // Password change state
   const [currentPw, setCurrentPw] = useState("");
@@ -112,6 +121,33 @@ export default function Settings() {
       });
     }
   }, [user?.id]);
+
+  // Returning from Stripe checkout: confirm the new plan and show the welcome dialog.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("session_id")) return;
+    window.history.replaceState({}, "", window.location.pathname);
+
+    const expectedPlan = sessionStorage.getItem("tera_pending_plan") as "pro" | "business" | null;
+    sessionStorage.removeItem("tera_pending_plan");
+    if (!expectedPlan) return;
+    pendingPlanRef.current = expectedPlan;
+
+    let attempts = 0;
+    const poll = () => {
+      attempts++;
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      if (attempts < 6 && pendingPlanRef.current) setTimeout(poll, 1500);
+    };
+    poll();
+  }, []);
+
+  useEffect(() => {
+    if (pendingPlanRef.current && user?.membershipPlan === pendingPlanRef.current) {
+      setWelcomePlan(pendingPlanRef.current);
+      pendingPlanRef.current = null;
+    }
+  }, [user?.membershipPlan]);
 
   const updateUserMutation = useMutation({
     mutationFn: async (data: SettingsFormData) =>
@@ -153,6 +189,9 @@ export default function Settings() {
   const handleCheckout = async (priceId: string) => {
     try {
       setCheckoutLoading(priceId);
+      if (PRICE_ID_TO_PLAN[priceId]) {
+        sessionStorage.setItem("tera_pending_plan", PRICE_ID_TO_PLAN[priceId]);
+      }
       const authHeaders = await getAuthHeaders();
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
@@ -213,6 +252,7 @@ export default function Settings() {
   const plan = (user?.membershipPlan as keyof typeof PLAN_DETAILS) || "free";
   const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.free;
   const PlanIcon = planInfo.icon;
+  const WelcomePlanIcon = welcomePlan ? PLAN_DETAILS[welcomePlan].icon : Package;
 
   const allServices = [
     { logo: <GoogleDriveLogo className="w-5 h-5" />, name: "Google Drive", connected: user?.googleConnected, href: "/integrations" },
@@ -729,6 +769,39 @@ export default function Settings() {
 
         </div>
       </div>
+
+      <Dialog open={!!welcomePlan} onOpenChange={(open) => !open && setWelcomePlan(null)}>
+        <DialogContent className="sm:max-w-md">
+          {welcomePlan && (
+            <>
+              <DialogHeader>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-2 ${
+                  welcomePlan === "business" ? "bg-violet-600" : "bg-blue-600"
+                }`}>
+                  <WelcomePlanIcon className="w-6 h-6 text-white" />
+                </div>
+                <DialogTitle className="text-xl font-black">
+                  {t("settingsPage.plan.welcomeTitle")}
+                </DialogTitle>
+                <DialogDescription>
+                  {t("settingsPage.plan.welcomeDesc", { plan: PLAN_DETAILS[welcomePlan].label })}
+                </DialogDescription>
+              </DialogHeader>
+              <ul className="space-y-2 py-2">
+                {Array.from({ length: PLAN_FEATURE_COUNT[welcomePlan] }, (_, i) => i + 1).map((n) => (
+                  <li key={n} className="flex items-center gap-2 text-sm text-gray-700">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
+                    {t(`pricingPage.plans.${welcomePlan}.f${n}`)}
+                  </li>
+                ))}
+              </ul>
+              <Button onClick={() => setWelcomePlan(null)} className="w-full">
+                {t("settingsPage.plan.welcomeCta")}
+              </Button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
