@@ -792,6 +792,7 @@ const esTranslations = {
     perMonth: "/mes",
     freeForever: "Gratis para siempre",
     billedAnnual: "Facturado {{sym}}{{total}}/año · ahorrás {{sym}}{{savings}}",
+    loginRequired: { title: "Necesitás una cuenta", desc: "Creá tu cuenta gratis para continuar con la compra." },
     plans: {
       free: { tagline: "Para empezar sin costo", cta: "Empezar gratis", f1: "5 GB tráfico cross-cloud/mes", f2: "20 transferencias/mes", f3: "100 MB máximo por archivo", f4: "2 servicios conectados", f5: "Google Drive + Dropbox", f6: "7 días de historial", f7: "Tareas programadas", f8: "Analytics", f9: "Notificaciones por email" },
       pro: { tagline: "Para uso regular y profesional", cta: "Comenzar Pro", badge: "Más popular", f1: "200 GB tráfico cross-cloud/mes", f2: "300 transferencias/mes", f3: "5 GB máximo por archivo", f4: "5 servicios conectados", f5: "Todos los proveedores (OneDrive, Box, S3…)", f6: "90 días de historial", f7: "5 tareas programadas", f8: "Analytics básico", f9: "Notificaciones por email", f10: "Soporte prioritario 24h" },
@@ -1180,6 +1181,7 @@ const enTranslations = {
     perMonth: "/mo",
     freeForever: "Free forever",
     billedAnnual: "Billed {{sym}}{{total}}/year · save {{sym}}{{savings}}",
+    loginRequired: { title: "You need an account", desc: "Create your free account to continue with your purchase." },
     plans: {
       free: { tagline: "Get started at no cost", cta: "Start free", f1: "5 GB cross-cloud traffic/month", f2: "20 transfers/month", f3: "100 MB max per file", f4: "2 connected services", f5: "Google Drive + Dropbox", f6: "7-day history", f7: "Scheduled tasks", f8: "Analytics", f9: "Email notifications" },
       pro: { tagline: "For regular and professional use", cta: "Start Pro", badge: "Most popular", f1: "200 GB cross-cloud traffic/month", f2: "300 transfers/month", f3: "5 GB max per file", f4: "5 connected services", f5: "All providers (OneDrive, Box, S3…)", f6: "90-day history", f7: "5 scheduled tasks", f8: "Basic analytics", f9: "Email notifications", f10: "Priority support 24h" },
@@ -1568,6 +1570,7 @@ const ptTranslations = {
     perMonth: "/mês",
     freeForever: "Grátis para sempre",
     billedAnnual: "Cobrado {{sym}}{{total}}/ano · economize {{sym}}{{savings}}",
+    loginRequired: { title: "Você precisa de uma conta", desc: "Crie sua conta grátis para continuar com a compra." },
     plans: {
       free: { tagline: "Para começar sem custo", cta: "Começar grátis", f1: "5 GB tráfego cross-cloud/mês", f2: "20 transferências/mês", f3: "100 MB máximo por arquivo", f4: "2 serviços conectados", f5: "Google Drive + Dropbox", f6: "7 dias de histórico", f7: "Tarefas agendadas", f8: "Analytics", f9: "Notificações por email" },
       pro: { tagline: "Para uso regular e profissional", cta: "Começar Pro", badge: "Mais popular", f1: "200 GB tráfego cross-cloud/mês", f2: "300 transferências/mês", f3: "5 GB máximo por arquivo", f4: "5 serviços conectados", f5: "Todos os provedores (OneDrive, Box, S3…)", f6: "90 dias de histórico", f7: "5 tarefas agendadas", f8: "Analytics básico", f9: "Notificações por email", f10: "Suporte prioritário 24h" },

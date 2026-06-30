@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Check, X, ArrowRight, Star, Zap, Shield, RefreshCw, Clock, BarChart2, Bell, Loader2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import logoUrl from '../assets/logo.png';
 import Footer from '../components/Footer';
 import LanguageSelector from '../components/LanguageSelector';
@@ -126,6 +126,7 @@ export default function PricingPage() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
   const { i18n, t } = useTranslation();
+  const [, setLocation] = useLocation();
   usePageTitle(t('pageTitles.pricing', 'TERA — Pricing'));
   const [currency, setCurrency] = useState<Currency>('USD');
   useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
@@ -182,7 +183,11 @@ export default function PricingPage() {
         body: JSON.stringify({ priceId, currency: currency.toLowerCase() }),
       });
       if (res.status === 401) {
-        window.location.href = '/';
+        toast({
+          title: t('pricingPage.loginRequired.title'),
+          description: t('pricingPage.loginRequired.desc'),
+        });
+        setTimeout(() => setLocation('/login?mode=register'), 1200);
         return;
       }
       if (!res.ok) {
