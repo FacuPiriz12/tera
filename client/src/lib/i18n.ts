@@ -538,7 +538,6 @@ const esTranslations = {
       legal: "Legal",
       privacy: "Privacidad",
       terms: "Términos",
-      cookies: "Cookies",
       rights: "© 2026 TERA. Todos los derechos reservados.",
       operational: "Sistemas operativos"
     },
@@ -1116,7 +1115,7 @@ const enTranslations = {
     },
     footer: {
       description: "The simplest way to move and sync files between your cloud services.",
-      platform: "Platform", legal: "Legal", privacy: "Privacy", terms: "Terms", cookies: "Cookies",
+      platform: "Platform", legal: "Legal", privacy: "Privacy", terms: "Terms",
       rights: "© 2026 TERA. All rights reserved.",
       operational: "Systems operational"
     },
@@ -1505,7 +1504,7 @@ const ptTranslations = {
     },
     footer: {
       description: "A forma mais simples de mover e sincronizar arquivos entre seus serviços na nuvem.",
-      platform: "Plataforma", legal: "Legal", privacy: "Privacidade", terms: "Termos", cookies: "Cookies",
+      platform: "Plataforma", legal: "Legal", privacy: "Privacidade", terms: "Termos",
       rights: "© 2026 TERA. Todos os direitos reservados.",
       operational: "Sistemas operacionais"
     },

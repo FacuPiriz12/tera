@@ -753,7 +753,6 @@ export default function Home() {
                 {[
                   ['/privacy', t('landing.footer.privacy')],
                   ['/terms',   t('landing.footer.terms')],
-                  ['#',        t('landing.footer.cookies')],
                 ].map(([href, label]) => (
                   <li key={label}><a href={href} className="text-gray-400 hover:text-blue-600 font-semibold text-sm transition-colors">{label}</a></li>
                 ))}
