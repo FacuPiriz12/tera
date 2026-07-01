@@ -76,6 +76,7 @@ export default function Header() {
   }, []);
 
   return (
+    <>
     <header className="sticky top-0 z-[100] bg-white border-b border-gray-100 shadow-sm h-[75px]">
       <div className="px-8 h-full flex items-center justify-between max-w-full mx-auto">
 
@@ -220,7 +221,7 @@ export default function Header() {
         </div>
       </div>
     </header>
-
     <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
+    </>
   );
 }
