@@ -266,6 +266,27 @@ export class GoogleDriveService {
     }
   }
 
+  async searchFiles(term: string): Promise<{ id: string; name: string; path: string; mimeType: string; size?: number; isFolder: boolean; provider: string }[]> {
+    await this.ensureValidToken();
+    const q = `name contains '${term.replace(/'/g, "\\'")}' and trashed = false`;
+    const response = await this.drive.files.list({
+      q,
+      fields: 'files(id,name,mimeType,size,parents)',
+      pageSize: 20,
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+    return (response.data.files || []).map((f: any) => ({
+      id: f.id,
+      name: f.name,
+      path: f.name,
+      mimeType: f.mimeType || '',
+      size: f.size ? parseInt(f.size) : undefined,
+      isFolder: f.mimeType === 'application/vnd.google-apps.folder',
+      provider: 'google',
+    }));
+  }
+
   /**
    * Copy a file to user's drive
    */

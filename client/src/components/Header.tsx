@@ -1,6 +1,7 @@
 import { Search, Bell, ClipboardList, User, LogOut, Settings, ChevronDown, CheckCircle2, XCircle, Loader2, ArrowRightLeft } from "lucide-react";
 import { useLocation } from "wouter";
 import { useRef, useEffect, useState } from "react";
+import GlobalSearch from "./GlobalSearch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -57,33 +58,22 @@ export default function Header() {
   const { jobs, activeJobsCount } = useTransfer();
   const searchRef = useRef<HTMLInputElement>(null);
   const [searchValue, setSearchValue] = useState('');
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
 
   const recentJobs = jobs.slice(0, 6);
   const hasUnread = jobs.some(j => j.status === 'completed' || j.status === 'failed' || j.status === 'in_progress');
 
-  // Cmd+K / Ctrl+K focuses search
+  // Cmd+K / Ctrl+K opens global search
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        searchRef.current?.focus();
-        searchRef.current?.select();
-      }
-      if (e.key === 'Escape' && document.activeElement === searchRef.current) {
-        searchRef.current?.blur();
-        setSearchValue('');
+        setGlobalSearchOpen(true);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && searchValue.trim()) {
-      setLocation(`/operations?q=${encodeURIComponent(searchValue.trim())}`);
-      searchRef.current?.blur();
-    }
-  }
 
   return (
     <header className="sticky top-0 z-[100] bg-white border-b border-gray-100 shadow-sm h-[75px]">
@@ -104,16 +94,13 @@ export default function Header() {
           <div className="flex-1 max-w-xl hidden md:block">
             <div className="relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
-              <input
-                ref={searchRef}
-                type="text"
-                value={searchValue}
-                onChange={e => setSearchValue(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder={t('common.actions.searchPlaceholder', 'Buscar archivos o carpetas...')}
-                className="w-full pl-11 pr-16 h-11 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 focus:bg-white transition-all duration-200"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded pointer-events-none hidden group-focus-within:hidden lg:flex items-center gap-0.5">
+              <button
+                onClick={() => setGlobalSearchOpen(true)}
+                className="w-full pl-11 pr-16 h-11 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 text-left hover:bg-white hover:border-blue-300 transition-all duration-200 cursor-text"
+              >
+                {t('common.actions.searchPlaceholder', 'Buscar archivos o carpetas...')}
+              </button>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded pointer-events-none lg:flex items-center gap-0.5 hidden">
                 ⌘K
               </span>
             </div>
@@ -233,5 +220,7 @@ export default function Header() {
         </div>
       </div>
     </header>
+
+    <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
   );
 }

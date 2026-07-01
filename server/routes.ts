@@ -783,6 +783,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ── Global file search ────────────────────────────────────────────────────────
+  // Called once per provider from the frontend in parallel.
+  // Returns: { id, name, path, mimeType, size, isFolder, provider }[]
+  app.get('/api/search', isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const q = (req.query.q as string || '').trim();
+    const provider = req.query.provider as string;
+
+    if (!q || q.length < 2) return res.json([]);
+
+    try {
+      if (provider === 'google') {
+        const svc = new GoogleDriveService(userId);
+        const files = await svc.searchFiles(q);
+        return res.json(files);
+      }
+
+      if (provider === 'dropbox') {
+        const svc = new DropboxService(userId);
+        await (svc as any).ensureValidToken();
+        const user = await storage.getUser(userId);
+        if (!user?.dropboxAccessToken) return res.json([]);
+        const { Dropbox } = await import('dropbox');
+        const dbx = new Dropbox({ accessToken: user.dropboxAccessToken, fetch });
+        const result = await (dbx as any).filesSearchV2({ query: q, options: { max_results: 20, file_status: { '.tag': 'active' } } });
+        const matches = result?.result?.matches || [];
+        return res.json(matches.map((m: any) => {
+          const meta = m.metadata?.metadata || m.metadata;
+          return {
+            id: meta?.id || meta?.path_lower || '',
+            name: meta?.name || '',
+            path: meta?.path_display || meta?.path_lower || '',
+            mimeType: meta?.['.tag'] === 'folder' ? 'folder' : (meta?.media_info?.metadata?.['.tag'] || 'file'),
+            size: meta?.size,
+            isFolder: meta?.['.tag'] === 'folder',
+            provider: 'dropbox',
+          };
+        }));
+      }
+
+      if (provider === 'onedrive') {
+        const user = await storage.getUser(userId);
+        if (!user?.onedriveAccessToken) return res.json([]);
+        let token = user.onedriveAccessToken;
+        const isExpired = user.onedriveTokenExpiry && new Date(user.onedriveTokenExpiry) <= new Date();
+        if (isExpired && user.onedriveRefreshToken) {
+          const refreshed = await OneDriveService.refreshAccessToken(user.onedriveRefreshToken);
+          token = refreshed.accessToken;
+        }
+        const url = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(q)}')?$top=20&$select=id,name,file,folder,size,parentReference,webUrl`;
+        const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!resp.ok) return res.json([]);
+        const data = await resp.json() as any;
+        return res.json((data.value || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          path: item.parentReference?.path ? `${item.parentReference.path}/${item.name}` : item.name,
+          mimeType: item.folder ? 'folder' : (item.file?.mimeType || 'file'),
+          size: item.size,
+          isFolder: !!item.folder,
+          provider: 'onedrive',
+        })));
+      }
+
+      if (provider === 'box') {
+        const user = await storage.getUser(userId);
+        if (!user?.boxAccessToken) return res.json([]);
+        let token = user.boxAccessToken;
+        const isExpired = user.boxTokenExpiry && new Date(user.boxTokenExpiry) <= new Date();
+        if (isExpired && user.boxRefreshToken) {
+          const refreshed = await BoxService.refreshAccessToken(user.boxRefreshToken);
+          token = refreshed.accessToken;
+        }
+        const url = `https://api.box.com/2.0/search?query=${encodeURIComponent(q)}&limit=20&fields=id,name,type,size,parent,item_collection`;
+        const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!resp.ok) return res.json([]);
+        const data = await resp.json() as any;
+        return res.json((data.entries || []).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          path: item.parent?.name ? `/${item.parent.name}/${item.name}` : `/${item.name}`,
+          mimeType: item.type === 'folder' ? 'folder' : 'file',
+          size: item.size,
+          isFolder: item.type === 'folder',
+          provider: 'box',
+        })));
+      }
+
+      if (provider === 's3') {
+        const user = await storage.getUser(userId);
+        if (!user?.s3Connected) return res.json([]);
+        const { S3Client, ListBucketsCommand, ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+        const s3 = new S3Client({
+          region: user.s3Region || 'us-east-1',
+          credentials: { accessKeyId: user.s3AccessKeyId!, secretAccessKey: user.s3SecretAccessKey! },
+        });
+        const { Buckets = [] } = await s3.send(new ListBucketsCommand({}));
+        const results: any[] = [];
+        const term = q.toLowerCase();
+        for (const bucket of Buckets.slice(0, 5)) {
+          const { Contents = [] } = await s3.send(new ListObjectsV2Command({ Bucket: bucket.Name!, MaxKeys: 200 }));
+          for (const obj of Contents) {
+            const key = obj.Key || '';
+            const name = key.split('/').pop() || key;
+            if (name.toLowerCase().includes(term)) {
+              results.push({ id: `${bucket.Name}/${key}`, name, path: `${bucket.Name}/${key}`, mimeType: 'file', size: obj.Size, isFolder: false, provider: 's3' });
+            }
+          }
+          if (results.length >= 20) break;
+        }
+        return res.json(results.slice(0, 20));
+      }
+
+      res.json([]);
+    } catch (error) {
+      console.error(`Search error [${provider}]:`, error);
+      res.json([]);
+    }
+  });
+
   app.post('/api/drive/list-files', isAuthenticated, async (req: any, res) => {
     try {
       const { fileId } = req.body;
