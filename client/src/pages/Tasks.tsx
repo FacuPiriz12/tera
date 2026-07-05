@@ -51,6 +51,7 @@ import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import FolderPicker, { FolderSelection } from "@/components/FolderPicker";
 import SyncStatsCard from "@/components/SyncStatsCard";
 import ConflictResolutionModal from "@/components/ConflictResolutionModal";
 import { FileVersionsTimeline } from "@/components/FileVersionsTimeline";
@@ -73,6 +74,25 @@ const FREQUENCIES = [
   { value: "monthly", label: "Mensual" },
   { value: "custom", label: "Días específicos" },
 ];
+
+const PROVIDERS = [
+  { value: "google",   label: "Google Drive" },
+  { value: "dropbox",  label: "Dropbox" },
+  { value: "onedrive", label: "OneDrive" },
+  { value: "box",      label: "Box" },
+  { value: "s3",       label: "Amazon S3" },
+];
+
+function buildSourceUrl(provider: string, folderId: string): string {
+  switch (provider) {
+    case 'google':   return `https://drive.google.com/drive/folders/${folderId}`;
+    case 'dropbox':  return `dropbox://folder:${folderId}`;
+    case 'onedrive': return `onedrive://${folderId}`;
+    case 'box':      return `box://${folderId}`;
+    case 's3':       return `s3://${folderId}`;
+    default:         return folderId;
+  }
+}
 
 const OPERATION_TYPES = [
   { value: "copy", label: "Copiar", description: "Copia archivos dentro del mismo proveedor" },
@@ -506,14 +526,19 @@ export default function Tasks() {
           <Label>Origen</Label>
           <Select
             value={formData.sourceProvider}
-            onValueChange={(value) => setFormData({ ...formData, sourceProvider: value })}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              sourceProvider: value,
+              sourceUrl: '',
+              sourceFolderId: '',
+              sourceName: '',
+            })}
           >
             <SelectTrigger data-testid="select-source-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="google">Google Drive</SelectItem>
-              <SelectItem value="dropbox">Dropbox</SelectItem>
+              {PROVIDERS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -522,67 +547,52 @@ export default function Tasks() {
           <Label>Destino</Label>
           <Select
             value={formData.destProvider}
-            onValueChange={(value) => setFormData({ ...formData, destProvider: value })}
+            onValueChange={(value) => setFormData({
+              ...formData,
+              destProvider: value,
+              destinationFolderId: '',
+              destinationFolderName: '',
+            })}
           >
             <SelectTrigger data-testid="select-dest-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="google">Google Drive</SelectItem>
-              <SelectItem value="dropbox">Dropbox</SelectItem>
+              {PROVIDERS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="source-url">URL de origen *</Label>
-        <Input
-          id="source-url"
-          placeholder="https://drive.google.com/... o https://dropbox.com/..."
-          value={formData.sourceUrl}
-          onChange={(e) => setFormData({ ...formData, sourceUrl: e.target.value })}
-          data-testid="input-source-url"
-          className="bg-gray-50 dark:bg-gray-800"
+        <Label>Carpeta de origen *</Label>
+        <FolderPicker
+          provider={formData.sourceProvider}
+          value={formData.sourceFolderId ? { id: formData.sourceFolderId, name: formData.sourceName || formData.sourceFolderId } : null}
+          onChange={(folder: FolderSelection) => setFormData({
+            ...formData,
+            sourceFolderId: folder.id,
+            sourceName: folder.name,
+            sourceUrl: buildSourceUrl(formData.sourceProvider, folder.id),
+          })}
+          placeholder="Seleccionar carpeta de origen..."
+          data-testid="picker-source-folder"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="source-name">Nombre del archivo/carpeta</Label>
-        <Input
-          id="source-name"
-          placeholder="Nombre para identificar el origen"
-          value={formData.sourceName}
-          onChange={(e) => setFormData({ ...formData, sourceName: e.target.value })}
-          data-testid="input-source-name"
-          className="bg-gray-50 dark:bg-gray-800"
+        <Label>Carpeta de destino</Label>
+        <FolderPicker
+          provider={formData.destProvider}
+          value={formData.destinationFolderId ? { id: formData.destinationFolderId, name: formData.destinationFolderName || formData.destinationFolderId } : null}
+          onChange={(folder: FolderSelection) => setFormData({
+            ...formData,
+            destinationFolderId: folder.id,
+            destinationFolderName: folder.name,
+          })}
+          placeholder="Seleccionar carpeta de destino..."
+          data-testid="picker-dest-folder"
         />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="dest-folder-id">ID carpeta destino</Label>
-          <Input
-            id="dest-folder-id"
-            placeholder="root"
-            value={formData.destinationFolderId}
-            onChange={(e) => setFormData({ ...formData, destinationFolderId: e.target.value })}
-            data-testid="input-dest-folder-id"
-            className="bg-gray-50 dark:bg-gray-800"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="dest-folder-name">Nombre carpeta</Label>
-          <Input
-            id="dest-folder-name"
-            placeholder="Mi unidad"
-            value={formData.destinationFolderName}
-            onChange={(e) => setFormData({ ...formData, destinationFolderName: e.target.value })}
-            data-testid="input-dest-folder-name"
-            className="bg-gray-50 dark:bg-gray-800"
-          />
-        </div>
       </div>
 
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
