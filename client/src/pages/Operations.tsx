@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { CopyOperation } from "@shared/schema";
 
 export default function Operations() {
-  const { t } = useTranslation(['pages', 'common']);
+  const { t } = useTranslation();
   usePageTitle(t('pageTitles.operations', 'TERA — Transfer History'));
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -67,13 +67,13 @@ export default function Operations() {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'completed':
-        return t('common:status.completed');
+        return t('common.status.completed');
       case 'failed':
         return t('operations.error');
       case 'in_progress':
-        return t('common:status.inProgress');
+        return t('common.status.inProgress');
       case 'pending':
-        return t('common:status.pending');
+        return t('common.status.pending');
       default:
         return t('operations.error');
     }
@@ -188,7 +188,7 @@ export default function Operations() {
                       <div className="flex items-center space-x-2">
                         <Files className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-xs text-muted-foreground">{t('pages:myFiles.files')}</p>
+                          <p className="text-xs text-muted-foreground">{t('myFiles.files')}</p>
                           <p className="text-sm font-medium">
                             {operation.completedFiles || 0} / {operation.totalFiles || 0}
                           </p>

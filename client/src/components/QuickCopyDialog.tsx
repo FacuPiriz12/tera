@@ -40,7 +40,7 @@ interface DestinationFolder {
 }
 
 export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogProps) {
-  const { t } = useTranslation(['copy', 'common']);
+  const { t } = useTranslation();
   const [url, setUrl] = useState("");
   const [provider, setProvider] = useState<Provider>(null);
   const [destinationFolder, setDestinationFolder] = useState<DestinationFolder>({
@@ -365,7 +365,7 @@ export default function QuickCopyDialog({ open, onOpenChange }: QuickCopyDialogP
                 onClick={() => onOpenChange(false)}
                 data-testid="button-cancel"
               >
-                {t('common:buttons.cancel')}
+                {t('common.buttons.cancel')}
               </Button>
               <Button 
                 type="submit" 

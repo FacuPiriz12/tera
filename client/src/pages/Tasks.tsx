@@ -148,7 +148,7 @@ const defaultFormData: TaskFormData = {
 };
 
 export default function Tasks() {
-  const { t } = useTranslation(['pages', 'common']);
+  const { t } = useTranslation();
   usePageTitle(t('pageTitles.tasks', 'TERA — Scheduled Tasks'));
   const { toast } = useToast();
   const queryClient = useQueryClient();

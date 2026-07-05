@@ -266,6 +266,25 @@ export class GoogleDriveService {
     }
   }
 
+  async listAllFiles(): Promise<{ id: string; name: string; mimeType: string; size?: string }[]> {
+    await this.ensureValidToken();
+    const all: any[] = [];
+    let nextPageToken: string | undefined;
+    do {
+      const response = await this.drive.files.list({
+        q: 'trashed = false',
+        fields: 'nextPageToken,files(id,name,mimeType,size)',
+        pageSize: 1000,
+        pageToken: nextPageToken,
+        supportsAllDrives: true,
+        includeItemsFromAllDrives: true,
+      });
+      if (response.data.files) all.push(...response.data.files);
+      nextPageToken = response.data.nextPageToken ?? undefined;
+    } while (nextPageToken);
+    return all;
+  }
+
   async searchFiles(term: string): Promise<{ id: string; name: string; path: string; mimeType: string; size?: number; isFolder: boolean; provider: string }[]> {
     await this.ensureValidToken();
     const q = `name contains '${term.replace(/'/g, "\\'")}' and trashed = false`;
@@ -507,25 +526,33 @@ export class GoogleDriveService {
         
         console.log(`Uploading chunk: ${chunkRange} (${Math.round((uploadedBytes / totalSize) * 100)}%)`);
         
-        const chunkResponse = await this.auth.request({
-          url: uploadUrl,
-          method: 'PUT',
-          headers: {
-            'Content-Range': chunkRange,
-            'Content-Type': mimeType || 'application/octet-stream'
-          },
-          data: Buffer.from(chunk)
-        });
+        // gaxios throws for non-2xx responses; 308 (Resume Incomplete) is expected
+        // between chunks, so we must catch and treat it as a continuation signal.
+        let chunkResponse: any;
+        try {
+          chunkResponse = await this.auth.request({
+            url: uploadUrl,
+            method: 'PUT',
+            headers: {
+              'Content-Range': chunkRange,
+              'Content-Type': mimeType || 'application/octet-stream'
+            },
+            data: Buffer.from(chunk)
+          });
+        } catch (chunkErr: any) {
+          if (chunkErr.response?.status === 308) {
+            chunkResponse = chunkErr.response;
+          } else {
+            throw chunkErr;
+          }
+        }
 
         if (chunkResponse.status === 200 || chunkResponse.status === 201) {
-          // Upload complete
           return chunkResponse.data;
         } else if (chunkResponse.status === 308) {
-          // Partial upload, continue
-          const rangeHeader = chunkResponse.headers.range;
+          const rangeHeader = chunkResponse.headers?.range;
           if (rangeHeader) {
-            const nextByte = parseInt(rangeHeader.split('-')[1]) + 1;
-            uploadedBytes = nextByte;
+            uploadedBytes = parseInt(rangeHeader.split('-')[1]) + 1;
           } else {
             uploadedBytes = end;
           }

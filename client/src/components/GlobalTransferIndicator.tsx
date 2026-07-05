@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTransfer, TransferJob } from "@/contexts/TransferContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function GlobalTransferIndicator() {
+  const { t } = useTranslation();
   const { jobs, activeJobsCount, clearCompletedJobs, updateJob } = useTransfer();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -25,9 +27,9 @@ export default function GlobalTransferIndicator() {
     try {
       await apiRequest('POST', `/api/transfer-jobs/${jobId}/cancel`);
       updateJob(jobId, { status: 'cancelled' });
-      toast({ title: 'Transferencia cancelada' });
+      toast({ title: t('globalTransferIndicator.cancelledToast') });
     } catch {
-      toast({ title: 'No se pudo cancelar', variant: 'destructive' });
+      toast({ title: t('globalTransferIndicator.cancelFailedToast'), variant: 'destructive' });
     } finally {
       setCancellingIds(prev => { const s = new Set(prev); s.delete(jobId); return s; });
     }
@@ -114,16 +116,16 @@ export default function GlobalTransferIndicator() {
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="h-4 w-4 text-primary" />
           <span className="font-medium text-sm">
-            Transferencias
+            {t('globalTransferIndicator.title')}
           </span>
           {activeJobsCount > 0 && (
             <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-              {activeJobsCount} activa{activeJobsCount !== 1 ? 's' : ''}
+              {activeJobsCount} {activeJobsCount !== 1 ? t('globalTransferIndicator.actives') : t('globalTransferIndicator.active')}
             </Badge>
           )}
           {completedJobs.length > 0 && (
             <Badge variant="secondary" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-              {completedJobs.length} completada{completedJobs.length !== 1 ? 's' : ''}
+              {completedJobs.length} {completedJobs.length !== 1 ? t('globalTransferIndicator.completedsBadge') : t('globalTransferIndicator.completedBadge')}
             </Badge>
           )}
         </div>
@@ -145,7 +147,7 @@ export default function GlobalTransferIndicator() {
         <div className="max-h-80 overflow-y-auto">
           {jobs.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground text-center">
-              No hay transferencias
+              {t('globalTransferIndicator.noTransfers')}
             </p>
           ) : (
             <div className="divide-y">
@@ -171,7 +173,7 @@ export default function GlobalTransferIndicator() {
                           className="h-6 w-6 text-muted-foreground hover:text-red-500"
                           onClick={() => handleCancel(job.id)}
                           disabled={cancellingIds.has(job.id)}
-                          title="Cancelar"
+                          title={t('globalTransferIndicator.cancel')}
                           data-testid={`btn-cancel-job-${job.id}`}
                         >
                           {cancellingIds.has(job.id) ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
@@ -224,7 +226,7 @@ export default function GlobalTransferIndicator() {
           ))}
           {activeJobs.length > 2 && (
             <p className="text-xs text-muted-foreground text-center mt-2">
-              +{activeJobs.length - 2} más
+              {t('globalTransferIndicator.more', { count: activeJobs.length - 2 })}
             </p>
           )}
         </div>
@@ -239,7 +241,7 @@ export default function GlobalTransferIndicator() {
             onClick={() => setLocation('/operations')}
             data-testid="btn-view-all-operations"
           >
-            Ver todas
+            {t('globalTransferIndicator.viewAll')}
           </Button>
           {(completedJobs.length > 0 || failedJobs.length > 0) && (
             <Button
@@ -249,7 +251,7 @@ export default function GlobalTransferIndicator() {
               onClick={clearCompletedJobs}
               data-testid="btn-clear-completed"
             >
-              Limpiar completadas
+              {t('globalTransferIndicator.clearCompleted')}
             </Button>
           )}
         </div>

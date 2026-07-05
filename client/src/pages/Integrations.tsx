@@ -17,7 +17,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
 export default function Integrations() {
-  const { t } = useTranslation(['pages', 'common']);
+  const { t } = useTranslation();
   usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
 
   const container = {

@@ -3,7 +3,7 @@ import { AlertCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function NotFound() {
-  const { t } = useTranslation(['pages', 'common']);
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md mx-4">

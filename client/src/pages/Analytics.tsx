@@ -20,7 +20,7 @@ import type { CopyOperation } from "@shared/schema";
 import { useTranslation } from "react-i18next";
 
 export default function Analytics() {
-  const { t } = useTranslation(['pages', 'common']);
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const { data: operations = [], isLoading } = useQuery({
     queryKey: ["/api/copy-operations"],

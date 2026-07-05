@@ -837,7 +837,33 @@ const esTranslations = {
     terms: 'TERA — Términos de servicio',
     privacy: 'TERA — Política de privacidad',
     forgotPassword: 'TERA — Recuperar contraseña',
-  }
+  },
+  globalTransferIndicator: {
+    title: 'Transferencias',
+    active: 'activa', actives: 'activas',
+    completedBadge: 'completada', completedsBadge: 'completadas',
+    noTransfers: 'No hay transferencias',
+    viewAll: 'Ver todas', clearCompleted: 'Limpiar completadas',
+    more: '+{{count}} más', cancel: 'Cancelar',
+    cancelledToast: 'Transferencia cancelada', cancelFailedToast: 'No se pudo cancelar',
+  },
+  fileUpload: {
+    button: 'Subir Archivo', dialogTitle: 'Subir archivo a la nube',
+    dialogDesc: 'Selecciona un archivo y elige el destino para guardarlo de forma segura.',
+    clickToSelect: 'Haz clic para seleccionar un archivo', maxSize: 'Máximo 100 MB',
+    destination: 'Destino de subida',
+    connectWarning: 'Asegúrate de haber conectado tu cuenta de {{provider}} primero.',
+    uploading: 'Subiendo archivo...', startUpload: 'Comenzar Subida',
+    successTitle: 'Archivo subido exitosamente',
+    successDesc: 'Tu archivo "{{name}}" se ha subido a {{provider}}.',
+    errorTitle: 'Error al subir archivo', errorDesc: 'Algo salió mal durante la carga.',
+    tooLargeTitle: 'Archivo demasiado grande', tooLargeDesc: 'El archivo no debe exceder 100 MB.',
+  },
+  globalSearch: {
+    placeholder: 'Buscar en todas tus nubes...', hint: 'Escribí al menos 2 caracteres para buscar',
+    noResults: 'Sin resultados para', noIndex: 'Sin índice — búsqueda en tiempo real',
+    indexed: 'Índice:', buildIndex: 'Construir índice', refreshIndex: 'Actualizar índice',
+  },
 };
 
 const enTranslations = {
@@ -1227,7 +1253,33 @@ const enTranslations = {
     terms: 'TERA — Terms of Service',
     privacy: 'TERA — Privacy Policy',
     forgotPassword: 'TERA — Forgot Password',
-  }
+  },
+  globalTransferIndicator: {
+    title: 'Transfers',
+    active: 'active', actives: 'active',
+    completedBadge: 'completed', completedsBadge: 'completed',
+    noTransfers: 'No transfers',
+    viewAll: 'View all', clearCompleted: 'Clear completed',
+    more: '+{{count}} more', cancel: 'Cancel',
+    cancelledToast: 'Transfer cancelled', cancelFailedToast: 'Could not cancel',
+  },
+  fileUpload: {
+    button: 'Upload File', dialogTitle: 'Upload file to cloud',
+    dialogDesc: 'Select a file and choose the destination to save it securely.',
+    clickToSelect: 'Click to select a file', maxSize: 'Maximum 100 MB',
+    destination: 'Upload destination',
+    connectWarning: 'Make sure you have connected your {{provider}} account first.',
+    uploading: 'Uploading file...', startUpload: 'Start Upload',
+    successTitle: 'File uploaded successfully',
+    successDesc: 'Your file "{{name}}" has been uploaded to {{provider}}.',
+    errorTitle: 'Error uploading file', errorDesc: 'Something went wrong during upload.',
+    tooLargeTitle: 'File too large', tooLargeDesc: 'File must not exceed 100 MB.',
+  },
+  globalSearch: {
+    placeholder: 'Search across all your clouds...', hint: 'Type at least 2 characters to search',
+    noResults: 'No results for', noIndex: 'No index — real-time search',
+    indexed: 'Index:', buildIndex: 'Build index', refreshIndex: 'Update index',
+  },
 };
 
 const ptTranslations = {
@@ -1617,7 +1669,33 @@ const ptTranslations = {
     terms: 'TERA — Termos de serviço',
     privacy: 'TERA — Política de privacidade',
     forgotPassword: 'TERA — Recuperar senha',
-  }
+  },
+  globalTransferIndicator: {
+    title: 'Transferências',
+    active: 'ativa', actives: 'ativas',
+    completedBadge: 'concluída', completedsBadge: 'concluídas',
+    noTransfers: 'Sem transferências',
+    viewAll: 'Ver todas', clearCompleted: 'Limpar concluídas',
+    more: '+{{count}} mais', cancel: 'Cancelar',
+    cancelledToast: 'Transferência cancelada', cancelFailedToast: 'Não foi possível cancelar',
+  },
+  fileUpload: {
+    button: 'Enviar Arquivo', dialogTitle: 'Enviar arquivo para a nuvem',
+    dialogDesc: 'Selecione um arquivo e escolha o destino para salvá-lo com segurança.',
+    clickToSelect: 'Clique para selecionar um arquivo', maxSize: 'Máximo 100 MB',
+    destination: 'Destino do upload',
+    connectWarning: 'Certifique-se de ter conectado sua conta do {{provider}} primeiro.',
+    uploading: 'Enviando arquivo...', startUpload: 'Iniciar Upload',
+    successTitle: 'Arquivo enviado com sucesso',
+    successDesc: 'Seu arquivo "{{name}}" foi enviado para {{provider}}.',
+    errorTitle: 'Erro ao enviar arquivo', errorDesc: 'Algo deu errado durante o upload.',
+    tooLargeTitle: 'Arquivo muito grande', tooLargeDesc: 'O arquivo não deve exceder 100 MB.',
+  },
+  globalSearch: {
+    placeholder: 'Buscar em todas as suas nuvens...', hint: 'Digite pelo menos 2 caracteres para buscar',
+    noResults: 'Sem resultados para', noIndex: 'Sem índice — busca em tempo real',
+    indexed: 'Índice:', buildIndex: 'Construir índice', refreshIndex: 'Atualizar índice',
+  },
 };
 
 const resources = {

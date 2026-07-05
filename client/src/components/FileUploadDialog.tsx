@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 
 export default function FileUploadDialog() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [destination, setDestination] = useState<'google' | 'dropbox'>('google');
@@ -63,8 +65,8 @@ export default function FileUploadDialog() {
     },
     onSuccess: (data) => {
       toast({
-        title: 'Archivo subido exitosamente',
-        description: `Tu archivo "${selectedFile?.name}" se ha subido a ${destination === 'google' ? 'Google Drive' : 'Dropbox'}.`,
+        title: t('fileUpload.successTitle'),
+        description: t('fileUpload.successDesc', { name: selectedFile?.name, provider: destination === 'google' ? 'Google Drive' : 'Dropbox' }),
       });
       setOpen(false);
       setSelectedFile(null);
@@ -72,8 +74,8 @@ export default function FileUploadDialog() {
     },
     onError: (error: any) => {
       toast({
-        title: 'Error al subir archivo',
-        description: error.message || 'Algo salió mal durante la carga.',
+        title: t('fileUpload.errorTitle'),
+        description: error.message || t('fileUpload.errorDesc'),
         variant: 'destructive',
       });
       setUploading(false);
@@ -85,8 +87,8 @@ export default function FileUploadDialog() {
     if (file) {
       if (file.size > 100 * 1024 * 1024) {
         toast({
-          title: 'Archivo demasiado grande',
-          description: 'El archivo no debe exceder 100 MB.',
+          title: t('fileUpload.tooLargeTitle'),
+          description: t('fileUpload.tooLargeDesc'),
           variant: 'destructive',
         });
         return;
@@ -107,14 +109,14 @@ export default function FileUploadDialog() {
       <DialogTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-2">
           <Upload className="w-4 h-4" />
-          Subir Archivo
+          {t('fileUpload.button')}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md rounded-3xl border-2 border-slate-200/60 shadow-2xl p-8 z-[200] !top-[50%] !translate-y-[-50%]">
         <DialogHeader className="space-y-2">
-          <DialogTitle className="text-2xl font-bold text-slate-900">Subir archivo a la nube</DialogTitle>
+          <DialogTitle className="text-2xl font-bold text-slate-900">{t('fileUpload.dialogTitle')}</DialogTitle>
           <DialogDescription className="text-slate-500 text-[0.95rem]">
-            Selecciona un archivo y elige el destino para guardarlo de forma segura.
+            {t('fileUpload.dialogDesc')}
           </DialogDescription>
         </DialogHeader>
         
@@ -139,17 +141,17 @@ export default function FileUploadDialog() {
                 <Upload className="w-5 h-5" />
               </div>
               <span className="text-sm font-semibold text-slate-700 mb-1">
-                {selectedFile ? selectedFile.name : 'Haz clic para seleccionar un archivo'}
+                {selectedFile ? selectedFile.name : t('fileUpload.clickToSelect')}
               </span>
               <span className="text-xs text-slate-400 font-medium">
-                {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : 'Máximo 100 MB'}
+                {selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : t('fileUpload.maxSize')}
               </span>
             </label>
           </div>
 
           {/* Destination Selection */}
           <div className="space-y-3">
-            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">Destino de subida</label>
+            <label className="text-sm font-bold text-slate-700 uppercase tracking-wider">{t('fileUpload.destination')}</label>
             <Select value={destination} onValueChange={(v: any) => setDestination(v)} disabled={uploading}>
               <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white focus:ring-blue-500">
                 <SelectValue />
@@ -165,7 +167,7 @@ export default function FileUploadDialog() {
           {(destination === 'google' || destination === 'dropbox') && (
             <div className="flex gap-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 text-sm text-blue-700 leading-relaxed">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <p className="font-medium">Asegúrate de haber conectado tu cuenta de <span className="font-bold">{destination === 'google' ? 'Google Drive' : 'Dropbox'}</span> primero.</p>
+              <p className="font-medium">{t('fileUpload.connectWarning', { provider: destination === 'google' ? 'Google Drive' : 'Dropbox' })}</p>
             </div>
           )}
 
@@ -184,7 +186,7 @@ export default function FileUploadDialog() {
             ) : (
               <Upload className="w-5 h-5 mr-2" />
             )}
-            {uploading ? 'Subiendo archivo...' : 'Comenzar Subida'}
+            {uploading ? t('fileUpload.uploading') : t('fileUpload.startUpload')}
           </Button>
         </div>
       </DialogContent>
