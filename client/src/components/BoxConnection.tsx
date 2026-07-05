@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useBoxAuth } from "@/hooks/useBoxAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,6 +35,7 @@ interface BoxConnectionProps {
 }
 
 export default function BoxConnection({ variant = 'header' }: BoxConnectionProps) {
+  const { t } = useTranslation();
   const {
     isConnected,
     hasValidToken,
@@ -45,18 +47,19 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
     checkOAuthCallback
   } = useBoxAuth();
   const { toast } = useToast();
+  const provider = 'Box';
 
   useEffect(() => {
     const result = checkOAuthCallback();
     if (result?.success) {
       toast({
-        title: "¡Conectado exitosamente!",
-        description: "Tu cuenta de Box ha sido conectada.",
+        title: t('pages.integrations.connectSuccess'),
+        description: t('pages.integrations.connectSuccessDesc', { provider }),
       });
     } else if (result?.error) {
       toast({
-        title: "Error de conexión",
-        description: "No se pudo conectar tu cuenta de Box. Intenta de nuevo.",
+        title: t('pages.integrations.connectError'),
+        description: t('pages.integrations.connectErrorDesc', { provider }),
         variant: "destructive",
       });
     }
@@ -67,8 +70,8 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
   const handleDisconnect = () => {
     disconnect();
     toast({
-      title: "Cuenta desconectada",
-      description: "Tu cuenta de Box ha sido desconectada.",
+      title: t('pages.integrations.disconnectSuccess'),
+      description: t('pages.integrations.disconnectSuccessDesc', { provider }),
     });
   };
 
@@ -105,7 +108,13 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {isConnected ? (hasValidToken ? "Box conectado" : "Token expirado - reconectar necesario") : "Conectar Box"}
+            {isConnected ? (
+              hasValidToken
+                ? t('pages.integrations.tooltipConnected', { provider })
+                : t('pages.integrations.tooltipExpired')
+            ) : (
+              t('pages.integrations.tooltipConnect', { provider })
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -127,7 +136,7 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
                   data-testid="button-reconnect-box"
                 >
                   {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Reconectar
+                  {t('pages.integrations.reconnect')}
                 </Button>
               )}
               <AlertDialog>
@@ -140,20 +149,20 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
                     data-testid="button-disconnect-box"
                   >
                     {isDisconnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Desconectar
+                    {t('pages.integrations.disconnect')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>¿Desconectar Box?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('pages.integrations.disconnectTitle', { provider })}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esto eliminará el acceso a tu cuenta de Box. No podrás copiar archivos hasta que vuelvas a conectar tu cuenta.
+                      {t('pages.integrations.disconnectDesc', { provider })}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel>{t('pages.integrations.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDisconnect} data-testid="confirm-disconnect-box">
-                      Desconectar
+                      {t('pages.integrations.disconnect')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -169,7 +178,7 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
               data-testid="button-connect-box"
             >
               {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Conectar
+              {t('pages.integrations.connect')}
             </Button>
           )}
         </div>
@@ -178,18 +187,18 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
             hasValidToken ? (
               <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                 <CheckCircle className="w-3 h-3 mr-1" />
-                Conectado
+                {t('pages.integrations.connected')}
               </Badge>
             ) : (
               <Badge variant="default" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                 <AlertTriangle className="w-3 h-3 mr-1" />
-                Token expirado
+                {t('pages.integrations.tokenExpired')}
               </Badge>
             )
           ) : (
             <Badge variant="default" className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
               <XCircle className="w-3 h-3 mr-1" />
-              Desconectado
+              {t('pages.integrations.disconnected')}
             </Badge>
           )}
         </div>
@@ -202,7 +211,7 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
       return (
         <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20" data-testid="box-sidebar-loading">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Verificando...</span>
+          <span className="text-xs text-muted-foreground">{t('pages.integrations.verifying')}</span>
         </div>
       );
     }
@@ -214,9 +223,13 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
             <div className="text-xs font-medium truncate">Box</div>
             <div className="text-xs text-muted-foreground">
               {isConnected ? (
-                hasValidToken ? <span className="text-green-600">Conectado</span> : <span className="text-orange-600">Token expirado</span>
+                hasValidToken ? (
+                  <span className="text-green-600">{t('pages.integrations.connected')}</span>
+                ) : (
+                  <span className="text-orange-600">{t('pages.integrations.tokenExpired')}</span>
+                )
               ) : (
-                <span className="text-muted-foreground">Desconectado</span>
+                <span className="text-muted-foreground">{t('pages.integrations.disconnected')}</span>
               )}
             </div>
           </div>
@@ -227,13 +240,13 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
               <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
             ) : (
               <Button onClick={handleConnect} variant="ghost" size="sm" className="h-6 px-2 text-xs" disabled={isConnecting} data-testid="button-reconnect-box-sidebar">
-                {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reconectar"}
+                {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : t('pages.integrations.reconnect')}
               </Button>
             )}
           </div>
         ) : (
           <Button onClick={handleConnect} variant="ghost" size="sm" className="h-6 px-2 text-xs" disabled={isConnecting} data-testid="button-connect-box-sidebar">
-            {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Conectar"}
+            {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : t('pages.integrations.connect')}
           </Button>
         )}
       </div>
@@ -251,7 +264,7 @@ export default function BoxConnection({ variant = 'header' }: BoxConnectionProps
     >
       {(isConnecting || isDisconnecting) && <Loader2 className="w-4 h-4 animate-spin" />}
       <Folder className="w-4 h-4" />
-      {isConnected ? "Box Conectado" : "Conectar Box"}
+      {isConnected ? t('pages.integrations.connected') : t('pages.integrations.connect')}
       {isConnected && (hasValidToken ? <CheckCircle className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-orange-500" />)}
     </Button>
   );

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useS3Auth } from "@/hooks/useS3Auth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -45,12 +46,14 @@ interface S3ConnectionProps {
 }
 
 export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
+  const { t } = useTranslation();
   const { isConnected, region, connect, isConnecting, connectError, disconnect, isDisconnecting, isLoadingStatus } = useS3Auth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [accessKeyId, setAccessKeyId] = useState('');
   const [secretAccessKey, setSecretAccessKey] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('us-east-1');
+  const provider = 'Amazon S3';
 
   const handleConnect = () => {
     connect(
@@ -60,10 +63,17 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
           setOpen(false);
           setAccessKeyId('');
           setSecretAccessKey('');
-          toast({ title: "¡Conectado exitosamente!", description: "Tu cuenta de Amazon S3 ha sido conectada." });
+          toast({
+            title: t('pages.integrations.connectSuccess'),
+            description: t('pages.integrations.connectSuccessDesc', { provider }),
+          });
         },
         onError: (err: any) => {
-          toast({ title: "Error de conexión", description: err.message || "Credenciales inválidas.", variant: "destructive" });
+          toast({
+            title: t('pages.integrations.connectError'),
+            description: err.message || t('pages.integrations.s3InvalidCredentials'),
+            variant: "destructive",
+          });
         },
       }
     );
@@ -71,7 +81,10 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
 
   const handleDisconnect = () => {
     disconnect();
-    toast({ title: "Cuenta desconectada", description: "Tu cuenta de Amazon S3 ha sido desconectada." });
+    toast({
+      title: t('pages.integrations.disconnectSuccess'),
+      description: t('pages.integrations.disconnectSuccessDesc', { provider }),
+    });
   };
 
   if (variant === 'card') {
@@ -83,19 +96,19 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm" className="px-8" disabled={isDisconnecting} data-testid="button-disconnect-s3">
                   {isDisconnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Desconectar
+                  {t('pages.integrations.disconnect')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>¿Desconectar Amazon S3?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('pages.integrations.disconnectTitle', { provider })}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esto eliminará tus credenciales de AWS. No podrás acceder a tus buckets hasta que vuelvas a conectar.
+                    {t('pages.integrations.disconnectDesc', { provider })}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDisconnect}>Desconectar</AlertDialogAction>
+                  <AlertDialogCancel>{t('pages.integrations.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDisconnect}>{t('pages.integrations.disconnect')}</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -103,17 +116,17 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="px-8 text-[#FF9900] border-slate-200" data-testid="button-connect-s3">
-                  Conectar
+                  {t('pages.integrations.connect')}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                   <div className="flex items-center gap-3 mb-1">
                     <S3Logo className="w-6 h-6" />
-                    <DialogTitle>Conectar Amazon S3</DialogTitle>
+                    <DialogTitle>{t('pages.integrations.connect')} Amazon S3</DialogTitle>
                   </div>
                   <DialogDescription>
-                    Ingresá tus credenciales de AWS IAM. Necesitás un usuario con permisos de S3.
+                    {t('pages.integrations.s3DialogDesc')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
@@ -139,7 +152,7 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="region">Región</Label>
+                    <Label htmlFor="region">{t('pages.integrations.s3Region')}</Label>
                     <select
                       id="region"
                       value={selectedRegion}
@@ -156,14 +169,14 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
                   )}
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+                  <Button variant="outline" onClick={() => setOpen(false)}>{t('pages.integrations.cancel')}</Button>
                   <Button
                     onClick={handleConnect}
                     disabled={isConnecting || !accessKeyId || !secretAccessKey}
                     className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
                   >
                     {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    {isConnecting ? 'Verificando...' : 'Conectar'}
+                    {isConnecting ? t('pages.integrations.verifying') : t('pages.integrations.connect')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -175,12 +188,12 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
           {isLoadingStatus ? null : isConnected ? (
             <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
               <CheckCircle className="w-3 h-3 mr-1" />
-              Conectado · {region}
+              {t('pages.integrations.connected')} · {region}
             </Badge>
           ) : (
             <Badge variant="default" className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
               <XCircle className="w-3 h-3 mr-1" />
-              Desconectado
+              {t('pages.integrations.disconnected')}
             </Badge>
           )}
         </div>
@@ -198,7 +211,7 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
       data-testid="button-s3-inline"
     >
       <S3Logo className="w-4 h-4" />
-      {isConnected ? "S3 Conectado" : "Conectar S3"}
+      {isConnected ? t('pages.integrations.connected') : t('pages.integrations.connect')}
       {isConnected && <CheckCircle className="w-4 h-4 text-green-500" />}
     </Button>
   );

@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -14,15 +15,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { 
-  CheckCircle, 
-  XCircle, 
+import {
+  CheckCircle,
+  XCircle,
   AlertTriangle,
   Loader2,
   HardDrive
@@ -34,48 +35,46 @@ interface GoogleDriveConnectionProps {
 }
 
 export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriveConnectionProps) {
-  const { 
-    isConnected, 
-    hasValidToken, 
-    connect, 
-    disconnect, 
-    isConnecting, 
+  const { t } = useTranslation();
+  const {
+    isConnected,
+    hasValidToken,
+    connect,
+    disconnect,
+    isConnecting,
     isDisconnecting,
     isLoadingStatus,
-    checkOAuthCallback 
+    checkOAuthCallback
   } = useGoogleAuth();
   const { toast } = useToast();
+  const provider = 'Google Drive';
 
-  // Check for OAuth callback results
   useEffect(() => {
     const result = checkOAuthCallback();
     if (result?.success) {
       toast({
-        title: "¡Conectado exitosamente!",
-        description: "Tu cuenta de Google Drive ha sido conectada.",
+        title: t('pages.integrations.connectSuccess'),
+        description: t('pages.integrations.connectSuccessDesc', { provider }),
       });
     } else if (result?.error) {
       toast({
-        title: "Error de conexión",
-        description: "No se pudo conectar tu cuenta de Google Drive. Intenta de nuevo.",
+        title: t('pages.integrations.connectError'),
+        description: t('pages.integrations.connectErrorDesc', { provider }),
         variant: "destructive",
       });
     }
   }, [checkOAuthCallback, toast]);
 
-  const handleConnect = () => {
-    connect();
-  };
+  const handleConnect = () => connect();
 
   const handleDisconnect = () => {
     disconnect();
     toast({
-      title: "Cuenta desconectada",
-      description: "Tu cuenta de Google Drive ha sido desconectada.",
+      title: t('pages.integrations.disconnectSuccess'),
+      description: t('pages.integrations.disconnectSuccessDesc', { provider }),
     });
   };
 
-  // Header variant - compact status indicator
   if (variant === 'header') {
     if (isLoadingStatus) {
       return (
@@ -111,9 +110,11 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
           </TooltipTrigger>
           <TooltipContent>
             {isConnected ? (
-              hasValidToken ? "Google Drive conectado" : "Token expirado - reconectar necesario"
+              hasValidToken
+                ? t('pages.integrations.tooltipConnected', { provider })
+                : t('pages.integrations.tooltipExpired')
             ) : (
-              "Conectar Google Drive"
+              t('pages.integrations.tooltipConnect', { provider })
             )}
           </TooltipContent>
         </Tooltip>
@@ -121,7 +122,6 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
     );
   }
 
-  // Card variant - full connection management
   if (variant === 'card') {
     return (
       <div className="flex items-center justify-between" data-testid="google-drive-card">
@@ -137,7 +137,7 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
                   data-testid="button-reconnect-google"
                 >
                   {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Reconectar
+                  {t('pages.integrations.reconnect')}
                 </Button>
               )}
               <AlertDialog>
@@ -150,20 +150,20 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
                     data-testid="button-disconnect-google"
                   >
                     {isDisconnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Desconectar
+                    {t('pages.integrations.disconnect')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>¿Desconectar Google Drive?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('pages.integrations.disconnectTitle', { provider })}</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Esto eliminará el acceso a tu cuenta de Google Drive. No podrás copiar archivos hasta que vuelvas a conectar tu cuenta.
+                      {t('pages.integrations.disconnectDesc', { provider })}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogCancel>{t('pages.integrations.cancel')}</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDisconnect} data-testid="confirm-disconnect">
-                      Desconectar
+                      {t('pages.integrations.disconnect')}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -179,7 +179,7 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
               data-testid="button-connect-google"
             >
               {isConnecting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Conectar
+              {t('pages.integrations.connect')}
             </Button>
           )}
         </div>
@@ -189,18 +189,18 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
             hasValidToken ? (
               <Badge variant="default" className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                 <CheckCircle className="w-3 h-3 mr-1" />
-                Conectado
+                {t('pages.integrations.connected')}
               </Badge>
             ) : (
               <Badge variant="default" className="bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300">
                 <AlertTriangle className="w-3 h-3 mr-1" />
-                Token expirado
+                {t('pages.integrations.tokenExpired')}
               </Badge>
             )
           ) : (
             <Badge variant="default" className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300">
               <XCircle className="w-3 h-3 mr-1" />
-              Desconectado
+              {t('pages.integrations.disconnected')}
             </Badge>
           )}
         </div>
@@ -208,13 +208,12 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
     );
   }
 
-  // Sidebar variant - compact with full status info
   if (variant === 'sidebar') {
     if (isLoadingStatus) {
       return (
         <div className="flex items-center gap-2 p-2 rounded-md bg-muted/20" data-testid="google-drive-sidebar-loading">
           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">Verificando...</span>
+          <span className="text-xs text-muted-foreground">{t('pages.integrations.verifying')}</span>
         </div>
       );
     }
@@ -228,12 +227,12 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
             <div className="text-xs text-muted-foreground">
               {isConnected ? (
                 hasValidToken ? (
-                  <span className="text-green-600">Conectado</span>
+                  <span className="text-green-600">{t('pages.integrations.connected')}</span>
                 ) : (
-                  <span className="text-orange-600">Token expirado</span>
+                  <span className="text-orange-600">{t('pages.integrations.tokenExpired')}</span>
                 )
               ) : (
-                <span className="text-muted-foreground">Desconectado</span>
+                <span className="text-muted-foreground">{t('pages.integrations.disconnected')}</span>
               )}
             </div>
           </div>
@@ -251,7 +250,7 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
                 disabled={isConnecting}
                 data-testid="button-reconnect-google-sidebar"
               >
-                {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Reconectar"}
+                {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : t('pages.integrations.reconnect')}
               </Button>
             )}
           </div>
@@ -264,14 +263,13 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
             disabled={isConnecting}
             data-testid="button-connect-google-sidebar"
           >
-            {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Conectar"}
+            {isConnecting ? <Loader2 className="w-3 h-3 animate-spin" /> : t('pages.integrations.connect')}
           </Button>
         )}
       </div>
     );
   }
 
-  // Inline variant - simple button
   return (
     <Button
       onClick={isConnected ? undefined : handleConnect}
@@ -283,7 +281,7 @@ export default function GoogleDriveConnection({ variant = 'header' }: GoogleDriv
     >
       {(isConnecting || isDisconnecting) && <Loader2 className="w-4 h-4 animate-spin" />}
       <HardDrive className="w-4 h-4" />
-      {isConnected ? "Drive Conectado" : "Conectar Drive"}
+      {isConnected ? t('pages.integrations.connected') : t('pages.integrations.connect')}
       {isConnected && (
         hasValidToken ? (
           <CheckCircle className="w-4 h-4 text-green-500" />

@@ -305,7 +305,18 @@ const esTranslations = {
       enterpriseSecurity: "Seguridad empresarial avanzada", complianceTools: "Herramientas de cumplimiento",
       cloudInfrastructure: "Infraestructura Cloud", s3Desc: "Conecta tus buckets de Amazon S3 para acceder y transferir archivos desde la infraestructura cloud de AWS.",
       infiniteStorage: "Almacenamiento ilimitado", globalRegions: "Múltiples regiones globales",
-      s3Compatible: "Compatible con Wasabi y Backblaze B2"
+      s3Compatible: "Compatible con Wasabi y Backblaze B2",
+      connect: "Conectar", connected: "Conectado", disconnect: "Desconectar",
+      reconnect: "Reconectar", disconnected: "Desconectado", tokenExpired: "Token expirado",
+      verifying: "Verificando...", cancel: "Cancelar",
+      connectSuccess: "¡Conectado exitosamente!", connectSuccessDesc: "Tu cuenta de {{provider}} ha sido conectada.",
+      connectError: "Error de conexión", connectErrorDesc: "No se pudo conectar tu cuenta de {{provider}}. Intentá de nuevo.",
+      disconnectSuccess: "Cuenta desconectada", disconnectSuccessDesc: "Tu cuenta de {{provider}} ha sido desconectada.",
+      tooltipConnected: "{{provider}} conectado", tooltipExpired: "Token expirado — reconectar necesario",
+      tooltipConnect: "Conectar {{provider}}", disconnectTitle: "¿Desconectar {{provider}}?",
+      disconnectDesc: "Esto eliminará el acceso a tu cuenta de {{provider}}. No podrás copiar archivos hasta que vuelvas a conectar.",
+      s3DialogDesc: "Ingresá tus credenciales de AWS IAM. Necesitás un usuario con permisos de S3.",
+      s3Region: "Región", s3InvalidCredentials: "Credenciales inválidas."
     }
   },
   quickCopy: {
@@ -939,7 +950,18 @@ const enTranslations = {
       enterpriseSecurity: "Advanced enterprise security", complianceTools: "Compliance tools",
       cloudInfrastructure: "Cloud Infrastructure", s3Desc: "Connect your Amazon S3 buckets to access and transfer files from AWS cloud infrastructure.",
       infiniteStorage: "Unlimited storage", globalRegions: "Multiple global regions",
-      s3Compatible: "Compatible with Wasabi and Backblaze B2"
+      s3Compatible: "Compatible with Wasabi and Backblaze B2",
+      connect: "Connect", connected: "Connected", disconnect: "Disconnect",
+      reconnect: "Reconnect", disconnected: "Disconnected", tokenExpired: "Token expired",
+      verifying: "Verifying...", cancel: "Cancel",
+      connectSuccess: "Successfully connected!", connectSuccessDesc: "Your {{provider}} account has been connected.",
+      connectError: "Connection error", connectErrorDesc: "Could not connect your {{provider}} account. Try again.",
+      disconnectSuccess: "Account disconnected", disconnectSuccessDesc: "Your {{provider}} account has been disconnected.",
+      tooltipConnected: "{{provider}} connected", tooltipExpired: "Token expired — reconnect required",
+      tooltipConnect: "Connect {{provider}}", disconnectTitle: "Disconnect {{provider}}?",
+      disconnectDesc: "This will remove access to your {{provider}} account. You won't be able to copy files until you reconnect.",
+      s3DialogDesc: "Enter your AWS IAM credentials. You need a user with S3 permissions.",
+      s3Region: "Region", s3InvalidCredentials: "Invalid credentials."
     }
   },
   quickCopy: {
@@ -1357,7 +1379,18 @@ const ptTranslations = {
       enterpriseSecurity: "Segurança empresarial avançada", complianceTools: "Ferramentas de conformidade",
       cloudInfrastructure: "Infraestrutura Cloud", s3Desc: "Conecte seus buckets do Amazon S3 para acessar e transferir arquivos da infraestrutura cloud da AWS.",
       infiniteStorage: "Armazenamento ilimitado", globalRegions: "Múltiplas regiões globais",
-      s3Compatible: "Compatível com Wasabi e Backblaze B2"
+      s3Compatible: "Compatível com Wasabi e Backblaze B2",
+      connect: "Conectar", connected: "Conectado", disconnect: "Desconectar",
+      reconnect: "Reconectar", disconnected: "Desconectado", tokenExpired: "Token expirado",
+      verifying: "Verificando...", cancel: "Cancelar",
+      connectSuccess: "Conectado com sucesso!", connectSuccessDesc: "Sua conta {{provider}} foi conectada.",
+      connectError: "Erro de conexão", connectErrorDesc: "Não foi possível conectar sua conta {{provider}}. Tente novamente.",
+      disconnectSuccess: "Conta desconectada", disconnectSuccessDesc: "Sua conta {{provider}} foi desconectada.",
+      tooltipConnected: "{{provider}} conectado", tooltipExpired: "Token expirado — reconexão necessária",
+      tooltipConnect: "Conectar {{provider}}", disconnectTitle: "Desconectar {{provider}}?",
+      disconnectDesc: "Isso removerá o acesso à sua conta {{provider}}. Você não poderá copiar arquivos até reconectar.",
+      s3DialogDesc: "Insira suas credenciais do AWS IAM. Você precisa de um usuário com permissões de S3.",
+      s3Region: "Região", s3InvalidCredentials: "Credenciais inválidas."
     }
   },
   quickCopy: {
