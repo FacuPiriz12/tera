@@ -1,6 +1,9 @@
 import { storage } from '../storage';
 import { GoogleDriveService } from './googleDriveService';
 import { DropboxService } from './dropboxService';
+import { OneDriveService } from './oneDriveService';
+import { BoxService } from './boxService';
+import { S3Service } from './s3Service';
 import { DuplicateDetectionService } from './duplicateDetectionService';
 import type { ScheduledTask, SyncFileRegistry, InsertSyncFileRegistry } from '@shared/schema';
 
@@ -30,6 +33,9 @@ export class SyncService {
   private userId: string;
   private googleService: GoogleDriveService | null = null;
   private dropboxService: DropboxService | null = null;
+  private oneDriveService: OneDriveService | null = null;
+  private boxService: BoxService | null = null;
+  private s3Service: S3Service | null = null;
   private duplicateDetection: DuplicateDetectionService;
 
   constructor(userId: string) {
@@ -38,17 +44,28 @@ export class SyncService {
   }
 
   private async getGoogleService(): Promise<GoogleDriveService> {
-    if (!this.googleService) {
-      this.googleService = new GoogleDriveService(this.userId);
-    }
+    if (!this.googleService) this.googleService = new GoogleDriveService(this.userId);
     return this.googleService;
   }
 
   private async getDropboxService(): Promise<DropboxService> {
-    if (!this.dropboxService) {
-      this.dropboxService = new DropboxService(this.userId);
-    }
+    if (!this.dropboxService) this.dropboxService = new DropboxService(this.userId);
     return this.dropboxService;
+  }
+
+  private async getOneDriveService(): Promise<OneDriveService> {
+    if (!this.oneDriveService) this.oneDriveService = new OneDriveService(this.userId);
+    return this.oneDriveService;
+  }
+
+  private async getBoxService(): Promise<BoxService> {
+    if (!this.boxService) this.boxService = new BoxService(this.userId);
+    return this.boxService;
+  }
+
+  private async getS3Service(): Promise<S3Service> {
+    if (!this.s3Service) this.s3Service = new S3Service(this.userId);
+    return this.s3Service;
   }
 
   async executeCumulativeSync(task: ScheduledTask): Promise<SyncResult> {
@@ -241,61 +258,39 @@ export class SyncService {
   }
 
   private async listSourceFiles(task: ScheduledTask): Promise<FileInfo[]> {
-    const files: FileInfo[] = [];
-    
-    if (task.sourceProvider === 'google') {
-      const googleService = await this.getGoogleService();
-      const folderId = task.sourceFolderId || this.extractFolderIdFromUrl(task.sourceUrl);
-      
-      if (!folderId) {
-        throw new Error('Could not determine source folder ID');
+    switch (task.sourceProvider) {
+      case 'google': {
+        const svc = await this.getGoogleService();
+        const folderId = task.sourceFolderId || this.extractFolderIdFromUrl(task.sourceUrl);
+        if (!folderId) throw new Error('Could not determine Google Drive source folder ID');
+        const all = await this.listGoogleFilesRecursive(svc, folderId);
+        return all.filter(f => this.shouldIncludeFile(f.id, task));
       }
-
-      const driveFiles = await googleService.listFolderContentsRecursive(folderId);
-      
-      for (const file of driveFiles) {
-        if (file.mimeType !== 'application/vnd.google-apps.folder') {
-          // Apply selective sync filters
-          if (!this.shouldIncludeFile(file.id, task)) {
-            continue;
-          }
-          
-          files.push({
-            id: file.id,
-            name: file.name,
-            mimeType: file.mimeType,
-            size: file.size ? parseInt(file.size) : undefined,
-            modifiedTime: file.modifiedTime ? new Date(file.modifiedTime) : undefined,
-            contentHash: file.md5Checksum,
-          });
-        }
+      case 'dropbox': {
+        const svc = await this.getDropboxService();
+        const folderPath = task.sourceFolderId || this.extractDropboxPath(task.sourceUrl) || '';
+        const all = await this.listDropboxFilesRecursive(svc, folderPath);
+        return all.filter(f => this.shouldIncludeFile(f.id, task));
       }
-    } else if (task.sourceProvider === 'dropbox') {
-      const dropboxService = await this.getDropboxService();
-      const folderPath = task.sourceFolderId || this.extractDropboxPath(task.sourceUrl) || '';
-      
-      const dropboxFiles = await dropboxService.listFolderContentsRecursive(folderPath);
-      
-      for (const file of dropboxFiles) {
-        if (file['.tag'] === 'file') {
-          // Apply selective sync filters
-          if (!this.shouldIncludeFile(file.id, task)) {
-            continue;
-          }
-          
-          files.push({
-            id: file.id,
-            name: file.name,
-            path: file.path_display,
-            size: file.size,
-            modifiedTime: file.client_modified ? new Date(file.client_modified) : undefined,
-            contentHash: file.content_hash,
-          });
-        }
+      case 'onedrive': {
+        const svc = await this.getOneDriveService();
+        const folderId = task.sourceFolderId || task.sourceUrl?.replace('onedrive://', '') || undefined;
+        return this.listOneDriveFilesRecursive(svc, folderId);
       }
+      case 'box': {
+        const svc = await this.getBoxService();
+        const folderId = task.sourceFolderId || task.sourceUrl?.replace('box://', '') || undefined;
+        return this.listBoxFilesRecursive(svc, folderId);
+      }
+      case 's3': {
+        const svc = await this.getS3Service();
+        const s3 = this.parseS3Url(task.sourceUrl);
+        if (!s3) throw new Error('Could not parse S3 source URL');
+        return this.listS3FilesRecursive(svc, s3.bucket, s3.key);
+      }
+      default:
+        throw new Error(`Unsupported source provider: ${task.sourceProvider}`);
     }
-
-    return files;
   }
 
   private shouldIncludeFile(fileId: string, task: ScheduledTask): boolean {
@@ -332,139 +327,127 @@ export class SyncService {
     return false;
   }
 
-  /**
-   * Copy file with metadata retention and duplicate handling
-   * Preserves original modification time when transferring between providers
-   * Allows user to choose action on duplicate (skip, replace, or copy_with_suffix)
-   */
   private async copyFile(
-    task: ScheduledTask, 
+    task: ScheduledTask,
     file: FileInfo,
     duplicateAction?: 'skip' | 'replace' | 'copy_with_suffix'
-  ): Promise<{ 
-    success: boolean; 
-    destFileId?: string; 
-    destFilePath?: string; 
-    error?: string;
-    isDuplicate?: boolean;
-    duplicateInfo?: any;
-  }> {
+  ): Promise<{ success: boolean; destFileId?: string; destFilePath?: string; error?: string; isDuplicate?: boolean; duplicateInfo?: any }> {
     try {
-      const isTransfer = task.sourceProvider !== task.destProvider;
-
-      if (!isTransfer) {
-        if (task.sourceProvider === 'google') {
-          const googleService = await this.getGoogleService();
-          const copiedFile = await googleService.copyFile(file.id, task.destinationFolderId);
-          return { success: true, destFileId: copiedFile.id };
-        } else {
-          const dropboxService = await this.getDropboxService();
-          const destPath = `${task.destinationFolderId === 'root' ? '' : task.destinationFolderId}/${file.name}`;
-          const copiedFile = await dropboxService.copyFile(file.path!, destPath);
-          return { success: true, destFilePath: copiedFile.path_display };
-        }
-      } else {
-        // Cross-platform transfer with metadata retention and duplicate detection
-        if (task.sourceProvider === 'google' && task.destProvider === 'dropbox') {
-          const googleService = await this.getGoogleService();
-          const dropboxService = await this.getDropboxService();
-          
-          const fileContent = await googleService.downloadFile(file.id);
-          const destPath = `${task.destinationFolderId === 'root' ? '' : task.destinationFolderId}`;
-          
-          // Preserve original modification time
-          const metadata = file.modifiedTime ? { clientModified: file.modifiedTime } : undefined;
-          if (metadata) {
-            console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
-          }
-          
-          // Determine upload options based on duplicate action
-          const uploadOptions: any = {};
-          let uploadFileName = file.name;
-          
-          if (duplicateAction === 'skip') {
-            return { success: false, error: 'File skipped by user' };
-          }
-          if (duplicateAction === 'replace') {
-            uploadOptions.forceOverwrite = true;
-          }
-          if (duplicateAction === 'copy_with_suffix') {
-            const { name, ext } = this.parseFileName(file.name);
-            uploadFileName = `${name}_copy${ext}`;
-          }
-          
-          try {
-            const uploadedFile = await dropboxService.uploadFile(uploadFileName, fileContent, destPath, metadata, uploadOptions);
-            return { success: true, destFilePath: destPath + '/' + uploadFileName };
-          } catch (uploadError: any) {
-            // Handle duplicate detection error
-            if (uploadError.isDuplicate) {
-              return { 
-                success: false, 
-                isDuplicate: true, 
-                duplicateInfo: uploadError.duplicateInfo,
-                error: 'Duplicate file detected'
-              };
-            }
-            throw uploadError;
-          }
-        } else if (task.sourceProvider === 'dropbox' && task.destProvider === 'google') {
-          const googleService = await this.getGoogleService();
-          const dropboxService = await this.getDropboxService();
-          
-          const fileContent = await dropboxService.downloadFile(file.path!);
-          
-          // Preserve original modification time
-          const metadata = file.modifiedTime ? { modifiedTime: file.modifiedTime } : undefined;
-          if (metadata) {
-            console.log(`📅 Retaining metadata for ${file.name}: modifiedTime=${file.modifiedTime?.toISOString()}`);
-          }
-          
-          // Determine upload options based on duplicate action
-          const uploadOptions: any = {};
-          let uploadFileName = file.name;
-          
-          if (duplicateAction === 'skip') {
-            return { success: false, error: 'File skipped by user' };
-          }
-          if (duplicateAction === 'replace') {
-            uploadOptions.forceOverwrite = true;
-          }
-          if (duplicateAction === 'copy_with_suffix') {
-            const { name, ext } = this.parseFileName(file.name);
-            uploadFileName = `${name}_copy${ext}`;
-          }
-          
-          try {
-            const uploadedFile = await googleService.uploadFile(
-              uploadFileName,
-              fileContent,
-              task.destinationFolderId,
-              file.mimeType || 'application/octet-stream',
-              metadata,
-              uploadOptions
-            );
-            return { success: true, destFileId: uploadedFile.id };
-          } catch (uploadError: any) {
-            // Handle duplicate detection error
-            if (uploadError.isDuplicate) {
-              return { 
-                success: false, 
-                isDuplicate: true, 
-                duplicateInfo: uploadError.duplicateInfo,
-                error: 'Duplicate file detected'
-              };
-            }
-            throw uploadError;
-          }
-        }
+      // Fast path: native same-provider copy for Google Drive
+      if (task.sourceProvider === 'google' && task.destProvider === 'google') {
+        const svc = await this.getGoogleService();
+        const copied = await svc.copyFile(file.id, task.destinationFolderId);
+        return { success: true, destFileId: (copied as any).id };
       }
-
-      return { success: false, error: 'Unsupported transfer combination' };
+      // Fast path: native same-provider copy for Dropbox
+      if (task.sourceProvider === 'dropbox' && task.destProvider === 'dropbox') {
+        const svc = await this.getDropboxService();
+        const destPath = `${task.destinationFolderId === 'root' ? '' : task.destinationFolderId}/${file.name}`;
+        const copied = await svc.copyFile(file.path!, destPath);
+        return { success: true, destFilePath: (copied as any).path_display };
+      }
+      // Generic path: download + upload (handles all cross-provider and onedrive/box/s3)
+      let fileName = file.name;
+      if (duplicateAction === 'copy_with_suffix') {
+        const { name, ext } = this.parseFileName(file.name);
+        fileName = `${name}_copy${ext}`;
+      }
+      const { content, fileName: exportedName } = await this.downloadFromSource(task, file);
+      if (exportedName !== file.name) fileName = exportedName;
+      return await this.uploadToDestination(task, fileName, content, file.mimeType, file.modifiedTime);
     } catch (error: any) {
+      if (error?.isDuplicate) {
+        return { success: false, isDuplicate: true, duplicateInfo: error.duplicateInfo, error: 'Duplicate file detected' };
+      }
       return { success: false, error: error.message };
     }
   }
+
+  private async downloadFromSource(task: ScheduledTask, file: FileInfo): Promise<{ content: Buffer; fileName: string }> {
+    switch (task.sourceProvider) {
+      case 'google': {
+        const svc = await this.getGoogleService();
+        const dl = await svc.downloadFile(file.id);
+        let fn = file.name;
+        if ((dl as any).exportExtension && !fn.includes('.')) fn += (dl as any).exportExtension;
+        return { content: Buffer.from(dl.content), fileName: fn };
+      }
+      case 'dropbox': {
+        const svc = await this.getDropboxService();
+        const raw = await svc.downloadFile(file.path!);
+        return { content: raw instanceof Buffer ? raw : Buffer.from(raw as ArrayBuffer), fileName: file.name };
+      }
+      case 'onedrive': {
+        const svc = await this.getOneDriveService();
+        return { content: await svc.downloadFile(file.id), fileName: file.name };
+      }
+      case 'box': {
+        const svc = await this.getBoxService();
+        return { content: await svc.downloadFile(file.id), fileName: file.name };
+      }
+      case 's3': {
+        const svc = await this.getS3Service();
+        const slashIdx = file.id.indexOf('/');
+        const bucket = slashIdx >= 0 ? file.id.slice(0, slashIdx) : file.id;
+        const key = slashIdx >= 0 ? file.id.slice(slashIdx + 1) : '';
+        return { content: await svc.downloadFile(bucket, key), fileName: file.name };
+      }
+      default:
+        throw new Error(`Unsupported source provider: ${task.sourceProvider}`);
+    }
+  }
+
+  private async uploadToDestination(
+    task: ScheduledTask,
+    fileName: string,
+    content: Buffer,
+    mimeType?: string,
+    modifiedTime?: Date
+  ): Promise<{ success: boolean; destFileId?: string; destFilePath?: string; error?: string }> {
+    try {
+      switch (task.destProvider) {
+        case 'google': {
+          const svc = await this.getGoogleService();
+          const meta = modifiedTime ? { modifiedTime } : undefined;
+          const up = await svc.uploadFile(fileName, content, task.destinationFolderId, mimeType || 'application/octet-stream', meta);
+          return { success: true, destFileId: up.id };
+        }
+        case 'dropbox': {
+          const svc = await this.getDropboxService();
+          const destPath = task.destinationFolderId === 'root' ? '' : (task.destinationFolderId || '');
+          const meta = modifiedTime ? { clientModified: modifiedTime } : undefined;
+          await svc.uploadFile(fileName, content, destPath, meta);
+          return { success: true, destFilePath: `${destPath}/${fileName}` };
+        }
+        case 'onedrive': {
+          const svc = await this.getOneDriveService();
+          const up = await svc.uploadFile(task.destinationFolderId || null, fileName, content, mimeType);
+          return { success: true, destFileId: up.id };
+        }
+        case 'box': {
+          const svc = await this.getBoxService();
+          const up = await svc.uploadFile(task.destinationFolderId || null, fileName, content, mimeType);
+          return { success: true, destFileId: up.id };
+        }
+        case 's3': {
+          const svc = await this.getS3Service();
+          const destId = task.destinationFolderId || '';
+          const slashIdx = destId.indexOf('/');
+          const bucket = slashIdx >= 0 ? destId.slice(0, slashIdx) : destId;
+          const prefix = slashIdx >= 0 ? destId.slice(slashIdx + 1) : '';
+          const key = prefix ? `${prefix}/${fileName}` : fileName;
+          await svc.uploadFile(bucket, key, content, mimeType);
+          return { success: true, destFilePath: key };
+        }
+        default:
+          throw new Error(`Unsupported destination provider: ${task.destProvider}`);
+      }
+    } catch (error: any) {
+      if (error?.isDuplicate) throw error;
+      return { success: false, error: error.message };
+    }
+  }
+
 
   private parseFileName(fileName: string): { name: string; ext: string } {
     const lastDot = fileName.lastIndexOf('.');
@@ -503,6 +486,81 @@ export class SyncService {
     } catch {
       return null;
     }
+  }
+
+  private parseS3Url(url: string): { bucket: string; key: string } | null {
+    if (!url.startsWith('s3://')) return null;
+    const rest = url.slice('s3://'.length);
+    const slashIdx = rest.indexOf('/');
+    if (slashIdx < 0) return { bucket: rest, key: '' };
+    return { bucket: rest.slice(0, slashIdx), key: rest.slice(slashIdx + 1) };
+  }
+
+  private async listGoogleFilesRecursive(svc: GoogleDriveService, folderId: string): Promise<FileInfo[]> {
+    const items = await svc.listFiles(folderId);
+    const result: FileInfo[] = [];
+    for (const item of items) {
+      if (item.mimeType === 'application/vnd.google-apps.folder') {
+        result.push(...await this.listGoogleFilesRecursive(svc, item.id));
+      } else {
+        result.push({ id: item.id, name: item.name, mimeType: item.mimeType, size: item.size ? parseInt(item.size) : undefined, modifiedTime: item.modifiedTime ? new Date(item.modifiedTime) : undefined, contentHash: (item as any).md5Checksum });
+      }
+    }
+    return result;
+  }
+
+  private async listDropboxFilesRecursive(svc: DropboxService, path: string): Promise<FileInfo[]> {
+    const items = await svc.listFiles(path === '/' ? '' : path) as any[];
+    const result: FileInfo[] = [];
+    for (const item of items) {
+      if (item['.tag'] === 'folder') {
+        const subPath = item.path_display || item.path_lower || `${path}/${item.name}`;
+        result.push(...await this.listDropboxFilesRecursive(svc, subPath));
+      } else if (item['.tag'] === 'file') {
+        result.push({ id: item.id, name: item.name, path: item.path_display, size: item.size, modifiedTime: item.client_modified ? new Date(item.client_modified) : undefined, contentHash: item.content_hash });
+      }
+    }
+    return result;
+  }
+
+  private async listOneDriveFilesRecursive(svc: OneDriveService, folderId?: string): Promise<FileInfo[]> {
+    const items = await svc.listFolder(folderId);
+    const result: FileInfo[] = [];
+    for (const item of items) {
+      if (item.isFolder) {
+        result.push(...await this.listOneDriveFilesRecursive(svc, item.id));
+      } else {
+        result.push({ id: item.id, name: item.name, mimeType: item.mimeType, size: item.size, modifiedTime: item.lastModified ? new Date(item.lastModified) : undefined });
+      }
+    }
+    return result;
+  }
+
+  private async listBoxFilesRecursive(svc: BoxService, folderId?: string): Promise<FileInfo[]> {
+    const items = await svc.listFolder(folderId);
+    const result: FileInfo[] = [];
+    for (const item of items) {
+      if (item.isFolder) {
+        result.push(...await this.listBoxFilesRecursive(svc, item.id));
+      } else {
+        result.push({ id: item.id, name: item.name, size: item.size, modifiedTime: item.lastModified ? new Date(item.lastModified) : undefined });
+      }
+    }
+    return result;
+  }
+
+  private async listS3FilesRecursive(svc: S3Service, bucket: string, prefix: string = ''): Promise<FileInfo[]> {
+    const items = await svc.listFolder(bucket, prefix);
+    const result: FileInfo[] = [];
+    for (const item of items) {
+      if (item.isFolder) {
+        result.push(...await this.listS3FilesRecursive(svc, bucket, item.id));
+      } else {
+        // Store id as 'bucket/key' so downloadFromSource can parse it back
+        result.push({ id: `${bucket}/${item.id}`, name: item.name, size: item.size, modifiedTime: item.lastModified ? new Date(item.lastModified) : undefined });
+      }
+    }
+    return result;
   }
 
   /**
@@ -665,47 +723,38 @@ export class SyncService {
   }
 
   private async listDestinationFiles(task: ScheduledTask): Promise<FileInfo[]> {
-    const files: FileInfo[] = [];
-    
-    if (task.destProvider === 'google') {
-      const googleService = await this.getGoogleService();
-      const folderId = task.destinationFolderId || this.extractFolderIdFromUrl(task.sourceUrl);
-      
-      if (folderId && folderId !== 'root') {
-        const driveFiles = await googleService.listFolderContentsRecursive(folderId);
-        for (const file of driveFiles) {
-          if (file.mimeType !== 'application/vnd.google-apps.folder') {
-            files.push({
-              id: file.id,
-              name: file.name,
-              mimeType: file.mimeType,
-              size: file.size ? parseInt(file.size) : undefined,
-              modifiedTime: file.modifiedTime ? new Date(file.modifiedTime) : undefined,
-              contentHash: file.md5Checksum,
-            });
-          }
-        }
+    switch (task.destProvider) {
+      case 'google': {
+        const svc = await this.getGoogleService();
+        const folderId = task.destinationFolderId;
+        if (!folderId || folderId === 'root') return [];
+        return this.listGoogleFilesRecursive(svc, folderId);
       }
-    } else if (task.destProvider === 'dropbox') {
-      const dropboxService = await this.getDropboxService();
-      const folderPath = task.destinationFolderId === 'root' ? '' : task.destinationFolderId;
-      
-      const dropboxFiles = await dropboxService.listFolderContentsRecursive(folderPath);
-      for (const file of dropboxFiles) {
-        if (file['.tag'] === 'file') {
-          files.push({
-            id: file.id,
-            name: file.name,
-            path: file.path_display,
-            size: file.size,
-            modifiedTime: file.client_modified ? new Date(file.client_modified) : undefined,
-            contentHash: file.content_hash,
-          });
-        }
+      case 'dropbox': {
+        const svc = await this.getDropboxService();
+        const folderPath = task.destinationFolderId === 'root' ? '' : (task.destinationFolderId || '');
+        return this.listDropboxFilesRecursive(svc, folderPath);
       }
+      case 'onedrive': {
+        const svc = await this.getOneDriveService();
+        return this.listOneDriveFilesRecursive(svc, task.destinationFolderId || undefined);
+      }
+      case 'box': {
+        const svc = await this.getBoxService();
+        return this.listBoxFilesRecursive(svc, task.destinationFolderId || undefined);
+      }
+      case 's3': {
+        const svc = await this.getS3Service();
+        const destId = task.destinationFolderId || '';
+        const slashIdx = destId.indexOf('/');
+        const bucket = slashIdx >= 0 ? destId.slice(0, slashIdx) : destId;
+        const prefix = slashIdx >= 0 ? destId.slice(slashIdx + 1) : '';
+        if (!bucket) return [];
+        return this.listS3FilesRecursive(svc, bucket, prefix);
+      }
+      default:
+        return [];
     }
-
-    return files;
   }
 }
 

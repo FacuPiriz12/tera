@@ -131,6 +131,7 @@ export class SchedulerService {
         destinationFolderId: task.destinationFolderId,
         destProvider: task.destProvider,
         status: 'pending',
+        itemType: 'folder',
         fileName: task.sourceName || (isTransfer ? 'Scheduled Transfer' : 'Scheduled Copy'),
       };
 

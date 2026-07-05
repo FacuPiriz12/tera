@@ -48,26 +48,26 @@ function getOAuthRedirectUri(req: any, path: string): string {
 }
 
 // Utility function to detect provider from URL
-function detectProviderFromUrl(sourceUrl: string): 'google' | 'dropbox' | null {
+function detectProviderFromUrl(sourceUrl: string): 'google' | 'dropbox' | 'onedrive' | 'box' | 's3' | null {
+  if (!sourceUrl) return null;
+  // Custom scheme detection (fast-path, no URL parsing needed)
+  if (sourceUrl.startsWith('onedrive://')) return 'onedrive';
+  if (sourceUrl.startsWith('box://')) return 'box';
+  if (sourceUrl.startsWith('s3://')) return 's3';
+  if (sourceUrl.startsWith('dropbox://')) return 'dropbox';
   try {
     const url = new URL(sourceUrl.toLowerCase());
-    
-    // Google Drive detection (case-insensitive)
-    if (url.hostname.includes('drive.google.com') || 
+    if (url.hostname.includes('drive.google.com') ||
         url.hostname.includes('docs.google.com') ||
         url.hostname.includes('sheets.google.com') ||
         url.hostname.includes('slides.google.com')) {
       return 'google';
     }
-    
-    // Dropbox detection (case-insensitive)
-    if (url.hostname.includes('dropbox.com') || 
-        url.hostname.includes('db.tt')) {
+    if (url.hostname.includes('dropbox.com') || url.hostname.includes('db.tt')) {
       return 'dropbox';
     }
-    
     return null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -532,11 +532,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limitError = await enforceOperationLimits(userId);
       if (limitError) return res.status(limitError.status).json({ message: limitError.message });
 
-      // Validate provider before creating operation
-      const provider = detectProviderFromUrl(req.body.sourceUrl);
+      // Detect provider from URL (or use explicit sourceProvider field)
+      const provider = detectProviderFromUrl(req.body.sourceUrl) || req.body.sourceProvider || null;
       if (!provider) {
         return res.status(400).json({
-          message: "Unsupported URL format - only Google Drive and Dropbox URLs are supported"
+          message: "Unsupported URL format. Provide a valid cloud URL or set sourceProvider."
         });
       }
 
@@ -549,22 +549,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle duplicates if specified in request
       const duplicateAction = req.body.duplicateAction || 'skip'; // 'skip' | 'replace' | 'copy_with_suffix'
-      
+
       const operation = await storage.createCopyOperation(validation);
-      
-      // Store duplicate handling preference if provided
-      if (req.body.duplicateAction) {
-        await storage.updateCopyOperation(operation.id, { 
-          fileName: validation.fileName,
-        });
-      }
-      
+
       res.json(operation);
 
-      // Start copy process in background with error handling based on provider
+      // Start copy process in background — google/dropbox use native copy APIs,
+      // other providers are handled by the queue worker which picks up 'pending' operations.
       if (provider === 'google') {
         const driveService = new GoogleDriveService(userId);
-        // Wrap in try-catch to handle background errors
         setImmediate(async () => {
           try {
             await driveService.startCopyOperation(operation.id, validation.sourceUrl, duplicateAction);
@@ -575,7 +568,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else if (provider === 'dropbox') {
         const dropboxService = new DropboxService(userId);
-        // Wrap in try-catch to handle background errors
         setImmediate(async () => {
           try {
             await dropboxService.startCopyOperation(operation.id, validation.sourceUrl, duplicateAction);
@@ -585,6 +577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
       }
+      // onedrive, box, s3: queue worker picks up the pending operation automatically
     } catch (error) {
       console.error("Error creating copy operation:", error);
       res.status(500).json({ message: "Failed to create copy operation" });

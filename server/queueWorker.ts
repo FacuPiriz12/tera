@@ -301,7 +301,11 @@ export class QueueWorker extends EventEmitter {
     // Detect if this is a folder operation — prefer the stored itemType, fall back to URL parsing
     let isFolder = job.itemType === 'folder';
     if (!isFolder && sourceUrl) {
-      isFolder = sourceUrl.includes('/drive/folders/') || sourceUrl.includes('dropbox://folder:');
+      isFolder = sourceUrl.includes('/drive/folders/')
+        || sourceUrl.includes('dropbox://folder:')
+        || sourceUrl.startsWith('onedrive://')
+        || sourceUrl.startsWith('box://')
+        || /^s3:\/\/[^/]+\/.+/.test(sourceUrl); // s3://bucket/prefix = folder
     }
     // Handle folder operations with progress callback
     if (isFolder) {
