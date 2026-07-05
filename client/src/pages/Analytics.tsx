@@ -71,7 +71,7 @@ export default function Analytics() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pl-0 sm:pl-20">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -87,7 +87,7 @@ export default function Analytics() {
 
   if (totalOperations === 0) {
     return (
-      <div className="min-h-screen bg-gray-50" data-testid="page-analytics">
+      <div className="min-h-screen bg-gray-50 pl-0 sm:pl-20" data-testid="page-analytics">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -122,7 +122,7 @@ export default function Analytics() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="page-analytics">
+    <div className="min-h-screen bg-gray-50 pl-0 sm:pl-20" data-testid="page-analytics">
       <Header />
       <div className="flex">
         <Sidebar />

@@ -58,7 +58,7 @@ export default function CloudHealth() {
 
   if (!hasConnections) {
     return (
-      <div className="min-h-screen bg-[#F5F7FA] flex flex-col" data-testid="cloud-health-page">
+      <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20" data-testid="cloud-health-page">
         <Header />
         <div className="flex flex-1">
           <Sidebar />
@@ -86,7 +86,7 @@ export default function CloudHealth() {
 
   if (isLoading || !health) {
     return (
-      <div className="min-h-screen bg-[#F5F7FA] flex flex-col" data-testid="cloud-health-page">
+      <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20" data-testid="cloud-health-page">
         <Header />
         <div className="flex flex-1">
           <Sidebar />

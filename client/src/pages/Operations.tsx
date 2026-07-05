@@ -119,7 +119,7 @@ export default function Operations() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pl-0 sm:pl-20">
         <Header />
         <div className="flex">
           <Sidebar />
@@ -134,7 +134,7 @@ export default function Operations() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" data-testid="page-operations">
+    <div className="min-h-screen bg-gray-50 pl-0 sm:pl-20" data-testid="page-operations">
       <Header />
       <div className="flex">
         <Sidebar />
