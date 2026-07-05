@@ -3397,6 +3397,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/scheduled-tasks', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+
+      // Enforce plan limits
+      const user = await storage.getUser(userId);
+      const plan = user?.membershipPlan || 'free';
+      const isAdmin = user?.role === 'admin';
+      const TASK_LIMITS: Record<string, number> = { free: 0, pro: 5, business: Infinity };
+      const taskLimit = TASK_LIMITS[plan] ?? 0;
+
+      if (!isAdmin) {
+        if (taskLimit === 0) {
+          return res.status(403).json({
+            message: "Las tareas programadas requieren un plan Pro",
+            code: 'PLAN_LIMIT',
+            plan,
+            limit: 0,
+          });
+        }
+        if (taskLimit !== Infinity) {
+          const existingTasks = await storage.getUserScheduledTasks(userId);
+          if (existingTasks.length >= taskLimit) {
+            return res.status(403).json({
+              message: `Alcanzaste el límite de ${taskLimit} tareas del plan ${plan}`,
+              code: 'PLAN_LIMIT',
+              plan,
+              current: existingTasks.length,
+              limit: taskLimit,
+            });
+          }
+        }
+      }
+
       const { getSchedulerService } = await import('./services/schedulerService');
       const scheduler = getSchedulerService();
       

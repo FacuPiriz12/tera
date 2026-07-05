@@ -1,23 +1,27 @@
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { 
-  Plus, 
-  Calendar, 
-  Clock, 
-  Play, 
-  Pause, 
-  Trash2, 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Plus,
+  Calendar,
+  Clock,
+  Play,
+  Pause,
+  Trash2,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
   Loader2,
   Edit,
   ChevronDown,
   History,
-  AlertCircle
+  AlertCircle,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -167,12 +171,19 @@ const defaultFormData: TaskFormData = {
   excludedFolderIds: [],
 };
 
+const TASK_LIMITS: Record<string, number> = { free: 0, pro: 5, business: Infinity };
+
 export default function Tasks() {
   const { t } = useTranslation();
   usePageTitle(t('pageTitles.tasks', 'TERA — Scheduled Tasks'));
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+  const { user } = useAuth();
+
+  const userPlan = (user?.membershipPlan as string) || 'free';
+  const isAdmin = user?.role === 'admin';
+  const taskLimit = isAdmin ? Infinity : (TASK_LIMITS[userPlan] ?? 0);
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
@@ -223,8 +234,19 @@ export default function Tasks() {
       setFormData(defaultFormData);
       toast({ title: "Tarea creada", description: "La tarea programada se ha creado correctamente." });
     },
-    onError: () => {
-      toast({ title: "Error", description: "No se pudo crear la tarea.", variant: "destructive" });
+    onError: (error: any) => {
+      const is403 = error?.message?.startsWith('403:');
+      if (is403) {
+        toast({
+          title: taskLimit === 0 ? "Función exclusiva Pro" : "Límite de tareas alcanzado",
+          description: taskLimit === 0
+            ? "Las tareas programadas requieren un plan Pro o Business."
+            : `Tu plan Pro permite hasta ${taskLimit} tareas. Actualizá a Business para tener tareas ilimitadas.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({ title: "Error", description: "No se pudo crear la tarea.", variant: "destructive" });
+      }
     },
   });
 
@@ -802,27 +824,52 @@ export default function Tasks() {
                 </p>
               </div>
               
-              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="gap-2" data-testid="button-new-task">
-                    <Plus className="w-4 h-4" />
-                    Nueva tarea
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle>Crear tarea programada</DialogTitle>
-                    <DialogDescription>
-                      Configura una copia automática de archivos entre servicios
-                    </DialogDescription>
-                  </DialogHeader>
-                  <TaskFormContent 
-                    onSubmit={handleCreateSubmit} 
-                    submitLabel="Crear tarea"
-                    isPending={createMutation.isPending}
-                  />
-                </DialogContent>
-              </Dialog>
+              <div className="flex items-center gap-3">
+                {taskLimit !== Infinity && taskLimit > 0 && (
+                  <span className="text-sm text-muted-foreground">
+                    {tasks.length}/{taskLimit} tareas
+                  </span>
+                )}
+                {taskLimit === 0 ? (
+                  <Link href="/pricing">
+                    <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-tasks">
+                      <Lock className="w-4 h-4" />
+                      Requiere Pro
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                ) : tasks.length >= taskLimit ? (
+                  <Link href="/pricing">
+                    <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-limit">
+                      <Lock className="w-4 h-4" />
+                      Límite alcanzado
+                      <ArrowRight className="w-3 h-3" />
+                    </Button>
+                  </Link>
+                ) : (
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="gap-2" data-testid="button-new-task">
+                        <Plus className="w-4 h-4" />
+                        Nueva tarea
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Crear tarea programada</DialogTitle>
+                        <DialogDescription>
+                          Configura una copia automática de archivos entre servicios
+                        </DialogDescription>
+                      </DialogHeader>
+                      <TaskFormContent
+                        onSubmit={handleCreateSubmit}
+                        submitLabel="Crear tarea"
+                        isPending={createMutation.isPending}
+                      />
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
 
             {tasks.length === 0 ? (
@@ -838,14 +885,24 @@ export default function Tasks() {
                     <p className="text-muted-foreground max-w-md mb-6">
                       Crea una tarea para copiar archivos automáticamente entre Google Drive y Dropbox según tu horario preferido.
                     </p>
-                    <Button 
-                      className="gap-2" 
-                      onClick={() => setIsCreateDialogOpen(true)}
-                      data-testid="button-create-first-task"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Crear primera tarea
-                    </Button>
+                    {taskLimit === 0 ? (
+                      <Link href="/pricing">
+                        <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-first-task">
+                          <Lock className="w-4 h-4" />
+                          Actualizar a Pro para crear tareas
+                          <ArrowRight className="w-3 h-3" />
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button
+                        className="gap-2"
+                        onClick={() => setIsCreateDialogOpen(true)}
+                        data-testid="button-create-first-task"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Crear primera tarea
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
