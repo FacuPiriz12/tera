@@ -506,6 +506,10 @@ export class QueueWorker extends EventEmitter {
     } else {
       // onedrive / box
       actualSourceId = sourceFileId || '';
+      if (!actualSourceId && sourceUrl) {
+        if (sourceProvider === 'onedrive') actualSourceId = sourceUrl.replace('onedrive://', '');
+        else if (sourceProvider === 'box') actualSourceId = sourceUrl.replace('box://', '');
+      }
     }
 
     let destParent: string;

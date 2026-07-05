@@ -128,6 +128,7 @@ export class SchedulerService {
         userId: task.userId,
         sourceUrl: task.sourceUrl,
         sourceProvider: task.sourceProvider,
+        sourceFileId: task.sourceFolderId || undefined,
         destinationFolderId: task.destinationFolderId,
         destProvider: task.destProvider,
         status: 'pending',
