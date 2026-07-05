@@ -905,6 +905,15 @@ export class QueueWorker extends EventEmitter {
   }
 
   private async executeTransferWithTimeout(job: CopyOperation): Promise<any> {
+    // Folder transfers can take hours — no hard timeout; the per-job heartbeat
+    // (touchJob every 60s) keeps the DB record alive and the user can cancel manually.
+    const isFolder = job.itemType === 'folder' ||
+      !!(job.sourceUrl && (job.sourceUrl.includes('/drive/folders/') || job.sourceUrl.includes('dropbox://folder:')));
+
+    if (isFolder) {
+      return this.executeTransfer(job);
+    }
+
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error(`Transfer timeout after ${this.config.connectionTimeout}ms`));
