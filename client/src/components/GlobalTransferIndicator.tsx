@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/hooks/useAuth";
 import { useTransfer, TransferJob } from "@/contexts/TransferContext";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +16,7 @@ import { useLocation } from "wouter";
 
 export default function GlobalTransferIndicator() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const { jobs, activeJobsCount, clearCompletedJobs, updateJob } = useTransfer();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -35,6 +37,7 @@ export default function GlobalTransferIndicator() {
     }
   }
 
+  if (!isAuthenticated) return null;
   if (jobs.length === 0) return null;
 
   const activeJobs = jobs.filter(j => 
