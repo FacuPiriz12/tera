@@ -477,7 +477,7 @@ export class GoogleDriveService {
   }
 
   private async uploadLargeFile(filename: string, content: ArrayBuffer, parentFolderId?: string, mimeType?: string, metadata?: FileMetadata): Promise<DriveFileInfo> {
-    const chunkSize = 256 * 1024; // 256KB chunks for resumable uploads
+    const chunkSize = 8 * 1024 * 1024; // 8MB chunks for resumable uploads
     const totalSize = content.byteLength;
     
     try {

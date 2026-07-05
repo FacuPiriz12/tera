@@ -44,7 +44,7 @@ export class QueueWorker extends EventEmitter {
       workerId: config.workerId || `worker-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       maxPollInterval: config.maxPollInterval || 30000, // 30 seconds max
       backoffMultiplier: config.backoffMultiplier || 1.5,
-      connectionTimeout: config.connectionTimeout || 60000, // 60 seconds
+      connectionTimeout: config.connectionTimeout || 600000, // 10 minutes
       heartbeatInterval: config.heartbeatInterval || 30000 // 30 seconds
     };
     this.currentPollInterval = this.config.pollInterval;
