@@ -10,6 +10,7 @@ import {
   fileHashes,
   fileConflicts,
   fileVersions,
+  fileIndex,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -32,6 +33,8 @@ import {
   type InsertFileConflict,
   type FileVersion,
   type InsertFileVersion,
+  type FileIndexEntry,
+  type InsertFileIndexEntry,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -191,6 +194,12 @@ export interface IStorage {
   // File versioning operations
   createFileVersion(version: InsertFileVersion): Promise<FileVersion>;
   getFileVersions(userId: string, fileId: string): Promise<FileVersion[]>;
+
+  // File index (global search cache)
+  upsertFileIndexBatch(entries: InsertFileIndexEntry[]): Promise<void>;
+  searchFileIndex(userId: string, query: string, providers?: string[]): Promise<FileIndexEntry[]>;
+  clearProviderIndex(userId: string, provider: string): Promise<void>;
+  getIndexStatus(userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1249,6 +1258,44 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(fileVersions.userId, userId), eq(fileVersions.fileId, fileId)))
       .orderBy(desc(fileVersions.versionNumber));
   }
+
+  async upsertFileIndexBatch(entries: InsertFileIndexEntry[]): Promise<void> {
+    if (entries.length === 0) return;
+    const db = getDb();
+    const CHUNK = 500;
+    for (let i = 0; i < entries.length; i += CHUNK) {
+      await db
+        .insert(fileIndex)
+        .values(entries.slice(i, i + CHUNK))
+        .onConflictDoUpdate({
+          target: [fileIndex.userId, fileIndex.provider, fileIndex.fileId],
+          set: { name: sql`excluded.name`, path: sql`excluded.path`, mimeType: sql`excluded.mime_type`, size: sql`excluded.size`, isFolder: sql`excluded.is_folder`, indexedAt: sql`now()` },
+        });
+    }
+  }
+
+  async searchFileIndex(userId: string, query: string, providers?: string[]): Promise<FileIndexEntry[]> {
+    const db = getDb();
+    const term = `%${query}%`;
+    const conditions = [eq(fileIndex.userId, userId), ilike(fileIndex.name, term)];
+    if (providers && providers.length > 0) {
+      conditions.push(sql`${fileIndex.provider} = ANY(ARRAY[${sql.raw(providers.map(p => `'${p}'`).join(','))}])`);
+    }
+    return db.select().from(fileIndex).where(and(...conditions)).limit(40);
+  }
+
+  async clearProviderIndex(userId: string, provider: string): Promise<void> {
+    await getDb().delete(fileIndex).where(and(eq(fileIndex.userId, userId), eq(fileIndex.provider, provider)));
+  }
+
+  async getIndexStatus(userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]> {
+    const rows = await getDb()
+      .select({ provider: fileIndex.provider, count: count(), lastIndexed: sql<Date>`MAX(${fileIndex.indexedAt})` })
+      .from(fileIndex)
+      .where(eq(fileIndex.userId, userId))
+      .groupBy(fileIndex.provider);
+    return rows.map(r => ({ provider: r.provider, count: Number(r.count), lastIndexed: r.lastIndexed }));
+  }
 }
 
 // Memory storage for development when DATABASE_URL is not available
@@ -2283,6 +2330,11 @@ class MemoryStorage implements IStorage {
   async resolveFileConflict(conflictId: string, resolution: 'keep_newer' | 'keep_source' | 'keep_target', _details?: string): Promise<FileConflict> {
     throw new Error(`resolveFileConflict not supported in dev mode (id: ${conflictId}, resolution: ${resolution})`);
   }
+
+  async upsertFileIndexBatch(_entries: InsertFileIndexEntry[]): Promise<void> {}
+  async searchFileIndex(_userId: string, _query: string, _providers?: string[]): Promise<FileIndexEntry[]> { return []; }
+  async clearProviderIndex(_userId: string, _provider: string): Promise<void> {}
+  async getIndexStatus(_userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]> { return []; }
 }
 
 export const storage: IStorage = process.env.DATABASE_URL

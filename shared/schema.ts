@@ -444,3 +444,23 @@ export const insertFileVersionSchema = createInsertSchema(fileVersions).omit({
   id: true,
   createdAt: true,
 });
+
+// File index — local metadata cache for fast global search across all clouds
+export const fileIndex = pgTable("file_index", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  provider: varchar("provider").notNull(),
+  fileId: varchar("file_id").notNull(),
+  name: text("name").notNull(),
+  path: text("path"),
+  mimeType: varchar("mime_type"),
+  size: bigint("size", { mode: "number" }),
+  isFolder: boolean("is_folder").default(false),
+  indexedAt: timestamp("indexed_at").defaultNow(),
+}, (t) => [
+  index("file_index_user_provider").on(t.userId, t.provider),
+  index("file_index_name").on(t.name),
+]);
+
+export type FileIndexEntry = typeof fileIndex.$inferSelect;
+export type InsertFileIndexEntry = typeof fileIndex.$inferInsert;

@@ -784,14 +784,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ── Global file search ────────────────────────────────────────────────────────
-  // Called once per provider from the frontend in parallel.
-  // Returns: { id, name, path, mimeType, size, isFolder, provider }[]
+
+  // Index status — returns per-provider file count and last indexed time
+  app.get('/api/search/index/status', isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const status = await storage.getIndexStatus(userId);
+    res.json(status);
+  });
+
+  // Trigger indexing for one or all providers (background, non-blocking)
+  app.post('/api/search/index', isAuthenticated, async (req: any, res) => {
+    const userId = req.user.claims.sub;
+    const { providers: requestedProviders } = req.body as { providers?: string[] };
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const PROVIDERS_TO_INDEX = requestedProviders || ['google', 'dropbox', 'onedrive', 'box', 's3'];
+    res.json({ started: true, providers: PROVIDERS_TO_INDEX });
+
+    // Run in background
+    setImmediate(async () => {
+      for (const provider of PROVIDERS_TO_INDEX) {
+        try {
+          await storage.clearProviderIndex(userId, provider);
+          const entries: any[] = [];
+
+          if (provider === 'google' && user.googleConnected && user.googleAccessToken) {
+            const svc = new GoogleDriveService(userId);
+            const files = await svc.listAllFiles();
+            files.forEach(f => entries.push({ userId, provider, fileId: f.id, name: f.name, path: f.name, mimeType: f.mimeType || '', size: f.size ? parseInt(String(f.size)) : null, isFolder: f.mimeType === 'application/vnd.google-apps.folder' }));
+          }
+
+          if (provider === 'dropbox' && user.dropboxConnected && user.dropboxAccessToken) {
+            const { Dropbox } = await import('dropbox');
+            const dbx = new Dropbox({ accessToken: user.dropboxAccessToken, fetch });
+            let cursor: string | undefined;
+            let hasMore = true;
+            while (hasMore) {
+              const result: any = cursor
+                ? await (dbx as any).filesListFolderContinue({ cursor })
+                : await (dbx as any).filesListFolder({ path: '', recursive: true, limit: 2000 });
+              const items = result?.result?.entries || [];
+              items.forEach((item: any) => entries.push({ userId, provider, fileId: item.id || item.path_lower, name: item.name, path: item.path_display || item.path_lower, mimeType: item['.tag'] === 'folder' ? 'folder' : 'file', size: item.size || null, isFolder: item['.tag'] === 'folder' }));
+              cursor = result?.result?.cursor;
+              hasMore = result?.result?.has_more || false;
+            }
+          }
+
+          if (provider === 'onedrive' && user.onedriveConnected && user.onedriveAccessToken) {
+            let token = user.onedriveAccessToken;
+            const isExpired = user.onedriveTokenExpiry && new Date(user.onedriveTokenExpiry) <= new Date();
+            if (isExpired && user.onedriveRefreshToken) {
+              const refreshed = await OneDriveService.refreshAccessToken(user.onedriveRefreshToken);
+              token = refreshed.accessToken;
+            }
+            let url: string | null = `https://graph.microsoft.com/v1.0/me/drive/root/delta?$select=id,name,file,folder,size,parentReference&$top=1000`;
+            while (url) {
+              const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+              if (!resp.ok) break;
+              const data: any = await resp.json();
+              (data.value || []).forEach((item: any) => {
+                if (item.deleted) return;
+                entries.push({ userId, provider, fileId: item.id, name: item.name, path: item.parentReference?.path ? `${item.parentReference.path}/${item.name}` : item.name, mimeType: item.folder ? 'folder' : (item.file?.mimeType || 'file'), size: item.size || null, isFolder: !!item.folder });
+              });
+              url = data['@odata.nextLink'] || null;
+            }
+          }
+
+          if (provider === 'box' && user.boxConnected && user.boxAccessToken) {
+            let token = user.boxAccessToken;
+            const isExpired = user.boxTokenExpiry && new Date(user.boxTokenExpiry) <= new Date();
+            if (isExpired && user.boxRefreshToken) {
+              const refreshed = await BoxService.refreshAccessToken(user.boxRefreshToken);
+              token = refreshed.accessToken;
+            }
+            const queue = ['0'];
+            while (queue.length > 0) {
+              const folderId = queue.shift()!;
+              let offset = 0;
+              while (true) {
+                const resp = await fetch(`https://api.box.com/2.0/folders/${folderId}/items?fields=id,name,type,size,parent&limit=1000&offset=${offset}`, { headers: { Authorization: `Bearer ${token}` } });
+                if (!resp.ok) break;
+                const data: any = await resp.json();
+                const items: any[] = data.entries || [];
+                items.forEach(item => {
+                  entries.push({ userId, provider, fileId: item.id, name: item.name, path: `/${item.name}`, mimeType: item.type === 'folder' ? 'folder' : 'file', size: item.size || null, isFolder: item.type === 'folder' });
+                  if (item.type === 'folder') queue.push(item.id);
+                });
+                if (items.length < 1000) break;
+                offset += 1000;
+              }
+            }
+          }
+
+          if (provider === 's3' && user.s3Connected && user.s3AccessKeyId) {
+            const { S3Client, ListBucketsCommand, ListObjectsV2Command } = await import('@aws-sdk/client-s3');
+            const s3 = new S3Client({ region: user.s3Region || 'us-east-1', credentials: { accessKeyId: user.s3AccessKeyId!, secretAccessKey: user.s3SecretAccessKey! } });
+            const { Buckets = [] } = await s3.send(new ListBucketsCommand({}));
+            for (const bucket of Buckets) {
+              let ct: string | undefined;
+              do {
+                const { Contents = [], NextContinuationToken } = await s3.send(new ListObjectsV2Command({ Bucket: bucket.Name!, ContinuationToken: ct, MaxKeys: 1000 }));
+                Contents.forEach(obj => { const key = obj.Key || ''; const name = key.split('/').pop() || key; entries.push({ userId, provider, fileId: `${bucket.Name}/${key}`, name, path: `${bucket.Name}/${key}`, mimeType: 'file', size: obj.Size || null, isFolder: false }); });
+                ct = NextContinuationToken;
+              } while (ct);
+            }
+          }
+
+          if (entries.length > 0) await storage.upsertFileIndexBatch(entries);
+          console.log(`[search-index] ${provider}: indexed ${entries.length} files for user ${userId}`);
+        } catch (err) {
+          console.error(`[search-index] Error indexing ${provider} for user ${userId}:`, err);
+        }
+      }
+    });
+  });
+
+  // Search — uses local index if available, falls back to live API
   app.get('/api/search', isAuthenticated, async (req: any, res) => {
     const userId = req.user.claims.sub;
     const q = (req.query.q as string || '').trim();
     const provider = req.query.provider as string;
 
     if (!q || q.length < 2) return res.json([]);
+
+    // Try index first
+    try {
+      const indexed = await storage.searchFileIndex(userId, q, provider ? [provider] : undefined);
+      if (indexed.length > 0) {
+        return res.json(indexed.map(e => ({ id: e.fileId, name: e.name, path: e.path, mimeType: e.mimeType, size: e.size, isFolder: e.isFolder, provider: e.provider })));
+      }
+    } catch (_) { /* fall through to live API */ }
 
     try {
       if (provider === 'google') {

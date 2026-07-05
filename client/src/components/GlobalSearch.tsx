@@ -1,14 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { Search, Folder, File, Loader2, X, ArrowRight, ExternalLink } from 'lucide-react';
+import { Search, Folder, File, Loader2, X, ArrowRight, RefreshCw, Database } from 'lucide-react';
 import GoogleDriveLogo from './GoogleDriveLogo';
 import DropboxLogo from './DropboxLogo';
 import OneDriveLogo from './OneDriveLogo';
 import BoxLogo from './BoxLogo';
 import S3Logo from './S3Logo';
 import { useAuth } from '@/hooks/useAuth';
-import { apiRequest } from '@/lib/queryClient';
 
 interface SearchResult {
   id: string;
@@ -69,17 +68,39 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
   });
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRefs = useRef<Record<string, AbortController>>({});
+  const [indexStatus, setIndexStatus] = useState<{ provider: string; count: number; lastIndexed: Date | null }[]>([]);
+  const [isIndexing, setIsIndexing] = useState(false);
 
-  // Focus input when opened
+  const fetchIndexStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/search/index/status', { credentials: 'include' });
+      if (res.ok) setIndexStatus(await res.json());
+    } catch (_) {}
+  }, []);
+
+  const triggerIndexing = useCallback(async () => {
+    setIsIndexing(true);
+    try {
+      await fetch('/api/search/index', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      // Poll until done (simple approach: wait 5s then refresh status)
+      setTimeout(async () => {
+        await fetchIndexStatus();
+        setIsIndexing(false);
+      }, 8000);
+    } catch (_) { setIsIndexing(false); }
+  }, [fetchIndexStatus]);
+
+  // Focus input when opened, fetch index status
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
+      fetchIndexStatus();
     } else {
       setQuery('');
       setResults({ google: [], dropbox: [], onedrive: [], box: [], s3: [] });
       setStatus({ google: 'idle', dropbox: 'idle', onedrive: 'idle', box: 'idle', s3: 'idle' });
     }
-  }, [open]);
+  }, [open, fetchIndexStatus]);
 
   // Escape to close
   useEffect(() => {
@@ -231,11 +252,28 @@ export default function GlobalSearch({ open, onClose }: GlobalSearchProps) {
           })}
         </div>
 
-        {/* Footer */}
-        <div className="px-4 py-2.5 border-t border-gray-100 flex items-center gap-4">
-          <span className="text-xs text-gray-400">
-            {t('globalSearch.footer', 'Buscando en todas tus nubes conectadas')}
-          </span>
+        {/* Footer — index status */}
+        <div className="px-4 py-2.5 border-t border-gray-100 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Database className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+            {indexStatus.length === 0 ? (
+              <span className="text-xs text-gray-400">{t('globalSearch.noIndex', 'Sin índice — búsqueda en tiempo real')}</span>
+            ) : (
+              <span className="text-xs text-gray-400">
+                {t('globalSearch.indexed', 'Índice:')} {indexStatus.map(s => `${PROVIDER_LABELS[s.provider as Provider] || s.provider} (${s.count.toLocaleString()})`).join(' · ')}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={isIndexing ? undefined : triggerIndexing}
+            disabled={isIndexing}
+            className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-semibold transition-colors disabled:opacity-50"
+          >
+            {isIndexing
+              ? <><Loader2 className="w-3 h-3 animate-spin" /> Indexando...</>
+              : <><RefreshCw className="w-3 h-3" /> {indexStatus.length === 0 ? t('globalSearch.buildIndex', 'Construir índice') : t('globalSearch.refreshIndex', 'Actualizar índice')}</>
+            }
+          </button>
         </div>
       </div>
     </div>
