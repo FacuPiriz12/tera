@@ -44,7 +44,7 @@ export default function CopyProgressModal({
   const { data: operation } = useQuery({
     queryKey: ["/api/copy-operations", operationId],
     enabled: !!operationId && open,
-    refetchInterval: operation?.status === 'in_progress' ? 1000 : false,
+    refetchInterval: (query) => query.state.data?.status === 'in_progress' ? 1000 : false,
   });
 
   // Calculate transfer speed and ETA
