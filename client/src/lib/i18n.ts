@@ -285,7 +285,9 @@ const esTranslations = {
       skip: "Saltear existentes", skipDesc: "Copia solo archivos nuevos, no sobreescribe",
       copyWithSuffix: "Copiar con nuevo nombre", copyWithSuffixDesc: "Si ya existe, crea una copia con sufijo (_1, _2…)",
       replace: "Reemplazar", replaceDesc: "Sobreescribe el archivo existente con el mismo nombre",
-      transferring: "Iniciando transferencia...", dragHint: "Soltá \"{{name}}\" en el otro panel para transferir"
+      transferring: "Iniciando transferencia...", dragHint: "Soltá \"{{name}}\" en el otro panel para transferir",
+      s3NoBucket: "Seleccioná un bucket S3 primero", s3NoBucketDesc: "Navegá dentro de un bucket en el panel de destino antes de transferir.",
+      filesTransferred: "archivos transferidos", of: "de", downloading: "Descargando", uploading: "Subiendo"
     },
     integrations: {
       title: "Integraciones", subtitle: "Conectá tus servicios de almacenamiento",
@@ -917,7 +919,9 @@ const enTranslations = {
       skip: "Skip existing", skipDesc: "Copies only new files, doesn't overwrite",
       copyWithSuffix: "Copy with new name", copyWithSuffixDesc: "If it exists, creates a copy with suffix (_1, _2…)",
       replace: "Replace", replaceDesc: "Overwrites the existing file with the same name",
-      transferring: "Starting transfer...", dragHint: "Drop \"{{name}}\" on the other panel to transfer"
+      transferring: "Starting transfer...", dragHint: "Drop \"{{name}}\" on the other panel to transfer",
+      s3NoBucket: "Select an S3 bucket first", s3NoBucketDesc: "Navigate inside a bucket in the destination panel before transferring.",
+      filesTransferred: "files transferred", of: "of", downloading: "Downloading", uploading: "Uploading"
     },
     integrations: {
       title: "Integrations", subtitle: "Connect your storage services",
@@ -1333,7 +1337,9 @@ const ptTranslations = {
       skip: "Ignorar existentes", skipDesc: "Copia apenas arquivos novos, não sobrescreve",
       copyWithSuffix: "Copiar com novo nome", copyWithSuffixDesc: "Se já existe, cria uma cópia com sufixo (_1, _2…)",
       replace: "Substituir", replaceDesc: "Sobrescreve o arquivo existente com o mesmo nome",
-      transferring: "Iniciando transferência...", dragHint: "Solte \"{{name}}\" no outro painel para transferir"
+      transferring: "Iniciando transferência...", dragHint: "Solte \"{{name}}\" no outro painel para transferir",
+      s3NoBucket: "Selecione um bucket S3 primeiro", s3NoBucketDesc: "Navegue dentro de um bucket no painel de destino antes de transferir.",
+      filesTransferred: "arquivos transferidos", of: "de", downloading: "Baixando", uploading: "Enviando"
     },
     integrations: {
       title: "Integrações", subtitle: "Conecte seus serviços de armazenamento",

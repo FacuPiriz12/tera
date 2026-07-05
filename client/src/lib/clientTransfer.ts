@@ -982,6 +982,11 @@ async function countFilesRecursive(
  * Transfer an entire folder client-side (browser ↔ cloud, no server for file data).
  * Lists source via server metadata endpoints; creates folders and transfers files directly.
  */
+interface TokenRefresher {
+  fn: () => Promise<{ sourceTokens: ProviderTokens; destTokens: ProviderTokens }>;
+  fetchedAt: number;
+}
+
 export async function transferFolderClientSide(
   sourceProvider: Provider,
   destProvider: Provider,
@@ -1001,6 +1006,8 @@ export async function transferFolderClientSide(
   onProgress: (completed: number, total: number) => void,
   /** Internal: shared mutable counter across recursive calls */
   _counter?: { completed: number; total: number },
+  /** Optional token refresher — re-fetches tokens if >45 min have passed */
+  _refresher?: TokenRefresher,
 ): Promise<void> {
   const isRoot = !_counter;
 
@@ -1067,8 +1074,17 @@ export async function transferFolderClientSide(
         destBucket,
         onProgress,
         _counter,
+        _refresher,
       );
     } else {
+      // Refresh tokens if >45 min since last fetch (prevents expiry on large folders)
+      if (_refresher && Date.now() - _refresher.fetchedAt > 45 * 60 * 1000) {
+        const refreshed = await _refresher.fn();
+        sourceTokens.accessToken = refreshed.sourceTokens.accessToken;
+        destTokens.accessToken = refreshed.destTokens.accessToken;
+        _refresher.fetchedAt = Date.now();
+      }
+
       // Build per-file transfer options
       const sourceFilePath = (() => {
         if (sourceProvider === 'dropbox') return item.id; // Dropbox item.id is the full path
@@ -1094,7 +1110,7 @@ export async function transferFolderClientSide(
         fileOpts,
         sourceTokens,
         destTokens,
-        () => {},  // per-file progress not surfaced; folder-level progress is what matters
+        () => {},
         () => {},
       );
 

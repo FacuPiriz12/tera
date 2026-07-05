@@ -1005,6 +1005,18 @@ export default function CloudExplorer() {
 
             setFolderProgress({ completed: 0, total: 0 });
 
+            const tokenRefresher = {
+              fn: async () => {
+                const res = await apiRequest('GET', `/api/client-transfer/tokens?sourceProvider=${pendingTransfer.from}&destProvider=${pendingTransfer.to}`);
+                const data = await res.json();
+                return {
+                  sourceTokens: { accessToken: data[pendingTransfer.from]?.accessToken as string | undefined },
+                  destTokens: { accessToken: data[pendingTransfer.to]?.accessToken as string | undefined },
+                };
+              },
+              fetchedAt: Date.now(),
+            };
+
             await transferFolderClientSide(
               pendingTransfer.from,
               pendingTransfer.to,
@@ -1020,6 +1032,8 @@ export default function CloudExplorer() {
               (completed, total) => {
                 setFolderProgress({ completed, total });
               },
+              undefined,
+              tokenRefresher,
             );
 
             addJob({
@@ -1082,12 +1096,8 @@ export default function CloudExplorer() {
             });
           }
         } else {
-          // ── Server-side transfer (Dropbox / Box large files) ──
+          // ── Server-side transfer (Dropbox — CORS prevents browser-side) ──
           usedServerSide = true;
-          toast({
-            title: t('pages.cloudExplorer.largeFile', 'Archivo grande'),
-            description: t('pages.cloudExplorer.largeFileDesc', 'Archivo grande, usando servidor...'),
-          });
 
           const payload: Record<string, any> = {
             sourceProvider: pendingTransfer.from,
