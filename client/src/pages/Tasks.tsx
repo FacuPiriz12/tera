@@ -778,7 +778,7 @@ export default function Tasks() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] flex flex-col" data-testid="tasks-page">
+    <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20" data-testid="tasks-page">
       <Header />
       <div className="flex flex-1">
         <Sidebar />

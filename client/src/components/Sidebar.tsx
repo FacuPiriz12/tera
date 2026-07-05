@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Home, FileText, Settings, Globe, Folder, BarChart3, Zap, Shield, Users } from "lucide-react";
+import { Home, FileText, Settings, Globe, Folder, BarChart3, Zap, Shield, Users, Calendar } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +20,7 @@ export default function Sidebar() {
 
   const toolItems = [
     { id: 'quick-copy',   path: "/copy-from-url", icon: Zap,       label: t('common.navigation.copyFromUrl') },
+    { id: 'tasks',        path: "/tasks",          icon: Calendar,  label: t('common.navigation.tasks') },
     { id: 'integrations', path: "/integrations",  icon: Settings,  label: t('common.navigation.integrations') },
     { id: 'analytics',    path: "/analytics",     icon: BarChart3, label: t('common.navigation.analytics') },
   ];
