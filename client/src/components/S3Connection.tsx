@@ -26,8 +26,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Lock, ArrowRight } from "lucide-react";
 import S3Logo from "@/components/S3Logo";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 
 const AWS_REGIONS = [
   { value: 'us-east-1', label: 'US East (N. Virginia)' },
@@ -47,6 +49,8 @@ interface S3ConnectionProps {
 
 export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isFree = (user?.membershipPlan || 'free') === 'free' && user?.role !== 'admin';
   const { isConnected, region, connect, isConnecting, connectError, disconnect, isDisconnecting, isLoadingStatus } = useS3Auth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -88,6 +92,23 @@ export default function S3Connection({ variant = 'card' }: S3ConnectionProps) {
   };
 
   if (variant === 'card') {
+    if (isFree) {
+      return (
+        <div className="flex items-center justify-between" data-testid="s3-card">
+          <Link href="/pricing">
+            <Button variant="outline" size="sm" className="px-8 gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Lock className="w-4 h-4" />
+              Solo Pro
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+          <Badge variant="default" className="bg-amber-100 text-amber-700 border-0 ml-8">
+            <Lock className="w-3 h-3 mr-1" />
+            Pro
+          </Badge>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-between" data-testid="s3-card">
         <div className="flex gap-2">

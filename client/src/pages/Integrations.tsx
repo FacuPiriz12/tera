@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Settings, CheckCircle, ArrowRight, Cloud, Shield, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +16,25 @@ import BoxLogo from "@/components/BoxLogo";
 import S3Logo from "@/components/S3Logo";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Integrations() {
   const { t } = useTranslation();
   usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error') === 'plan_required') {
+      const provider = params.get('provider') || 'este proveedor';
+      toast({
+        title: "Función exclusiva Pro",
+        description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} requiere un plan Pro o Business.`,
+        variant: "destructive",
+      });
+      window.history.replaceState({}, '', '/integrations');
+    }
+  }, []);
 
   const container = {
     hidden: { opacity: 0 },

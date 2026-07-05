@@ -26,9 +26,13 @@ import {
   XCircle,
   AlertTriangle,
   Loader2,
-  Folder
+  Folder,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 import OneDriveLogo from "@/components/OneDriveLogo";
+import { useAuth } from "@/hooks/useAuth";
+import { Link } from "wouter";
 
 interface OneDriveConnectionProps {
   variant?: 'header' | 'card' | 'inline' | 'sidebar';
@@ -36,6 +40,8 @@ interface OneDriveConnectionProps {
 
 export default function OneDriveConnection({ variant = 'header' }: OneDriveConnectionProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isFree = (user?.membershipPlan || 'free') === 'free' && user?.role !== 'admin';
   const {
     isConnected,
     hasValidToken,
@@ -123,6 +129,23 @@ export default function OneDriveConnection({ variant = 'header' }: OneDriveConne
   }
 
   if (variant === 'card') {
+    if (isFree) {
+      return (
+        <div className="flex items-center justify-between" data-testid="onedrive-card">
+          <Link href="/pricing">
+            <Button variant="outline" size="sm" className="px-8 gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+              <Lock className="w-4 h-4" />
+              Solo Pro
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+          <Badge variant="default" className="bg-amber-100 text-amber-700 border-0 ml-8">
+            <Lock className="w-3 h-3 mr-1" />
+            Pro
+          </Badge>
+        </div>
+      );
+    }
     return (
       <div className="flex items-center justify-between" data-testid="onedrive-card">
         <div className="flex gap-2">

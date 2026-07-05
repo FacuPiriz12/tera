@@ -4231,6 +4231,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!userId) return res.redirect('/login?redirect=/integrations&error=auth_required');
 
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.redirect('/integrations?error=plan_required&provider=onedrive');
+      }
+
       if (!process.env.ONEDRIVE_CLIENT_ID || !process.env.ONEDRIVE_CLIENT_SECRET) {
         console.error('OneDrive OAuth not configured');
         return res.redirect('/integrations?onedrive_auth=error&reason=not_configured');
@@ -4332,6 +4337,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/onedrive/files', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.status(403).json({ message: 'OneDrive requires a Pro or Business plan', code: 'PLAN_REQUIRED' });
+      }
       const folderId = req.query.folderId as string | undefined;
       const service = new OneDriveService(userId);
       const files = await service.listFolder(folderId);
@@ -4358,6 +4367,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!userId && req.session?.supabaseUserId) userId = req.session.supabaseUserId;
 
       if (!userId) return res.redirect('/login?redirect=/integrations&error=auth_required');
+
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.redirect('/integrations?error=plan_required&provider=box');
+      }
 
       if (!process.env.BOX_CLIENT_ID || !process.env.BOX_CLIENT_SECRET) {
         console.error('Box OAuth not configured');
@@ -4460,6 +4474,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/box/files', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.status(403).json({ message: 'Box requires a Pro or Business plan', code: 'PLAN_REQUIRED' });
+      }
       const folderId = req.query.folderId as string | undefined;
       const service = new BoxService(userId);
       const files = await service.listFolder(folderId);
@@ -4476,6 +4494,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/auth/s3', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.status(403).json({ message: 'Amazon S3 requires a Pro or Business plan', code: 'PLAN_REQUIRED' });
+      }
       const { accessKeyId, secretAccessKey, region } = req.body;
 
       if (!accessKeyId || !secretAccessKey) {
@@ -4521,6 +4543,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/s3/buckets', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.status(403).json({ message: 'Amazon S3 requires a Pro or Business plan', code: 'PLAN_REQUIRED' });
+      }
       const service = new S3Service(userId);
       const buckets = await service.listBuckets();
       res.json(buckets);
@@ -4534,6 +4560,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/s3/files', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const userRecord = await storage.getUser(userId);
+      if (!userRecord || ((userRecord.membershipPlan === 'free' || !userRecord.membershipPlan) && userRecord.role !== 'admin')) {
+        return res.status(403).json({ message: 'Amazon S3 requires a Pro or Business plan', code: 'PLAN_REQUIRED' });
+      }
       const { bucket, prefix } = req.query;
       if (!bucket) return res.status(400).json({ message: 'Bucket name is required' });
       const service = new S3Service(userId);
