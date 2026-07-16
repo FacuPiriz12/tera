@@ -249,14 +249,42 @@ export default function Operations() {
                       </div>
                     )}
                     
-                    {operation.errorMessage && (
-                      <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                        <p className="text-xs text-red-600 dark:text-red-400 mb-1">Error:</p>
-                        <p className="text-sm text-red-700 dark:text-red-300">
-                          {operation.errorMessage}
-                        </p>
-                      </div>
-                    )}
+                    {operation.errorMessage && (() => {
+                      const parts = operation.errorMessage.startsWith('FILE_TOO_LARGE:')
+                        ? operation.errorMessage.split(':')
+                        : null;
+                      if (parts) {
+                        const [, fileSize, limit] = parts;
+                        return (
+                          <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                                  Archivo demasiado grande para tu plan
+                                </p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300">
+                                  El archivo pesa {fileSize} y tu plan permite hasta {limit} por transferencia.
+                                </p>
+                              </div>
+                              <Link href="/pricing">
+                                <Button variant="outline" size="sm" className="gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0">
+                                  Mejorar plan
+                                  <ArrowRight className="w-3 h-3" />
+                                </Button>
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                          <p className="text-xs text-red-600 dark:text-red-400 mb-1">Error:</p>
+                          <p className="text-sm text-red-700 dark:text-red-300">
+                            {operation.errorMessage}
+                          </p>
+                        </div>
+                      );
+                    })()}
 
                     {operation.status === 'completed' && operation.copiedFileUrl && (
                       <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">

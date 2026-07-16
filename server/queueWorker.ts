@@ -22,6 +22,23 @@ interface UserConcurrencyLimits {
   pro: number;
 }
 
+const SIZE_LIMITS: Record<string, number> = {
+  free:     100 * 1024 * 1024,        // 100 MB
+  pro:      5 * 1024 * 1024 * 1024,   // 5 GB
+  business: Infinity,
+};
+
+function formatSizeLimit(bytes: number): string {
+  if (bytes === Infinity) return 'unlimited';
+  if (bytes >= 1024 * 1024 * 1024) return `${Math.round(bytes / 1024 / 1024 / 1024)} GB`;
+  return `${Math.round(bytes / 1024 / 1024)} MB`;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export class QueueWorker extends EventEmitter {
   private config: WorkerConfig;
   private isRunning = false;
@@ -373,6 +390,17 @@ export class QueueWorker extends EventEmitter {
       throw new Error('Job was cancelled by user');
     }
 
+    // Plan file size check
+    const jobUser = await storage.getUser(job.userId);
+    const jobPlan = jobUser?.membershipPlan || 'free';
+    const isJobAdmin = jobUser?.role === 'admin';
+    const sizeLimit = isJobAdmin ? Infinity : (SIZE_LIMITS[jobPlan] ?? SIZE_LIMITS.free);
+    if (fileContent.length > sizeLimit) {
+      throw new Error(
+        `FILE_TOO_LARGE:${formatFileSize(fileContent.length)}:${formatSizeLimit(sizeLimit)}`
+      );
+    }
+
     // Update progress - download completed
     await storage.setJobProgress(job.id, 0, 1, 50);
     this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: 1, progressPct: 50 });
@@ -528,9 +556,14 @@ export class QueueWorker extends EventEmitter {
     await storage.setJobProgress(job.id, 0, progressCtx.total, 0);
     this.emit('jobProgress', job.id, job.userId, { completedFiles: 0, totalFiles: progressCtx.total, progressPct: 0 });
 
+    const folderUser = await storage.getUser(job.userId);
+    const folderPlan = folderUser?.membershipPlan || 'free';
+    const isFolderAdmin = folderUser?.role === 'admin';
+    const folderSizeLimit = isFolderAdmin ? Infinity : (SIZE_LIMITS[folderPlan] ?? SIZE_LIMITS.free);
+
     await this.crossCloudFolderTransfer(
       job, actualSourceId, destParent, fileName || 'Untitled',
-      progressCtx, progressCallback, sourceBucket, destBucket
+      progressCtx, progressCallback, sourceBucket, destBucket, folderSizeLimit
     );
 
     return { copiedFileName: fileName, copiedFileUrl: undefined };
@@ -608,6 +641,7 @@ export class QueueWorker extends EventEmitter {
     progressCallback: (c: number, t: number, pct: number) => Promise<void>,
     sourceBucket?: string,
     destBucket?: string,
+    sizeLimit: number = Infinity,
   ): Promise<void> {
     const { sourceProvider, destProvider } = job;
     const CONCURRENCY = 5;
@@ -703,7 +737,7 @@ export class QueueWorker extends EventEmitter {
         subId = sub.id;
       }
       await this.crossCloudFolderTransfer(
-        job, subId, newDestId, sub.name, progressCtx, progressCallback, sourceBucket, destBucket
+        job, subId, newDestId, sub.name, progressCtx, progressCallback, sourceBucket, destBucket, sizeLimit
       );
     }
 
@@ -740,6 +774,13 @@ export class QueueWorker extends EventEmitter {
               break;
             default:
               throw new Error(`Unknown source provider: ${sourceProvider}`);
+          }
+
+          // Plan file size check
+          if (content.length > sizeLimit) {
+            throw new Error(
+              `FILE_TOO_LARGE:${formatFileSize(content.length)}:${formatSizeLimit(sizeLimit)}`
+            );
           }
 
           // Upload
