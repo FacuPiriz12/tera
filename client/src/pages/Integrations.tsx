@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { Settings, CheckCircle, ArrowRight, Cloud, Shield, Zap } from "lucide-react";
+import { Settings, CheckCircle, ArrowRight, Cloud, Shield, Zap, RefreshCw, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -17,11 +17,26 @@ import S3Logo from "@/components/S3Logo";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+
+const RECONNECT_BANNER_KEY = 'tera_gdrive_reconnect_dismissed_v2';
 
 export default function Integrations() {
   const { t } = useTranslation();
   usePageTitle(t('pageTitles.integrations', 'TERA — Integrations'));
   const { toast } = useToast();
+  const [showReconnectBanner, setShowReconnectBanner] = useState(
+    () => !localStorage.getItem(RECONNECT_BANNER_KEY)
+  );
+  const { data: googleStatus } = useQuery<{ connected: boolean }>({
+    queryKey: ['/api/auth/google/status'],
+  });
+  const shouldShowBanner = showReconnectBanner && googleStatus?.connected;
+
+  function dismissBanner() {
+    localStorage.setItem(RECONNECT_BANNER_KEY, '1');
+    setShowReconnectBanner(false);
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -76,6 +91,20 @@ export default function Integrations() {
               {t('pages.integrations.subtitle', 'Conecta tus servicios de almacenamiento para sincronizar, respaldar y gestionar tus archivos desde un solo lugar.')}
             </p>
           </motion.div>
+
+          {/* Google Drive reconnect banner */}
+          {shouldShowBanner && (
+            <div className="mb-6 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+              <RefreshCw className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 text-sm text-blue-800">
+                <span className="font-semibold">Reconectá Google Drive.</span>{' '}
+                Actualizamos los permisos de Google Drive para mayor seguridad. Por favor desconectá y volvé a conectar tu cuenta para seguir usando el Cloud Explorer.
+              </div>
+              <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Integration Cards */}
           <motion.div 
