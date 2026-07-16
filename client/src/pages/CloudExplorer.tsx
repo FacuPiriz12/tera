@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import FilePreviewModal from "@/components/FilePreviewModal";
+import GooglePickerButton, { type PickerResult } from "@/components/GooglePickerButton";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
 import OneDriveLogo from "@/components/OneDriveLogo";
@@ -51,6 +52,8 @@ interface PanelState {
   breadcrumbs: BreadcrumbEntry[];
   search: string;
 }
+
+const GOOGLE_DRIVE_MODE = (import.meta.env.VITE_GOOGLE_DRIVE_MODE as string | undefined) || 'picker';
 
 const GOOGLE_FOLDER_MIME = 'application/vnd.google-apps.folder';
 const DROPBOX_FOLDER_MIME = 'application/vnd.dropbox.folder';
@@ -244,6 +247,20 @@ function CloudPanel({
 }: CloudPanelProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const isPickerMode = panelState.provider === 'google' && GOOGLE_DRIVE_MODE === 'picker';
+  const [pickerSelection, setPickerSelection] = useState<PickerResult | null>(null);
+
+  function handlePickerSelect(result: PickerResult) {
+    setPickerSelection(result);
+    if (result.isFolder) {
+      setPanelState({
+        ...panelState,
+        googleFolderId: result.id,
+        breadcrumbs: [{ name: result.name, id: result.id }],
+        search: '',
+      });
+    }
+  }
   const isFree = (user?.membershipPlan || 'free') === 'free' && user?.role !== 'admin';
   const { toast } = useToast();
 
@@ -539,6 +556,7 @@ function CloudPanel({
             </div>
           </div>
 
+          {!isPickerMode && (
           <div className="flex items-center gap-1.5">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
@@ -558,10 +576,11 @@ function CloudPanel({
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </div>
+          )}
         </div>
 
-        {/* Recent folders — only for non-S3 providers at root */}
-        {panelState.provider !== 's3' && isAtRoot && recentFolders.length > 0 && (
+        {/* Recent folders — only for non-S3 providers at root (hidden in picker mode) */}
+        {!isPickerMode && panelState.provider !== 's3' && isAtRoot && recentFolders.length > 0 && (
           <div className="flex items-center gap-1.5 mb-2 flex-wrap">
             <Clock className="w-3 h-3 text-gray-400 flex-shrink-0" />
             {recentFolders.map(f => (
@@ -577,7 +596,26 @@ function CloudPanel({
           </div>
         )}
 
-        {/* Breadcrumbs */}
+        {/* Breadcrumbs / picker status */}
+        {isPickerMode ? (
+          <div className="flex items-center gap-1.5 bg-white/60 rounded-lg px-2 py-1.5 border border-white/80 min-w-0">
+            <FolderOpen className="w-3 h-3 text-blue-400 flex-shrink-0" />
+            <span className="text-[11px] text-gray-500 font-medium truncate">
+              {pickerSelection
+                ? pickerSelection.name
+                : 'Ningún elemento seleccionado'
+              }
+            </span>
+            {pickerSelection && (
+              <button
+                onClick={() => setPickerSelection(null)}
+                className="ml-auto text-[10px] text-gray-400 hover:text-gray-600 flex-shrink-0"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        ) : (
         <div className="flex items-center gap-1 bg-white/60 rounded-lg px-2 py-1.5 border border-white/80 min-w-0">
           <button
             onClick={navigateToRoot}
@@ -607,7 +645,66 @@ function CloudPanel({
             </React.Fragment>
           ))}
         </div>
+        )}
       </div>
+
+      {/* Picker UI — Google Drive in picker mode */}
+      {isPickerMode ? (
+        <div className="flex-1 min-h-0 flex flex-col items-center justify-center p-6 gap-5">
+          {pickerSelection ? (
+            <>
+              <div className="w-full p-4 bg-blue-50 rounded-2xl border border-blue-200 flex items-center gap-3">
+                {pickerSelection.isFolder
+                  ? <Folder className="w-8 h-8 text-blue-400 flex-shrink-0" />
+                  : <File className="w-8 h-8 text-blue-300 flex-shrink-0" />
+                }
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-800 truncate">{pickerSelection.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {pickerSelection.isFolder ? 'Carpeta' : 'Archivo'} · Google Drive
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 w-full">
+                <button
+                  onClick={() => onRequestMultiTransfer(
+                    [{ id: pickerSelection.id, name: pickerSelection.name, mimeType: pickerSelection.mimeType, isFolder: pickerSelection.isFolder }],
+                    'google',
+                    pickerSelection.id,
+                  )}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors"
+                >
+                  <SendHorizontal className="w-4 h-4" />
+                  Transferir al otro panel
+                </button>
+                <GooglePickerButton
+                  onSelect={handlePickerSelect}
+                  selectType="any"
+                  label="Cambiar selección"
+                  className="w-full justify-center"
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center">
+                <GoogleDriveLogo className="w-8 h-8" />
+              </div>
+              <div className="text-center">
+                <p className="text-sm font-semibold text-gray-700 mb-1">Google Drive</p>
+                <p className="text-xs text-gray-400 max-w-[200px]">
+                  Seleccioná un archivo o carpeta para transferir. Para destino, seleccioná la carpeta donde querés guardar.
+                </p>
+              </div>
+              <GooglePickerButton
+                onSelect={handlePickerSelect}
+                selectType="any"
+                label="Seleccionar desde Drive"
+              />
+            </>
+          )}
+        </div>
+      ) : (
 
       {/* Content — scrollable */}
       <div className="flex-1 min-h-0 overflow-y-scroll p-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
@@ -769,6 +866,7 @@ function CloudPanel({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

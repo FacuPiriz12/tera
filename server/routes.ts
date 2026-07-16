@@ -1441,7 +1441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         access_type: 'offline',
         prompt: 'consent',
         scope: [
-          'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/drive.file',
           'openid',
           'email',
           'profile'
