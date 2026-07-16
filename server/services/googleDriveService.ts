@@ -1044,6 +1044,11 @@ export class GoogleDriveService {
         return;
       }
 
+      if (user.membershipPlan === 'free' && user.role !== 'admin') {
+        console.log('Free plan: skipping completion email notification');
+        return;
+      }
+
       if (!user.googleAccessToken) {
         console.log('User not connected to Google, skipping email notification');
         return;
