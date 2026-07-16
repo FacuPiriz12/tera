@@ -705,8 +705,6 @@ function CloudPanel({
           )}
         </div>
       ) : (
-
-      {/* Content — scrollable */}
       <div className="flex-1 min-h-0 overflow-y-scroll p-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-300">
         {/* Error */}
         {error && !isLoading && (() => {
