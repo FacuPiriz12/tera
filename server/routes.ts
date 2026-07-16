@@ -517,8 +517,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/copy-operations', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const plan = user?.membershipPlan || 'free';
+      const isAdmin = user?.role === 'admin';
+
+      const HISTORY_DAYS: Record<string, number | null> = { free: 7, pro: 90, business: null };
+      const days = isAdmin ? null : (HISTORY_DAYS[plan] ?? 7);
+
       const operations = await storage.getUserCopyOperations(userId);
-      res.json(operations);
+      const filtered = days === null ? operations : operations.filter(op => {
+        if (!op.createdAt) return true;
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - days);
+        return new Date(op.createdAt) >= cutoff;
+      });
+
+      res.json({ operations: filtered, historyDays: days, plan });
     } catch (error) {
       console.error("Error fetching copy operations:", error);
       res.status(500).json({ message: "Failed to fetch copy operations" });

@@ -31,10 +31,11 @@ export default function Profile() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
 
-  const { data: operations, isLoading: statsLoading } = useQuery<CopyOperation[]>({
+  const { data: operationsData, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/copy-operations"],
     enabled: !!user,
   });
+  const operations: CopyOperation[] = (operationsData as any)?.operations ?? (Array.isArray(operationsData) ? operationsData : []);
 
   if (!user) {
     return (

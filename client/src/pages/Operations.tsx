@@ -1,7 +1,7 @@
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { Clock, CheckCircle, XCircle, Loader2, Calendar, Files, Timer, ExternalLink, Eye, Zap, RotateCcw } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Loader2, Calendar, Files, Timer, ExternalLink, Eye, Zap, RotateCcw, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { Link } from "wouter";
 import CopyProgressModal from "@/components/CopyProgressModal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,10 +35,13 @@ export default function Operations() {
     },
   });
   
-  const { data: operations = [], isLoading } = useQuery({
+  const { data: operationsData, isLoading } = useQuery({
     queryKey: ["/api/copy-operations"],
     refetchInterval: 5000,
   });
+  const operations: CopyOperation[] = (operationsData as any)?.operations ?? (Array.isArray(operationsData) ? operationsData : []);
+  const historyDays: number | null = (operationsData as any)?.historyDays ?? null;
+  const userPlan: string = (operationsData as any)?.plan ?? 'free';
 
   // Track completed operations to invalidate drive-files cache
   useEffect(() => {
@@ -145,6 +149,26 @@ export default function Operations() {
               {t('operations.description')}
             </p>
           </div>
+
+          {historyDays !== null && (
+            <div className="mb-5 flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2 text-sm text-amber-800">
+                <Clock className="w-4 h-4 flex-shrink-0" />
+                <span>
+                  {userPlan === 'free'
+                    ? `Plan Free: mostrando los últimos ${historyDays} días. Actualizá a Pro para ver 90 días.`
+                    : `Plan Pro: mostrando los últimos ${historyDays} días. Actualizá a Business para ver el historial completo.`
+                  }
+                </span>
+              </div>
+              <Link href="/pricing">
+                <Button variant="outline" size="sm" className="gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0 ml-4">
+                  Ver planes
+                  <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            </div>
+          )}
 
           {operations.length === 0 ? (
             <Card className="bg-white rounded-[10px] shadow-[0_2px_10px_rgba(0,0,0,0.05)]">

@@ -175,8 +175,9 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include' 
       });
       if (response.ok) {
-        const operations = await response.json();
-        
+        const data = await response.json();
+        const operations: any[] = data?.operations ?? (Array.isArray(data) ? data : []);
+
         const fetchedJobs: TransferJob[] = operations.map((op: any) => ({
           id: op.id,
           fileName: op.fileName || 'Transferencia',

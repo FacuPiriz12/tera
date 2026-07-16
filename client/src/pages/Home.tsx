@@ -28,9 +28,10 @@ export default function Home() {
   usePageTitle(t('pageTitles.dashboard', 'TERA — Dashboard'));
   const [, setLocation] = useLocation();
 
-  const { data: operations = [] } = useQuery<CopyOperation[]>({
+  const { data: operationsData } = useQuery({
     queryKey: ["/api/copy-operations"],
   });
+  const operations: CopyOperation[] = (operationsData as any)?.operations ?? (Array.isArray(operationsData) ? operationsData : []);
 
   const { data: googleStatus }   = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/google/status"] });
   const { data: dropboxStatus }  = useQuery<{ connected: boolean }>({ queryKey: ["/api/auth/dropbox/status"] });

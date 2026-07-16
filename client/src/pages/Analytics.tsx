@@ -22,9 +22,10 @@ import { useTranslation } from "react-i18next";
 export default function Analytics() {
   const { t } = useTranslation();
   const [, setLocation] = useLocation();
-  const { data: operations = [], isLoading } = useQuery({
+  const { data: operationsData, isLoading } = useQuery({
     queryKey: ["/api/copy-operations"],
   });
+  const operations: CopyOperation[] = (operationsData as any)?.operations ?? (Array.isArray(operationsData) ? operationsData : []);
 
   // Cálculo de estadísticas
   const totalOperations = operations.length;
