@@ -69,10 +69,6 @@ export default function GooglePickerButton({
 
   const openPicker = useCallback(async () => {
     setError(null);
-    if (!PICKER_API_KEY) {
-      setError('Falta VITE_GOOGLE_PICKER_API_KEY en las variables de entorno.');
-      return;
-    }
     setLoading(true);
     try {
       const res = await apiRequest(
@@ -94,10 +90,11 @@ export default function GooglePickerButton({
             .setIncludeFolders(true)
             .setSelectFolderEnabled(true);
 
-      new window.google.picker.PickerBuilder()
+      const builder = new window.google.picker.PickerBuilder()
         .setOAuthToken(token)
-        .setDeveloperKey(PICKER_API_KEY)
-        .addView(view)
+        .addView(view);
+      if (PICKER_API_KEY) builder.setDeveloperKey(PICKER_API_KEY);
+      builder
         .setCallback((result: any) => {
           if (result.action === window.google.picker.Action.PICKED) {
             const doc = result.docs[0];
