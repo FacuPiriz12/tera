@@ -4067,6 +4067,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/files/:fileId/versions', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const plan = user?.membershipPlan || 'free';
+      if (plan !== 'business' && user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Version history requires a Business plan.', code: 'PLAN_REQUIRED' });
+      }
       const versions = await storage.getFileVersions(userId, req.params.fileId);
       res.json(versions);
     } catch (error: any) {
@@ -4079,6 +4084,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/files/:fileId/restore/:versionId', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const plan = user?.membershipPlan || 'free';
+      if (plan !== 'business' && user?.role !== 'admin') {
+        return res.status(403).json({ message: 'Version restore requires a Business plan.', code: 'PLAN_REQUIRED' });
+      }
       const { fileId, versionId } = req.params;
 
       // Get the version to restore
