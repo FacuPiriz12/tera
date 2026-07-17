@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Sync Google Drive with OneDrive Automatically — TERA</title>
+  <meta name="description" content="Automatically sync files between Google Drive and Microsoft OneDrive. Set up a scheduled sync and TERA handles the transfers for you — no manual work required." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://mytera.app/blog/sync-google-drive-onedrive-automatically" />
+  <meta property="og:title" content="How to Sync Google Drive with OneDrive Automatically" />
+  <meta property="og:description" content="Keep Google Drive and OneDrive in sync automatically. Set it once and TERA transfers files on your schedule." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://mytera.app/blog/sync-google-drive-onedrive-automatically" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1a1a2e;
+      background: #fff;
+      line-height: 1.7;
+    }
+    header {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header a { text-decoration: none; font-weight: 700; font-size: 1.1rem; color: #1a1a2e; }
+    header nav a { font-size: 0.9rem; color: #6b7280; margin-left: 24px; text-decoration: none; }
+    header nav a:hover { color: #1a1a2e; }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .breadcrumb { font-size: 0.8rem; color: #9ca3af; margin-bottom: 24px; }
+    .breadcrumb a { color: #9ca3af; text-decoration: none; }
+    h1 { font-size: 2rem; font-weight: 800; line-height: 1.25; margin-bottom: 16px; color: #0f172a; }
+    .meta { font-size: 0.85rem; color: #9ca3af; margin-bottom: 40px; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; color: #0f172a; }
+    p { margin-bottom: 16px; color: #374151; }
+    ol, ul { padding-left: 24px; margin-bottom: 16px; color: #374151; }
+    li { margin-bottom: 8px; }
+    .cta-box {
+      background: #f0f4ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 40px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #3730a3; font-weight: 600; margin-bottom: 12px; }
+    .cta-box a {
+      display: inline-block;
+      background: #4f46e5;
+      color: white;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .cta-box a:hover { background: #4338ca; }
+    .tip {
+      background: #f9fafb;
+      border-left: 3px solid #4f46e5;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 24px 0;
+      font-size: 0.95rem;
+      color: #374151;
+    }
+    footer {
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    footer a { color: #9ca3af; text-decoration: none; margin: 0 12px; }
+    footer a:hover { color: #6b7280; }
+    @media (max-width: 600px) { h1 { font-size: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/">TERA</a>
+  <nav>
+    <a href="/pricing">Pricing</a>
+    <a href="/auth">Sign up free</a>
+  </nav>
+</header>
+
+<main>
+  <div class="breadcrumb">
+    <a href="/">Home</a> › <a href="/blog">Blog</a> › Sync Google Drive with OneDrive automatically
+  </div>
+
+  <h1>How to Sync Google Drive with OneDrive Automatically</h1>
+  <p class="meta">Last updated: July 2026 · 4 min read</p>
+
+  <p>
+    Keeping files in sync between Google Drive and Microsoft OneDrive is a common need — especially for people who work in environments that use both Google Workspace and Microsoft 365. Doing it manually every time is slow and easy to forget.
+  </p>
+  <p>
+    This guide shows how to set up an automatic sync between Google Drive and OneDrive using TERA's scheduled tasks feature.
+  </p>
+
+  <div class="cta-box">
+    <p>Set up an automatic sync between Google Drive and OneDrive</p>
+    <a href="/auth">Try TERA free — no credit card needed</a>
+  </div>
+
+  <h2>What "sync" means here</h2>
+  <p>
+    TERA's sync is a one-way scheduled transfer: new files added to a source folder are automatically copied to a destination folder on the schedule you define. If you need files to flow from Google Drive to OneDrive, you set up a task with Drive as the source and OneDrive as the destination.
+  </p>
+  <p>
+    It's not a real-time bidirectional sync (files deleted on one side don't delete on the other), but for most use cases — like keeping a project folder backed up, or making work files available in both ecosystems — it covers the need.
+  </p>
+
+  <h2>Step-by-step setup</h2>
+  <ol>
+    <li>Create an account at <a href="https://mytera.app">mytera.app</a> if you don't have one</li>
+    <li>Go to <strong>Integrations</strong> and connect your Google Drive account</li>
+    <li>Connect your Microsoft OneDrive account in the same section</li>
+    <li>Go to <strong>Tasks</strong> in the sidebar</li>
+    <li>Click <strong>New task</strong></li>
+    <li>Set the source to a Google Drive folder and the destination to an OneDrive folder</li>
+    <li>Choose your schedule: daily, weekly, or a custom interval</li>
+    <li>Save — TERA will run the sync automatically from that point on</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Tip:</strong> You can create multiple tasks pointing to different folder pairs. For example, one task that syncs your work projects folder and another for documents.
+  </div>
+
+  <h2>What gets transferred</h2>
+  <p>
+    On each run, TERA checks for files in the source folder that don't yet exist in the destination and transfers them. Files that already exist are skipped to avoid unnecessary re-transfers.
+  </p>
+  <p>
+    Google Workspace files (Docs, Sheets, Slides, Forms) are automatically converted to their Microsoft equivalents (docx, xlsx, pptx) when transferred to OneDrive.
+  </p>
+
+  <h2>Transfer history</h2>
+  <p>
+    Every sync run is logged in the Operations section, so you can see exactly what was transferred, when, and whether it succeeded. If a file fails to transfer, it shows up there with the reason.
+  </p>
+
+  <h2>Can I sync in the other direction?</h2>
+  <p>
+    Yes — OneDrive to Google Drive works the same way. Set the source to an OneDrive folder and the destination to a Google Drive folder, and TERA transfers files in that direction instead.
+  </p>
+
+  <h2>Other sync combinations</h2>
+  <p>
+    The same task system works for any combination of supported providers: Google Drive, Dropbox, OneDrive, Box and Amazon S3. So you can also set up syncs like:
+  </p>
+  <ul>
+    <li>Dropbox → Google Drive</li>
+    <li>Google Drive → Amazon S3 (for backups)</li>
+    <li>OneDrive → Dropbox</li>
+    <li>Box → Google Drive</li>
+  </ul>
+
+  <div class="cta-box">
+    <p>Stop syncing manually. Set it up once and let TERA handle it.</p>
+    <a href="/auth">Get started for free</a>
+  </div>
+
+</main>
+
+<footer>
+  <a href="/">TERA</a>
+  <a href="/pricing">Pricing</a>
+  <a href="/privacy">Privacy</a>
+  <a href="/terms">Terms</a>
+  <br /><br />
+  © 2026 TERA. All rights reserved.
+</footer>
+
+</body>
+</html>

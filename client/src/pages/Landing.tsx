@@ -280,7 +280,10 @@ function FeatureCard({ icon: Icon, title, desc, badge, color, delay }: { icon: a
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function Home() {
   const { t } = useTranslation();
-  usePageTitle(t('pageTitles.landing', 'TERA — Multi-Cloud File Transfer'));
+  usePageTitle(
+    t('pageTitles.landing', 'TERA — Multi-Cloud File Transfer'),
+    'Transfer files between Google Drive, Dropbox, OneDrive, Box and Amazon S3 without downloading. Dual-panel cloud explorer with drag & drop, scheduled sync and transfer history. Free to try.'
+  );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [, setLocation] = useLocation();
 

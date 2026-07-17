@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Move Files Between Cloud Storage Services Without Downloading — TERA</title>
+  <meta name="description" content="Move files between Google Drive, Dropbox, OneDrive, Box and S3 without downloading them. A direct cloud-to-cloud transfer tool that works in minutes." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://mytera.app/blog/move-files-between-cloud-storage-without-downloading" />
+  <meta property="og:title" content="How to Move Files Between Cloud Storage Services Without Downloading" />
+  <meta property="og:description" content="Transfer files between any two cloud storage providers directly — no downloads, no manual re-uploads." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://mytera.app/blog/move-files-between-cloud-storage-without-downloading" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #1a1a2e;
+      background: #fff;
+      line-height: 1.7;
+    }
+    header {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header a { text-decoration: none; font-weight: 700; font-size: 1.1rem; color: #1a1a2e; }
+    header nav a {
+      font-size: 0.9rem;
+      color: #6b7280;
+      margin-left: 24px;
+      text-decoration: none;
+    }
+    header nav a:hover { color: #1a1a2e; }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+    .breadcrumb { font-size: 0.8rem; color: #9ca3af; margin-bottom: 24px; }
+    .breadcrumb a { color: #9ca3af; text-decoration: none; }
+    .breadcrumb a:hover { color: #6b7280; }
+    h1 { font-size: 2rem; font-weight: 800; line-height: 1.25; margin-bottom: 16px; color: #0f172a; }
+    .meta { font-size: 0.85rem; color: #9ca3af; margin-bottom: 40px; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; color: #0f172a; }
+    p { margin-bottom: 16px; color: #374151; }
+    ol, ul { padding-left: 24px; margin-bottom: 16px; color: #374151; }
+    li { margin-bottom: 8px; }
+    table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 0.9rem; }
+    th { background: #f9fafb; padding: 10px 14px; text-align: left; font-weight: 600; border-bottom: 2px solid #e5e7eb; color: #374151; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+    .cta-box {
+      background: #f0f4ff;
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 40px 0;
+      text-align: center;
+    }
+    .cta-box p { color: #3730a3; font-weight: 600; margin-bottom: 12px; }
+    .cta-box a {
+      display: inline-block;
+      background: #4f46e5;
+      color: white;
+      text-decoration: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .cta-box a:hover { background: #4338ca; }
+    footer {
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+    footer a { color: #9ca3af; text-decoration: none; margin: 0 12px; }
+    footer a:hover { color: #6b7280; }
+    @media (max-width: 600px) { h1 { font-size: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/">TERA</a>
+  <nav>
+    <a href="/pricing">Pricing</a>
+    <a href="/auth">Sign up free</a>
+  </nav>
+</header>
+
+<main>
+  <div class="breadcrumb">
+    <a href="/">Home</a> › <a href="/blog">Blog</a> › Move files between cloud storage without downloading
+  </div>
+
+  <h1>How to Move Files Between Cloud Storage Services Without Downloading</h1>
+  <p class="meta">Last updated: July 2026 · 5 min read</p>
+
+  <p>
+    Most people who use cloud storage end up with files scattered across multiple services — Google Drive for work, Dropbox for personal projects, OneDrive because it came with Office, S3 for backups. Moving files between them is a common need with no obvious solution beyond the manual download-and-reupload loop.
+  </p>
+  <p>
+    This guide covers how to move files between cloud storage providers directly, without downloading anything to your computer.
+  </p>
+
+  <div class="cta-box">
+    <p>Move files between any two clouds in minutes</p>
+    <a href="/auth">Try TERA free — no credit card needed</a>
+  </div>
+
+  <h2>The problem with manual transfers</h2>
+  <p>
+    The traditional method — download from cloud A, upload to cloud B — works but has real limitations:
+  </p>
+  <ul>
+    <li><strong>Storage required:</strong> You need free disk space equal to the size of what you're moving</li>
+    <li><strong>Time:</strong> Large folders can take hours, and you need to stay connected throughout</li>
+    <li><strong>Reliability:</strong> Any internet interruption or computer sleep can break the transfer midway</li>
+    <li><strong>Scale:</strong> For recurring transfers (like keeping two cloud folders in sync) this approach doesn't scale</li>
+  </ul>
+
+  <h2>Cloud-to-cloud transfers: how they work</h2>
+  <p>
+    A direct cloud-to-cloud transfer tool like TERA acts as a bridge between your storage accounts. Instead of routing files through your computer, it connects to both clouds and moves the data directly. Your machine only needs to start the transfer — it doesn't need to stay on.
+  </p>
+
+  <h2>Supported cloud providers</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Provider</th>
+        <th>Transfer from</th>
+        <th>Transfer to</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Google Drive</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Dropbox</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Microsoft OneDrive</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Box</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Amazon S3</td><td>✓</td><td>✓</td></tr>
+    </tbody>
+  </table>
+  <p>Any combination works — Google Drive to Dropbox, Dropbox to OneDrive, S3 to Box, and so on.</p>
+
+  <h2>How to transfer files between clouds</h2>
+  <ol>
+    <li>Create a free account at <a href="https://mytera.app">mytera.app</a></li>
+    <li>Go to Integrations and connect the cloud accounts you want to use</li>
+    <li>Open the Cloud Explorer — it shows two panels side by side</li>
+    <li>Set each panel to a different cloud provider and navigate to your files</li>
+    <li>Select what you want to transfer and drag it across, or use the transfer button</li>
+    <li>TERA handles the rest — files, folders and subfolders are all copied over</li>
+  </ol>
+
+  <h2>Scheduled sync between cloud providers</h2>
+  <p>
+    If you need to keep two cloud folders in sync on a recurring basis, TERA has a scheduled tasks feature. You define a source folder and a destination folder, set a schedule (daily, weekly, or custom), and TERA automatically transfers any new or modified files on that schedule.
+  </p>
+  <p>
+    This is useful for things like automatically backing up a Google Drive folder to S3, or keeping a Dropbox project folder in sync with a client's OneDrive.
+  </p>
+
+  <h2>Free vs paid</h2>
+  <p>
+    TERA has a free plan that supports files up to 100MB and 7 days of transfer history. For larger files or longer history, paid plans are available. For most occasional use cases, the free plan is enough to get started.
+  </p>
+
+  <div class="cta-box">
+    <p>Stop downloading and re-uploading. Transfer directly between clouds.</p>
+    <a href="/auth">Get started for free</a>
+  </div>
+
+</main>
+
+<footer>
+  <a href="/">TERA</a>
+  <a href="/pricing">Pricing</a>
+  <a href="/privacy">Privacy</a>
+  <a href="/terms">Terms</a>
+  <br /><br />
+  © 2026 TERA. All rights reserved.
+</footer>
+
+</body>
+</html>

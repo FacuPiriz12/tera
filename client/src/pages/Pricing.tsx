@@ -127,7 +127,10 @@ export default function PricingPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { i18n, t } = useTranslation();
   const [, setLocation] = useLocation();
-  usePageTitle(t('pageTitles.pricing', 'TERA — Pricing'));
+  usePageTitle(
+    t('pageTitles.pricing', 'TERA — Pricing'),
+    'Simple pricing for multi-cloud file transfers. Free plan available. Upgrade to Pro or Business for larger files, full history and advanced analytics.'
+  );
   const [currency, setCurrency] = useState<Currency>('USD');
   useEffect(() => { setCurrency(langToCurrency(i18n.language)); }, [i18n.language]);
   const sym = CURRENCY_CONFIG[currency].symbol;
