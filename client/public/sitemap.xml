@@ -21,7 +21,17 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://mytera.app/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mytera.app/blog/transfer-files-google-drive-to-dropbox</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mytera.app/blog/move-files-from-dropbox-to-google-drive</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -32,6 +42,16 @@
   </url>
   <url>
     <loc>https://mytera.app/blog/sync-google-drive-onedrive-automatically</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mytera.app/blog/transfer-files-onedrive-to-google-drive</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mytera.app/blog/google-drive-to-s3-backup</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

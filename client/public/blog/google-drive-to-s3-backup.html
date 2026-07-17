@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to Back Up Google Drive to Amazon S3 — TERA</title>
+  <meta name="description" content="Automatically back up your Google Drive files to Amazon S3. Set up a scheduled transfer with TERA and your backups run without any manual work." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://mytera.app/blog/google-drive-to-s3-backup" />
+  <meta property="og:title" content="How to Back Up Google Drive to Amazon S3" />
+  <meta property="og:description" content="Automatically back up Google Drive to S3 with scheduled transfers. Set it once, TERA handles the rest." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://mytera.app/blog/google-drive-to-s3-backup" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #1a1a2e; background: #fff; line-height: 1.7; }
+    header { border-bottom: 1px solid #e5e7eb; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    header a { text-decoration: none; font-weight: 700; font-size: 1.1rem; color: #1a1a2e; }
+    header nav a { font-size: 0.9rem; color: #6b7280; margin-left: 24px; text-decoration: none; }
+    header nav a:hover { color: #1a1a2e; }
+    main { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+    .breadcrumb { font-size: 0.8rem; color: #9ca3af; margin-bottom: 24px; }
+    .breadcrumb a { color: #9ca3af; text-decoration: none; }
+    h1 { font-size: 2rem; font-weight: 800; line-height: 1.25; margin-bottom: 16px; color: #0f172a; }
+    .meta { font-size: 0.85rem; color: #9ca3af; margin-bottom: 40px; }
+    h2 { font-size: 1.25rem; font-weight: 700; margin: 40px 0 16px; color: #0f172a; }
+    p { margin-bottom: 16px; color: #374151; }
+    ol, ul { padding-left: 24px; margin-bottom: 16px; color: #374151; }
+    li { margin-bottom: 8px; }
+    .cta-box { background: #f0f4ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 24px; margin: 40px 0; text-align: center; }
+    .cta-box p { color: #3730a3; font-weight: 600; margin-bottom: 12px; }
+    .cta-box a { display: inline-block; background: #4f46e5; color: white; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; }
+    .cta-box a:hover { background: #4338ca; }
+    .tip { background: #f9fafb; border-left: 3px solid #4f46e5; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 24px 0; font-size: 0.95rem; color: #374151; }
+    footer { border-top: 1px solid #e5e7eb; text-align: center; padding: 32px 24px; font-size: 0.85rem; color: #9ca3af; }
+    footer a { color: #9ca3af; text-decoration: none; margin: 0 12px; }
+    @media (max-width: 600px) { h1 { font-size: 1.5rem; } }
+  </style>
+</head>
+<body>
+<header>
+  <a href="/">TERA</a>
+  <nav><a href="/pricing">Pricing</a><a href="/auth">Sign up free</a></nav>
+</header>
+<main>
+  <div class="breadcrumb"><a href="/">Home</a> › <a href="/blog">Blog</a> › Back up Google Drive to Amazon S3</div>
+  <h1>How to Back Up Google Drive to Amazon S3</h1>
+  <p class="meta">Last updated: July 2026 · 5 min read</p>
+  <p>Google Drive is convenient for collaboration and daily work, but it's not a backup solution. If files get accidentally deleted or your account gets compromised, Drive doesn't protect you from data loss. Keeping a copy in Amazon S3 gives you a durable, independent backup that you fully control.</p>
+  <p>This guide covers how to back up Google Drive to S3 — including how to automate it so it runs without any manual work.</p>
+  <div class="cta-box">
+    <p>Back up Google Drive to S3 automatically</p>
+    <a href="/auth">Try TERA free — no credit card needed</a>
+  </div>
+  <h2>What you need</h2>
+  <ul>
+    <li>A Google Drive account with the files you want to back up</li>
+    <li>An AWS account with an S3 bucket already created</li>
+    <li>An AWS IAM user with access keys (Access Key ID and Secret Access Key) that has read/write access to the bucket</li>
+    <li>A TERA account (free)</li>
+  </ul>
+  <h2>Setting up the backup</h2>
+  <ol>
+    <li>Create a free account at <a href="https://mytera.app">mytera.app</a></li>
+    <li>Go to Integrations and connect your Google Drive account</li>
+    <li>In the same section, connect Amazon S3 — you'll need your Access Key ID, Secret Access Key and region</li>
+    <li>Go to <strong>Tasks</strong> and create a new task</li>
+    <li>Set the source to your Google Drive folder and the destination to your S3 bucket (you can specify a prefix/folder path within the bucket)</li>
+    <li>Choose a schedule — daily is recommended for a backup use case</li>
+    <li>Save the task. TERA will run the first transfer immediately and then on your schedule</li>
+  </ol>
+  <div class="tip"><strong>Tip:</strong> Create a dedicated S3 bucket for your Drive backups with a name like <code>my-drive-backup</code>. This keeps the backup separate from other S3 data and makes it easy to set specific retention policies.</div>
+  <h2>What gets transferred</h2>
+  <p>On each run, TERA checks for files in your Google Drive folder that don't yet exist in S3 and transfers them. Files already in S3 are skipped. Google Workspace files (Docs, Sheets, Slides) are exported to standard formats (docx, xlsx, pptx) before being stored in S3.</p>
+  <h2>S3 storage costs</h2>
+  <p>S3 Standard storage costs approximately $0.023 per GB per month. For a 10GB Drive backup that's about $0.23/month — very cheap for a reliable off-site backup. You can also use S3 Glacier for even lower costs if you rarely need to access the backup.</p>
+  <h2>One-time transfer vs. ongoing backup</h2>
+  <p>If you just want to export your Drive to S3 once, you can do a manual transfer instead of a scheduled task — open the Cloud Explorer, set Drive on one side and S3 on the other, and transfer the folder. For ongoing backups, the scheduled task is the right approach.</p>
+  <div class="cta-box">
+    <p>Set up an automatic Google Drive to S3 backup in minutes.</p>
+    <a href="/auth">Get started for free</a>
+  </div>
+</main>
+<footer>
+  <a href="/">TERA</a><a href="/pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a>
+  <br /><br />© 2026 TERA. All rights reserved.
+</footer>
+</body>
+</html>
