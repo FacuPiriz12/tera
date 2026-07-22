@@ -291,6 +291,7 @@ const esTranslations = {
     },
     integrations: {
       title: "Integraciones", subtitle: "Conectá tus servicios de almacenamiento",
+      reconnectBannerTitle: "Reconectá Google Drive.", reconnectBannerDesc: "Actualizamos los permisos de Google Drive para mayor seguridad. Por favor desconectá y volvé a conectar tu cuenta para seguir usando el Cloud Explorer.",
       personalStorage: "Almacenamiento personal", googleDriveDesc: "Almacenamiento en la nube de Google con colaboración en tiempo real",
       dropboxDesc: "Almacenamiento en la nube con sincronización y uso compartido sencillo",
       features: "Funcionalidades", autoSync: "Sincronización automática", sharedFolders: "Carpetas compartidas",
@@ -936,6 +937,7 @@ const enTranslations = {
     },
     integrations: {
       title: "Integrations", subtitle: "Connect your storage services",
+      reconnectBannerTitle: "Reconnect Google Drive.", reconnectBannerDesc: "We updated Google Drive permissions for better security. Please disconnect and reconnect your account to continue using the Cloud Explorer.",
       personalStorage: "Personal storage", googleDriveDesc: "Google cloud storage with real-time collaboration",
       dropboxDesc: "Cloud storage with easy sync and sharing", features: "Features",
       autoSync: "Auto sync", sharedFolders: "Shared folders", permissions: "Permission control",
@@ -1365,6 +1367,7 @@ const ptTranslations = {
     },
     integrations: {
       title: "Integrações", subtitle: "Conecte seus serviços de armazenamento",
+      reconnectBannerTitle: "Reconecte o Google Drive.", reconnectBannerDesc: "Atualizamos as permissões do Google Drive para maior segurança. Por favor desconecte e reconecte sua conta para continuar usando o Cloud Explorer.",
       personalStorage: "Armazenamento pessoal", googleDriveDesc: "Armazenamento em nuvem do Google com colaboração em tempo real",
       dropboxDesc: "Armazenamento em nuvem com sincronização e compartilhamento fáceis", features: "Funcionalidades",
       autoSync: "Sincronização automática", sharedFolders: "Pastas compartilhadas", permissions: "Controle de permissões",

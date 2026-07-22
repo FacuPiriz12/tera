@@ -97,8 +97,8 @@ export default function Integrations() {
             <div className="mb-6 flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
               <RefreshCw className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 text-sm text-blue-800">
-                <span className="font-semibold">Reconectá Google Drive.</span>{' '}
-                Actualizamos los permisos de Google Drive para mayor seguridad. Por favor desconectá y volvé a conectar tu cuenta para seguir usando el Cloud Explorer.
+                <span className="font-semibold">{t('pages.integrations.reconnectBannerTitle', 'Reconnect Google Drive.')}</span>{' '}
+                {t('pages.integrations.reconnectBannerDesc', 'We updated Google Drive permissions for better security. Please disconnect and reconnect your account to continue using the Cloud Explorer.')}
               </div>
               <button onClick={dismissBanner} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
                 <X className="w-4 h-4" />
