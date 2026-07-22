@@ -40,6 +40,9 @@ export default function Integrations() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get('google_auth') === 'success') {
+      dismissBanner();
+    }
     if (params.get('error') === 'plan_required') {
       const provider = params.get('provider') || 'este proveedor';
       toast({
