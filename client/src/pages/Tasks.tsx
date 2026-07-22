@@ -61,24 +61,6 @@ import ConflictResolutionModal from "@/components/ConflictResolutionModal";
 import { FileVersionsTimeline } from "@/components/FileVersionsTimeline";
 import type { ScheduledTask, ScheduledTaskRun, FileConflict } from "@shared/schema";
 
-const DAYS_OF_WEEK = [
-  { value: 0, label: "Domingo" },
-  { value: 1, label: "Lunes" },
-  { value: 2, label: "Martes" },
-  { value: 3, label: "Miércoles" },
-  { value: 4, label: "Jueves" },
-  { value: 5, label: "Viernes" },
-  { value: 6, label: "Sábado" },
-];
-
-const FREQUENCIES = [
-  { value: "hourly", label: "Cada hora" },
-  { value: "daily", label: "Diario" },
-  { value: "weekly", label: "Semanal" },
-  { value: "monthly", label: "Mensual" },
-  { value: "custom", label: "Días específicos" },
-];
-
 const PROVIDERS = [
   { value: "google",   label: "Google Drive" },
   { value: "dropbox",  label: "Dropbox" },
@@ -97,29 +79,6 @@ function buildSourceUrl(provider: string, folderId: string): string {
     default:         return folderId;
   }
 }
-
-const OPERATION_TYPES = [
-  { value: "copy", label: "Copiar", description: "Copia archivos dentro del mismo proveedor" },
-  { value: "transfer", label: "Transferir", description: "Transfiere archivos entre proveedores (Drive ↔ Dropbox)" },
-];
-
-const SYNC_MODES = [
-  { 
-    value: "copy", 
-    label: "Copia simple", 
-    description: "Copia todos los archivos cada vez que se ejecuta" 
-  },
-  { 
-    value: "cumulative_sync", 
-    label: "Sincronización acumulativa", 
-    description: "Solo copia archivos nuevos o modificados desde la última sincronización" 
-  },
-  { 
-    value: "mirror_sync", 
-    label: "Espejo bidireccional (Mirror Sync)", 
-    description: "Sincronización automática en ambas direcciones. Los cambios en cualquier lado se reflejan al otro" 
-  },
-];
 
 interface TaskFormData {
   name: string;
@@ -155,7 +114,7 @@ const defaultFormData: TaskFormData = {
   sourceFolderId: "",
   destProvider: "google",
   destinationFolderId: "root",
-  destinationFolderName: "Mi unidad",
+  destinationFolderName: "",
   operationType: "copy",
   syncMode: "copy",
   frequency: "daily",
@@ -174,9 +133,38 @@ const defaultFormData: TaskFormData = {
 const TASK_LIMITS: Record<string, number> = { free: 0, pro: 5, business: Infinity };
 
 export default function Tasks() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   usePageTitle(t('pageTitles.tasks', 'TERA — Scheduled Tasks'));
   const { toast } = useToast();
+
+  const DAYS_OF_WEEK = [
+    { value: 0, label: t('pages.tasks.days.0') },
+    { value: 1, label: t('pages.tasks.days.1') },
+    { value: 2, label: t('pages.tasks.days.2') },
+    { value: 3, label: t('pages.tasks.days.3') },
+    { value: 4, label: t('pages.tasks.days.4') },
+    { value: 5, label: t('pages.tasks.days.5') },
+    { value: 6, label: t('pages.tasks.days.6') },
+  ];
+
+  const FREQUENCIES = [
+    { value: "hourly", label: t('pages.tasks.freq.hourly') },
+    { value: "daily", label: t('pages.tasks.freq.daily') },
+    { value: "weekly", label: t('pages.tasks.freq.weekly') },
+    { value: "monthly", label: t('pages.tasks.freq.monthly') },
+    { value: "custom", label: t('pages.tasks.freq.custom') },
+  ];
+
+  const OPERATION_TYPES = [
+    { value: "copy", label: t('pages.tasks.ops.copy.label'), description: t('pages.tasks.ops.copy.description') },
+    { value: "transfer", label: t('pages.tasks.ops.transfer.label'), description: t('pages.tasks.ops.transfer.description') },
+  ];
+
+  const SYNC_MODES = [
+    { value: "copy", label: t('pages.tasks.syncModes.copy.label'), description: t('pages.tasks.syncModes.copy.description') },
+    { value: "cumulative_sync", label: t('pages.tasks.syncModes.cumulative_sync.label'), description: t('pages.tasks.syncModes.cumulative_sync.description') },
+    { value: "mirror_sync", label: t('pages.tasks.syncModes.mirror_sync.label'), description: t('pages.tasks.syncModes.mirror_sync.description') },
+  ];
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -232,20 +220,20 @@ export default function Tasks() {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
       setIsCreateDialogOpen(false);
       setFormData(defaultFormData);
-      toast({ title: "Tarea creada", description: "La tarea programada se ha creado correctamente." });
+      toast({ title: t('pages.tasks.toast.created'), description: t('pages.tasks.toast.createdDesc') });
     },
     onError: (error: any) => {
       const is403 = error?.message?.startsWith('403:');
       if (is403) {
         toast({
-          title: taskLimit === 0 ? "Función exclusiva Pro" : "Límite de tareas alcanzado",
+          title: taskLimit === 0 ? t('pages.tasks.toast.proRequired') : t('pages.tasks.toast.limitReached'),
           description: taskLimit === 0
-            ? "Las tareas programadas requieren un plan Pro o Business."
-            : `Tu plan Pro permite hasta ${taskLimit} tareas. Actualizá a Business para tener tareas ilimitadas.`,
+            ? t('pages.tasks.toast.proRequiredDesc')
+            : t('pages.tasks.toast.limitReachedDesc', { limit: taskLimit }),
           variant: "destructive",
         });
       } else {
-        toast({ title: "Error", description: "No se pudo crear la tarea.", variant: "destructive" });
+        toast({ title: "Error", description: t('pages.tasks.toast.errorCreate'), variant: "destructive" });
       }
     },
   });
@@ -261,10 +249,10 @@ export default function Tasks() {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
       setIsEditDialogOpen(false);
       setSelectedTask(null);
-      toast({ title: "Tarea actualizada", description: "Los cambios se han guardado correctamente." });
+      toast({ title: t('pages.tasks.toast.updated'), description: t('pages.tasks.toast.updatedDesc') });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo actualizar la tarea.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorUpdate'), variant: "destructive" });
     },
   });
 
@@ -272,10 +260,10 @@ export default function Tasks() {
     mutationFn: (id: string) => apiRequest(`/api/scheduled-tasks/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
-      toast({ title: "Tarea eliminada", description: "La tarea ha sido eliminada." });
+      toast({ title: t('pages.tasks.toast.deleted'), description: t('pages.tasks.toast.deletedDesc') });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo eliminar la tarea.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorDelete'), variant: "destructive" });
     },
   });
 
@@ -283,10 +271,10 @@ export default function Tasks() {
     mutationFn: (id: string) => apiRequest(`/api/scheduled-tasks/${id}/pause`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
-      toast({ title: "Tarea pausada", description: "La tarea ha sido pausada." });
+      toast({ title: t('pages.tasks.toast.paused'), description: t('pages.tasks.toast.pausedDesc') });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo pausar la tarea.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorPause'), variant: "destructive" });
     },
   });
 
@@ -294,10 +282,10 @@ export default function Tasks() {
     mutationFn: (id: string) => apiRequest(`/api/scheduled-tasks/${id}/resume`, { method: 'POST' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
-      toast({ title: "Tarea reanudada", description: "La tarea se ejecutará según lo programado." });
+      toast({ title: t('pages.tasks.toast.resumed'), description: t('pages.tasks.toast.resumedDesc') });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo reanudar la tarea.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorResume'), variant: "destructive" });
     },
   });
 
@@ -306,21 +294,21 @@ export default function Tasks() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/scheduled-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["/api/copy-operations"] });
-      toast({ title: "Ejecutando", description: "La tarea se está ejecutando ahora." });
+      toast({ title: t('pages.tasks.toast.running'), description: t('pages.tasks.toast.runningDesc') });
     },
     onError: () => {
-      toast({ title: "Error", description: "No se pudo ejecutar la tarea.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorRun'), variant: "destructive" });
     },
   });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-800" data-testid="badge-status-active">Activa</Badge>;
+        return <Badge className="bg-green-100 text-green-800" data-testid="badge-status-active">{t('pages.tasks.status.active')}</Badge>;
       case 'paused':
-        return <Badge className="bg-yellow-100 text-yellow-800" data-testid="badge-status-paused">Pausada</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800" data-testid="badge-status-paused">{t('pages.tasks.status.paused')}</Badge>;
       case 'deleted':
-        return <Badge className="bg-red-100 text-red-800" data-testid="badge-status-deleted">Eliminada</Badge>;
+        return <Badge className="bg-red-100 text-red-800" data-testid="badge-status-deleted">{t('pages.tasks.status.deleted')}</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
     }
@@ -330,12 +318,12 @@ export default function Tasks() {
     if (!status) return null;
     switch (status) {
       case 'success':
-        return <Badge className="bg-green-50 text-green-700"><CheckCircle className="w-3 h-3 mr-1" />Exitosa</Badge>;
+        return <Badge className="bg-green-50 text-green-700"><CheckCircle className="w-3 h-3 mr-1" />{t('pages.tasks.status.success')}</Badge>;
       case 'failed':
-        return <Badge className="bg-red-50 text-red-700"><XCircle className="w-3 h-3 mr-1" />Fallida</Badge>;
+        return <Badge className="bg-red-50 text-red-700"><XCircle className="w-3 h-3 mr-1" />{t('pages.tasks.status.failed')}</Badge>;
       case 'running':
       case 'pending':
-        return <Badge className="bg-blue-50 text-blue-700"><Loader2 className="w-3 h-3 mr-1 animate-spin" />En progreso</Badge>;
+        return <Badge className="bg-blue-50 text-blue-700"><Loader2 className="w-3 h-3 mr-1 animate-spin" />{t('pages.tasks.status.running')}</Badge>;
       default:
         return null;
     }
@@ -348,29 +336,32 @@ export default function Tasks() {
 
     switch (task.frequency) {
       case 'hourly':
-        return `Cada hora, al minuto ${task.minute || 0}`;
+        return t('pages.tasks.schedule.hourly', { minute: task.minute || 0 });
       case 'daily':
-        return `Todos los días a las ${time}`;
-      case 'weekly':
-        const dayName = DAYS_OF_WEEK.find(d => d.value === task.dayOfWeek)?.label || 'Lunes';
-        return `Cada ${dayName} a las ${time}`;
+        return t('pages.tasks.schedule.daily', { time });
+      case 'weekly': {
+        const dayName = DAYS_OF_WEEK.find(d => d.value === task.dayOfWeek)?.label || t('pages.tasks.days.1');
+        return t('pages.tasks.schedule.weekly', { day: dayName, time });
+      }
       case 'monthly':
-        return `El día ${task.dayOfMonth || 1} de cada mes a las ${time}`;
-      case 'custom':
+        return t('pages.tasks.schedule.monthly', { dayOfMonth: task.dayOfMonth || 1, time });
+      case 'custom': {
         const selectedDays = (task as any).selectedDays || [];
         if (selectedDays.length === 0) {
-          return `Programado a las ${time}`;
+          return t('pages.tasks.schedule.default', { time });
         }
         const daysList = selectedDays.map((d: number) => DAYS_OF_WEEK.find(day => day.value === d)?.label.slice(0, 3)).join(', ');
-        return `${daysList} a las ${time}`;
+        return t('pages.tasks.schedule.custom', { days: daysList, time });
+      }
       default:
-        return `Programado a las ${time}`;
+        return t('pages.tasks.schedule.default', { time });
     }
   };
 
   const formatDate = (date: Date | string | null) => {
-    if (!date) return "Nunca";
-    return new Date(date).toLocaleDateString('es-ES', {
+    if (!date) return t('pages.tasks.schedule.never');
+    const locale = i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'es' ? 'es-ES' : 'en-US';
+    return new Date(date).toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -381,7 +372,7 @@ export default function Tasks() {
 
   const handleCreateSubmit = () => {
     if (!formData.name || !formData.sourceUrl) {
-      toast({ title: "Error", description: "Nombre y URL de origen son obligatorios.", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.validationError'), variant: "destructive" });
       return;
     }
     createMutation.mutate(formData);
@@ -434,10 +425,10 @@ export default function Tasks() {
   const TaskFormContent = ({ onSubmit, submitLabel, isPending }: { onSubmit: () => void; submitLabel: string; isPending: boolean }) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
       <div className="space-y-2">
-        <Label htmlFor="task-name">Nombre de la tarea *</Label>
+        <Label htmlFor="task-name">{t('pages.tasks.form.taskName')}</Label>
         <Input
           id="task-name"
-          placeholder="Ej: Backup diario de documentos"
+          placeholder={t('pages.tasks.form.taskNamePlaceholder')}
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           data-testid="input-task-name"
@@ -446,10 +437,10 @@ export default function Tasks() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="task-description">Descripción</Label>
+        <Label htmlFor="task-description">{t('pages.tasks.form.description')}</Label>
         <Textarea
           id="task-description"
-          placeholder="Descripción opcional de la tarea"
+          placeholder={t('pages.tasks.form.descriptionPlaceholder')}
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           data-testid="input-task-description"
@@ -458,7 +449,7 @@ export default function Tasks() {
       </div>
 
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-4">
-        <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Tipo de operación</h4>
+        <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">{t('pages.tasks.form.operationType')}</h4>
         <div className="grid grid-cols-2 gap-3">
           {OPERATION_TYPES.map(op => (
             <button
@@ -482,7 +473,7 @@ export default function Tasks() {
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
         <h4 className="font-medium text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
           <RefreshCw className="w-4 h-4" />
-          Modo de sincronización
+          {t('pages.tasks.form.syncMode')}
         </h4>
         <div className="grid grid-cols-1 gap-3">
           {SYNC_MODES.map(mode => (
@@ -503,18 +494,13 @@ export default function Tasks() {
           ))}
         </div>
         {formData.syncMode === 'cumulative_sync' && (
-          <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 p-2 rounded">
-            ✓ Solo copia archivos nuevos o modificados<br/>
-            ✓ Ahorra ancho de banda<br/>
-            ⚠️ Los archivos que borres en origen seguirán en destino
+          <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30 p-2 rounded whitespace-pre-line">
+            {t('pages.tasks.form.cumulativeHint', "✓ Only copies new or modified files\n✓ Saves bandwidth\n⚠️ Files deleted in source will remain in destination")}
           </div>
         )}
         {formData.syncMode === 'mirror_sync' && (
-          <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 p-2 rounded">
-            ↔️ Sincronización bidireccional automática<br/>
-            ✓ Cambios en Drive se reflejan en Dropbox y viceversa<br/>
-            ⚠️ Puede detectar y resolver conflictos<br/>
-            ⏰ Se ejecuta en el horario programado
+          <div className="text-xs text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30 p-2 rounded whitespace-pre-line">
+            {t('pages.tasks.form.mirrorHint', "↔️ Automatic bidirectional sync\n✓ Changes in Drive are reflected in Dropbox and vice versa\n⚠️ Can detect and resolve conflicts\n⏰ Runs on the scheduled time")}
           </div>
         )}
       </div>
@@ -523,29 +509,29 @@ export default function Tasks() {
         <h4 className="font-medium text-sm flex items-center justify-between gap-2 text-blue-700 dark:text-blue-300">
           <div className="flex items-center gap-2">
             <RefreshCw className="w-4 h-4" />
-            Sincronización Selectiva
+            {t('pages.tasks.form.selectiveSync')}
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="text-xs h-7"
             onClick={() => setIsSelectiveSyncDialogOpen(true)}
           >
-            Configurar carpetas
+            {t('pages.tasks.form.configFolders')}
           </Button>
         </h4>
         <div className="text-xs text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
           {formData.selectedFolderIds?.length ? (
-            <p>✓ {formData.selectedFolderIds.length} carpetas seleccionadas</p>
+            <p>{t('pages.tasks.form.foldersSelected', { count: formData.selectedFolderIds.length })}</p>
           ) : (
-            <p>Sincronizando todo el contenido (por defecto)</p>
+            <p>{t('pages.tasks.form.syncingAll')}</p>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Origen</Label>
+          <Label>{t('pages.tasks.form.source')}</Label>
           <Select
             value={formData.sourceProvider}
             onValueChange={(value) => setFormData({
@@ -566,7 +552,7 @@ export default function Tasks() {
         </div>
 
         <div className="space-y-2">
-          <Label>Destino</Label>
+          <Label>{t('pages.tasks.form.destination')}</Label>
           <Select
             value={formData.destProvider}
             onValueChange={(value) => setFormData({
@@ -587,7 +573,7 @@ export default function Tasks() {
       </div>
 
       <div className="space-y-2">
-        <Label>Carpeta de origen *</Label>
+        <Label>{t('pages.tasks.form.sourceFolder')}</Label>
         <FolderPicker
           provider={formData.sourceProvider}
           value={formData.sourceFolderId ? { id: formData.sourceFolderId, name: formData.sourceName || formData.sourceFolderId } : null}
@@ -597,13 +583,13 @@ export default function Tasks() {
             sourceName: folder.name,
             sourceUrl: buildSourceUrl(formData.sourceProvider, folder.id),
           })}
-          placeholder="Seleccionar carpeta de origen..."
+          placeholder={t('pages.tasks.form.sourcePlaceholder')}
           data-testid="picker-source-folder"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Carpeta de destino</Label>
+        <Label>{t('pages.tasks.form.destFolder')}</Label>
         <FolderPicker
           provider={formData.destProvider}
           value={formData.destinationFolderId ? { id: formData.destinationFolderId, name: formData.destinationFolderName || formData.destinationFolderId } : null}
@@ -612,7 +598,7 @@ export default function Tasks() {
             destinationFolderId: folder.id,
             destinationFolderName: folder.name,
           })}
-          placeholder="Seleccionar carpeta de destino..."
+          placeholder={t('pages.tasks.form.destPlaceholder')}
           data-testid="picker-dest-folder"
         />
       </div>
@@ -620,11 +606,11 @@ export default function Tasks() {
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-4">
         <h4 className="font-medium text-sm flex items-center gap-2 text-blue-700 dark:text-blue-300">
           <Calendar className="w-4 h-4" />
-          Programación
+          {t('pages.tasks.form.schedule')}
         </h4>
         
         <div className="space-y-2">
-          <Label>Frecuencia</Label>
+          <Label>{t('pages.tasks.form.frequency')}</Label>
           <Select
             value={formData.frequency}
             onValueChange={(value) => setFormData({ ...formData, frequency: value, selectedDays: [] })}
@@ -642,7 +628,7 @@ export default function Tasks() {
 
         {formData.frequency === 'custom' && (
           <div className="space-y-2">
-            <Label>Selecciona los días</Label>
+            <Label>{t('pages.tasks.form.selectDays')}</Label>
             <div className="flex flex-wrap gap-2">
               {DAYS_OF_WEEK.map(day => (
                 <button
@@ -661,14 +647,14 @@ export default function Tasks() {
               ))}
             </div>
             {(formData.selectedDays || []).length === 0 && (
-              <p className="text-xs text-amber-600">Selecciona al menos un día</p>
+              <p className="text-xs text-amber-600">{t('pages.tasks.form.atLeastOneDay')}</p>
             )}
           </div>
         )}
 
         {formData.frequency === 'weekly' && (
           <div className="space-y-2">
-            <Label>Día de la semana</Label>
+            <Label>{t('pages.tasks.form.dayOfWeek')}</Label>
             <Select
               value={formData.dayOfWeek.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfWeek: parseInt(value) })}
@@ -687,7 +673,7 @@ export default function Tasks() {
 
         {formData.frequency === 'monthly' && (
           <div className="space-y-2">
-            <Label>Día del mes</Label>
+            <Label>{t('pages.tasks.form.dayOfMonth')}</Label>
             <Select
               value={formData.dayOfMonth.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfMonth: parseInt(value) })}
@@ -697,7 +683,7 @@ export default function Tasks() {
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
-                  <SelectItem key={day} value={day.toString()}>Día {day}</SelectItem>
+                  <SelectItem key={day} value={day.toString()}>{t('pages.tasks.form.dayN', { n: day })}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -706,7 +692,7 @@ export default function Tasks() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="hour">Hora (0-23)</Label>
+            <Label htmlFor="hour">{t('pages.tasks.form.hour')}</Label>
             <Input
               id="hour"
               type="number"
@@ -719,7 +705,7 @@ export default function Tasks() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="minute">Minuto</Label>
+            <Label htmlFor="minute">{t('pages.tasks.form.minute')}</Label>
             <Input
               id="minute"
               type="number"
@@ -736,15 +722,15 @@ export default function Tasks() {
 
       <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 space-y-3">
         <p className="text-xs text-purple-700 dark:text-purple-300 font-medium">
-          💡 Tip: Con Sincronización Selectiva, solo sincronizarás las carpetas que elijas, ahorrando tiempo y espacio.
+          {t('pages.tasks.form.selectiveSyncTip')}
         </p>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
-            <Label>Omitir duplicados</Label>
-            <p className="text-xs text-muted-foreground">No copiar archivos que ya existen</p>
+            <Label>{t('pages.tasks.form.skipDuplicates')}</Label>
+            <p className="text-xs text-muted-foreground">{t('pages.tasks.form.skipDuplicatesDesc')}</p>
           </div>
           <Switch
             checked={formData.skipDuplicates}
@@ -755,8 +741,8 @@ export default function Tasks() {
 
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
-            <Label>Notificar al completar</Label>
-            <p className="text-xs text-muted-foreground">Enviar notificación cuando termine</p>
+            <Label>{t('pages.tasks.form.notifyComplete')}</Label>
+            <p className="text-xs text-muted-foreground">{t('pages.tasks.form.notifyCompleteDesc')}</p>
           </div>
           <Switch
             checked={formData.notifyOnComplete}
@@ -767,8 +753,8 @@ export default function Tasks() {
 
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
-            <Label>Notificar errores</Label>
-            <p className="text-xs text-muted-foreground">Enviar notificación si hay errores</p>
+            <Label>{t('pages.tasks.form.notifyErrors')}</Label>
+            <p className="text-xs text-muted-foreground">{t('pages.tasks.form.notifyErrorsDesc')}</p>
           </div>
           <Switch
             checked={formData.notifyOnFailure}
@@ -818,23 +804,23 @@ export default function Tasks() {
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Tareas Programadas</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t('pages.tasks.title')}</h1>
                 <p className="text-muted-foreground mt-1">
-                  Programa copias automáticas de archivos entre servicios en la nube
+                  {t('pages.tasks.subtitle')}
                 </p>
               </div>
               
               <div className="flex items-center gap-3">
                 {taskLimit !== Infinity && taskLimit > 0 && (
                   <span className="text-sm text-muted-foreground">
-                    {tasks.length}/{taskLimit} tareas
+                    {t('pages.tasks.taskCount', { count: tasks.length, limit: taskLimit })}
                   </span>
                 )}
                 {taskLimit === 0 ? (
                   <Link href="/pricing">
                     <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-tasks">
                       <Lock className="w-4 h-4" />
-                      Requiere Pro
+                      {t('pages.tasks.requiresPro')}
                       <ArrowRight className="w-3 h-3" />
                     </Button>
                   </Link>
@@ -842,7 +828,7 @@ export default function Tasks() {
                   <Link href="/pricing">
                     <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-limit">
                       <Lock className="w-4 h-4" />
-                      Límite alcanzado
+                      {t('pages.tasks.limitReached')}
                       <ArrowRight className="w-3 h-3" />
                     </Button>
                   </Link>
@@ -851,19 +837,19 @@ export default function Tasks() {
                     <DialogTrigger asChild>
                       <Button className="gap-2" data-testid="button-new-task">
                         <Plus className="w-4 h-4" />
-                        Nueva tarea
+                        {t('pages.tasks.newTask')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-lg">
                       <DialogHeader>
-                        <DialogTitle>Crear tarea programada</DialogTitle>
+                        <DialogTitle>{t('pages.tasks.createTitle')}</DialogTitle>
                         <DialogDescription>
-                          Configura una copia automática de archivos entre servicios
+                          {t('pages.tasks.createDesc')}
                         </DialogDescription>
                       </DialogHeader>
                       <TaskFormContent
                         onSubmit={handleCreateSubmit}
-                        submitLabel="Crear tarea"
+                        submitLabel={t('pages.tasks.createTask')}
                         isPending={createMutation.isPending}
                       />
                     </DialogContent>
@@ -880,16 +866,16 @@ export default function Tasks() {
                       <Calendar className="w-12 h-12 text-blue-500" />
                     </div>
                     <h2 className="text-xl font-semibold text-foreground mb-2">
-                      No hay tareas programadas
+                      {t('pages.tasks.emptyTitle')}
                     </h2>
                     <p className="text-muted-foreground max-w-md mb-6">
-                      Crea una tarea para copiar archivos automáticamente entre Google Drive y Dropbox según tu horario preferido.
+                      {t('pages.tasks.emptyDesc')}
                     </p>
                     {taskLimit === 0 ? (
                       <Link href="/pricing">
                         <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-first-task">
                           <Lock className="w-4 h-4" />
-                          Actualizar a Pro para crear tareas
+                          {t('pages.tasks.upgradeToPro')}
                           <ArrowRight className="w-3 h-3" />
                         </Button>
                       </Link>
@@ -900,7 +886,7 @@ export default function Tasks() {
                         data-testid="button-create-first-task"
                       >
                         <Plus className="w-4 h-4" />
-                        Crear primera tarea
+                        {t('pages.tasks.createFirstTask')}
                       </Button>
                     )}
                   </div>
@@ -939,7 +925,7 @@ export default function Tasks() {
                               data-testid={`action-run-now-${task.id}`}
                             >
                               <Play className="w-4 h-4 mr-2" />
-                              Ejecutar ahora
+                              {t('pages.tasks.actions.runNow')}
                             </DropdownMenuItem>
                             {task.status === 'active' ? (
                               <DropdownMenuItem 
@@ -948,7 +934,7 @@ export default function Tasks() {
                                 data-testid={`action-pause-${task.id}`}
                               >
                                 <Pause className="w-4 h-4 mr-2" />
-                                Pausar
+                                {t('pages.tasks.actions.pause')}
                               </DropdownMenuItem>
                             ) : task.status === 'paused' && (
                               <DropdownMenuItem 
@@ -957,7 +943,7 @@ export default function Tasks() {
                                 data-testid={`action-resume-${task.id}`}
                               >
                                 <Play className="w-4 h-4 mr-2" />
-                                Reanudar
+                                {t('pages.tasks.actions.resume')}
                               </DropdownMenuItem>
                             )}
                             
@@ -966,7 +952,7 @@ export default function Tasks() {
                               setIsVersionTimelineOpen(true);
                             }}>
                               <History className="w-4 h-4 mr-2" />
-                              Ver historial de versiones
+                              {t('pages.tasks.actions.versionHistory')}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={() => {
@@ -974,12 +960,12 @@ export default function Tasks() {
                               setIsConflictDialogOpen(true);
                             }}>
                               <AlertCircle className="w-4 h-4 mr-2" />
-                              Gestionar conflictos
+                              {t('pages.tasks.actions.manageConflicts')}
                             </DropdownMenuItem>
 
                             <DropdownMenuItem onClick={() => openEditDialog(task)}>
                               <Edit className="w-4 h-4 mr-2" />
-                              Editar
+                              {t('pages.tasks.actions.edit')}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => deleteMutation.mutate(task.id)}
@@ -988,7 +974,7 @@ export default function Tasks() {
                               data-testid={`action-delete-${task.id}`}
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Eliminar
+                              {t('pages.tasks.actions.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1000,7 +986,7 @@ export default function Tasks() {
                         <div className="flex items-start gap-2">
                           <RefreshCw className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-muted-foreground">Programación</p>
+                            <p className="text-muted-foreground">{t('pages.tasks.card.schedule')}</p>
                             <p className="font-medium">{formatSchedule(task)}</p>
                           </div>
                         </div>
@@ -1008,7 +994,7 @@ export default function Tasks() {
                         <div className="flex items-start gap-2">
                           <Clock className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-muted-foreground">Próxima ejecución</p>
+                            <p className="text-muted-foreground">{t('pages.tasks.card.nextRun')}</p>
                             <p className="font-medium">{formatDate(task.nextRunAt)}</p>
                           </div>
                         </div>
@@ -1016,7 +1002,7 @@ export default function Tasks() {
                         <div className="flex items-start gap-2">
                           <History className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-muted-foreground">Última ejecución</p>
+                            <p className="text-muted-foreground">{t('pages.tasks.card.lastRun')}</p>
                             <p className="font-medium">{formatDate(task.lastRunAt)}</p>
                             {getLastRunBadge(task.lastRunStatus)}
                           </div>
@@ -1025,9 +1011,9 @@ export default function Tasks() {
                         <div className="flex items-start gap-2">
                           <CheckCircle className="w-4 h-4 text-muted-foreground mt-0.5" />
                           <div>
-                            <p className="text-muted-foreground">Estadísticas</p>
+                            <p className="text-muted-foreground">{t('pages.tasks.card.stats')}</p>
                             <p className="font-medium">
-                              {task.successfulRuns || 0} exitosas / {task.failedRuns || 0} fallidas
+                              {t('pages.tasks.card.statsValue', { success: task.successfulRuns || 0, failed: task.failedRuns || 0 })}
                             </p>
                           </div>
                         </div>
@@ -1037,7 +1023,7 @@ export default function Tasks() {
                         <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-red-700">Último error</p>
+                            <p className="text-sm font-medium text-red-700">{t('pages.tasks.card.lastError')}</p>
                             <p className="text-sm text-red-600">{task.lastRunError}</p>
                           </div>
                         </div>
@@ -1074,9 +1060,9 @@ export default function Tasks() {
           <Dialog open={isVersionTimelineOpen} onOpenChange={setIsVersionTimelineOpen}>
             <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Historial de Versiones</DialogTitle>
+                <DialogTitle>{t('pages.tasks.versionHistoryTitle')}</DialogTitle>
                 <DialogDescription>
-                  Explora las versiones anteriores y restaura cambios.
+                  {t('pages.tasks.versionHistoryDesc')}
                 </DialogDescription>
               </DialogHeader>
               {selectedTaskForVersions && (
@@ -1091,9 +1077,9 @@ export default function Tasks() {
           <Dialog open={isSelectiveSyncDialogOpen} onOpenChange={setIsSelectiveSyncDialogOpen}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Sincronización Selectiva</DialogTitle>
+                <DialogTitle>{t('pages.tasks.selectiveSyncTitle')}</DialogTitle>
                 <DialogDescription>
-                  Selecciona qué carpetas deseas sincronizar o excluir
+                  {t('pages.tasks.selectiveSyncDesc')}
                 </DialogDescription>
               </DialogHeader>
               <SelectiveSyncDialogContent
@@ -1124,14 +1110,14 @@ export default function Tasks() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Editar tarea</DialogTitle>
+            <DialogTitle>{t('pages.tasks.editTitle')}</DialogTitle>
             <DialogDescription>
-              Modifica la configuración de la tarea programada
+              {t('pages.tasks.editDesc')}
             </DialogDescription>
           </DialogHeader>
-          <TaskFormContent 
-            onSubmit={handleEditSubmit} 
-            submitLabel="Guardar cambios"
+          <TaskFormContent
+            onSubmit={handleEditSubmit}
+            submitLabel={t('pages.tasks.saveChanges')}
             isPending={updateMutation.isPending}
           />
         </DialogContent>
@@ -1168,6 +1154,7 @@ function SelectiveSyncDialogContent({
   taskId?: string;
   onSave: (selected: string[], excluded: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const [folders, setFolders] = useState<SelectiveSyncFolder[]>([]);
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [excludedFolders, setExcludedFolders] = useState<Set<string>>(new Set());
@@ -1199,7 +1186,7 @@ function SelectiveSyncDialogContent({
       }
     } catch (error) {
       console.error("Error loading folders:", error);
-      toast({ title: "Error", description: "No se pudieron cargar las carpetas", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorLoadFolders'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -1278,10 +1265,10 @@ function SelectiveSyncDialogContent({
         headers: { 'Content-Type': 'application/json' },
       });
       onSave(Array.from(selectedFolders), Array.from(excludedFolders));
-      toast({ title: "Guardado", description: "La configuración de sincronización selectiva se ha actualizado." });
+      toast({ title: t('pages.tasks.toast.savedSelection'), description: t('pages.tasks.toast.savedSelectionDesc') });
     } catch (error) {
       console.error("Error saving folder selection:", error);
-      toast({ title: "Error", description: "No se pudieron guardar los cambios", variant: "destructive" });
+      toast({ title: "Error", description: t('pages.tasks.toast.errorSaveSelection'), variant: "destructive" });
     } finally {
       setIsSaving(false);
     }
@@ -1292,19 +1279,19 @@ function SelectiveSyncDialogContent({
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 gap-4">
           <Loader2 className="w-8 h-8 animate-spin" />
-          <p className="text-sm text-muted-foreground">Cargando carpetas...</p>
+          <p className="text-sm text-muted-foreground">{t('pages.tasks.selectiveSync.loading')}</p>
         </div>
       ) : folders.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <p>No hay carpetas disponibles para sincronización selectiva</p>
+          <p>{t('pages.tasks.selectiveSync.noFolders')}</p>
           <Button type="button" variant="outline" size="sm" onClick={loadFolders} className="mt-4">
-            Intentar de nuevo
+            {t('pages.tasks.selectiveSync.retry')}
           </Button>
         </div>
       ) : (
         <>
           <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded">
-            📌 Arrastra carpetas a las zonas de abajo, o usa los controles
+            {t('pages.tasks.selectiveSync.hint')}
           </div>
           <div className="flex gap-2">
             <button
@@ -1312,14 +1299,14 @@ function SelectiveSyncDialogContent({
               onClick={() => setSortBy('name')}
               className={`text-xs px-3 py-1 rounded transition-colors ${sortBy === 'name' ? 'bg-primary text-primary-foreground' : 'border border-gray-300 hover:bg-gray-100'}`}
             >
-              Nombre
+              {t('pages.tasks.selectiveSync.sortName')}
             </button>
             <button
               type="button"
               onClick={() => setSortBy('size')}
               className={`text-xs px-3 py-1 rounded transition-colors ${sortBy === 'size' ? 'bg-primary text-primary-foreground' : 'border border-gray-300 hover:bg-gray-100'}`}
             >
-              Tamaño
+              {t('pages.tasks.selectiveSync.sortSize')}
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -1328,14 +1315,14 @@ function SelectiveSyncDialogContent({
               onDrop={() => handleDropZone('include')}
               className="p-3 rounded-lg border-2 border-dashed border-green-300 bg-green-50/50"
             >
-              <p className="text-xs font-semibold text-green-700 text-center">✓ Sincronizar ({selectedFolders.size})</p>
+              <p className="text-xs font-semibold text-green-700 text-center">{t('pages.tasks.selectiveSync.includeZone', { count: selectedFolders.size })}</p>
             </div>
             <div
               onDragOver={handleDragOver}
               onDrop={() => handleDropZone('exclude')}
               className="p-3 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50"
             >
-              <p className="text-xs font-semibold text-red-700 text-center">✗ Omitir ({excludedFolders.size})</p>
+              <p className="text-xs font-semibold text-red-700 text-center">{t('pages.tasks.selectiveSync.excludeZone', { count: excludedFolders.size })}</p>
             </div>
           </div>
           <div className="space-y-2 border-t pt-3">
@@ -1359,7 +1346,7 @@ function SelectiveSyncDialogContent({
           </div>
           <Button type="button" onClick={handleSave} disabled={isSaving} className="w-full mt-4">
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Guardar selección
+            {t('pages.tasks.selectiveSync.saveBtn')}
           </Button>
         </>
       )}
