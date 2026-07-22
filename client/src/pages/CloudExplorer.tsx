@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Folder, File, Search, RefreshCw,
+  Folder, FolderOpen, File, Search, RefreshCw,
   FileText, FileSpreadsheet, Image as ImageIcon, Video, Music, Archive,
   ChevronRight, ChevronLeft, Home, AlertCircle, Loader2, ArrowRight, MoveRight, WifiOff,
   CheckSquare, Square, Clock, SendHorizontal, Minus, Eye
