@@ -482,14 +482,14 @@ function CloudPanel({
 
   return (
     <div
-      className={`relative bg-white rounded-2xl shadow-sm border flex flex-col transition-all duration-200 ${
+      className={`relative bg-white rounded-2xl shadow-sm border flex flex-col transition-all duration-200 h-full ${
         isDragTarget
           ? 'ring-2 ring-blue-500 border-blue-300 bg-blue-50/30 shadow-blue-100 shadow-lg'
           : isDragSource
           ? 'border-gray-200 opacity-80'
           : 'border-gray-200 hover:shadow-md'
       }`}
-      style={{ maxHeight: 'calc(100vh - 180px)' }}
+      style={{ minHeight: '480px', maxHeight: 'calc(100vh - 180px)' }}
       onDragOver={(e) => e.preventDefault()}
       onDragEnter={onDragEnter}
       onDragLeave={onDragLeave}
@@ -546,9 +546,9 @@ function CloudPanel({
                   {isS3BucketSelector
                     ? `${sorted.length} bucket${sorted.length !== 1 ? 's' : ''}`
                     : <>
-                        {folderCount > 0 && `${folderCount} carpeta${folderCount !== 1 ? 's' : ''}`}
+                        {folderCount > 0 && `${folderCount} ${folderCount !== 1 ? t('pages.cloudExplorer.folders') : t('pages.cloudExplorer.folder')}`}
                         {folderCount > 0 && fileCount > 0 && ' · '}
-                        {fileCount > 0 && `${fileCount} archivo${fileCount !== 1 ? 's' : ''}`}
+                        {fileCount > 0 && `${fileCount} ${fileCount !== 1 ? t('pages.cloudExplorer.files') : t('pages.cloudExplorer.file')}`}
                       </>
                   }
                 </p>
@@ -1588,8 +1588,8 @@ export default function CloudExplorer() {
           )}
 
           {/* Panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div className={`${mobileVisiblePanel === 1 ? 'block' : 'hidden'} lg:block`}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+            <div className={`${mobileVisiblePanel === 1 ? 'block' : 'hidden'} lg:block h-full`}>
               <CloudPanel
                 panelId={1}
                 panelState={panel1}
@@ -1606,7 +1606,7 @@ export default function CloudExplorer() {
                 isDesktopLayout={isDesktop}
               />
             </div>
-            <div className={`${mobileVisiblePanel === 2 ? 'block' : 'hidden'} lg:block`}>
+            <div className={`${mobileVisiblePanel === 2 ? 'block' : 'hidden'} lg:block h-full`}>
               <CloudPanel
                 panelId={2}
                 panelState={panel2}
