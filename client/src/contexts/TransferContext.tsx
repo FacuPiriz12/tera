@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { queryClient, apiRequest, getAuthHeaders } from "@/lib/queryClient";
 
 export interface TransferJob {
@@ -30,6 +31,7 @@ const TransferContext = createContext<TransferContextType | null>(null);
 export function TransferProvider({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<TransferJob[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -109,8 +111,8 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
       });
       
       toast({
-        title: "Transferencia completada",
-        description: `${jobData.fileName} transferido exitosamente`,
+        title: t('copy.transferCompleted'),
+        description: t('copy.transferCompletedDesc', { fileName: jobData.fileName }),
       });
 
       queryClient.invalidateQueries({ queryKey: ['/api/copy-operations'] });
@@ -125,8 +127,8 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
       });
       
       toast({
-        title: "Error en transferencia",
-        description: jobData.errorMessage || `Error al transferir`,
+        title: t('copy.transferError'),
+        description: jobData.errorMessage || t('copy.transferErrorDesc'),
         variant: "destructive"
       });
 

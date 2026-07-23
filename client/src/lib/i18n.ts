@@ -451,7 +451,11 @@ const esTranslations = {
     description: "La página que buscás no existe o fue movida"
   },
   copy: {
-    transferInitiated: "Transferencia iniciada"
+    transferInitiated: "Transferencia iniciada",
+    transferCompleted: "Transferencia completada",
+    transferCompletedDesc: "{{fileName}} transferido exitosamente",
+    transferError: "Error en transferencia",
+    transferErrorDesc: "Error al transferir",
   },
   status: {
     loading: "Cargando..."
@@ -1200,7 +1204,7 @@ const enTranslations = {
     preview: "Preview", starting: "Starting..."
   },
   notFound: { title: "Page not found", description: "The page you are looking for does not exist or was moved" },
-  copy: { transferInitiated: "Transfer started" },
+  copy: { transferInitiated: "Transfer started", transferCompleted: "Transfer completed", transferCompletedDesc: "{{fileName}} transferred successfully", transferError: "Transfer error", transferErrorDesc: "Error transferring file" },
   status: { loading: "Loading..." },
   language: { switchLanguage: "Switch language", select: "Select language", spanish: "Español", english: "English", portuguese: "Português" },
   errors: { validation: { invalidUrl: "Invalid URL", urlRequired: "URL is required" } },
@@ -1743,7 +1747,7 @@ const ptTranslations = {
     preview: "Prévia", starting: "Iniciando..."
   },
   notFound: { title: "Página não encontrada", description: "A página que você está procurando não existe ou foi movida" },
-  copy: { transferInitiated: "Transferência iniciada" },
+  copy: { transferInitiated: "Transferência iniciada", transferCompleted: "Transferência concluída", transferCompletedDesc: "{{fileName}} transferido com sucesso", transferError: "Erro na transferência", transferErrorDesc: "Erro ao transferir arquivo" },
   status: { loading: "Carregando..." },
   language: { switchLanguage: "Trocar idioma", select: "Selecionar idioma", spanish: "Español", english: "English", portuguese: "Português" },
   errors: { validation: { invalidUrl: "URL inválida", urlRequired: "URL é obrigatória" } },
