@@ -127,15 +127,15 @@ export default function Analytics() {
                   <Lock className="w-8 h-8 text-amber-400" />
                 </div>
                 <div className="text-center max-w-sm">
-                  <Badge className="mb-3 bg-amber-100 text-amber-700 border-0">Plan Pro requerido</Badge>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Analytics disponible desde Pro</h3>
+                  <Badge className="mb-3 bg-amber-100 text-amber-700 border-0">{t('analyticsMisc.proRequiredBadge')}</Badge>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{t('analyticsMisc.proLockedTitle')}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    Mirá estadísticas de tus transferencias, tasa de éxito, actividad por día y más. El plan Business incluye además desglose por proveedor.
+                    {t('analyticsMisc.proLockedDesc')}
                   </p>
                 </div>
                 <Link href="/pricing">
                   <Button className="gap-2 mt-2">
-                    Ver planes <ArrowRight className="w-4 h-4" />
+                    {t('analyticsMisc.viewPlans')} <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               </CardContent>

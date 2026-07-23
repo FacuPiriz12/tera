@@ -77,7 +77,7 @@ export default function AuthPage() {
       if (password !== confirmPassword) {
         toast({
           title: "Error",
-          description: "Las contraseñas no coinciden",
+          description: t('authMisc.passwordMismatch'),
           variant: "destructive",
         });
         return;

@@ -28,10 +28,10 @@ export default function Operations() {
     mutationFn: (id: string) => apiRequest('POST', `/api/copy-operations/${id}/retry`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/copy-operations'] });
-      toast({ title: 'Reintentando transferencia', description: 'La operación fue puesta en cola nuevamente.' });
+      toast({ title: t('operationsMisc.retryTitle'), description: t('operationsMisc.retryDesc') });
     },
     onError: () => {
-      toast({ title: 'Error al reintentar', variant: 'destructive' });
+      toast({ title: t('operationsMisc.retryError'), variant: 'destructive' });
     },
   });
   
@@ -156,14 +156,14 @@ export default function Operations() {
                 <Clock className="w-4 h-4 flex-shrink-0" />
                 <span>
                   {userPlan === 'free'
-                    ? `Plan Free: mostrando los últimos ${historyDays} días. Actualizá a Pro para ver 90 días.`
-                    : `Plan Pro: mostrando los últimos ${historyDays} días. Actualizá a Business para ver el historial completo.`
+                    ? t('operationsMisc.planFree', { days: historyDays })
+                    : t('operationsMisc.planPro', { days: historyDays })
                   }
                 </span>
               </div>
               <Link href="/pricing">
                 <Button variant="outline" size="sm" className="gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0 ml-4">
-                  Ver planes
+                  {t('operationsMisc.viewPlans')}
                   <ArrowRight className="w-3 h-3" />
                 </Button>
               </Link>
@@ -242,7 +242,7 @@ export default function Operations() {
                     
                     {operation.sourceUrl && (
                       <div className="mt-4 p-3 bg-muted rounded-lg">
-                        <p className="text-xs text-muted-foreground mb-1">URL de origen:</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('operationsMisc.sourceUrl')}</p>
                         <p className="text-sm font-mono break-all">
                           {operation.sourceUrl}
                         </p>
@@ -260,15 +260,15 @@ export default function Operations() {
                             <div className="flex items-start gap-3">
                               <div className="flex-1">
                                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
-                                  Archivo demasiado grande para tu plan
+                                  {t('operationsMisc.fileTooLarge')}
                                 </p>
                                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                                  El archivo pesa {fileSize} y tu plan permite hasta {limit} por transferencia.
+                                  {t('operationsMisc.fileTooLargeDesc', { size: fileSize, limit })}
                                 </p>
                               </div>
                               <Link href="/pricing">
                                 <Button variant="outline" size="sm" className="gap-1.5 border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0">
-                                  Mejorar plan
+                                  {t('operationsMisc.upgradePlan')}
                                   <ArrowRight className="w-3 h-3" />
                                 </Button>
                               </Link>
@@ -293,16 +293,16 @@ export default function Operations() {
                             <div className="flex items-center space-x-2 mb-2">
                               <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                               <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                                Copia completada exitosamente
+                                {t('operationsMisc.copyCompleted')}
                               </p>
                             </div>
                             {operation.copiedFileName && (
                               <p className="text-xs text-green-600 dark:text-green-400 mb-2">
-                                Archivo copiado: <span className="font-medium">{operation.copiedFileName}</span>
+                                {t('operationsMisc.copiedFile')} <span className="font-medium">{operation.copiedFileName}</span>
                               </p>
                             )}
                             <p className="text-xs text-green-600 dark:text-green-400">
-                              Enlace a la carpeta copiada en tu Drive:
+                              {t('operationsMisc.copiedFileUrl')}
                             </p>
                           </div>
                         </div>
@@ -314,7 +314,7 @@ export default function Operations() {
                           data-testid={`link-copied-file-${operation.id}`}
                         >
                           <ExternalLink className="w-4 h-4" />
-                          <span>Abrir en Google Drive</span>
+                          <span>{t('operationsMisc.openDrive')}</span>
                         </a>
                       </div>
                     )}
@@ -323,7 +323,7 @@ export default function Operations() {
                     {operation.status === 'in_progress' && operation.totalFiles && (
                       <div className="mt-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progreso de transferencia</span>
+                          <span className="text-muted-foreground">{t('operationsMisc.progress')}</span>
                           <span className="font-medium">
                             {Math.round(((operation.completedFiles || 0) / operation.totalFiles) * 100)}%
                           </span>
@@ -334,10 +334,10 @@ export default function Operations() {
                           data-testid={`progress-${operation.id}`}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>{operation.completedFiles || 0} de {operation.totalFiles} archivos</span>
+                          <span>{t('operationsMisc.filesCount', { completed: operation.completedFiles || 0, total: operation.totalFiles })}</span>
                           <div className="flex items-center space-x-1">
                             <Zap className="w-3 h-3" />
-                            <span>En progreso</span>
+                            <span>{t('operationsMisc.inProgress')}</span>
                           </div>
                         </div>
                       </div>
@@ -355,7 +355,7 @@ export default function Operations() {
                           data-testid={`button-retry-${operation.id}`}
                         >
                           {retryMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-1" />}
-                          Reintentar
+                          {t('operationsMisc.retry')}
                         </Button>
                       )}
                       <Button
@@ -368,7 +368,7 @@ export default function Operations() {
                         data-testid={`button-view-details-${operation.id}`}
                       >
                         <Eye className="w-4 h-4 mr-1" />
-                        Ver detalles
+                        {t('operationsMisc.viewDetails')}
                       </Button>
                     </div>
                   </CardContent>

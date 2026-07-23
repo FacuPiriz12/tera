@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import type { CopyOperation } from "@shared/schema";
+import { useTranslation } from "react-i18next";
 
 interface CopyProgressModalProps {
   operationId?: string;
@@ -13,29 +14,24 @@ interface CopyProgressModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Helper functions for calculations
 const formatDuration = (seconds: number): string => {
   if (seconds < 60) return `${Math.round(seconds)}s`;
   if (seconds < 3600) return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`;
   return `${Math.round(seconds / 3600)}h ${Math.round((seconds % 3600) / 60)}m`;
 };
 
-const formatSpeed = (filesPerSecond: number): string => {
-  if (filesPerSecond < 1) return `${(filesPerSecond * 60).toFixed(1)} archivos/min`;
-  return `${filesPerSecond.toFixed(1)} archivos/s`;
-};
-
-export default function CopyProgressModal({ 
-  operationId, 
-  open, 
-  onOpenChange 
+export default function CopyProgressModal({
+  operationId,
+  open,
+  onOpenChange
 }: CopyProgressModalProps) {
+  const { t } = useTranslation();
   const [transferStats, setTransferStats] = useState({
     speed: 0,
     estimatedTimeRemaining: 0,
     startTime: Date.now()
   });
-  
+
   const previousProgress = useRef<{completedFiles: number, timestamp: number}>({
     completedFiles: 0,
     timestamp: Date.now()
@@ -47,30 +43,26 @@ export default function CopyProgressModal({
     refetchInterval: (query) => query.state.data?.status === 'in_progress' ? 1000 : false,
   });
 
-  // Calculate transfer speed and ETA
   useEffect(() => {
     if (!operation || operation.status !== 'in_progress') return;
 
     const now = Date.now();
     const currentCompleted = operation.completedFiles || 0;
     const totalFiles = operation.totalFiles || 1;
-    
-    // Update speed calculation every second
+
     if (now - previousProgress.current.timestamp >= 1000) {
       const timeDiff = (now - previousProgress.current.timestamp) / 1000;
       const filesDiff = currentCompleted - previousProgress.current.completedFiles;
       const speed = filesDiff / timeDiff;
-      
-      // Calculate ETA
       const remainingFiles = totalFiles - currentCompleted;
       const eta = speed > 0 ? remainingFiles / speed : 0;
-      
+
       setTransferStats({
         speed,
         estimatedTimeRemaining: eta,
         startTime: transferStats.startTime
       });
-      
+
       previousProgress.current = {
         completedFiles: currentCompleted,
         timestamp: now
@@ -80,7 +72,7 @@ export default function CopyProgressModal({
 
   if (!operation) return null;
 
-  const progress = operation.totalFiles 
+  const progress = operation.totalFiles
     ? Math.round((operation.completedFiles / operation.totalFiles) * 100)
     : 0;
 
@@ -89,9 +81,13 @@ export default function CopyProgressModal({
   const isActive = operation.status === 'in_progress';
   const isPending = operation.status === 'pending';
 
-  // Calculate elapsed time for completed operations
-  const elapsedTime = operation.duration || 
+  const elapsedTime = operation.duration ||
     (isActive ? (Date.now() - transferStats.startTime) / 1000 : 0);
+
+  const formatSpeed = (filesPerSecond: number): string => {
+    if (filesPerSecond < 1) return `${(filesPerSecond * 60).toFixed(1)} ${t('copyProgress.filesPerMin', 'archivos/min')}`;
+    return `${filesPerSecond.toFixed(1)} ${t('copyProgress.filesPerSec', 'archivos/s')}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,10 +100,10 @@ export default function CopyProgressModal({
               {isActive && <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />}
               {isPending && <Clock className="w-5 h-5 text-yellow-500" />}
               <span>
-                {isCompleted ? 'Copia Completada' : 
-                 isFailed ? 'Error en la Copia' : 
-                 isPending ? 'Copia Pendiente' :
-                 'Copiando archivos'}
+                {isCompleted ? t('copyProgress.titleCompleted', 'Copia Completada') :
+                 isFailed ? t('copyProgress.titleFailed', 'Error en la Copia') :
+                 isPending ? t('copyProgress.titlePending', 'Copia Pendiente') :
+                 t('copyProgress.titleActive', 'Copiando archivos')}
               </span>
             </div>
             <Button
@@ -120,18 +116,18 @@ export default function CopyProgressModal({
             </Button>
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Overall Progress */}
           <div>
             <div className="flex justify-between text-sm mb-2">
-              <span>Progreso general</span>
+              <span>{t('copyProgress.overallProgress', 'Progreso general')}</span>
               <span data-testid="text-progress-percentage">{progress}%</span>
             </div>
             <Progress value={progress} className="h-3" data-testid="progress-overall" />
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
               <span data-testid="text-progress-status">
-                {operation.completedFiles || 0} de {operation.totalFiles || 0} archivos
+                {t('copyProgress.filesOf', '{{completed}} de {{total}} archivos', { completed: operation.completedFiles || 0, total: operation.totalFiles || 0 })}
               </span>
               {isActive && transferStats.speed > 0 && (
                 <span data-testid="text-transfer-speed">
@@ -147,20 +143,20 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-blue-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Velocidad</p>
+                  <p className="text-xs text-muted-foreground">{t('copyProgress.speed', 'Velocidad')}</p>
                   <p className="text-sm font-medium" data-testid="text-speed-detail">
-                    {transferStats.speed > 0 ? formatSpeed(transferStats.speed) : 'Calculando...'}
+                    {transferStats.speed > 0 ? formatSpeed(transferStats.speed) : t('copyProgress.calculating', 'Calculando...')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-green-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Tiempo restante</p>
+                  <p className="text-xs text-muted-foreground">{t('copyProgress.timeRemaining', 'Tiempo restante')}</p>
                   <p className="text-sm font-medium" data-testid="text-eta">
-                    {transferStats.estimatedTimeRemaining > 0 ? 
-                      formatDuration(transferStats.estimatedTimeRemaining) : 
-                      'Calculando...'}
+                    {transferStats.estimatedTimeRemaining > 0 ?
+                      formatDuration(transferStats.estimatedTimeRemaining) :
+                      t('copyProgress.calculating', 'Calculando...')}
                   </p>
                 </div>
               </div>
@@ -173,7 +169,7 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-gray-500" />
                 <div>
-                  <p className="text-xs text-muted-foreground">Tiempo total</p>
+                  <p className="text-xs text-muted-foreground">{t('copyProgress.totalTime', 'Tiempo total')}</p>
                   <p className="text-sm font-medium" data-testid="text-elapsed-time">
                     {formatDuration(elapsedTime)}
                   </p>
@@ -188,17 +184,17 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2 text-green-700 dark:text-green-400">
                 <Check className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  ¡Copia completada exitosamente!
+                  {t('copy.completedSuccess')}
                 </span>
               </div>
               {operation.copiedFileUrl && (
                 <div className="mt-2">
                   <p className="text-xs text-green-600 dark:text-green-500 mb-1">
-                    Archivo copiado disponible en:
+                    {t('copy.copiedFileAvailable')}
                   </p>
-                  <a 
-                    href={operation.copiedFileUrl} 
-                    target="_blank" 
+                  <a
+                    href={operation.copiedFileUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-blue-600 dark:text-blue-400 hover:underline break-all"
                     data-testid="link-copied-file"
@@ -214,7 +210,7 @@ export default function CopyProgressModal({
             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <div className="flex items-center space-x-2 text-red-700 dark:text-red-400 mb-2">
                 <AlertTriangle className="w-5 h-5" />
-                <span className="text-sm font-medium">Error durante la copia</span>
+                <span className="text-sm font-medium">{t('copy.errorDuring')}</span>
               </div>
               <p className="text-xs text-red-600 dark:text-red-400">{operation.errorMessage}</p>
             </div>
@@ -225,7 +221,7 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2 text-yellow-700 dark:text-yellow-400">
                 <Clock className="w-5 h-5" />
                 <span className="text-sm font-medium">
-                  Copia en cola, será procesada pronto
+                  {t('copy.queuedDesc')}
                 </span>
               </div>
             </div>
@@ -236,12 +232,12 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2 text-blue-700 dark:text-blue-400">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-sm font-medium">
-                  Transfiriendo archivos...
+                  {t('copyProgress.transferring', 'Transfiriendo archivos...')}
                 </span>
               </div>
               {transferStats.speed > 0 && (
                 <p className="text-xs text-blue-600 dark:text-blue-500 mt-1">
-                  Procesando a {formatSpeed(transferStats.speed)}
+                  {t('copyProgress.processingAt', 'Procesando a {{speed}}', { speed: formatSpeed(transferStats.speed) })}
                 </p>
               )}
             </div>
@@ -253,20 +249,20 @@ export default function CopyProgressModal({
               <div className="flex items-center space-x-2 mb-2">
                 <Folder className="w-4 h-4 text-muted-foreground" />
                 <p className="text-xs font-medium text-muted-foreground">
-                  Origen
+                  {t('copyProgress.source', 'Origen')}
                 </p>
               </div>
               <p className="text-sm break-all" data-testid="text-source-url">
                 {operation.sourceUrl}
               </p>
             </div>
-            
+
             {operation.fileName && (
               <div className="bg-muted p-3 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <FileText className="w-4 h-4 text-muted-foreground" />
                   <p className="text-xs font-medium text-muted-foreground">
-                    Archivo/Carpeta
+                    {t('copyProgress.fileFolder', 'Archivo/Carpeta')}
                   </p>
                 </div>
                 <p className="text-sm" data-testid="text-file-name">
@@ -282,51 +278,46 @@ export default function CopyProgressModal({
               {isActive && (
                 <Badge variant="secondary" className="text-xs">
                   <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                  En progreso
+                  {t('copyProgress.inProgress', 'En progreso')}
                 </Badge>
               )}
               {isPending && (
                 <Badge variant="outline" className="text-xs">
                   <Clock className="w-3 h-3 mr-1" />
-                  En cola
+                  {t('copyProgress.queued', 'En cola')}
                 </Badge>
               )}
             </div>
-            
+
             <div className="flex space-x-2">
               {isCompleted && operation.copiedFileUrl && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => window.open(operation.copiedFileUrl, '_blank')}
                   data-testid="button-open-file"
                 >
                   <FileText className="w-4 h-4 mr-1" />
-                  Abrir archivo
+                  {t('copyProgress.openFile', 'Abrir archivo')}
                 </Button>
               )}
-              
-              <Button 
-                variant={isCompleted ? "default" : "outline"} 
+
+              <Button
+                variant={isCompleted ? "default" : "outline"}
                 size="sm"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-close-modal"
               >
-                {isCompleted ? 'Perfecto' : 
-                 isFailed ? 'Cerrar' : 
-                 'Cerrar'}
+                {isCompleted ? t('copyProgress.perfect', 'Perfecto') : t('common.actions.close', 'Cerrar')}
               </Button>
-              
+
               {isFailed && (
-                <Button 
+                <Button
                   size="sm"
-                  onClick={() => {
-                    // Retry logic could be implemented here
-                    onOpenChange(false);
-                  }}
+                  onClick={() => onOpenChange(false)}
                   data-testid="button-retry"
                 >
-                  Reintentar
+                  {t('operationsMisc.retry')}
                 </Button>
               )}
             </div>

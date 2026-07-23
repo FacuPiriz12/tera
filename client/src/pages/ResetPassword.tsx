@@ -61,7 +61,7 @@ export default function ResetPasswordPage() {
     if (passwordRequirements.some(req => !req.met)) {
       toast({
         title: "Error",
-        description: "Password does not meet requirements",
+        description: t('common.auth.resetPassword.passwordReqsNotMet'),
         variant: "destructive",
       });
       return;
@@ -101,14 +101,14 @@ export default function ResetPasswordPage() {
               <XCircle className="w-10 h-10 text-red-600" />
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              Enlace inválido o vencido
+              {t('common.auth.resetPassword.invalidTitle')}
             </h1>
             <p className="text-gray-600 mb-8">
-              Este enlace de restablecimiento ya no es válido. Solicitá uno nuevo.
+              {t('common.auth.resetPassword.invalidDesc')}
             </p>
             <Link href="/forgot-password">
               <Button className="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-xl font-semibold">
-                Solicitar nuevo enlace
+                {t('common.auth.resetPassword.requestNew')}
               </Button>
             </Link>
           </div>

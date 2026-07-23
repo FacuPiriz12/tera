@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -56,13 +57,14 @@ interface FolderBrowserModalProps {
   onSelect: (folder: { id?: string; path?: string; name: string; provider: Provider }) => void;
 }
 
-export default function FolderBrowserModal({ 
-  open, 
-  onOpenChange, 
+export default function FolderBrowserModal({
+  open,
+  onOpenChange,
   provider,
   initialParentId,
-  onSelect 
+  onSelect
 }: FolderBrowserModalProps) {
+  const { t } = useTranslation();
   // Set default initial parent based on provider
   const getDefaultParent = (provider: Provider) => {
     return provider === 'google' ? 'root' : '/';
@@ -185,8 +187,8 @@ export default function FolderBrowserModal({
   if (foldersError) {
     if (isUnauthorizedError(foldersError)) {
       toast({
-        title: "No autorizado",
-        description: "Iniciando sesión de nuevo...",
+        title: t('appMisc.accessDenied'),
+        description: t('folderMisc.signingIn'),
         variant: "destructive",
       });
       setTimeout(() => {
@@ -202,30 +204,30 @@ export default function FolderBrowserModal({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Folder className="w-5 h-5 text-red-500" />
-              Error al cargar carpetas
+              {t('folderMisc.loadErrorTitle', 'Error al cargar carpetas')}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-sm text-red-700 dark:text-red-300" data-testid="text-error-message">
                 {errorMessage}
               </p>
             </div>
-            
+
             <div className="flex justify-end space-x-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => onOpenChange(false)}
                 data-testid="button-close-error"
               >
-                Cerrar
+                {t('common.actions.close', 'Cerrar')}
               </Button>
-              <Button 
+              <Button
                 onClick={() => refetchFolders()}
                 data-testid="button-retry-folders"
               >
-                Reintentar
+                {t('common.actions.retry', 'Reintentar')}
               </Button>
             </div>
           </div>
@@ -240,7 +242,7 @@ export default function FolderBrowserModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Folder className="w-5 h-5 text-blue-600" />
-            Seleccionar Carpeta de Destino
+            {t('folderMisc.selectDestTitle', 'Seleccionar Carpeta de Destino')}
           </DialogTitle>
         </DialogHeader>
         
@@ -290,7 +292,7 @@ export default function FolderBrowserModal({
               data-testid="button-go-back"
             >
               <ArrowLeft className="w-4 h-4" />
-              Volver
+              {t('common.actions.back', 'Volver')}
             </Button>
 
             <Button
@@ -298,7 +300,7 @@ export default function FolderBrowserModal({
               className="bg-green-600 hover:bg-green-700"
               data-testid="button-select-current"
             >
-              Seleccionar esta carpeta
+              {t('folderMisc.selectThisFolder', 'Seleccionar esta carpeta')}
             </Button>
           </div>
 
@@ -310,14 +312,14 @@ export default function FolderBrowserModal({
                   <div className="text-center space-y-4">
                     <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-500" />
                     <p className="text-sm text-muted-foreground" data-testid="text-loading-folders">
-                      Cargando carpetas...
+                      {t('folderMisc.loading', 'Cargando carpetas...')}
                     </p>
                   </div>
                 </div>
               ) : folders.length === 0 ? (
                 <div className="flex items-center justify-center py-8">
                   <p className="text-sm text-muted-foreground" data-testid="text-no-folders">
-                    No hay subcarpetas en esta ubicación
+                    {t('folderMisc.noSubfolders')}
                   </p>
                 </div>
               ) : (
@@ -342,12 +344,12 @@ export default function FolderBrowserModal({
 
           {/* Action buttons */}
           <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => onOpenChange(false)}
               data-testid="button-cancel-selection"
             >
-              Cancelar
+              {t('common.actions.cancel', 'Cancelar')}
             </Button>
           </div>
         </div>

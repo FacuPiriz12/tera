@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { TransferProvider } from "@/contexts/TransferContext";
 import GlobalTransferIndicator from "@/components/GlobalTransferIndicator";
 import BottomNav from "@/components/BottomNav";
@@ -38,13 +39,14 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const { isAuthenticated, isLoading, user, error } = useAuth();
-  
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Verificando autenticación...</p>
+          <p className="text-muted-foreground">{t('appMisc.verifying')}</p>
         </div>
       </div>
     );
@@ -124,21 +126,21 @@ function Router() {
       <Route path="/admin">
         {() => {
           if (!isLoggedIn) return <AuthPage />;
-          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">{t('appMisc.accessDenied')}</h1><p>{t('appMisc.accessDeniedDesc')}</p></div>;
           return <AdminDashboard />;
         }}
       </Route>
       <Route path="/admin/users">
         {() => {
           if (!isLoggedIn) return <AuthPage />;
-          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">{t('appMisc.accessDenied')}</h1><p>{t('appMisc.accessDeniedDesc')}</p></div>;
           return <AdminUsers />;
         }}
       </Route>
       <Route path="/admin/operations">
         {() => {
           if (!isLoggedIn) return <AuthPage />;
-          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">Acceso Denegado</h1><p>No tienes permisos para acceder a esta página.</p></div>;
+          if (!isAdmin) return <div className="p-6 max-w-7xl mx-auto"><h1 className="text-3xl font-bold mb-4">{t('appMisc.accessDenied')}</h1><p>{t('appMisc.accessDeniedDesc')}</p></div>;
           return <AdminOperations />;
         }}
       </Route>

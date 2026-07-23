@@ -16,8 +16,10 @@ import { RefreshCw, Filter, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 export default function AdminOperations() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState({
     userId: '',
@@ -60,14 +62,14 @@ export default function AdminOperations() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/operations'] });
       toast({
-        title: "Operación reintentada",
-        description: "La operación ha sido reintentada correctamente",
+        title: t('adminPanel.opRetried'),
+        description: t('adminPanel.opRetriedDesc'),
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudo reintentar la operación",
+        description: error.message || t('adminPanel.opRetryError'),
         variant: "destructive",
       });
     },
@@ -103,7 +105,7 @@ export default function AdminOperations() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Cargando operaciones...</div>
+        <div className="text-lg">{t('adminOps.loading')}</div>
       </div>
     );
   }
@@ -111,7 +113,7 @@ export default function AdminOperations() {
   return (
     <div className="p-6 max-w-7xl mx-auto" data-testid="page-admin-operations">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Logs de Operaciones</h1>
+        <h1 className="text-3xl font-bold">{t('adminOps.title')}</h1>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -119,7 +121,7 @@ export default function AdminOperations() {
             data-testid="button-toggle-filters"
           >
             <Filter className="w-4 h-4 mr-2" />
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+            {showFilters ? t('adminOps.hideFilters') : t('adminOps.showFilters')}
           </Button>
         </div>
       </div>
@@ -129,52 +131,52 @@ export default function AdminOperations() {
         <Card className="p-6 mb-6" data-testid="card-filters">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="userId">ID de Usuario</Label>
+              <Label htmlFor="userId">{t('adminOps.userIdLabel')}</Label>
               <Input
                 id="userId"
                 value={filters.userId}
                 onChange={(e) => setFilters({ ...filters, userId: e.target.value })}
-                placeholder="Filtrar por usuario"
+                placeholder={t('adminOps.userIdPlaceholder')}
                 data-testid="input-filter-user-id"
               />
             </div>
             <div>
-              <Label htmlFor="status">Estado</Label>
+              <Label htmlFor="status">{t('adminOps.statusLabel')}</Label>
               <Select
                 value={filters.status}
                 onValueChange={(value) => setFilters({ ...filters, status: value })}
               >
                 <SelectTrigger data-testid="select-filter-status">
-                  <SelectValue placeholder="Todos los estados" />
+                  <SelectValue placeholder={t('adminOps.allStatuses')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="in_progress">En Progreso</SelectItem>
-                  <SelectItem value="completed">Completado</SelectItem>
-                  <SelectItem value="failed">Fallido</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                  <SelectItem value="">{t('adminOps.all')}</SelectItem>
+                  <SelectItem value="pending">{t('adminOps.pending')}</SelectItem>
+                  <SelectItem value="in_progress">{t('adminOps.inProgress')}</SelectItem>
+                  <SelectItem value="completed">{t('adminOps.completed')}</SelectItem>
+                  <SelectItem value="failed">{t('adminOps.failed')}</SelectItem>
+                  <SelectItem value="cancelled">{t('adminOps.cancelled')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="provider">Proveedor</Label>
+              <Label htmlFor="provider">{t('adminOps.providerLabel')}</Label>
               <Select
                 value={filters.provider}
                 onValueChange={(value) => setFilters({ ...filters, provider: value })}
               >
                 <SelectTrigger data-testid="select-filter-provider">
-                  <SelectValue placeholder="Todos los proveedores" />
+                  <SelectValue placeholder={t('adminOps.allProviders')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="">{t('adminOps.all')}</SelectItem>
                   <SelectItem value="google">Google Drive</SelectItem>
                   <SelectItem value="dropbox">Dropbox</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="startDate">Fecha Inicio</Label>
+              <Label htmlFor="startDate">{t('adminOps.startDateLabel')}</Label>
               <Input
                 id="startDate"
                 type="date"
@@ -184,7 +186,7 @@ export default function AdminOperations() {
               />
             </div>
             <div>
-              <Label htmlFor="endDate">Fecha Fin</Label>
+              <Label htmlFor="endDate">{t('adminOps.endDateLabel')}</Label>
               <Input
                 id="endDate"
                 type="date"
@@ -196,7 +198,7 @@ export default function AdminOperations() {
             <div className="flex items-end">
               <Button variant="outline" onClick={clearFilters} className="w-full" data-testid="button-clear-filters">
                 <X className="w-4 h-4 mr-2" />
-                Limpiar Filtros
+                {t('adminOps.clearFilters')}
               </Button>
             </div>
           </div>
@@ -209,13 +211,13 @@ export default function AdminOperations() {
             <thead className="bg-muted">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Usuario</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Archivo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Proveedor</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Progreso</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Fecha</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colUser')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colFile')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colProvider')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colStatus')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colProgress')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminOps.colDate')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">{t('adminOps.colActions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -265,7 +267,7 @@ export default function AdminOperations() {
 
         {data?.operations.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            No se encontraron operaciones con los filtros aplicados
+            {t('adminOps.noResults')}
           </div>
         )}
 
@@ -278,10 +280,10 @@ export default function AdminOperations() {
               disabled={page === 1}
               data-testid="button-prev-page"
             >
-              Anterior
+              {t('adminPanel.prev')}
             </Button>
             <span className="text-sm text-muted-foreground">
-              Página {page} de {data.totalPages} (Total: {data.total})
+              {t('adminPanel.pageOf', { page, total: data.totalPages, count: data.total })}
             </span>
             <Button
               variant="outline"
@@ -289,7 +291,7 @@ export default function AdminOperations() {
               disabled={page === data.totalPages}
               data-testid="button-next-page"
             >
-              Siguiente
+              {t('adminPanel.next')}
             </Button>
           </div>
         )}

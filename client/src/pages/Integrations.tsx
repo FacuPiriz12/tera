@@ -44,10 +44,10 @@ export default function Integrations() {
       dismissBanner();
     }
     if (params.get('error') === 'plan_required') {
-      const provider = params.get('provider') || 'este proveedor';
+      const provider = params.get('provider') || t('integrationsMisc.defaultProvider');
       toast({
-        title: "Función exclusiva Pro",
-        description: `${provider.charAt(0).toUpperCase() + provider.slice(1)} requiere un plan Pro o Business.`,
+        title: t('integrationsMisc.proTitle'),
+        description: t('integrationsMisc.proDesc', { provider: provider.charAt(0).toUpperCase() + provider.slice(1) }),
         variant: "destructive",
       });
       window.history.replaceState({}, '', '/integrations');

@@ -24,8 +24,10 @@ import { Shield, Ban, CheckCircle, Trash2, Settings, Mail } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useTranslation } from "react-i18next";
 
 export default function AdminUsers() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -63,14 +65,14 @@ export default function AdminUsers() {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       setEditDialogOpen(false);
       toast({
-        title: "Límites actualizados",
-        description: "Los límites del usuario se han actualizado correctamente",
+        title: t('adminPanel.users.toasts.limitsUpdated'),
+        description: t('adminPanel.users.toasts.limitsUpdatedDesc'),
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudieron actualizar los límites",
+        description: error.message || t('adminPanel.users.toasts.limitsError'),
         variant: "destructive",
       });
     },
@@ -86,8 +88,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
-        title: "Rol actualizado",
-        description: "El rol del usuario se ha actualizado correctamente",
+        title: t('adminPanel.users.toasts.roleUpdated'),
+        description: t('adminPanel.users.toasts.roleUpdatedDesc'),
       });
     },
   });
@@ -101,8 +103,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
-        title: "Usuario suspendido",
-        description: "El usuario ha sido suspendido correctamente",
+        title: t('adminPanel.users.toasts.suspended'),
+        description: t('adminPanel.users.toasts.suspendedDesc'),
       });
     },
   });
@@ -116,8 +118,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
-        title: "Usuario activado",
-        description: "El usuario ha sido activado correctamente",
+        title: t('adminPanel.users.toasts.activated'),
+        description: t('adminPanel.users.toasts.activatedDesc'),
       });
     },
   });
@@ -131,8 +133,8 @@ export default function AdminUsers() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       toast({
-        title: "Usuario eliminado",
-        description: "El usuario ha sido eliminado correctamente",
+        title: t('adminPanel.users.toasts.deleted'),
+        description: t('adminPanel.users.toasts.deletedDesc'),
       });
     },
   });
@@ -152,10 +154,10 @@ export default function AdminUsers() {
       setEmailDialogOpen(false);
       setEmailSubject('');
       setEmailMessage('');
-      toast({ title: "Email enviado", description: `Mensaje enviado a ${emailTarget?.email}` });
+      toast({ title: t('adminPanel.users.toasts.emailSent'), description: t('adminPanel.users.toasts.emailSentDesc', { email: emailTarget?.email }) });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "No se pudo enviar el email", variant: "destructive" });
+      toast({ title: "Error", description: error.message || t('adminPanel.users.toasts.emailError'), variant: "destructive" });
     },
   });
 
@@ -193,7 +195,7 @@ export default function AdminUsers() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Cargando usuarios...</div>
+        <div className="text-lg">{t('adminPanel.users.loading')}</div>
       </div>
     );
   }
@@ -201,9 +203,9 @@ export default function AdminUsers() {
   return (
     <div className="p-6 max-w-7xl mx-auto" data-testid="page-admin-users">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
+        <h1 className="text-3xl font-bold">{t('adminPanel.users.title')}</h1>
         <div className="text-sm text-muted-foreground">
-          Total: {data?.total || 0} usuarios
+          {t('adminPanel.users.total', { count: data?.total || 0 })}
         </div>
       </div>
 
@@ -212,12 +214,12 @@ export default function AdminUsers() {
           <table className="w-full" data-testid="table-users">
             <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Usuario</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Rol</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Límites</th>
-                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.user')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.email')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.role')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.status')}</th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.limits')}</th>
+                <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">{t('adminPanel.users.cols.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -239,7 +241,7 @@ export default function AdminUsers() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="user">Usuario</SelectItem>
+                        <SelectItem value="user">{t('adminPanel.users.roleUser')}</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -247,11 +249,11 @@ export default function AdminUsers() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     {user.isActive ? (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Activo
+                        {t('adminPanel.users.statusActive')}
                       </span>
                     ) : (
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                        Suspendido
+                        {t('adminPanel.users.statusSuspended')}
                       </span>
                     )}
                   </td>
@@ -265,7 +267,7 @@ export default function AdminUsers() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenEmail(user)}
-                        title="Enviar email"
+                        title={t('adminPanel.users.sendEmailTitle')}
                       >
                         <Mail className="w-4 h-4" />
                       </Button>
@@ -300,7 +302,7 @@ export default function AdminUsers() {
                         variant="ghost"
                         size="sm"
                         onClick={() => {
-                          if (confirm('¿Estás seguro de eliminar este usuario?')) {
+                          if (confirm(t('adminPanel.users.confirmDelete'))) {
                             deleteUserMutation.mutate(user.id);
                           }
                         }}
@@ -325,10 +327,10 @@ export default function AdminUsers() {
               disabled={page === 1}
               data-testid="button-prev-page"
             >
-              Anterior
+              {t('adminPanel.prev')}
             </Button>
             <span className="text-sm text-muted-foreground">
-              Página {page} de {data.totalPages}
+              {t('adminPanel.pageOfShort', { page, total: data.totalPages })}
             </span>
             <Button
               variant="outline"
@@ -336,7 +338,7 @@ export default function AdminUsers() {
               disabled={page === data.totalPages}
               data-testid="button-next-page"
             >
-              Siguiente
+              {t('adminPanel.next')}
             </Button>
           </div>
         )}
@@ -346,14 +348,14 @@ export default function AdminUsers() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent data-testid="dialog-edit-limits">
           <DialogHeader>
-            <DialogTitle>Editar Límites de Usuario</DialogTitle>
+            <DialogTitle>{t('adminPanel.users.editLimitsTitle')}</DialogTitle>
             <DialogDescription>
-              Modifica los límites para {selectedUser?.firstName} {selectedUser?.lastName}
+              {t('adminPanel.users.editLimitsDesc', { name: `${selectedUser?.firstName} ${selectedUser?.lastName}` })}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitLimits} className="space-y-4">
             <div>
-              <Label htmlFor="maxStorageBytes">Almacenamiento Máximo (GB)</Label>
+              <Label htmlFor="maxStorageBytes">{t('adminPanel.users.maxStorage')}</Label>
               <Input
                 id="maxStorageBytes"
                 name="maxStorageBytes"
@@ -363,7 +365,7 @@ export default function AdminUsers() {
               />
             </div>
             <div>
-              <Label htmlFor="maxConcurrentOperations">Operaciones Concurrentes</Label>
+              <Label htmlFor="maxConcurrentOperations">{t('adminPanel.users.concurrentOps')}</Label>
               <Input
                 id="maxConcurrentOperations"
                 name="maxConcurrentOperations"
@@ -373,7 +375,7 @@ export default function AdminUsers() {
               />
             </div>
             <div>
-              <Label htmlFor="maxDailyOperations">Operaciones Diarias</Label>
+              <Label htmlFor="maxDailyOperations">{t('adminPanel.users.dailyOps')}</Label>
               <Input
                 id="maxDailyOperations"
                 name="maxDailyOperations"
@@ -384,10 +386,10 @@ export default function AdminUsers() {
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancelar
+                {t('adminPanel.users.cancel')}
               </Button>
               <Button type="submit" disabled={updateLimitsMutation.isPending} data-testid="button-save-limits">
-                {updateLimitsMutation.isPending ? "Guardando..." : "Guardar"}
+                {updateLimitsMutation.isPending ? t('adminPanel.users.saving') : t('adminPanel.users.save')}
               </Button>
             </div>
           </form>
@@ -398,32 +400,32 @@ export default function AdminUsers() {
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Enviar email a {emailTarget?.firstName || emailTarget?.email}</DialogTitle>
+            <DialogTitle>{t('adminPanel.users.sendEmailTitle')} {emailTarget?.firstName || emailTarget?.email}</DialogTitle>
             <DialogDescription>{emailTarget?.email}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div>
-              <Label htmlFor="email-subject">Asunto</Label>
+              <Label htmlFor="email-subject">{t('adminPanel.users.emailSubject')}</Label>
               <Input
                 id="email-subject"
                 value={emailSubject}
                 onChange={(e) => setEmailSubject(e.target.value)}
-                placeholder="Asunto del mensaje"
+                placeholder={t('adminPanel.users.emailSubjectPlaceholder')}
               />
             </div>
             <div>
-              <Label htmlFor="email-message">Mensaje</Label>
+              <Label htmlFor="email-message">{t('adminPanel.users.emailBody')}</Label>
               <Textarea
                 id="email-message"
                 value={emailMessage}
                 onChange={(e) => setEmailMessage(e.target.value)}
-                placeholder="Escribí tu mensaje acá..."
+                placeholder={t('adminPanel.users.emailBodyPlaceholder')}
                 rows={6}
               />
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
-                Cancelar
+                {t('adminPanel.users.cancel')}
               </Button>
               <Button
                 disabled={!emailSubject || !emailMessage || sendEmailMutation.isPending}
@@ -434,7 +436,7 @@ export default function AdminUsers() {
                   lang: emailTarget.language || 'es',
                 })}
               >
-                {sendEmailMutation.isPending ? "Enviando..." : "Enviar email"}
+                {sendEmailMutation.isPending ? t('adminPanel.users.sendingEmail') : t('adminPanel.users.sendEmail')}
               </Button>
             </div>
           </div>

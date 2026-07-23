@@ -67,6 +67,7 @@ import ShareFileDialog from "@/components/ShareFileDialog";
 import FolderBrowserModal from "@/components/FolderBrowserModal";
 import type { DriveFile } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 
 interface ShareRequest {
   id: string;
@@ -124,21 +125,27 @@ function getProviderIcon(provider: string) {
   }
 }
 
-function getStatusBadge(status: ShareRequest["status"]) {
-  switch (status) {
-    case "pending":
-      return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">Pendiente</Badge>;
-    case "accepted":
-      return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">Aceptado</Badge>;
-    case "rejected":
-      return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-300">Rechazado</Badge>;
-    case "cancelled":
-      return <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-300">Cancelado</Badge>;
-    case "expired":
-      return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300">Expirado</Badge>;
-    default:
-      return null;
-  }
+function getStatusBadge(status: ShareRequest["status"], t: (key: string) => string) {
+  const labels: Record<string, string> = {
+    pending: t('shareInbox.statusPending'),
+    accepted: t('shareInbox.statusAccepted'),
+    rejected: t('shareInbox.statusRejected'),
+    cancelled: t('shareInbox.statusCancelled'),
+    expired: t('shareInbox.statusExpired'),
+  };
+  const styles: Record<string, string> = {
+    pending: "bg-yellow-50 text-yellow-700 border-yellow-300",
+    accepted: "bg-green-50 text-green-700 border-green-300",
+    rejected: "bg-red-50 text-red-700 border-red-300",
+    cancelled: "bg-gray-50 text-gray-700 border-gray-300",
+    expired: "bg-orange-50 text-orange-700 border-orange-300",
+  };
+  if (!labels[status]) return null;
+  return (
+    <Badge variant="outline" className={styles[status]}>
+      {labels[status]}
+    </Badge>
+  );
 }
 
 function ShareItemSkeleton() {
@@ -159,6 +166,7 @@ function ShareItemSkeleton() {
 }
 
 function EmptyState({ type }: { type: "inbox" | "outbox" }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="rounded-full bg-gray-100 dark:bg-gray-800 p-6 mb-4">
@@ -169,12 +177,10 @@ function EmptyState({ type }: { type: "inbox" | "outbox" }) {
         )}
       </div>
       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-        {type === "inbox" ? "No hay archivos recibidos" : "No has compartido archivos"}
+        {type === "inbox" ? t('shareInbox.emptyInboxTitle') : t('shareInbox.emptyOutboxTitle')}
       </h3>
       <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-        {type === "inbox"
-          ? "Cuando otros usuarios te compartan archivos, aparecerán aquí."
-          : "Los archivos que compartas con otros usuarios aparecerán aquí."}
+        {type === "inbox" ? t('shareInbox.emptyInboxDesc') : t('shareInbox.emptyOutboxDesc')}
       </p>
     </div>
   );
@@ -189,6 +195,7 @@ interface InboxItemProps {
 }
 
 function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: InboxItemProps) {
+  const { t } = useTranslation();
   return (
     <Card className="mb-3 hover:shadow-md transition-shadow" data-testid={`share-inbox-item-${share.id}`}>
       <CardContent className="p-4">
@@ -199,15 +206,15 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
               <User className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
                 {share.senderName || share.senderEmail}
               </span>
-              {getStatusBadge(share.status)}
+              {getStatusBadge(share.status, t)}
             </div>
-            
+
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
               {share.fileType === "folder" ? (
                 <FolderOpen className="h-4 w-4" />
@@ -220,19 +227,19 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
               )}
               {getProviderIcon(share.provider)}
             </div>
-            
+
             {share.message && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">
                 "{share.message}"
               </p>
             )}
-            
+
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Clock className="h-3 w-3" />
               {formatDistanceToNow(new Date(share.createdAt), { addSuffix: true, locale: es })}
             </div>
           </div>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0" data-testid={`menu-share-${share.id}`}>
@@ -249,7 +256,7 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
                     data-testid={`menu-accept-${share.id}`}
                   >
                     <Check className="h-4 w-4 mr-2" />
-                    Aceptar
+                    {t('shareInbox.accept')}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onRespond(share.id, "reject")}
@@ -258,28 +265,28 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
                     data-testid={`menu-reject-${share.id}`}
                   >
                     <X className="h-4 w-4 mr-2" />
-                    Rechazar
+                    {t('shareInbox.reject')}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
-              
+
               <DropdownMenuItem onClick={() => onViewDetails(share)} data-testid={`menu-details-${share.id}`}>
                 <Eye className="h-4 w-4 mr-2" />
-                Ver detalles
+                {t('shareInbox.viewDetails')}
               </DropdownMenuItem>
-              
+
               {share.status === "accepted" && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => onSendTo(share, share.provider as "google" | "dropbox")} 
+                  <DropdownMenuItem
+                    onClick={() => onSendTo(share, share.provider as "google" | "dropbox")}
                     data-testid={`menu-sendto-${share.id}`}
                   >
                     <HardDrive className="h-4 w-4 mr-2" />
-                    Copiar a Mi Unidad
+                    {t('shareInbox.copyToDrive')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     onClick={() => {
                       const url = `/api/shares/${share.id}/download`;
                       window.open(url, '_blank');
@@ -287,7 +294,7 @@ function InboxItem({ share, onRespond, onSendTo, onViewDetails, isResponding }: 
                     data-testid={`menu-download-${share.id}`}
                   >
                     <Plus className="h-4 w-4 mr-2" />
-                    Descargar
+                    {t('shareInbox.download')}
                   </DropdownMenuItem>
                 </>
               )}
@@ -304,6 +311,7 @@ function OutboxItem({ share, onCancel, isCancelling }: {
   onCancel: (id: string) => void;
   isCancelling: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <Card className="mb-3 hover:shadow-md transition-shadow" data-testid={`share-outbox-item-${share.id}`}>
       <CardContent className="p-4">
@@ -314,16 +322,16 @@ function OutboxItem({ share, onCancel, isCancelling }: {
               <User className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Para:</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{t('shareInbox.to')}</span>
               <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
                 {share.recipientName || share.recipientEmail}
               </span>
-              {getStatusBadge(share.status)}
+              {getStatusBadge(share.status, t)}
             </div>
-            
+
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
               {share.fileType === "folder" ? (
                 <FolderOpen className="h-4 w-4" />
@@ -336,19 +344,19 @@ function OutboxItem({ share, onCancel, isCancelling }: {
               )}
               {getProviderIcon(share.provider)}
             </div>
-            
+
             {share.message && (
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 italic">
                 "{share.message}"
               </p>
             )}
-            
+
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Clock className="h-3 w-3" />
               {formatDistanceToNow(new Date(share.createdAt), { addSuffix: true, locale: es })}
             </div>
           </div>
-          
+
           {share.status === "pending" && (
             <Button
               size="sm"
@@ -393,10 +401,11 @@ interface FilePickerDialogProps {
 }
 
 function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackButton }: FilePickerDialogProps) {
+  const { t } = useTranslation();
   const [selectedSource, setSelectedSource] = useState<"myfiles" | "google" | "dropbox">("myfiles");
   const [currentPath, setCurrentPath] = useState<string>("");
   const [pathHistory, setPathHistory] = useState<Array<{name: string, path: string}>>([]);
-  
+
   const { data: googleStatus } = useQuery({
     queryKey: ['/api/auth/google/status'],
     enabled: open
@@ -454,8 +463,8 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
   const myFiles = myFilesResponse?.files || [];
   const googleFilesFromMyFiles = myFiles.filter(f => f.provider === "google");
   const dropboxFilesFromMyFiles = myFiles.filter(f => f.provider === "dropbox");
-  
-  const isLoading = selectedSource === "myfiles" ? myFilesLoading : 
+
+  const isLoading = selectedSource === "myfiles" ? myFilesLoading :
                     selectedSource === "google" ? googleLoading : dropboxLoading;
 
   const handleFolderClick = (file: CloudFile) => {
@@ -489,11 +498,11 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
       handleFolderClick(file);
       return;
     }
-    
-    const provider = selectedSource === "myfiles" 
+
+    const provider = selectedSource === "myfiles"
       ? ('provider' in file ? file.provider as "google" | "dropbox" : "google")
       : selectedSource as "google" | "dropbox";
-    
+
     onSelectFile(file, provider);
   };
 
@@ -515,10 +524,10 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-blue-600" />
-            Seleccionar archivo para compartir
+            {t('shareInbox.pickerTitle')}
           </DialogTitle>
           <DialogDescription>
-            Elige un archivo o carpeta de tu almacenamiento
+            {t('shareInbox.pickerDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -526,20 +535,20 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
           <TabsList className="grid w-full grid-cols-3 mb-4">
             <TabsTrigger value="myfiles" className="flex items-center gap-1 text-xs" data-testid="tab-myfiles">
               <HardDrive className="h-3 w-3" />
-              Mis Archivos
+              {t('shareInbox.myFiles')}
             </TabsTrigger>
-            <TabsTrigger 
-              value="google" 
-              className="flex items-center gap-1 text-xs" 
+            <TabsTrigger
+              value="google"
+              className="flex items-center gap-1 text-xs"
               data-testid="tab-google-drive"
               disabled={!googleStatus?.connected}
             >
               <SiGoogledrive className="h-3 w-3" />
               Google Drive
             </TabsTrigger>
-            <TabsTrigger 
-              value="dropbox" 
-              className="flex items-center gap-1 text-xs" 
+            <TabsTrigger
+              value="dropbox"
+              className="flex items-center gap-1 text-xs"
               data-testid="tab-dropbox"
               disabled={!dropboxStatus?.connected}
             >
@@ -553,17 +562,17 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
               <Button variant="ghost" size="sm" onClick={handleGoHome} data-testid="button-go-home">
                 <Home className="h-4 w-4" />
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleGoBack} 
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleGoBack}
                 disabled={pathHistory.length === 0}
                 data-testid="button-go-back"
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm text-muted-foreground truncate">
-                {pathHistory.map(p => p.name).join(" / ") || "Raíz"}
+                {pathHistory.map(p => p.name).join(" / ") || t('shareInbox.root')}
               </span>
             </div>
           )}
@@ -579,15 +588,15 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Cloud className="h-12 w-12 text-gray-300 mb-4" />
                 <p className="text-sm text-muted-foreground">
-                  {selectedSource === "myfiles" 
-                    ? "No hay archivos guardados" 
-                    : selectedSource === "google" 
-                      ? (googleStatus?.connected ? "No hay archivos en esta carpeta" : "Conecta tu Google Drive primero")
-                      : (dropboxStatus?.connected ? "No hay archivos en esta carpeta" : "Conecta tu Dropbox primero")}
+                  {selectedSource === "myfiles"
+                    ? t('shareInbox.noSavedFiles')
+                    : selectedSource === "google"
+                      ? (googleStatus?.connected ? t('shareInbox.noFilesInFolder') : t('shareInbox.connectGdrive'))
+                      : (dropboxStatus?.connected ? t('shareInbox.noFilesInFolder') : t('shareInbox.connectDropbox'))}
                 </p>
                 {selectedSource === "myfiles" && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Ve a "Mis Archivos" para copiar archivos primero
+                    {t('shareInbox.goToMyFiles')}
                   </p>
                 )}
               </div>
@@ -599,7 +608,7 @@ function FilePickerDialog({ open, onOpenChange, onSelectFile, onBack, showBackBu
                   const fileSize = 'fileSize' in file ? file.fileSize : file.size;
                   const isFolder = 'isFolder' in file ? file.isFolder : ('mimeType' in file && file.mimeType?.includes('folder'));
                   const provider = 'provider' in file ? file.provider : selectedSource;
-                  
+
                   return (
                     <button
                       key={fileId}
@@ -643,6 +652,7 @@ interface ShareDetailsDialogProps {
 }
 
 function ShareDetailsDialog({ share, open, onOpenChange }: ShareDetailsDialogProps) {
+  const { t } = useTranslation();
   if (!share) return null;
 
   return (
@@ -651,7 +661,7 @@ function ShareDetailsDialog({ share, open, onOpenChange }: ShareDetailsDialogPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-blue-600" />
-            Detalles del archivo
+            {t('shareInbox.detailsTitle')}
           </DialogTitle>
         </DialogHeader>
 
@@ -675,32 +685,34 @@ function ShareDetailsDialog({ share, open, onOpenChange }: ShareDetailsDialogPro
 
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tipo:</span>
-              <span className="font-medium">{share.fileType === "folder" ? "Carpeta" : "Archivo"}</span>
+              <span className="text-muted-foreground">{t('shareInbox.typeLabel')}</span>
+              <span className="font-medium">
+                {share.fileType === "folder" ? t('shareInbox.typeFolder') : t('shareInbox.typeFile')}
+              </span>
             </div>
             {share.fileSize && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tamaño:</span>
+                <span className="text-muted-foreground">{t('shareInbox.sizeLabel')}</span>
                 <span className="font-medium">{formatFileSize(share.fileSize)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">De:</span>
+              <span className="text-muted-foreground">{t('shareInbox.fromLabel')}</span>
               <span className="font-medium">{share.senderName || share.senderEmail}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Fecha:</span>
+              <span className="text-muted-foreground">{t('shareInbox.dateLabel')}</span>
               <span className="font-medium">
                 {formatDistanceToNow(new Date(share.createdAt), { addSuffix: true, locale: es })}
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Estado:</span>
-              {getStatusBadge(share.status)}
+              <span className="text-muted-foreground">{t('shareInbox.statusLabel')}</span>
+              {getStatusBadge(share.status, t)}
             </div>
             {share.message && (
               <div className="pt-2 border-t">
-                <span className="text-sm text-muted-foreground block mb-1">Mensaje:</span>
+                <span className="text-sm text-muted-foreground block mb-1">{t('shareInbox.messageLabel')}</span>
                 <p className="text-sm italic bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                   "{share.message}"
                 </p>
@@ -715,6 +727,7 @@ function ShareDetailsDialog({ share, open, onOpenChange }: ShareDetailsDialogPro
 
 export default function ShareInbox() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -750,7 +763,7 @@ export default function ShareInbox() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredInbox = useMemo(() => {
-    return inbox.filter(s => 
+    return inbox.filter(s =>
       (s.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
        (s.senderName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
        (s.senderEmail || "").toLowerCase().includes(searchQuery.toLowerCase())) &&
@@ -759,7 +772,7 @@ export default function ShareInbox() {
   }, [inbox, searchQuery, statusFilter]);
 
   const filteredOutbox = useMemo(() => {
-    return outbox.filter(s => 
+    return outbox.filter(s =>
       (s.fileName.toLowerCase().includes(searchQuery.toLowerCase()) ||
        (s.recipientName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
        (s.recipientEmail || "").toLowerCase().includes(searchQuery.toLowerCase())) &&
@@ -775,17 +788,17 @@ export default function ShareInbox() {
       queryClient.invalidateQueries({ queryKey: ["/api/shares/inbox"] });
       queryClient.invalidateQueries({ queryKey: ["/api/drive-files"] });
       toast({
-        title: action === "accept" ? "Archivo aceptado" : "Archivo rechazado",
+        title: action === "accept" ? t('shareInbox.acceptedToast') : t('shareInbox.rejectedToast'),
         description: action === "accept"
-          ? "El archivo ha sido añadido a Mis Archivos."
-          : "Has rechazado el archivo compartido.",
+          ? t('shareInbox.acceptedToastDesc')
+          : t('shareInbox.rejectedToastDesc'),
       });
       setRespondingId(null);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "No se pudo procesar la respuesta. Intenta de nuevo.",
+        description: t('shareInbox.respondError'),
         variant: "destructive",
       });
       setRespondingId(null);
@@ -799,15 +812,15 @@ export default function ShareInbox() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shares/outbox"] });
       toast({
-        title: "Compartido cancelado",
-        description: "El archivo ya no será compartido con el destinatario.",
+        title: t('shareInbox.cancelledToast'),
+        description: t('shareInbox.cancelledToastDesc'),
       });
       setCancellingId(null);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "No se pudo cancelar el compartido. Intenta de nuevo.",
+        description: t('shareInbox.cancelError'),
         variant: "destructive",
       });
       setCancellingId(null);
@@ -815,23 +828,23 @@ export default function ShareInbox() {
   });
 
   const sendToMutation = useMutation({
-    mutationFn: async ({ shareId, provider, destinationFolderId, destinationPath }: { 
-      shareId: string; 
-      provider: "google" | "dropbox"; 
+    mutationFn: async ({ shareId, provider, destinationFolderId, destinationPath }: {
+      shareId: string;
+      provider: "google" | "dropbox";
       destinationFolderId?: string;
       destinationPath?: string;
     }) => {
-      return apiRequest("POST", `/api/shares/${shareId}/send-to`, { 
-        provider, 
+      return apiRequest("POST", `/api/shares/${shareId}/send-to`, {
+        provider,
         destinationFolderId,
-        destinationPath 
+        destinationPath
       });
     },
     onSuccess: (_, { provider }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/shares/inbox"] });
       toast({
-        title: "Archivo enviado",
-        description: `El archivo se está copiando a ${provider === "google" ? "Google Drive" : "Dropbox"}.`,
+        title: t('shareInbox.sentToast'),
+        description: t('shareInbox.sentToastDesc', { provider: provider === "google" ? "Google Drive" : "Dropbox" }),
       });
       setFolderBrowserOpen(false);
       setShareToSend(null);
@@ -839,7 +852,7 @@ export default function ShareInbox() {
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudo enviar el archivo. Intenta de nuevo.",
+        description: error.message || t('shareInbox.sendError'),
         variant: "destructive",
       });
     },
@@ -882,7 +895,7 @@ export default function ShareInbox() {
     const fileSize = file.fileSize || file.size;
     const mimeType = file.mimeType;
     const isFolder = mimeType?.includes('folder') || file.isFolder;
-    
+
     setFileToShare({
       id: file.copiedFileId || file.id?.toString() || "",
       name: fileName,
@@ -904,24 +917,24 @@ export default function ShareInbox() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <Mail className="h-6 w-6" />
-            Archivos Compartidos
+            {t('shareInbox.pageTitle')}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Gestiona los archivos que otros usuarios te han compartido
+            {t('shareInbox.pageDesc')}
           </p>
         </div>
         <div className="flex items-center gap-3">
           {pendingInboxCount > 0 && (
             <Badge className="bg-blue-500 text-white">
-              {pendingInboxCount} pendiente{pendingInboxCount > 1 ? "s" : ""}
+              {t('shareInbox.pendingBadge', { count: pendingInboxCount })}
             </Badge>
           )}
-          <Button 
+          <Button
             onClick={() => setFilePickerOpen(true)}
             data-testid="button-new-share"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Nuevo compartido
+            {t('shareInbox.newShare')}
           </Button>
         </div>
       </div>
@@ -931,7 +944,7 @@ export default function ShareInbox() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nombre o remitente..."
+              placeholder={t('shareInbox.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -940,14 +953,14 @@ export default function ShareInbox() {
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-[180px]">
-              <SelectValue placeholder="Estado" />
+              <SelectValue placeholder={t('shareInbox.statusFilterPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              <SelectItem value="pending">Pendientes</SelectItem>
-              <SelectItem value="accepted">Aceptados</SelectItem>
-              <SelectItem value="rejected">Rechazados</SelectItem>
-              <SelectItem value="cancelled">Cancelados</SelectItem>
+              <SelectItem value="all">{t('shareInbox.allStatuses')}</SelectItem>
+              <SelectItem value="pending">{t('shareInbox.pendingPl')}</SelectItem>
+              <SelectItem value="accepted">{t('shareInbox.acceptedPl')}</SelectItem>
+              <SelectItem value="rejected">{t('shareInbox.rejectedPl')}</SelectItem>
+              <SelectItem value="cancelled">{t('shareInbox.cancelledPl')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -955,14 +968,14 @@ export default function ShareInbox() {
         <TabsList className="grid w-full grid-cols-2 mb-6">
           <TabsTrigger value="inbox" className="flex items-center gap-2" data-testid="tab-inbox">
             <Inbox className="h-4 w-4" />
-            Bandeja de Entrada
+            {t('shareInbox.inboxTab')}
             {pendingInboxCount > 0 && (
               <Badge variant="secondary" className="ml-1">{pendingInboxCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger value="outbox" className="flex items-center gap-2" data-testid="tab-outbox">
             <Send className="h-4 w-4" />
-            Enviados
+            {t('shareInbox.outboxTab')}
           </TabsTrigger>
         </TabsList>
 
@@ -979,12 +992,12 @@ export default function ShareInbox() {
                 <Inbox className="h-8 w-8 text-blue-500" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery || statusFilter !== "all" ? "No se encontraron resultados" : "Tu bandeja está vacía"}
+                {searchQuery || statusFilter !== "all" ? t('shareInbox.emptyInboxSearch') : t('shareInbox.emptyInboxEmpty')}
               </h3>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                {searchQuery || statusFilter !== "all" 
-                  ? "Prueba con otros términos de búsqueda o filtros." 
-                  : "Cuando otros usuarios te compartan archivos, aparecerán aquí con opciones para aceptarlos o ver detalles."}
+                {searchQuery || statusFilter !== "all"
+                  ? t('shareInbox.emptyInboxSearchDesc')
+                  : t('shareInbox.emptyInboxEmptyDesc')}
               </p>
             </div>
           ) : (
@@ -1016,12 +1029,12 @@ export default function ShareInbox() {
                 <Send className="h-8 w-8 text-green-500" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                {searchQuery || statusFilter !== "all" ? "No se encontraron resultados" : "No has enviado nada aún"}
+                {searchQuery || statusFilter !== "all" ? t('shareInbox.emptyOutboxSearch') : t('shareInbox.emptyOutboxEmpty')}
               </h3>
               <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                {searchQuery || statusFilter !== "all" 
-                  ? "Prueba con otros términos de búsqueda o filtros." 
-                  : "Comienza a compartir archivos con otros usuarios haciendo clic en 'Nuevo compartido'."}
+                {searchQuery || statusFilter !== "all"
+                  ? t('shareInbox.emptyOutboxSearchDesc')
+                  : t('shareInbox.emptyOutboxEmptyDesc')}
               </p>
             </div>
           ) : (

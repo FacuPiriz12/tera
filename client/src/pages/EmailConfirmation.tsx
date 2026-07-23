@@ -162,7 +162,7 @@ export default function EmailConfirmation() {
           <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 text-center animate-in slide-in-from-bottom-2 duration-500">
             <Loader2 className="h-8 w-8 text-blue-500 animate-spin mx-auto mb-2" />
             <p className="text-blue-800 font-semibold text-sm leading-relaxed">
-              Confirmando tu dirección de correo electrónico...
+              {t('emailConfirmationConfirmingEmail')}
             </p>
           </div>
         )}
@@ -215,11 +215,11 @@ export default function EmailConfirmation() {
         </div>
 
         <div className="border-t border-gray-100 pt-8">
-          <p className="text-gray-400 text-sm font-bold mb-4">¿No eres tú?</p>
+          <p className="text-gray-400 text-sm font-bold mb-4">{t('emailVerificationWrongEmail')}</p>
           <Link href="/auth">
             <button className="inline-flex items-center text-sm font-bold text-gray-900 hover:text-blue-600 transition-colors group">
               <UserPlus className="w-4 h-4 mr-2" />
-              Registrarse con otro correo
+              {t('emailVerificationSignupDifferent')}
             </button>
           </Link>
         </div>

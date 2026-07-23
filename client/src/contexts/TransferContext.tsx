@@ -144,7 +144,7 @@ export function TransferProvider({ children }: { children: React.ReactNode }) {
       const jobData = JSON.parse(event.data);
       updateJob(jobData.jobId, { 
         status: 'pending',
-        errorMessage: `Reintentando (${jobData.attempts})...`
+        errorMessage: t('copy.retrying', { attempts: jobData.attempts })
       });
     });
 

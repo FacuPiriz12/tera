@@ -23,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { FileConflict } from "@shared/schema";
+import { useTranslation } from "react-i18next";
 
 interface ConflictResolutionModalProps {
   isOpen: boolean;
@@ -43,8 +44,8 @@ function formatBytes(bytes: number): string {
   return `${size.toFixed(2)} ${units[unitIndex]}`;
 }
 
-function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleString("es-ES", {
+function formatDate(date: string | Date, locale: string): string {
+  return new Date(date).toLocaleString(locale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -60,6 +61,8 @@ export default function ConflictResolutionModal({
   taskId,
 }: ConflictResolutionModalProps) {
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'es' ? 'es-ES' : 'en-US';
   const [selectedConflictId, setSelectedConflictId] = useState<string | null>(
     conflicts.length > 0 ? conflicts[0].id : null
   );
@@ -81,14 +84,13 @@ export default function ConflictResolutionModal({
     },
     onSuccess: (data: any) => {
       toast({
-        title: "✓ Conflicto resuelto",
-        description: `Se resolvió el conflicto con estrategia: ${data.conflict?.resolution}`,
+        title: t('conflict.toastResolved'),
+        description: t('conflict.toastResolvedDesc', { strategy: data.conflict?.resolution }),
       });
       queryClient.invalidateQueries({
         queryKey: ["/api/scheduled-tasks", taskId, "conflicts"],
       });
 
-      // Remove resolved conflict and show next one
       const nextConflict = conflicts.find((c) => c.id !== selectedConflictId);
       if (nextConflict) {
         setSelectedConflictId(nextConflict.id);
@@ -98,8 +100,8 @@ export default function ConflictResolutionModal({
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "No se pudo resolver el conflicto",
+        title: t('conflict.toastError'),
+        description: t('conflict.toastErrorDesc'),
         variant: "destructive",
       });
     },
@@ -114,17 +116,17 @@ export default function ConflictResolutionModal({
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            <DialogTitle>Resolver conflictos de sincronización</DialogTitle>
+            <DialogTitle>{t('conflict.title')}</DialogTitle>
           </div>
           <DialogDescription>
-            {conflicts.length} conflicto{conflicts.length !== 1 ? "s" : ""} pendiente{conflicts.length !== 1 ? "s" : ""} de resolver
+            {t('conflict.pendingDesc', { count: conflicts.length })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Conflict List */}
           <div className="space-y-2">
-            <p className="text-sm font-medium">Conflictos:</p>
+            <p className="text-sm font-medium">{t('conflict.listLabel')}</p>
             <div className="grid gap-2 max-h-[120px] overflow-y-auto">
               {conflicts.map((conflict) => (
                 <button
@@ -143,9 +145,9 @@ export default function ConflictResolutionModal({
                       <span className="font-medium text-sm">{conflict.fileName}</span>
                     </div>
                     {conflict.resolvedAt ? (
-                      <Badge className="bg-green-100 text-green-800">Resuelto</Badge>
+                      <Badge className="bg-green-100 text-green-800">{t('conflict.resolved')}</Badge>
                     ) : (
-                      <Badge className="bg-amber-100 text-amber-800">Pendiente</Badge>
+                      <Badge className="bg-amber-100 text-amber-800">{t('conflict.pending')}</Badge>
                     )}
                   </div>
                 </button>
@@ -164,10 +166,10 @@ export default function ConflictResolutionModal({
                   </h3>
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">
-                      Fuente: <span className="font-medium">{selectedConflict.sourceProvider}</span>
+                      {t('conflict.source')} <span className="font-medium">{(selectedConflict as any).sourceProvider}</span>
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Destino: <span className="font-medium">{selectedConflict.destProvider}</span>
+                      {t('conflict.dest')} <span className="font-medium">{(selectedConflict as any).destProvider}</span>
                     </p>
                   </div>
                 </div>
@@ -177,14 +179,14 @@ export default function ConflictResolutionModal({
                   {/* Source version */}
                   <div className="p-3 rounded-lg bg-muted">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">
-                      📁 {selectedConflict.sourceProvider}
+                      📁 {(selectedConflict as any).sourceProvider}
                     </p>
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3" />
                         <span>
                           {sourceVersion?.modifiedAt
-                            ? formatDate(sourceVersion.modifiedAt)
+                            ? formatDate(sourceVersion.modifiedAt, locale)
                             : "N/A"}
                         </span>
                       </div>
@@ -200,14 +202,14 @@ export default function ConflictResolutionModal({
                   {/* Dest version */}
                   <div className="p-3 rounded-lg bg-muted">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">
-                      📁 {selectedConflict.destProvider}
+                      📁 {(selectedConflict as any).destProvider}
                     </p>
                     <div className="space-y-1 text-xs">
                       <div className="flex items-center gap-2">
                         <Clock className="w-3 h-3" />
                         <span>
                           {destVersion?.modifiedAt
-                            ? formatDate(destVersion.modifiedAt)
+                            ? formatDate(destVersion.modifiedAt, locale)
                             : "N/A"}
                         </span>
                       </div>
@@ -224,7 +226,7 @@ export default function ConflictResolutionModal({
                 {/* Resolution strategy */}
                 <div className="pt-2 border-t">
                   <p className="text-xs font-semibold text-muted-foreground mb-3">
-                    Estrategia de resolución:
+                    {t('conflict.strategy')}
                   </p>
 
                   <div className="space-y-2">
@@ -232,17 +234,15 @@ export default function ConflictResolutionModal({
                     <Button
                       variant="outline"
                       className="w-full justify-start text-sm h-auto py-2"
-                      onClick={() =>
-                        resolveMutation.mutate("keep_source")
-                      }
+                      onClick={() => resolveMutation.mutate("keep_source")}
                       disabled={resolveMutation.isPending}
                       data-testid="button-keep-source"
                     >
                       <ArrowRight className="w-4 h-4 mr-2" />
                       <div className="text-left">
-                        <p className="font-medium">Mantener {selectedConflict.sourceProvider}</p>
+                        <p className="font-medium">{t('conflict.keepSource', { provider: (selectedConflict as any).sourceProvider })}</p>
                         <p className="text-xs text-muted-foreground">
-                          Usa la versión de {selectedConflict.sourceProvider}
+                          {t('conflict.keepSourceDesc', { provider: (selectedConflict as any).sourceProvider })}
                         </p>
                       </div>
                     </Button>
@@ -251,28 +251,24 @@ export default function ConflictResolutionModal({
                     <Button
                       variant="outline"
                       className="w-full justify-start text-sm h-auto py-2"
-                      onClick={() =>
-                        resolveMutation.mutate("keep_newer")
-                      }
+                      onClick={() => resolveMutation.mutate("keep_newer")}
                       disabled={resolveMutation.isPending}
                       data-testid="button-keep-newer"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-2" />
                       <div className="text-left">
-                        <p className="font-medium">Mantener la más reciente</p>
+                        <p className="font-medium">{t('conflict.keepNewer')}</p>
                         <p className="text-xs text-muted-foreground">
-                          Usa la versión más nueva (automático)
+                          {t('conflict.keepNewerDesc')}
                         </p>
                       </div>
                     </Button>
 
-                    {/* Keep Both (Versioning) */}
+                    {/* Keep Both */}
                     <Button
                       variant="outline"
                       className="w-full justify-start text-sm h-auto py-2"
-                      onClick={() =>
-                        resolveMutation.mutate("keep_target")
-                      }
+                      onClick={() => resolveMutation.mutate("keep_target")}
                       disabled={resolveMutation.isPending}
                       data-testid="button-keep-both"
                     >
@@ -282,9 +278,9 @@ export default function ConflictResolutionModal({
                         <FileText className="w-4 h-4 mr-2" />
                       )}
                       <div className="text-left">
-                        <p className="font-medium">Mantener ambas versiones</p>
+                        <p className="font-medium">{t('conflict.keepBoth')}</p>
                         <p className="text-xs text-muted-foreground">
-                          La otra se archiva como versión anterior
+                          {t('conflict.keepBothDesc')}
                         </p>
                       </div>
                     </Button>
@@ -297,7 +293,7 @@ export default function ConflictResolutionModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} data-testid="button-close-conflicts">
-            Cerrar
+            {t('conflict.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

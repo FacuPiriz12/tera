@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { apiRequest } from '@/lib/queryClient';
+import { useTranslation } from 'react-i18next';
 
 export interface FolderSelection {
   id: string;
@@ -91,6 +92,7 @@ export default function FolderPicker({
   disabled,
   placeholder,
 }: FolderPickerProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [breadcrumb, setBreadcrumb] = useState<FolderItem[]>([]);
   const [s3Bucket, setS3Bucket] = useState('');
@@ -144,7 +146,7 @@ export default function FolderPicker({
   }
 
   const canConfirm = provider !== 's3' || !!s3Bucket;
-  const buttonLabel = value ? value.name : (placeholder ?? 'Seleccionar carpeta...');
+  const buttonLabel = value ? value.name : (placeholder ?? t('folderMisc.selectFolder', 'Seleccionar carpeta...'));
 
   return (
     <>
@@ -193,7 +195,7 @@ export default function FolderPicker({
           <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 px-3 py-2 flex items-center gap-2 text-sm">
             <FolderOpen className="w-4 h-4 text-blue-500 flex-shrink-0" />
             <span className="font-medium text-blue-900 dark:text-blue-100 truncate">{currentFolder.name}</span>
-            <span className="text-blue-400 text-xs ml-auto whitespace-nowrap">carpeta actual</span>
+            <span className="text-blue-400 text-xs ml-auto whitespace-nowrap">{t('folderMisc.currentFolder', 'carpeta actual')}</span>
           </div>
 
           {/* Folder list */}
@@ -204,11 +206,11 @@ export default function FolderPicker({
               </div>
             ) : isError ? (
               <div className="py-6 text-center text-sm text-red-500 px-4">
-                No se pudo cargar. ¿Está conectado este proveedor?
+                {t('folderMisc.loadError')}
               </div>
             ) : folders.length === 0 ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                {provider === 's3' && !s3Bucket ? 'No hay buckets disponibles' : 'No hay subcarpetas'}
+                {provider === 's3' && !s3Bucket ? t('folderMisc.noBuckets', 'No hay buckets disponibles') : t('folderMisc.noSubfolders')}
               </div>
             ) : (
               folders.map(folder => (
@@ -228,10 +230,10 @@ export default function FolderPicker({
 
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => setOpen(false)}>
-              Cancelar
+              {t('common.actions.cancel', 'Cancelar')}
             </Button>
             <Button type="button" onClick={handleConfirm} disabled={!canConfirm}>
-              Usar &ldquo;{currentFolder.name}&rdquo;
+              {t('folderMisc.useFolder', 'Usar')} &ldquo;{currentFolder.name}&rdquo;
             </Button>
           </DialogFooter>
         </DialogContent>

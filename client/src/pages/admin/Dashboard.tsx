@@ -2,8 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Users, Activity, CheckCircle2, XCircle, Clock, TrendingUp, HardDrive } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useTranslation } from "react-i18next";
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
   const { data: metrics, isLoading } = useQuery<{
     totalUsers: number;
     activeUsers: number;
@@ -21,7 +23,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Cargando métricas...</div>
+        <div className="text-lg">{t('adminPanel.loading')}</div>
       </div>
     );
   }
@@ -45,14 +47,14 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto" data-testid="page-admin-dashboard">
-      <h1 className="text-3xl font-bold mb-6">Panel de Administración</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('adminPanel.title')}</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card className="p-6" data-testid="card-total-users">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Usuarios</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.totalUsers')}</p>
               <p className="text-3xl font-bold">{metrics?.totalUsers || 0}</p>
             </div>
             <Users className="w-10 h-10 text-primary" />
@@ -62,7 +64,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-active-users">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Usuarios Activos</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.activeUsers')}</p>
               <p className="text-3xl font-bold">{metrics?.activeUsers || 0}</p>
             </div>
             <Activity className="w-10 h-10 text-green-500" />
@@ -72,7 +74,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-operations-today">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Operaciones Hoy</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.operationsToday')}</p>
               <p className="text-3xl font-bold">{metrics?.operationsToday || 0}</p>
             </div>
             <TrendingUp className="w-10 h-10 text-blue-500" />
@@ -82,7 +84,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-success-rate">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Tasa de Éxito</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.successRate')}</p>
               <p className="text-3xl font-bold">{metrics?.successRate.toFixed(1) || 0}%</p>
             </div>
             <CheckCircle2 className="w-10 h-10 text-green-600" />
@@ -95,7 +97,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-total-operations">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Operaciones</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.totalOperations')}</p>
               <p className="text-2xl font-bold">{metrics?.totalOperations || 0}</p>
             </div>
             <Clock className="w-8 h-8 text-orange-500" />
@@ -105,7 +107,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-avg-duration">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Duración Promedio</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.avgDuration')}</p>
               <p className="text-2xl font-bold">{formatDuration(metrics?.avgDuration || 0)}</p>
             </div>
             <Activity className="w-8 h-8 text-purple-500" />
@@ -115,7 +117,7 @@ export default function AdminDashboard() {
         <Card className="p-6" data-testid="card-total-storage">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Almacenamiento Total</p>
+              <p className="text-sm text-muted-foreground">{t('adminPanel.totalStorage')}</p>
               <p className="text-2xl font-bold">{formatBytes(metrics?.totalStorage || 0)}</p>
             </div>
             <HardDrive className="w-8 h-8 text-indigo-500" />
@@ -127,7 +129,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Operations by Status */}
         <Card className="p-6" data-testid="chart-operations-status">
-          <h2 className="text-xl font-bold mb-4">Operaciones por Estado</h2>
+          <h2 className="text-xl font-bold mb-4">{t('adminPanel.byStatus')}</h2>
           {metrics && metrics.operationsByStatus.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -150,14 +152,14 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              No hay datos disponibles
+              {t('adminPanel.noData')}
             </div>
           )}
         </Card>
 
         {/* Operations by Provider */}
         <Card className="p-6" data-testid="chart-operations-provider">
-          <h2 className="text-xl font-bold mb-4">Operaciones por Proveedor</h2>
+          <h2 className="text-xl font-bold mb-4">{t('adminPanel.byProvider')}</h2>
           {metrics && metrics.operationsByProvider.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={metrics.operationsByProvider}>
@@ -166,12 +168,12 @@ export default function AdminDashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="count" fill="#3b82f6" name="Operaciones" />
+                <Bar dataKey="count" fill="#3b82f6" name={t('adminPanel.opName')} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              No hay datos disponibles
+              {t('adminPanel.noData')}
             </div>
           )}
         </Card>

@@ -210,7 +210,7 @@ export function useAuth() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error al iniciar sesión",
+        title: i18n.t('authMisc.loginError'),
         description: error.message,
         variant: "destructive",
       });
@@ -242,7 +242,7 @@ export function useAuth() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error al registrarse",
+        title: i18n.t('authMisc.registerError', 'Error al registrarse'),
         description: error.message,
         variant: "destructive",
       });
