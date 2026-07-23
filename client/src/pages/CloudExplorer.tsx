@@ -546,9 +546,9 @@ function CloudPanel({
                   {isS3BucketSelector
                     ? `${sorted.length} bucket${sorted.length !== 1 ? 's' : ''}`
                     : <>
-                        {folderCount > 0 && `${folderCount} ${folderCount !== 1 ? t('pages.cloudExplorer.folders') : t('pages.cloudExplorer.folder')}`}
+                        {folderCount > 0 && `${folderCount} ${folderCount !== 1 ? t('pages.cloudExplorer.foldersCount') : t('pages.cloudExplorer.folderCount')}`}
                         {folderCount > 0 && fileCount > 0 && ' · '}
-                        {fileCount > 0 && `${fileCount} ${fileCount !== 1 ? t('pages.cloudExplorer.files') : t('pages.cloudExplorer.file')}`}
+                        {fileCount > 0 && `${fileCount} ${fileCount !== 1 ? t('pages.cloudExplorer.filesCount') : t('pages.cloudExplorer.fileCount')}`}
                       </>
                   }
                 </p>
