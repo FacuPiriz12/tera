@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { Readable } from 'stream';
 import { storage } from '../storage';
 import { DuplicateDetectionService } from './duplicateDetectionService';
+import { sendTaskNotificationEmail } from '../lib/email';
 
 export interface DriveFileInfo {
   id: string;
@@ -1034,134 +1035,23 @@ export class GoogleDriveService {
   }
 
   /**
-   * Send completion email to user using Gmail API
+   * Send completion email to user via Resend
    */
   private async sendCompletionEmail(operationId: string, result: DriveFileInfo, duration: number): Promise<void> {
     try {
       const user = await storage.getUser(this.userId);
-      if (!user?.email) {
-        console.log('User email not available, skipping email notification');
-        return;
-      }
-
-      if (user.membershipPlan === 'free' && user.role !== 'admin') {
-        console.log('Free plan: skipping completion email notification');
-        return;
-      }
-
-      if (!user.googleAccessToken) {
-        console.log('User not connected to Google, skipping email notification');
-        return;
-      }
+      if (!user?.email) return;
 
       const operation = await storage.getCopyOperation(operationId);
-      if (!operation) {
-        console.log('Operation not found, skipping email notification');
-        return;
-      }
+      if (!operation) return;
 
-      // Configurar Gmail API con el token del usuario
-      const gmail = google.gmail({ version: 'v1', auth: this.auth });
-
-      // Formatear fechas reales de la operación
-      const startDate = new Date(operation.createdAt!).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      
-      const endDate = new Date(operation.updatedAt!).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      // Crear template HTML similar a la imagen de referencia
-      const emailHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proceso de copia completado</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header { background-color: #dce4ec; padding: 25px 20px; text-align: center; }
-        .logo { font-family: 'Arial Black', 'Helvetica Bold', sans-serif; font-size: 32px; font-weight: 900; color: #1565c0; letter-spacing: 2px; margin: 0; }
-        .content { padding: 30px; }
-        .success-message { color: #137333; font-weight: 500; margin-bottom: 20px; }
-        .drive-link { display: inline-block; background-color: #1565c0; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; margin: 20px 0; }
-        .summary { background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0; }
-        .summary h3 { margin: 0 0 15px 0; color: #202124; }
-        .summary ul { margin: 0; padding-left: 0; list-style: none; }
-        .summary li { margin: 8px 0; color: #5f6368; }
-        .summary li strong { color: #202124; }
-        .footer { text-align: center; color: #5f6368; font-size: 14px; padding: 20px; border-top: 1px solid #e8eaed; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <p class="logo">TERA</p>
-        </div>
-        <div class="content">
-            <p>Hola <strong>${user.firstName || user.email}</strong>,</p>
-            
-            <p class="success-message">El proceso de copia de la ${result.mimeType === 'application/vnd.google-apps.folder' ? 'carpeta' : 'archivo'} para <strong>"${result.name}"</strong> ha finalizado exitosamente.</p>
-            
-            <p><strong>Enlace ${result.mimeType === 'application/vnd.google-apps.folder' ? 'a la carpeta copiada' : 'al archivo copiado'} en tu Drive:</strong></p>
-            <a href="${result.webViewLink}" class="drive-link">Abrir en Google Drive</a>
-            
-            <div class="summary">
-                <h3>Resumen de la Operación:</h3>
-                <ul>
-                    <li><strong>Nombre del ${result.mimeType === 'application/vnd.google-apps.folder' ? 'Carpeta Copiada' : 'Archivo Copiado'}:</strong> ${result.name}</li>
-                    <li><strong>Iniciado:</strong> ${startDate}</li>
-                    <li><strong>Completado:</strong> ${endDate}</li>
-                    <li><strong>Duración Total:</strong> ${duration} segundos</li>
-                    <li><strong>Total Archivos Copiados:</strong> ${operation.completedFiles || 0}</li>
-                    ${operation.totalFiles > 1 ? `<li><strong>Total Carpetas Creadas:</strong> ${Math.ceil((operation.totalFiles - operation.completedFiles) / 2) || 1}</li>` : ''}
-                </ul>
-            </div>
-        </div>
-        <div class="footer">
-            <p>Gracias por usar TERA.</p>
-        </div>
-    </div>
-</body>
-</html>`;
-
-      // Crear el mensaje de email con formato HTML
-      const subject = `Proceso de copia completado - ${result.name}`;
-      const message = [
-        `To: ${user.email}`,
-        `From: ${user.email}`,
-        `Subject: ${subject}`,
-        'MIME-Version: 1.0',
-        'Content-Type: text/html; charset=utf-8',
-        '',
-        emailHtml
-      ].join('\n');
-
-      // Codificar el mensaje en base64
-      const encodedMessage = Buffer.from(message)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-
-      // Enviar el email
-      await gmail.users.messages.send({
-        userId: 'me',
-        requestBody: {
-          raw: encodedMessage,
-        },
-      });
+      await sendTaskNotificationEmail(
+        user.email,
+        result.name,
+        true,
+        { filesProcessed: operation.completedFiles || 0, duration },
+        user.language || 'es'
+      );
 
       console.log(`✅ Notification email sent to ${user.email} for operation ${operationId}`);
       

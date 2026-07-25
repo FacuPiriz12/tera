@@ -5,6 +5,7 @@ import { DropboxService } from './services/dropboxService';
 import { OneDriveService } from './services/oneDriveService';
 import { BoxService } from './services/boxService';
 import { S3Service } from './services/s3Service';
+import { sendTaskNotificationEmail } from './lib/email';
 import type { CopyOperation } from '@shared/schema';
 
 interface WorkerConfig {
@@ -279,6 +280,21 @@ export class QueueWorker extends EventEmitter {
       console.log(`✅ Job ${job.id} completed successfully in ${duration}s`);
       this.emit('jobCompleted', job.id, job.userId, result);
 
+      try {
+        const user = await storage.getUser(job.userId);
+        if (user?.email) {
+          await sendTaskNotificationEmail(
+            user.email,
+            job.fileName || 'Transfer',
+            true,
+            { filesProcessed: (result as any).completedFiles || 1, duration },
+            user.language || 'es'
+          );
+        }
+      } catch (notifyErr) {
+        console.error('Failed to send completion notification:', notifyErr);
+      }
+
     } catch (error) {
       console.error(`❌ Job ${job.id} failed:`, error);
       
@@ -290,6 +306,21 @@ export class QueueWorker extends EventEmitter {
         // Max retries reached or non-retryable error
         await storage.failJob(job.id, errorMessage);
         this.emit('jobFailed', job.id, job.userId, errorMessage);
+
+        try {
+          const user = await storage.getUser(job.userId);
+          if (user?.email) {
+            await sendTaskNotificationEmail(
+              user.email,
+              job.fileName || 'Transfer',
+              false,
+              { filesProcessed: 0, duration: 0, errorMessage },
+              user.language || 'es'
+            );
+          }
+        } catch (notifyErr) {
+          console.error('Failed to send failure notification:', notifyErr);
+        }
       } else {
         // Retry with exponential backoff
         const delay = this.calculateBackoffDelay(attempts);
