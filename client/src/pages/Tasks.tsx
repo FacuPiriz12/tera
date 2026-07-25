@@ -1,23 +1,10 @@
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
-  Plus,
-  Calendar,
-  Clock,
-  Play,
-  Pause,
-  Trash2,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  Loader2,
-  Edit,
-  ChevronDown,
-  History,
-  AlertCircle,
-  Lock,
-  ArrowRight,
+  Plus, Calendar, Clock, Play, Pause, Trash2, RefreshCw,
+  CheckCircle, XCircle, Loader2, Edit, History, AlertCircle,
+  Lock, ArrowRight, MoreHorizontal, Zap, TrendingUp,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,26 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+  DialogTrigger, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +36,8 @@ import ConflictResolutionModal from "@/components/ConflictResolutionModal";
 import { FileVersionsTimeline } from "@/components/FileVersionsTimeline";
 import type { ScheduledTask, ScheduledTaskRun, FileConflict } from "@shared/schema";
 
+// ─── Provider config ──────────────────────────────────────────────────────────
+
 const PROVIDERS = [
   { value: "google",   label: "Google Drive" },
   { value: "dropbox",  label: "Dropbox" },
@@ -68,6 +45,35 @@ const PROVIDERS = [
   { value: "box",      label: "Box" },
   { value: "s3",       label: "Amazon S3" },
 ];
+
+const PROVIDER_META: Record<string, { label: string; short: string; bg: string; text: string }> = {
+  google:   { label: "Google Drive", short: "GDrive",  bg: "#4285F4", text: "#fff" },
+  dropbox:  { label: "Dropbox",      short: "Dropbox", bg: "#0061FF", text: "#fff" },
+  onedrive: { label: "OneDrive",     short: "OneDrive",bg: "#0078D4", text: "#fff" },
+  box:      { label: "Box",          short: "Box",     bg: "#0061D5", text: "#fff" },
+  s3:       { label: "Amazon S3",    short: "S3",      bg: "#FF9900", text: "#fff" },
+};
+
+function ProviderChip({ provider, folder }: { provider: string; folder?: string | null }) {
+  const meta = PROVIDER_META[provider] ?? { label: provider, short: provider, bg: "#6B7280", text: "#fff" };
+  return (
+    <div className="flex items-center gap-1.5 min-w-0">
+      <span
+        className="inline-flex items-center justify-center px-2 py-0.5 rounded-md text-[11px] font-bold shrink-0"
+        style={{ backgroundColor: meta.bg, color: meta.text }}
+      >
+        {meta.short}
+      </span>
+      {folder && (
+        <span className="text-xs text-slate-500 truncate max-w-[90px]" title={folder}>
+          {folder}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 function buildSourceUrl(provider: string, folderId: string): string {
   switch (provider) {
@@ -132,6 +138,8 @@ const defaultFormData: TaskFormData = {
 
 const TASK_LIMITS: Record<string, number> = { free: 0, pro: 5, business: Infinity };
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function Tasks() {
   const { t, i18n } = useTranslation();
   usePageTitle(t('pageTitles.tasks', 'TERA — Scheduled Tasks'));
@@ -148,39 +156,40 @@ export default function Tasks() {
   ];
 
   const FREQUENCIES = [
-    { value: "hourly", label: t('pages.tasks.freq.hourly') },
-    { value: "daily", label: t('pages.tasks.freq.daily') },
-    { value: "weekly", label: t('pages.tasks.freq.weekly') },
+    { value: "hourly",  label: t('pages.tasks.freq.hourly') },
+    { value: "daily",   label: t('pages.tasks.freq.daily') },
+    { value: "weekly",  label: t('pages.tasks.freq.weekly') },
     { value: "monthly", label: t('pages.tasks.freq.monthly') },
-    { value: "custom", label: t('pages.tasks.freq.custom') },
+    { value: "custom",  label: t('pages.tasks.freq.custom') },
   ];
 
   const OPERATION_TYPES = [
-    { value: "copy", label: t('pages.tasks.ops.copy.label'), description: t('pages.tasks.ops.copy.description') },
+    { value: "copy",     label: t('pages.tasks.ops.copy.label'),     description: t('pages.tasks.ops.copy.description') },
     { value: "transfer", label: t('pages.tasks.ops.transfer.label'), description: t('pages.tasks.ops.transfer.description') },
   ];
 
   const SYNC_MODES = [
-    { value: "copy", label: t('pages.tasks.syncModes.copy.label'), description: t('pages.tasks.syncModes.copy.description') },
+    { value: "copy",            label: t('pages.tasks.syncModes.copy.label'),            description: t('pages.tasks.syncModes.copy.description') },
     { value: "cumulative_sync", label: t('pages.tasks.syncModes.cumulative_sync.label'), description: t('pages.tasks.syncModes.cumulative_sync.description') },
-    { value: "mirror_sync", label: t('pages.tasks.syncModes.mirror_sync.label'), description: t('pages.tasks.syncModes.mirror_sync.description') },
+    { value: "mirror_sync",     label: t('pages.tasks.syncModes.mirror_sync.label'),     description: t('pages.tasks.syncModes.mirror_sync.description') },
   ];
+
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const userPlan = (user?.membershipPlan as string) || 'free';
-  const isAdmin = user?.role === 'admin';
+  const userPlan  = (user?.membershipPlan as string) || 'free';
+  const isAdmin   = user?.role === 'admin';
   const taskLimit = isAdmin ? Infinity : (TASK_LIMITS[userPlan] ?? 0);
 
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen,        setIsCreateDialogOpen]        = useState(false);
+  const [isEditDialogOpen,          setIsEditDialogOpen]          = useState(false);
   const [isSelectiveSyncDialogOpen, setIsSelectiveSyncDialogOpen] = useState(false);
-  const [isConflictDialogOpen, setIsConflictDialogOpen] = useState(false);
-  const [isVersionTimelineOpen, setIsVersionTimelineOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null);
-  const [selectedTaskForVersions, setSelectedTaskForVersions] = useState<{id: string, name: string} | null>(null);
-  const [selectedTaskForStats, setSelectedTaskForStats] = useState<string | null>(null);
-  const [formData, setFormData] = useState<TaskFormData>(defaultFormData);
+  const [isConflictDialogOpen,      setIsConflictDialogOpen]      = useState(false);
+  const [isVersionTimelineOpen,     setIsVersionTimelineOpen]     = useState(false);
+  const [selectedTask,              setSelectedTask]              = useState<ScheduledTask | null>(null);
+  const [selectedTaskForVersions,   setSelectedTaskForVersions]   = useState<{ id: string; name: string } | null>(null);
+  const [selectedTaskForStats,      setSelectedTaskForStats]      = useState<string | null>(null);
+  const [formData,                  setFormData]                  = useState<TaskFormData>(defaultFormData);
 
   const { data: tasks = [], isLoading } = useQuery<ScheduledTask[]>({
     queryKey: ["/api/scheduled-tasks"],
@@ -239,7 +248,7 @@ export default function Tasks() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<TaskFormData> }) => 
+    mutationFn: ({ id, data }: { id: string; data: Partial<TaskFormData> }) =>
       apiRequest(`/api/scheduled-tasks/${id}`, {
         method: 'PATCH',
         body: JSON.stringify(data),
@@ -301,60 +310,27 @@ export default function Tasks() {
     },
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-100 text-green-800" data-testid="badge-status-active">{t('pages.tasks.status.active')}</Badge>;
-      case 'paused':
-        return <Badge className="bg-yellow-100 text-yellow-800" data-testid="badge-status-paused">{t('pages.tasks.status.paused')}</Badge>;
-      case 'deleted':
-        return <Badge className="bg-red-100 text-red-800" data-testid="badge-status-deleted">{t('pages.tasks.status.deleted')}</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
-    }
-  };
-
-  const getLastRunBadge = (status: string | null) => {
-    if (!status) return null;
-    switch (status) {
-      case 'success':
-        return <Badge className="bg-green-50 text-green-700"><CheckCircle className="w-3 h-3 mr-1" />{t('pages.tasks.status.success')}</Badge>;
-      case 'failed':
-        return <Badge className="bg-red-50 text-red-700"><XCircle className="w-3 h-3 mr-1" />{t('pages.tasks.status.failed')}</Badge>;
-      case 'running':
-      case 'pending':
-        return <Badge className="bg-blue-50 text-blue-700"><Loader2 className="w-3 h-3 mr-1 animate-spin" />{t('pages.tasks.status.running')}</Badge>;
-      default:
-        return null;
-    }
-  };
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   const formatSchedule = (task: ScheduledTask) => {
-    const hour = (task.hour || 8).toString().padStart(2, '0');
+    const hour   = (task.hour   || 8).toString().padStart(2, '0');
     const minute = (task.minute || 0).toString().padStart(2, '0');
-    const time = `${hour}:${minute}`;
-
+    const time   = `${hour}:${minute}`;
     switch (task.frequency) {
-      case 'hourly':
-        return t('pages.tasks.schedule.hourly', { minute: task.minute || 0 });
-      case 'daily':
-        return t('pages.tasks.schedule.daily', { time });
+      case 'hourly':  return t('pages.tasks.schedule.hourly',  { minute: task.minute || 0 });
+      case 'daily':   return t('pages.tasks.schedule.daily',   { time });
       case 'weekly': {
         const dayName = DAYS_OF_WEEK.find(d => d.value === task.dayOfWeek)?.label || t('pages.tasks.days.1');
         return t('pages.tasks.schedule.weekly', { day: dayName, time });
       }
-      case 'monthly':
-        return t('pages.tasks.schedule.monthly', { dayOfMonth: task.dayOfMonth || 1, time });
+      case 'monthly': return t('pages.tasks.schedule.monthly', { dayOfMonth: task.dayOfMonth || 1, time });
       case 'custom': {
-        const selectedDays = (task as any).selectedDays || [];
-        if (selectedDays.length === 0) {
-          return t('pages.tasks.schedule.default', { time });
-        }
-        const daysList = selectedDays.map((d: number) => DAYS_OF_WEEK.find(day => day.value === d)?.label.slice(0, 3)).join(', ');
+        const sel = (task as any).selectedDays || [];
+        if (sel.length === 0) return t('pages.tasks.schedule.default', { time });
+        const daysList = sel.map((d: number) => DAYS_OF_WEEK.find(day => day.value === d)?.label.slice(0, 3)).join(', ');
         return t('pages.tasks.schedule.custom', { days: daysList, time });
       }
-      default:
-        return t('pages.tasks.schedule.default', { time });
+      default: return t('pages.tasks.schedule.default', { time });
     }
   };
 
@@ -362,12 +338,35 @@ export default function Tasks() {
     if (!date) return t('pages.tasks.schedule.never');
     const locale = i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'es' ? 'es-ES' : 'en-US';
     return new Date(date).toLocaleDateString(locale, {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
     });
+  };
+
+  const formatCountdown = (date: Date | string | null) => {
+    if (!date) return t('pages.tasks.schedule.never');
+    const diff  = new Date(date).getTime() - Date.now();
+    if (diff <= 0) return t('pages.tasks.statNow', 'Ahora');
+    const mins  = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    if (days  > 0) return t('pages.tasks.countdownDays',  'en {{n}}d',  { n: days });
+    if (hours > 0) return t('pages.tasks.countdownHours', 'en {{n}}h',  { n: hours });
+    return              t('pages.tasks.countdownMins',  'en {{n}}m',  { n: mins });
+  };
+
+  const getLastRunBadge = (status: string | null) => {
+    if (!status) return null;
+    switch (status) {
+      case 'success':
+        return <span className="inline-flex items-center gap-1 text-xs text-green-700"><CheckCircle className="w-3 h-3" />{t('pages.tasks.status.success')}</span>;
+      case 'failed':
+        return <span className="inline-flex items-center gap-1 text-xs text-red-600"><XCircle className="w-3 h-3" />{t('pages.tasks.status.failed')}</span>;
+      case 'running':
+      case 'pending':
+        return <span className="inline-flex items-center gap-1 text-xs text-blue-600"><Loader2 className="w-3 h-3 animate-spin" />{t('pages.tasks.status.running')}</span>;
+      default: return null;
+    }
   };
 
   const handleCreateSubmit = () => {
@@ -379,9 +378,7 @@ export default function Tasks() {
   };
 
   const handleEditSubmit = () => {
-    if (selectedTask) {
-      updateMutation.mutate({ id: selectedTask.id, data: formData });
-    }
+    if (selectedTask) updateMutation.mutate({ id: selectedTask.id, data: formData });
   };
 
   const openEditDialog = (task: ScheduledTask) => {
@@ -414,13 +411,24 @@ export default function Tasks() {
   };
 
   const toggleDay = (day: number) => {
-    const currentDays = formData.selectedDays || [];
-    if (currentDays.includes(day)) {
-      setFormData({ ...formData, selectedDays: currentDays.filter(d => d !== day) });
-    } else {
-      setFormData({ ...formData, selectedDays: [...currentDays, day].sort() });
-    }
+    const cur = formData.selectedDays || [];
+    setFormData({
+      ...formData,
+      selectedDays: cur.includes(day) ? cur.filter(d => d !== day) : [...cur, day].sort(),
+    });
   };
+
+  // ─── Aggregate stats ──────────────────────────────────────────────────────
+
+  const activeTasks    = tasks.filter(t => t.status === 'active').length;
+  const totalRuns      = tasks.reduce((sum, t) => sum + (t.totalRuns      || 0), 0);
+  const successfulRuns = tasks.reduce((sum, t) => sum + (t.successfulRuns || 0), 0);
+  const successRate    = totalRuns > 0 ? Math.round((successfulRuns / totalRuns) * 100) : 0;
+  const nextTask       = [...tasks]
+    .filter(t => t.status === 'active' && t.nextRunAt)
+    .sort((a, b) => new Date(a.nextRunAt!).getTime() - new Date(b.nextRunAt!).getTime())[0];
+
+  // ─── Shared form ──────────────────────────────────────────────────────────
 
   const TaskFormContent = ({ onSubmit, submitLabel, isPending }: { onSubmit: () => void; submitLabel: string; isPending: boolean }) => (
     <div className="space-y-4 max-h-[60vh] overflow-y-auto px-1">
@@ -511,21 +519,15 @@ export default function Tasks() {
             <RefreshCw className="w-4 h-4" />
             {t('pages.tasks.form.selectiveSync')}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs h-7"
-            onClick={() => setIsSelectiveSyncDialogOpen(true)}
-          >
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setIsSelectiveSyncDialogOpen(true)}>
             {t('pages.tasks.form.configFolders')}
           </Button>
         </h4>
         <div className="text-xs text-muted-foreground bg-white/50 dark:bg-black/20 p-2 rounded">
-          {formData.selectedFolderIds?.length ? (
-            <p>{t('pages.tasks.form.foldersSelected', { count: formData.selectedFolderIds.length })}</p>
-          ) : (
-            <p>{t('pages.tasks.form.syncingAll')}</p>
-          )}
+          {formData.selectedFolderIds?.length
+            ? <p>{t('pages.tasks.form.foldersSelected', { count: formData.selectedFolderIds.length })}</p>
+            : <p>{t('pages.tasks.form.syncingAll')}</p>
+          }
         </div>
       </div>
 
@@ -534,13 +536,7 @@ export default function Tasks() {
           <Label>{t('pages.tasks.form.source')}</Label>
           <Select
             value={formData.sourceProvider}
-            onValueChange={(value) => setFormData({
-              ...formData,
-              sourceProvider: value,
-              sourceUrl: '',
-              sourceFolderId: '',
-              sourceName: '',
-            })}
+            onValueChange={(value) => setFormData({ ...formData, sourceProvider: value, sourceUrl: '', sourceFolderId: '', sourceName: '' })}
           >
             <SelectTrigger data-testid="select-source-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
@@ -555,12 +551,7 @@ export default function Tasks() {
           <Label>{t('pages.tasks.form.destination')}</Label>
           <Select
             value={formData.destProvider}
-            onValueChange={(value) => setFormData({
-              ...formData,
-              destProvider: value,
-              destinationFolderId: '',
-              destinationFolderName: '',
-            })}
+            onValueChange={(value) => setFormData({ ...formData, destProvider: value, destinationFolderId: '', destinationFolderName: '' })}
           >
             <SelectTrigger data-testid="select-dest-provider" className="bg-gray-50 dark:bg-gray-800">
               <SelectValue />
@@ -608,7 +599,7 @@ export default function Tasks() {
           <Calendar className="w-4 h-4" />
           {t('pages.tasks.form.schedule')}
         </h4>
-        
+
         <div className="space-y-2">
           <Label>{t('pages.tasks.form.frequency')}</Label>
           <Select
@@ -619,9 +610,7 @@ export default function Tasks() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {FREQUENCIES.map(f => (
-                <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
-              ))}
+              {FREQUENCIES.map(f => <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -659,9 +648,7 @@ export default function Tasks() {
               value={formData.dayOfWeek.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfWeek: parseInt(value) })}
             >
-              <SelectTrigger className="bg-white dark:bg-gray-800">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="bg-white dark:bg-gray-800"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {DAYS_OF_WEEK.map(day => (
                   <SelectItem key={day.value} value={day.value.toString()}>{day.label}</SelectItem>
@@ -678,9 +665,7 @@ export default function Tasks() {
               value={formData.dayOfMonth.toString()}
               onValueChange={(value) => setFormData({ ...formData, dayOfMonth: parseInt(value) })}
             >
-              <SelectTrigger className="bg-white dark:bg-gray-800">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger className="bg-white dark:bg-gray-800"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                   <SelectItem key={day} value={day.toString()}>{t('pages.tasks.form.dayN', { n: day })}</SelectItem>
@@ -694,27 +679,19 @@ export default function Tasks() {
           <div className="space-y-2">
             <Label htmlFor="hour">{t('pages.tasks.form.hour')}</Label>
             <Input
-              id="hour"
-              type="number"
-              min={0}
-              max={23}
+              id="hour" type="number" min={0} max={23}
               value={formData.hour}
               onChange={(e) => setFormData({ ...formData, hour: parseInt(e.target.value) || 0 })}
-              data-testid="input-hour"
-              className="bg-white dark:bg-gray-800"
+              data-testid="input-hour" className="bg-white dark:bg-gray-800"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="minute">{t('pages.tasks.form.minute')}</Label>
             <Input
-              id="minute"
-              type="number"
-              min={0}
-              max={59}
+              id="minute" type="number" min={0} max={59}
               value={formData.minute}
               onChange={(e) => setFormData({ ...formData, minute: parseInt(e.target.value) || 0 })}
-              data-testid="input-minute"
-              className="bg-white dark:bg-gray-800"
+              data-testid="input-minute" className="bg-white dark:bg-gray-800"
             />
           </div>
         </div>
@@ -738,7 +715,6 @@ export default function Tasks() {
             data-testid="switch-skip-duplicates"
           />
         </div>
-
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
             <Label>{t('pages.tasks.form.notifyComplete')}</Label>
@@ -750,7 +726,6 @@ export default function Tasks() {
             data-testid="switch-notify-complete"
           />
         </div>
-
         <div className="flex items-center justify-between py-2">
           <div className="space-y-0.5">
             <Label>{t('pages.tasks.form.notifyErrors')}</Label>
@@ -779,15 +754,20 @@ export default function Tasks() {
     </div>
   );
 
+  // ─── Loading state ────────────────────────────────────────────────────────
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20" data-testid="tasks-page">
         <Header />
         <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-8">
-            <div className="flex items-center justify-center h-64">
-              <Loader2 className="w-8 h-8 animate-spin" />
+          <main className="flex-1 p-8 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+              </div>
+              <p className="text-slate-500 text-sm">{t('pages.tasks.loading', 'Cargando syncs...')}</p>
             </div>
           </main>
         </div>
@@ -795,47 +775,54 @@ export default function Tasks() {
     );
   }
 
+  // ─── Render ───────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20" data-testid="tasks-page">
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-8">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">{t('pages.tasks.title')}</h1>
-                <p className="text-muted-foreground mt-1">
-                  {t('pages.tasks.subtitle')}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-3">
-                {taskLimit !== Infinity && taskLimit > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {t('pages.tasks.taskCount', { count: tasks.length, limit: taskLimit })}
-                  </span>
-                )}
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="max-w-5xl mx-auto space-y-6">
+
+            {/* ── Hero header ── */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-6 text-white shadow-lg">
+              {/* Decorative circles */}
+              <div className="absolute -top-8 -right-8 w-40 h-40 bg-white/5 rounded-full" />
+              <div className="absolute -bottom-10 -left-6 w-52 h-52 bg-white/5 rounded-full" />
+
+              <div className="relative flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <RefreshCw className="w-4 h-4 text-blue-200" />
+                    <span className="text-blue-200 text-xs font-semibold uppercase tracking-wider">
+                      {t('pages.tasks.automation', 'Automatización')}
+                    </span>
+                  </div>
+                  <h1 className="text-2xl font-bold">{t('pages.tasks.title')}</h1>
+                  <p className="text-blue-100 text-sm mt-1">
+                    {t('pages.tasks.heroSubtitle', 'Transferencias automáticas entre tus nubes')}
+                  </p>
+                </div>
+
                 {taskLimit === 0 ? (
                   <Link href="/pricing">
-                    <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-tasks">
+                    <Button className="bg-white text-blue-700 hover:bg-blue-50 gap-2 shrink-0" data-testid="button-upgrade-tasks">
                       <Lock className="w-4 h-4" />
                       {t('pages.tasks.requiresPro')}
-                      <ArrowRight className="w-3 h-3" />
                     </Button>
                   </Link>
-                ) : tasks.length >= taskLimit ? (
+                ) : tasks.length >= taskLimit && taskLimit !== Infinity ? (
                   <Link href="/pricing">
-                    <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-limit">
+                    <Button className="bg-white text-blue-700 hover:bg-blue-50 gap-2 shrink-0" data-testid="button-upgrade-limit">
                       <Lock className="w-4 h-4" />
                       {t('pages.tasks.limitReached')}
-                      <ArrowRight className="w-3 h-3" />
                     </Button>
                   </Link>
                 ) : (
                   <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button className="gap-2" data-testid="button-new-task">
+                      <Button className="bg-white text-blue-700 hover:bg-blue-50 gap-2 shrink-0" data-testid="button-new-task">
                         <Plus className="w-4 h-4" />
                         {t('pages.tasks.newTask')}
                       </Button>
@@ -843,9 +830,7 @@ export default function Tasks() {
                     <DialogContent className="max-w-lg">
                       <DialogHeader>
                         <DialogTitle>{t('pages.tasks.createTitle')}</DialogTitle>
-                        <DialogDescription>
-                          {t('pages.tasks.createDesc')}
-                        </DialogDescription>
+                        <DialogDescription>{t('pages.tasks.createDesc')}</DialogDescription>
                       </DialogHeader>
                       <TaskFormContent
                         onSubmit={handleCreateSubmit}
@@ -856,264 +841,352 @@ export default function Tasks() {
                   </Dialog>
                 )}
               </div>
+
+              {/* Stats chips — only when there are tasks */}
+              {tasks.length > 0 && (
+                <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-blue-200 text-[11px] font-medium uppercase tracking-wide">
+                      {t('pages.tasks.statActive', 'Activas')}
+                    </p>
+                    <p className="text-2xl font-bold mt-0.5">{activeTasks}</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-blue-200 text-[11px] font-medium uppercase tracking-wide">
+                      {t('pages.tasks.statRuns', 'Ejecuciones')}
+                    </p>
+                    <p className="text-2xl font-bold mt-0.5">{totalRuns}</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-blue-200 text-[11px] font-medium uppercase tracking-wide">
+                      {t('pages.tasks.statSuccess', 'Tasa de éxito')}
+                    </p>
+                    <p className="text-2xl font-bold mt-0.5">{totalRuns > 0 ? `${successRate}%` : '—'}</p>
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3">
+                    <p className="text-blue-200 text-[11px] font-medium uppercase tracking-wide">
+                      {t('pages.tasks.statNext', 'Próxima sync')}
+                    </p>
+                    <p className="text-lg font-bold mt-0.5 truncate">
+                      {nextTask ? formatCountdown(nextTask.nextRunAt) : t('pages.tasks.noUpcoming', '—')}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {tasks.length === 0 ? (
-              <Card className="shadow-sm border-border">
-                <CardContent className="py-16">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6">
-                      <Calendar className="w-12 h-12 text-blue-500" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-foreground mb-2">
-                      {t('pages.tasks.emptyTitle')}
-                    </h2>
-                    <p className="text-muted-foreground max-w-md mb-6">
-                      {t('pages.tasks.emptyDesc')}
-                    </p>
-                    {taskLimit === 0 ? (
-                      <Link href="/pricing">
-                        <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-first-task">
-                          <Lock className="w-4 h-4" />
-                          {t('pages.tasks.upgradeToPro')}
-                          <ArrowRight className="w-3 h-3" />
-                        </Button>
-                      </Link>
-                    ) : (
-                      <Button
-                        className="gap-2"
-                        onClick={() => setIsCreateDialogOpen(true)}
-                        data-testid="button-create-first-task"
-                      >
-                        <Plus className="w-4 h-4" />
-                        {t('pages.tasks.createFirstTask')}
-                      </Button>
-                    )}
+            {/* ── Plan warning for free users ── */}
+            {taskLimit === 0 && (
+              <div className="flex items-center justify-between gap-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                    <Lock className="w-5 h-5 text-amber-600" />
                   </div>
-                </CardContent>
-              </Card>
+                  <div>
+                    <p className="font-semibold text-amber-900 text-sm">
+                      {t('pages.tasks.planBannerTitle', 'Función exclusiva Pro')}
+                    </p>
+                    <p className="text-amber-700 text-xs mt-0.5">
+                      {t('pages.tasks.planBannerDesc', 'Automatizá hasta 5 syncs con el plan Pro')}
+                    </p>
+                  </div>
+                </div>
+                <Link href="/pricing">
+                  <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white gap-1 shrink-0">
+                    {t('pages.tasks.upgradeBtn', 'Ver planes')}
+                    <ArrowRight className="w-3 h-3" />
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* ── Task list or empty state ── */}
+            {tasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="relative mb-6">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-3xl flex items-center justify-center shadow-sm">
+                    <Calendar className="w-12 h-12 text-blue-500" />
+                  </div>
+                  <div className="absolute -bottom-2 -right-2 w-9 h-9 bg-white border-2 border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                  </div>
+                </div>
+                <h2 className="text-xl font-bold text-slate-800 mb-2">{t('pages.tasks.emptyTitle')}</h2>
+                <p className="text-slate-500 max-w-sm text-sm mb-8">{t('pages.tasks.emptyDesc')}</p>
+
+                {taskLimit === 0 ? (
+                  <Link href="/pricing">
+                    <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50" data-testid="button-upgrade-first-task">
+                      <Lock className="w-4 h-4" />
+                      {t('pages.tasks.upgradeToPro')}
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button className="gap-2 bg-blue-600 hover:bg-blue-700" onClick={() => setIsCreateDialogOpen(true)} data-testid="button-create-first-task">
+                    <Plus className="w-4 h-4" />
+                    {t('pages.tasks.createFirstTask')}
+                  </Button>
+                )}
+              </div>
             ) : (
-              <div className="space-y-4">
-                {tasks.map((task) => (
-                  <Card key={task.id} className="shadow-sm hover:shadow-md transition-shadow" data-testid={`card-task-${task.id}`}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {task.name}
-                            {getStatusBadge(task.status)}
-                          </CardTitle>
-                          {task.description && (
-                            <CardDescription>{task.description}</CardDescription>
-                          )}
-                        </div>
-                        
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              data-testid={`button-task-actions-${task.id}`}
-                            >
-                              <ChevronDown className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem 
+              <div className="space-y-3">
+                {tasks.map((task) => {
+                  const isExpanded       = selectedTaskForStats === task.id;
+                  const statusColor      = task.status === 'active' ? 'border-l-green-500' : task.status === 'paused' ? 'border-l-amber-400' : 'border-l-slate-300';
+                  const isRunningThisTask = runNowMutation.isPending && runNowMutation.variables === task.id;
+
+                  return (
+                    <Card
+                      key={task.id}
+                      className={`border-l-4 ${statusColor} hover:shadow-md transition-all duration-200 overflow-hidden`}
+                      data-testid={`card-task-${task.id}`}
+                    >
+                      <CardContent className="p-0">
+                        {/* ── Card header row ── */}
+                        <div className="flex items-start gap-3 p-4 pb-3">
+                          {/* Status dot */}
+                          <div className="mt-1.5 shrink-0">
+                            {task.status === 'active' ? (
+                              <span className="relative flex h-2.5 w-2.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                              </span>
+                            ) : task.status === 'paused' ? (
+                              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-amber-400" />
+                            ) : (
+                              <span className="inline-flex h-2.5 w-2.5 rounded-full bg-slate-300" />
+                            )}
+                          </div>
+
+                          {/* Title + description */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-bold text-slate-900 text-base leading-tight">{task.name}</h3>
+                              {task.status === 'active' && (
+                                <Badge className="bg-green-100 text-green-800 text-[10px] px-1.5 py-0 h-4" data-testid="badge-status-active">
+                                  {t('pages.tasks.status.active')}
+                                </Badge>
+                              )}
+                              {task.status === 'paused' && (
+                                <Badge className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0 h-4" data-testid="badge-status-paused">
+                                  {t('pages.tasks.status.paused')}
+                                </Badge>
+                              )}
+                            </div>
+                            {task.description && (
+                              <p className="text-slate-500 text-xs mt-0.5 truncate">{task.description}</p>
+                            )}
+                          </div>
+
+                          {/* Action buttons */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {/* Run Now */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-slate-400 hover:text-blue-600 hover:bg-blue-50"
                               onClick={() => runNowMutation.mutate(task.id)}
                               disabled={runNowMutation.isPending}
+                              title={t('pages.tasks.actions.runNow')}
                               data-testid={`action-run-now-${task.id}`}
                             >
-                              <Play className="w-4 h-4 mr-2" />
-                              {t('pages.tasks.actions.runNow')}
-                            </DropdownMenuItem>
+                              {isRunningThisTask
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <Zap className="w-4 h-4" />
+                              }
+                            </Button>
+
+                            {/* Pause / Resume */}
                             {task.status === 'active' ? (
-                              <DropdownMenuItem 
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-slate-400 hover:text-amber-600 hover:bg-amber-50"
                                 onClick={() => pauseMutation.mutate(task.id)}
                                 disabled={pauseMutation.isPending}
+                                title={t('pages.tasks.actions.pause')}
                                 data-testid={`action-pause-${task.id}`}
                               >
-                                <Pause className="w-4 h-4 mr-2" />
-                                {t('pages.tasks.actions.pause')}
-                              </DropdownMenuItem>
-                            ) : task.status === 'paused' && (
-                              <DropdownMenuItem 
+                                <Pause className="w-4 h-4" />
+                              </Button>
+                            ) : task.status === 'paused' ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-slate-400 hover:text-green-600 hover:bg-green-50"
                                 onClick={() => resumeMutation.mutate(task.id)}
                                 disabled={resumeMutation.isPending}
+                                title={t('pages.tasks.actions.resume')}
                                 data-testid={`action-resume-${task.id}`}
                               >
-                                <Play className="w-4 h-4 mr-2" />
-                                {t('pages.tasks.actions.resume')}
-                              </DropdownMenuItem>
-                            )}
-                            
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedTaskForVersions({id: task.id, name: task.name});
-                              setIsVersionTimelineOpen(true);
-                            }}>
-                              <History className="w-4 h-4 mr-2" />
-                              {t('pages.tasks.actions.versionHistory')}
-                            </DropdownMenuItem>
+                                <Play className="w-4 h-4" />
+                              </Button>
+                            ) : null}
 
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedTaskForStats(task.id);
-                              setIsConflictDialogOpen(true);
-                            }}>
-                              <AlertCircle className="w-4 h-4 mr-2" />
-                              {t('pages.tasks.actions.manageConflicts')}
-                            </DropdownMenuItem>
-
-                            <DropdownMenuItem onClick={() => openEditDialog(task)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              {t('pages.tasks.actions.edit')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => deleteMutation.mutate(task.id)}
-                              disabled={deleteMutation.isPending}
-                              className="text-red-600"
-                              data-testid={`action-delete-${task.id}`}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {t('pages.tasks.actions.delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm" onClick={() => setSelectedTaskForStats(selectedTaskForStats === task.id ? null : task.id)}>
-                        <div className="flex items-start gap-2">
-                          <RefreshCw className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="text-muted-foreground">{t('pages.tasks.card.schedule')}</p>
-                            <p className="font-medium">{formatSchedule(task)}</p>
+                            {/* More dropdown */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-slate-400 hover:text-slate-700"
+                                  data-testid={`button-task-actions-${task.id}`}
+                                >
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => { setSelectedTaskForVersions({ id: task.id, name: task.name }); setIsVersionTimelineOpen(true); }}>
+                                  <History className="w-4 h-4 mr-2" />
+                                  {t('pages.tasks.actions.versionHistory')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { setSelectedTaskForStats(task.id); setIsConflictDialogOpen(true); }}>
+                                  <AlertCircle className="w-4 h-4 mr-2" />
+                                  {t('pages.tasks.actions.manageConflicts')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditDialog(task)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  {t('pages.tasks.actions.edit')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => deleteMutation.mutate(task.id)}
+                                  disabled={deleteMutation.isPending}
+                                  className="text-red-600 focus:text-red-600"
+                                  data-testid={`action-delete-${task.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  {t('pages.tasks.actions.delete')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         </div>
 
-                        <div className="flex items-start gap-2">
-                          <Clock className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="text-muted-foreground">{t('pages.tasks.card.nextRun')}</p>
-                            <p className="font-medium">{formatDate(task.nextRunAt)}</p>
+                        {/* ── Provider flow ── */}
+                        <div className="mx-4 mb-3 flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2.5">
+                          <ProviderChip provider={task.sourceProvider} folder={task.sourceName || undefined} />
+                          <div className="flex-1 flex items-center justify-center gap-1">
+                            <div className="h-px flex-1 bg-slate-200" />
+                            <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <div className="h-px flex-1 bg-slate-200" />
                           </div>
+                          <ProviderChip provider={task.destProvider} folder={task.destinationFolderName || undefined} />
                         </div>
 
-                        <div className="flex items-start gap-2">
-                          <History className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="text-muted-foreground">{t('pages.tasks.card.lastRun')}</p>
-                            <p className="font-medium">{formatDate(task.lastRunAt)}</p>
-                            {getLastRunBadge(task.lastRunStatus)}
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-muted-foreground mt-0.5" />
-                          <div>
-                            <p className="text-muted-foreground">{t('pages.tasks.card.stats')}</p>
-                            <p className="font-medium">
-                              {t('pages.tasks.card.statsValue', { success: task.successfulRuns || 0, failed: task.failedRuns || 0 })}
+                        {/* ── Info row ── */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-slate-100 border-t border-slate-100">
+                          <div className="px-4 py-3">
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold mb-1">
+                              {t('pages.tasks.card.schedule')}
                             </p>
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <p className="text-xs font-medium text-slate-700 truncate">{formatSchedule(task)}</p>
+                            </div>
+                          </div>
+
+                          <div className="px-4 py-3">
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold mb-1">
+                              {t('pages.tasks.card.nextRun')}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <TrendingUp className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                              <p className="text-xs font-semibold text-blue-600 truncate">
+                                {task.nextRunAt ? formatCountdown(task.nextRunAt) : t('pages.tasks.schedule.never')}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="px-4 py-3">
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold mb-1">
+                              {t('pages.tasks.card.lastRun')}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <History className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <div className="min-w-0">
+                                <p className="text-xs text-slate-600 truncate">{formatDate(task.lastRunAt)}</p>
+                                {getLastRunBadge(task.lastRunStatus)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div
+                            className="px-4 py-3 cursor-pointer hover:bg-slate-50 transition-colors"
+                            onClick={() => setSelectedTaskForStats(isExpanded ? null : task.id)}
+                            title={isExpanded ? t('pages.tasks.hideStats', 'Ocultar estadísticas') : t('pages.tasks.viewStats', 'Ver estadísticas')}
+                          >
+                            <p className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold mb-1">
+                              {t('pages.tasks.card.stats')}
+                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <CheckCircle className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <p className="text-xs font-medium text-slate-700">
+                                <span className="text-green-600">{task.successfulRuns || 0}✓</span>
+                                {' / '}
+                                <span className="text-red-500">{task.failedRuns || 0}✗</span>
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {task.lastRunError && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-red-500 mt-0.5" />
-                          <div>
-                            <p className="text-sm font-medium text-red-700">{t('pages.tasks.card.lastError')}</p>
-                            <p className="text-sm text-red-600">{task.lastRunError}</p>
+                        {/* ── Error banner ── */}
+                        {task.lastRunError && (
+                          <div className="mx-4 mb-3 mt-1 flex items-start gap-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                            <div>
+                              <p className="text-xs font-semibold text-red-700">{t('pages.tasks.card.lastError')}</p>
+                              <p className="text-xs text-red-600 mt-0.5">{task.lastRunError}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-
-                      <div className="mt-4 pt-4 border-t flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>
-                          {task.sourceProvider === 'google' ? 'Google Drive' : 'Dropbox'} → {task.destProvider === 'google' ? 'Google Drive' : 'Dropbox'}
-                        </span>
-                        {task.sourceName && <span>• {task.sourceName}</span>}
-                      </div>
-                    </CardContent>
-
-                    {selectedTaskForStats === task.id && lastRun && (
-                      <div className="p-4 border-t bg-gray-50 dark:bg-gray-900">
-                        {isLoadingRun ? (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                          </div>
-                        ) : (
-                          <SyncStatsCard
-                            taskRun={lastRun}
-                            syncMode={task.syncMode || 'copy'}
-                          />
                         )}
-                      </div>
-                    )}
-                  </Card>
-                ))}
+
+                        {/* ── Expanded stats ── */}
+                        {isExpanded && (
+                          <div className="border-t border-slate-100 p-4 bg-slate-50/50">
+                            {isLoadingRun ? (
+                              <div className="flex items-center justify-center py-6">
+                                <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+                              </div>
+                            ) : lastRun ? (
+                              <SyncStatsCard taskRun={lastRun} syncMode={task.syncMode || 'copy'} />
+                            ) : (
+                              <p className="text-center text-sm text-slate-400 py-4">
+                                {t('pages.tasks.noRunsYet', 'Sin ejecuciones registradas aún')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
-
-          <Dialog open={isVersionTimelineOpen} onOpenChange={setIsVersionTimelineOpen}>
-            <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{t('pages.tasks.versionHistoryTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('pages.tasks.versionHistoryDesc')}
-                </DialogDescription>
-              </DialogHeader>
-              {selectedTaskForVersions && (
-                <FileVersionsTimeline 
-                  fileId={selectedTaskForVersions.id} 
-                  fileName={selectedTaskForVersions.name} 
-                />
-              )}
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isSelectiveSyncDialogOpen} onOpenChange={setIsSelectiveSyncDialogOpen}>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>{t('pages.tasks.selectiveSyncTitle')}</DialogTitle>
-                <DialogDescription>
-                  {t('pages.tasks.selectiveSyncDesc')}
-                </DialogDescription>
-              </DialogHeader>
-              <SelectiveSyncDialogContent
-                taskId={selectedTask?.id}
-                onSave={(selectedFolders, excludedFolders) => {
-                  setFormData({
-                    ...formData,
-                    selectedFolderIds: selectedFolders,
-                    excludedFolderIds: excludedFolders,
-                  });
-                  setIsSelectiveSyncDialogOpen(false);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-
-          {selectedTaskForStats && (
-            <ConflictResolutionModal
-              isOpen={isConflictDialogOpen}
-              onClose={() => setIsConflictDialogOpen(false)}
-              conflicts={conflicts}
-              taskId={selectedTaskForStats}
-            />
-          )}
         </main>
       </div>
+
+      {/* ── Dialogs ── */}
+
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('pages.tasks.createTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.tasks.createDesc')}</DialogDescription>
+          </DialogHeader>
+          <TaskFormContent
+            onSubmit={handleCreateSubmit}
+            submitLabel={t('pages.tasks.createTask')}
+            isPending={createMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('pages.tasks.editTitle')}</DialogTitle>
-            <DialogDescription>
-              {t('pages.tasks.editDesc')}
-            </DialogDescription>
+            <DialogDescription>{t('pages.tasks.editDesc')}</DialogDescription>
           </DialogHeader>
           <TaskFormContent
             onSubmit={handleEditSubmit}
@@ -1122,9 +1195,48 @@ export default function Tasks() {
           />
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isVersionTimelineOpen} onOpenChange={setIsVersionTimelineOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('pages.tasks.versionHistoryTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.tasks.versionHistoryDesc')}</DialogDescription>
+          </DialogHeader>
+          {selectedTaskForVersions && (
+            <FileVersionsTimeline fileId={selectedTaskForVersions.id} fileName={selectedTaskForVersions.name} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSelectiveSyncDialogOpen} onOpenChange={setIsSelectiveSyncDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{t('pages.tasks.selectiveSyncTitle')}</DialogTitle>
+            <DialogDescription>{t('pages.tasks.selectiveSyncDesc')}</DialogDescription>
+          </DialogHeader>
+          <SelectiveSyncDialogContent
+            taskId={selectedTask?.id}
+            onSave={(selectedFolders, excludedFolders) => {
+              setFormData({ ...formData, selectedFolderIds: selectedFolders, excludedFolderIds: excludedFolders });
+              setIsSelectiveSyncDialogOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {selectedTaskForStats && (
+        <ConflictResolutionModal
+          isOpen={isConflictDialogOpen}
+          onClose={() => setIsConflictDialogOpen(false)}
+          conflicts={conflicts}
+          taskId={selectedTaskForStats}
+        />
+      )}
     </div>
   );
 }
+
+// ─── Selective Sync Dialog ────────────────────────────────────────────────────
 
 interface SelectiveSyncFolder {
   id: string;
@@ -1155,21 +1267,15 @@ function SelectiveSyncDialogContent({
   onSave: (selected: string[], excluded: string[]) => void;
 }) {
   const { t } = useTranslation();
-  const [folders, setFolders] = useState<SelectiveSyncFolder[]>([]);
+  const [folders,         setFolders]         = useState<SelectiveSyncFolder[]>([]);
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
   const [excludedFolders, setExcludedFolders] = useState<Set<string>>(new Set());
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [sortBy, setSortBy] = useState<'name' | 'size'>('name');
-  const [draggedFolder, setDraggedFolder] = useState<string | null>(null);
-  const [dragOverZone, setDragOverZone] = useState<'include' | 'exclude' | null>(null);
+  const [isLoading,       setIsLoading]       = useState(false);
+  const [isSaving,        setIsSaving]        = useState(false);
+  const [sortBy,          setSortBy]          = useState<'name' | 'size'>('name');
+  const [draggedFolder,   setDraggedFolder]   = useState<string | null>(null);
+  const [dragOverZone,    setDragOverZone]    = useState<'include' | 'exclude' | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    if (taskId) {
-      loadFolders();
-    }
-  }, [taskId]);
 
   const loadFolders = async () => {
     if (!taskId) return;
@@ -1179,50 +1285,36 @@ function SelectiveSyncDialogContent({
       const data = await response.json();
       if (data && data.folders) {
         setFolders(data.folders);
-        const selected = new Set(data.folders.filter((f: any) => f.selected).map((f: any) => f.id));
-        const excluded = new Set(data.folders.filter((f: any) => f.excluded).map((f: any) => f.id));
+        const selected = new Set<string>(data.folders.filter((f: any) => f.selected).map((f: any) => f.id));
+        const excluded = new Set<string>(data.folders.filter((f: any) => f.excluded).map((f: any) => f.id));
         setSelectedFolders(selected);
         setExcludedFolders(excluded);
       }
-    } catch (error) {
-      console.error("Error loading folders:", error);
+    } catch {
       toast({ title: "Error", description: t('pages.tasks.toast.errorLoadFolders'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sortedFolders = [...folders].sort((a, b) => {
-    if (sortBy === 'size') {
-      return (b.size || 0) - (a.size || 0);
-    }
-    return a.name.localeCompare(b.name);
-  });
+  const sortedFolders = [...folders].sort((a, b) =>
+    sortBy === 'size' ? (b.size || 0) - (a.size || 0) : a.name.localeCompare(b.name)
+  );
 
   const toggleFolderSelection = (folderId: string) => {
-    const newSelected = new Set(selectedFolders);
-    const newExcluded = new Set(excludedFolders);
-    if (newSelected.has(folderId)) {
-      newSelected.delete(folderId);
-    } else {
-      newSelected.add(folderId);
-      newExcluded.delete(folderId);
-    }
-    setSelectedFolders(newSelected);
-    setExcludedFolders(newExcluded);
+    const ns = new Set(selectedFolders);
+    const ne = new Set(excludedFolders);
+    if (ns.has(folderId)) { ns.delete(folderId); } else { ns.add(folderId); ne.delete(folderId); }
+    setSelectedFolders(ns);
+    setExcludedFolders(ne);
   };
 
   const toggleFolderExclusion = (folderId: string) => {
-    const newSelected = new Set(selectedFolders);
-    const newExcluded = new Set(excludedFolders);
-    if (newExcluded.has(folderId)) {
-      newExcluded.delete(folderId);
-    } else {
-      newExcluded.add(folderId);
-      newSelected.delete(folderId);
-    }
-    setExcludedFolders(newExcluded);
-    setSelectedFolders(newSelected);
+    const ns = new Set(selectedFolders);
+    const ne = new Set(excludedFolders);
+    if (ne.has(folderId)) { ne.delete(folderId); } else { ne.add(folderId); ns.delete(folderId); }
+    setExcludedFolders(ne);
+    setSelectedFolders(ns);
   };
 
   const handleDragStart = (e: React.DragEvent, folderId: string) => {
@@ -1237,19 +1329,12 @@ function SelectiveSyncDialogContent({
 
   const handleDropZone = (zone: 'include' | 'exclude') => {
     if (!draggedFolder) return;
-    const newSelected = new Set(selectedFolders);
-    const newExcluded = new Set(excludedFolders);
-    newSelected.delete(draggedFolder);
-    newExcluded.delete(draggedFolder);
-    if (zone === 'include') {
-      newSelected.add(draggedFolder);
-    } else {
-      newExcluded.add(draggedFolder);
-    }
-    setSelectedFolders(newSelected);
-    setExcludedFolders(newExcluded);
-    setDraggedFolder(null);
-    setDragOverZone(null);
+    const ns = new Set(selectedFolders);
+    const ne = new Set(excludedFolders);
+    ns.delete(draggedFolder); ne.delete(draggedFolder);
+    if (zone === 'include') ns.add(draggedFolder); else ne.add(draggedFolder);
+    setSelectedFolders(ns); setExcludedFolders(ne);
+    setDraggedFolder(null); setDragOverZone(null);
   };
 
   const handleSave = async () => {
@@ -1258,16 +1343,12 @@ function SelectiveSyncDialogContent({
     try {
       await apiRequest(`/api/scheduled-tasks/${taskId}/folders/select`, {
         method: 'POST',
-        body: JSON.stringify({
-          selectedFolderIds: Array.from(selectedFolders),
-          excludedFolderIds: Array.from(excludedFolders),
-        }),
+        body: JSON.stringify({ selectedFolderIds: Array.from(selectedFolders), excludedFolderIds: Array.from(excludedFolders) }),
         headers: { 'Content-Type': 'application/json' },
       });
       onSave(Array.from(selectedFolders), Array.from(excludedFolders));
       toast({ title: t('pages.tasks.toast.savedSelection'), description: t('pages.tasks.toast.savedSelectionDesc') });
-    } catch (error) {
-      console.error("Error saving folder selection:", error);
+    } catch {
       toast({ title: "Error", description: t('pages.tasks.toast.errorSaveSelection'), variant: "destructive" });
     } finally {
       setIsSaving(false);
@@ -1310,18 +1391,10 @@ function SelectiveSyncDialogContent({
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div
-              onDragOver={handleDragOver}
-              onDrop={() => handleDropZone('include')}
-              className="p-3 rounded-lg border-2 border-dashed border-green-300 bg-green-50/50"
-            >
+            <div onDragOver={handleDragOver} onDrop={() => handleDropZone('include')} className="p-3 rounded-lg border-2 border-dashed border-green-300 bg-green-50/50">
               <p className="text-xs font-semibold text-green-700 text-center">{t('pages.tasks.selectiveSync.includeZone', { count: selectedFolders.size })}</p>
             </div>
-            <div
-              onDragOver={handleDragOver}
-              onDrop={() => handleDropZone('exclude')}
-              className="p-3 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50"
-            >
+            <div onDragOver={handleDragOver} onDrop={() => handleDropZone('exclude')} className="p-3 rounded-lg border-2 border-dashed border-red-300 bg-red-50/50">
               <p className="text-xs font-semibold text-red-700 text-center">{t('pages.tasks.selectiveSync.excludeZone', { count: excludedFolders.size })}</p>
             </div>
           </div>
@@ -1331,7 +1404,13 @@ function SelectiveSyncDialogContent({
                 key={folder.id}
                 draggable
                 onDragStart={(e) => handleDragStart(e, folder.id)}
-                className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-move ${selectedFolders.has(folder.id) ? 'bg-green-50 border-green-300' : excludedFolders.has(folder.id) ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'}`}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-move ${
+                  selectedFolders.has(folder.id)
+                    ? 'bg-green-50 border-green-300'
+                    : excludedFolders.has(folder.id)
+                    ? 'bg-red-50 border-red-300'
+                    : 'bg-white border-gray-200'
+                }`}
               >
                 <input type="checkbox" checked={selectedFolders.has(folder.id)} onChange={() => toggleFolderSelection(folder.id)} />
                 <div className="flex-1 min-w-0">
