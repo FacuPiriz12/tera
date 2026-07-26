@@ -1,638 +1,444 @@
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useSearch } from "wouter";
-import { 
-  Download, 
-  FileText, 
-  FileImage, 
-  FileSpreadsheet, 
-  Folder, 
-  Archive,
-  Search,
-  Grid3x3,
-  List,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Copy,
-  Trash2,
-  Info,
-  Calendar,
-  HardDrive,
-  Link2,
-  Eye,
-  Share2,
-  Filter
+import {
+  Download, FileText, FileImage, FileSpreadsheet, Folder, Archive,
+  Search, Grid3x3, List, MoreVertical, ChevronLeft, ChevronRight,
+  ExternalLink, Copy, Info, Calendar, HardDrive, Link2, Share2,
+  FileVideo, FileAudio, File, Layers
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
+import OneDriveLogo from "@/components/OneDriveLogo";
+import BoxLogo from "@/components/BoxLogo";
+import S3Logo from "@/components/S3Logo";
 import { useToast } from "@/hooks/use-toast";
 import type { CloudFile } from "@shared/schema";
 import { getAuthHeaders } from "@/lib/queryClient";
 import ShareFileDialog from "@/components/ShareFileDialog";
 
-type PlatformFilter = 'all' | 'google' | 'dropbox';
+type ProviderFilter = 'all' | 'google' | 'dropbox' | 'onedrive' | 'box' | 's3';
+
+// ── Provider metadata ────────────────────────────────────────────────────────
+
+const PROVIDER_META: Record<string, { label: string; Logo: React.ComponentType<{ className?: string }> }> = {
+  google:   { label: 'Google Drive', Logo: GoogleDriveLogo },
+  dropbox:  { label: 'Dropbox',      Logo: DropboxLogo },
+  onedrive: { label: 'OneDrive',     Logo: OneDriveLogo },
+  box:      { label: 'Box',          Logo: BoxLogo },
+  s3:       { label: 'Amazon S3',    Logo: S3Logo },
+};
+
+// ── File type helpers ────────────────────────────────────────────────────────
+
+function getFileCategory(mimeType?: string | null) {
+  if (!mimeType) return 'other';
+  if (mimeType.includes('folder'))     return 'folder';
+  if (mimeType.includes('image/'))     return 'image';
+  if (mimeType.includes('video/'))     return 'video';
+  if (mimeType.includes('audio/'))     return 'audio';
+  if (mimeType.includes('pdf'))        return 'pdf';
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'spreadsheet';
+  if (mimeType.includes('word') || mimeType.includes('document'))     return 'document';
+  if (mimeType.includes('zip') || mimeType.includes('archive'))       return 'archive';
+  return 'other';
+}
+
+const CATEGORY_STYLE: Record<string, { icon: React.ReactNode; bg: string; text: string }> = {
+  folder:      { icon: <Folder className="w-5 h-5" />,          bg: 'bg-amber-100 dark:bg-amber-900/30',  text: 'text-amber-600' },
+  image:       { icon: <FileImage className="w-5 h-5" />,       bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-600' },
+  video:       { icon: <FileVideo className="w-5 h-5" />,       bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-600' },
+  audio:       { icon: <FileAudio className="w-5 h-5" />,       bg: 'bg-pink-100 dark:bg-pink-900/30',    text: 'text-pink-600' },
+  pdf:         { icon: <FileText className="w-5 h-5" />,        bg: 'bg-red-100 dark:bg-red-900/30',      text: 'text-red-600' },
+  spreadsheet: { icon: <FileSpreadsheet className="w-5 h-5" />, bg: 'bg-green-100 dark:bg-green-900/30',  text: 'text-green-600' },
+  document:    { icon: <FileText className="w-5 h-5" />,        bg: 'bg-blue-100 dark:bg-blue-900/30',    text: 'text-blue-600' },
+  archive:     { icon: <Archive className="w-5 h-5" />,         bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600' },
+  other:       { icon: <File className="w-5 h-5" />,            bg: 'bg-slate-100 dark:bg-slate-800',      text: 'text-slate-500' },
+};
+
+function FileIcon({ mimeType, size = 'md' }: { mimeType?: string | null; size?: 'sm' | 'md' | 'lg' }) {
+  const cat = getFileCategory(mimeType);
+  const { icon, bg, text } = CATEGORY_STYLE[cat] ?? CATEGORY_STYLE.other;
+  const dim = size === 'sm' ? 'w-8 h-8' : size === 'lg' ? 'w-14 h-14' : 'w-10 h-10';
+  return (
+    <div className={`${dim} ${bg} ${text} rounded-xl flex items-center justify-center flex-shrink-0`}>
+      {icon}
+    </div>
+  );
+}
+
+function ProviderBadge({ provider }: { provider?: string | null }) {
+  if (!provider) return null;
+  const meta = PROVIDER_META[provider];
+  if (!meta) return <span className="text-xs text-muted-foreground capitalize">{provider}</span>;
+  const { Logo, label } = meta;
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+      <Logo className="w-3 h-3" />
+      {label}
+    </span>
+  );
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function formatFileSize(bytes?: number | null): string {
+  if (!bytes || bytes === 0) return '—';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function formatDate(dateString?: string | null): string {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatFullDate(dateString?: string | null): string {
+  if (!dateString) return '—';
+  return new Date(dateString).toLocaleDateString(undefined, { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function totalStorageLabel(files: CloudFile[]): string {
+  const total = files.reduce((s, f) => s + (f.fileSize || 0), 0);
+  return formatFileSize(total);
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 export default function MyFiles() {
   const { t } = useTranslation();
   usePageTitle(t('pageTitles.myFiles', 'TERA — My Files'));
   const { toast } = useToast();
   const searchString = useSearch();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFile, setSelectedFile] = useState<CloudFile | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
+
+  const [searchTerm, setSearchTerm]         = useState('');
+  const [viewMode, setViewMode]             = useState<'grid' | 'list'>('grid');
+  const [currentPage, setCurrentPage]       = useState(1);
+  const [selectedFile, setSelectedFile]     = useState<CloudFile | null>(null);
+  const [detailsOpen, setDetailsOpen]       = useState(false);
+  const [providerFilter, setProviderFilter] = useState<ProviderFilter>('all');
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [fileToShare, setFileToShare] = useState<CloudFile | null>(null);
-  const itemsPerPage = 10;
-  
+  const [fileToShare, setFileToShare]       = useState<CloudFile | null>(null);
+  const itemsPerPage = 12;
+
   const urlFilters = useMemo(() => {
     const params = new URLSearchParams(searchString);
     return {
       types: params.get('types')?.split(',').filter(Boolean) || [],
-      date: params.get('date') || 'any',
-      size: params.get('size') || 'any',
-      owner: params.get('owner') || '',
-      folder: params.get('folder') || '',
-      tags: params.get('tags') || '',
+      date:  params.get('date')  || 'any',
+      size:  params.get('size')  || 'any',
     };
   }, [searchString]);
 
-  const hasActiveFilters = urlFilters.types.length > 0 || 
-    urlFilters.date !== 'any' || 
-    urlFilters.size !== 'any' || 
-    urlFilters.owner !== '' || 
-    urlFilters.folder !== '' || 
-    urlFilters.tags !== '';
-  
   const { data: filesData = { files: [], total: 0, totalPages: 0 }, isLoading } = useQuery({
     queryKey: ["/api/drive-files", currentPage, itemsPerPage],
     queryFn: async ({ queryKey }) => {
       const [, page, limit] = queryKey;
       const authHeaders = await getAuthHeaders();
-      const response = await fetch(`/api/drive-files?page=${page}&limit=${limit}`, {
-        headers: authHeaders,
-        credentials: "include",
-      });
-      if (!response.ok) {
-        if (response.status === 401) return { files: [], total: 0, totalPages: 0 };
-        throw new Error('Failed to fetch files');
-      }
-      return response.json();
+      const res = await fetch(`/api/drive-files?page=${page}&limit=${limit}`, { headers: authHeaders, credentials: 'include' });
+      if (!res.ok) { if (res.status === 401) return { files: [], total: 0, totalPages: 0 }; throw new Error('Failed'); }
+      return res.json();
     },
     keepPreviousData: true,
-  });
+  } as any);
 
-  const rawFiles = filesData.files || [];
-  const total = filesData.total || 0;
+  const rawFiles: CloudFile[] = filesData.files || [];
+  const total      = filesData.total || 0;
   const totalPages = filesData.totalPages || 0;
 
-  const matchesTypeFilter = (file: CloudFile, types: string[]): boolean => {
-    if (types.length === 0) return true;
-    const mimeType = file.mimeType?.toLowerCase() || '';
-    
-    return types.some(type => {
-      switch (type) {
-        case 'folders': return mimeType.includes('folder');
-        case 'files': return !mimeType.includes('folder');
-        case 'pdf': return mimeType.includes('pdf');
-        case 'document': return mimeType.includes('word') || mimeType.includes('document');
-        case 'spreadsheet': return mimeType.includes('spreadsheet') || mimeType.includes('excel');
-        case 'presentation': return mimeType.includes('presentation') || mimeType.includes('powerpoint');
-        case 'image': return mimeType.includes('image');
-        case 'audio': return mimeType.includes('audio');
-        case 'video': return mimeType.includes('video');
-        default: return false;
-      }
-    });
-  };
+  // Providers that actually have files
+  const activeProviders = useMemo(() => [...new Set(rawFiles.map(f => f.provider).filter(Boolean))], [rawFiles]);
 
-  const matchesSizeFilter = (file: CloudFile, sizeRange: string): boolean => {
-    if (sizeRange === 'any') return true;
-    const size = file.fileSize || 0;
-    const MB = 1024 * 1024;
-    const GB = 1024 * MB;
-    
-    switch (sizeRange) {
-      case '0-1mb': return size <= 1 * MB;
-      case '1-5mb': return size > 1 * MB && size <= 5 * MB;
-      case '5-25mb': return size > 5 * MB && size <= 25 * MB;
-      case '25-100mb': return size > 25 * MB && size <= 100 * MB;
-      case '100mb-1gb': return size > 100 * MB && size <= 1 * GB;
-      case '1gb+': return size > 1 * GB;
-      default: return true;
-    }
-  };
-
-  const matchesDateFilter = (file: CloudFile, dateRange: string): boolean => {
-    if (dateRange === 'any') return true;
-    const fileDate = new Date(file.modifiedAt || file.copiedAt);
-    const now = new Date();
-    
-    switch (dateRange) {
-      case 'last_day':
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        return fileDate >= oneDayAgo;
-      case 'last_week':
-        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        return fileDate >= oneWeekAgo;
-      case 'last_month':
-        const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        return fileDate >= oneMonthAgo;
-      case 'last_year':
-        const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        return fileDate >= oneYearAgo;
-      default: return true;
-    }
-  };
-
-  const files = useMemo(() => {
-    if (!hasActiveFilters) return rawFiles;
-    
+  const filteredFiles = useMemo(() => {
     return rawFiles.filter(file => {
-      if (!matchesTypeFilter(file, urlFilters.types)) return false;
-      if (!matchesSizeFilter(file, urlFilters.size)) return false;
-      if (!matchesDateFilter(file, urlFilters.date)) return false;
-      if (urlFilters.owner && !file.fileName?.toLowerCase().includes(urlFilters.owner.toLowerCase())) return false;
-      if (urlFilters.folder && !file.fileName?.toLowerCase().includes(urlFilters.folder.toLowerCase())) return false;
+      if (searchTerm && !file.fileName.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (providerFilter !== 'all' && file.provider !== providerFilter) return false;
+      if (urlFilters.types.length > 0) {
+        const cat = getFileCategory(file.mimeType);
+        if (!urlFilters.types.includes(cat)) return false;
+      }
       return true;
     });
-  }, [rawFiles, urlFilters, hasActiveFilters]);
+  }, [rawFiles, searchTerm, providerFilter, urlFilters]);
 
-  const getFileIcon = (mimeType?: string) => {
-    if (!mimeType) return <FileText className="w-6 h-6 text-gray-600" />;
+  // ── Actions ──────────────────────────────────────────────────────────────
 
-    if (mimeType.includes('folder')) {
-      return <Folder className="w-6 h-6 text-yellow-600" />;
-    }
-    if (mimeType.includes('image/')) {
-      return <FileImage className="w-6 h-6 text-green-600" />;
-    }
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) {
-      return <FileSpreadsheet className="w-6 h-6 text-green-600" />;
-    }
-    if (mimeType.includes('word') || mimeType.includes('document')) {
-      return <FileText className="w-6 h-6 text-blue-600" />;
-    }
-    if (mimeType.includes('zip') || mimeType.includes('archive')) {
-      return <Archive className="w-6 h-6 text-purple-600" />;
-    }
-    return <FileText className="w-6 h-6 text-gray-600" />;
-  };
-
-  const formatFileSize = (bytes?: number): string => {
-    if (!bytes || bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const formatFullDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getFileType = (mimeType?: string): string => {
-    if (!mimeType) return t('myFiles.fileTypes.file', 'Archivo');
-    if (mimeType.includes('folder')) return t('myFiles.fileTypes.folder', 'Carpeta');
-    if (mimeType.includes('image/')) return t('myFiles.fileTypes.image', 'Imagen');
-    if (mimeType.includes('video/')) return t('myFiles.fileTypes.video', 'Video');
-    if (mimeType.includes('audio/')) return t('myFiles.fileTypes.audio', 'Audio');
-    if (mimeType.includes('pdf')) return t('myFiles.fileTypes.pdf', 'PDF');
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return t('myFiles.fileTypes.spreadsheet', 'Hoja de cálculo');
-    if (mimeType.includes('word') || mimeType.includes('document')) return t('myFiles.fileTypes.document', 'Documento');
-    if (mimeType.includes('zip') || mimeType.includes('archive')) return t('myFiles.fileTypes.archive', 'Archivo comprimido');
-    return t('myFiles.fileTypes.file', 'Archivo');
-  };
-
-  const getFileUrl = (file: CloudFile): string => {
-    if (file.provider === 'dropbox') {
-      return file.sourceUrl || `https://www.dropbox.com/home/${file.copiedFileId}`;
-    }
+  const getFileUrl = (file: CloudFile) => {
+    if (file.provider === 'dropbox') return file.sourceUrl || `https://www.dropbox.com/home/${file.copiedFileId}`;
+    if (file.provider === 'onedrive') return `https://onedrive.live.com/?id=${file.copiedFileId}`;
+    if (file.provider === 'box') return `https://app.box.com/file/${file.copiedFileId}`;
     return `https://drive.google.com/file/d/${file.copiedFileId}/view`;
   };
 
-  const getDownloadUrl = (file: CloudFile): string => {
-    if (file.provider === 'dropbox') {
-      return file.sourceUrl?.replace('?dl=0', '?dl=1') || `https://www.dropbox.com/home/${file.copiedFileId}?dl=1`;
-    }
-    return `https://drive.google.com/uc?export=download&id=${file.copiedFileId}`;
-  };
+  const getProviderLabel = (file: CloudFile) => PROVIDER_META[file.provider || '']?.label || file.provider || 'Cloud';
 
-  const getProviderName = (file: CloudFile): string => {
-    return file.provider === 'dropbox' ? 'Dropbox' : 'Google Drive';
-  };
-
-  const handleDownload = (file: CloudFile, e?: React.MouseEvent) => {
+  const handleOpenInCloud = (file: CloudFile, e?: React.MouseEvent) => { e?.stopPropagation(); window.open(getFileUrl(file), '_blank'); };
+  const handleDownload    = (file: CloudFile, e?: React.MouseEvent) => { e?.stopPropagation(); window.open(getFileUrl(file), '_blank'); };
+  const handleCopyLink    = (file: CloudFile, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const downloadUrl = getDownloadUrl(file);
-    window.open(downloadUrl, '_blank');
+    navigator.clipboard.writeText(getFileUrl(file));
+    toast({ title: t('myFiles.linkCopied', 'Link copied') });
   };
+  const handleViewDetails = (file: CloudFile, e?: React.MouseEvent) => { e?.stopPropagation(); setSelectedFile(file); setDetailsOpen(true); };
+  const handleShare       = (file: CloudFile, e?: React.MouseEvent) => { e?.stopPropagation(); setFileToShare(file); setShareDialogOpen(true); };
 
-  const handleOpenInCloud = (file: CloudFile, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const cloudUrl = getFileUrl(file);
-    window.open(cloudUrl, '_blank');
-  };
-
-  const handleCopyLink = (file: CloudFile, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    const cloudUrl = getFileUrl(file);
-    navigator.clipboard.writeText(cloudUrl);
-    toast({
-      title: t('myFiles.linkCopied', 'Enlace copiado'),
-      description: t('myFiles.linkCopiedDesc', 'El enlace se ha copiado al portapapeles'),
-    });
-  };
-
-  const handleViewDetails = (file: CloudFile, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setSelectedFile(file);
-    setDetailsOpen(true);
-  };
-
-  const handleCardClick = (file: CloudFile) => {
-    setSelectedFile(file);
-    setDetailsOpen(true);
-  };
-
-  const handleShare = (file: CloudFile, e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setFileToShare(file);
-    setShareDialogOpen(true);
-  };
-
-  const filteredFiles = files.filter((file: CloudFile) => {
-    const matchesSearch = file.fileName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPlatform = platformFilter === 'all' || file.provider === platformFilter;
-    return matchesSearch && matchesPlatform;
-  });
+  // ── Loading ───────────────────────────────────────────────────────────────
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20">
         <Header />
-        <div className="flex">
+        <div className="flex flex-1">
           <Sidebar />
-          <main className="flex-1 p-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+          <main className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </main>
         </div>
       </div>
     );
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col transition-all duration-300 pl-0 sm:pl-20" data-testid="page-my-files">
+    <div className="min-h-screen bg-[#F5F7FA] dark:bg-background flex flex-col pl-0 sm:pl-20" data-testid="page-my-files">
       <Header />
-      <div className="flex">
+      <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-8">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-[1.5rem] font-semibold text-foreground mb-2">
-              {t('myFiles.title', { defaultValue: 'Mis Archivos' })}
-            </h1>
-            <p className="text-muted-foreground">
-              {t('myFiles.subtitle', 'Archivos y Carpetas')}
-            </p>
+        <main className="flex-1 p-6 lg:p-8 space-y-6 max-w-7xl">
+
+          {/* ── Hero ── */}
+          <div className="rounded-2xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 50%, #3b82f6 100%)' }}>
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+            <div className="relative p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Layers className="w-4 h-4 text-white/70" />
+                  <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">{t('myFiles.title', 'My Files')}</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-white">{t('myFiles.heroTitle', 'All your files, one place')}</h1>
+                <p className="text-white/60 text-sm mt-1">{t('myFiles.heroSubtitle', 'Files transferred or copied across your connected clouds')}</p>
+              </div>
+
+              {/* Stats */}
+              <div className="flex gap-3 flex-wrap">
+                {[
+                  { label: t('myFiles.statFiles', 'Total files'), value: total },
+                  { label: t('myFiles.statProviders', 'Providers'), value: activeProviders.length },
+                  { label: t('myFiles.statStorage', 'Storage tracked'), value: totalStorageLabel(rawFiles) },
+                ].map(s => (
+                  <div key={s.label} className="bg-white/15 backdrop-blur rounded-xl px-4 py-3 min-w-[90px]">
+                    <div className="text-xl font-bold text-white">{s.value}</div>
+                    <div className="text-white/60 text-xs mt-0.5">{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
-        {/* Controls */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          {/* ── Controls ── */}
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            {/* Search */}
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={t('myFiles.searchPlaceholder', { defaultValue: 'Buscar en mis archivos...' })}
+                placeholder={t('myFiles.searchPlaceholder', 'Search files…')}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="pl-9 bg-white dark:bg-card border-border"
                 data-testid="input-search-files"
               />
             </div>
-            
-            {/* Platform Filter */}
-            <div className="flex border border-border rounded-lg">
-              <Button
-                variant={platformFilter === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setPlatformFilter('all')}
-                className="rounded-r-none px-3"
-                data-testid="button-filter-all"
-              >
-                {t('myFiles.all', 'Todos')}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPlatformFilter('google')}
-                className={`rounded-none border-l px-3 ${platformFilter === 'google' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''}`}
-                data-testid="button-filter-google"
-              >
-                <GoogleDriveLogo className="w-4 h-4 mr-1" />
-                Drive
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setPlatformFilter('dropbox')}
-                className={`rounded-l-none border-l px-3 ${platformFilter === 'dropbox' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : ''}`}
-                data-testid="button-filter-dropbox"
-              >
-                <DropboxLogo className="w-4 h-4 mr-1" />
-                Dropbox
-              </Button>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <div className="flex border border-border rounded-lg">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="rounded-r-none"
-                data-testid="button-view-grid"
-              >
-                <Grid3x3 className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="rounded-l-none border-l"
-                data-testid="button-view-list"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
 
-        {/* Files Grid/List */}
-        {filteredFiles.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Folder className="w-16 h-16 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">
-                {searchTerm ? t('myFiles.noFilesFound', { defaultValue: 'No se encontraron archivos' }) : t('myFiles.noFilesCopied', { defaultValue: 'No hay archivos copiados' })}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Provider filter chips */}
+              <div className="flex items-center gap-1 bg-white dark:bg-card border border-border rounded-lg p-1">
+                <button
+                  onClick={() => setProviderFilter('all')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${providerFilter === 'all' ? 'bg-blue-600 text-white shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  data-testid="button-filter-all"
+                >
+                  {t('myFiles.all', 'All')}
+                </button>
+                {activeProviders.map(p => {
+                  const meta = PROVIDER_META[p || ''];
+                  if (!meta) return null;
+                  const { Logo, label } = meta;
+                  const active = providerFilter === p;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setProviderFilter(p as ProviderFilter)}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-sm font-medium transition-colors ${active ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300' : 'text-muted-foreground hover:text-foreground'}`}
+                      data-testid={`button-filter-${p}`}
+                    >
+                      <Logo className="w-3.5 h-3.5" />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* View toggle */}
+              <div className="flex items-center bg-white dark:bg-card border border-border rounded-lg p-1 gap-1">
+                <button onClick={() => setViewMode('grid')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground'}`} data-testid="button-view-grid">
+                  <Grid3x3 className="w-4 h-4" />
+                </button>
+                <button onClick={() => setViewMode('list')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-muted-foreground hover:text-foreground'}`} data-testid="button-view-list">
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Results count ── */}
+          {filteredFiles.length > 0 && (
+            <p className="text-sm text-muted-foreground -mt-2">
+              {filteredFiles.length} {t('myFiles.filesFound', 'file(s)')}
+              {providerFilter !== 'all' && ` · ${PROVIDER_META[providerFilter]?.label || providerFilter}`}
+              {searchTerm && ` · "${searchTerm}"`}
+            </p>
+          )}
+
+          {/* ── Empty state ── */}
+          {filteredFiles.length === 0 ? (
+            <div className="bg-white dark:bg-card rounded-2xl border border-border flex flex-col items-center justify-center py-20 px-6 text-center">
+              <div className="w-16 h-16 bg-blue-50 dark:bg-blue-950/30 rounded-2xl flex items-center justify-center mb-4">
+                <Folder className="w-8 h-8 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-foreground mb-1">
+                {searchTerm ? t('myFiles.noFilesFound', 'No files found') : t('myFiles.noFilesCopied', 'No files yet')}
               </h3>
-              <p className="text-muted-foreground text-center">
-                {searchTerm 
-                  ? t('myFiles.tryDifferentSearch', { defaultValue: 'Intenta con otros términos de búsqueda.' })
-                  : platformFilter === 'dropbox'
-                    ? t('myFiles.filterDropbox', 'Los archivos y carpetas de Dropbox aparecerán aquí.')
-                    : platformFilter === 'google'
-                      ? t('myFiles.filterGoogle', 'Los archivos y carpetas de Google Drive aparecerán aquí.')
-                      : t('myFiles.filesWillAppearHere', { defaultValue: 'Tus archivos aparecerán aquí una vez copiados.' })
-                }
+              <p className="text-muted-foreground text-sm max-w-xs">
+                {searchTerm
+                  ? t('myFiles.tryDifferentSearch', 'Try different search terms')
+                  : t('myFiles.filesWillAppearHere', 'Files transferred between clouds will appear here')}
               </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className={viewMode === 'grid' ? 
-            "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" : 
-            "space-y-2"
-          }>
-            {filteredFiles.map((file: CloudFile) => (
-              <Card 
-                key={file.id} 
-                className="hover:shadow-md transition-shadow group cursor-pointer"
-                onClick={() => handleCardClick(file)}
-                data-testid={`card-file-${file.id}`}
-              >
-                <CardContent className={viewMode === 'grid' ? 'p-4' : 'p-3 flex items-center space-x-4'}>
-                  <div className={viewMode === 'grid' ? 'space-y-3' : 'flex items-center space-x-3 flex-1'}>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center flex-shrink-0 relative">
-                        {getFileIcon(file.mimeType || undefined)}
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4">
-                          {file.provider === 'dropbox' ? (
-                            <DropboxLogo className="w-4 h-4" />
-                          ) : (
-                            <GoogleDriveLogo className="w-4 h-4" />
-                          )}
-                        </div>
-                      </div>
-                      <div className={viewMode === 'list' ? 'flex-1 min-w-0' : 'min-w-0 flex-1'}>
-                        <h3 className="font-medium text-sm truncate max-w-[180px]" title={file.fileName}>
-                          {file.fileName}
-                        </h3>
-                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                          <span>{formatFileSize(file.fileSize || undefined)}</span>
-                          <span>•</span>
-                          <span>{formatDate(file.createdAt!)}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {viewMode === 'grid' && (
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                          {t('myFiles.copied', 'Copiado')}
-                        </Badge>
-                        <div className="flex space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => handleDownload(file, e)}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                            data-testid={`button-download-${file.id}`}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                                data-testid={`button-more-${file.id}`}
-                              >
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)} data-testid={`menu-details-${file.id}`}>
-                                <Info className="w-4 h-4 mr-2" />
-                                {t('myFiles.viewDetails', 'Ver detalles')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)} data-testid={`menu-open-cloud-${file.id}`}>
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(file) })}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)} data-testid={`menu-download-${file.id}`}>
-                                <Download className="w-4 h-4 mr-2" />
-                                {t('myFiles.download', 'Descargar')}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)} data-testid={`menu-copy-link-${file.id}`}>
-                                <Link2 className="w-4 h-4 mr-2" />
-                                {t('myFiles.copyLink', 'Copiar enlace')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-${file.id}`}>
-                                <Share2 className="w-4 h-4 mr-2" />
-                                {t('myFiles.share', 'Compartir')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {viewMode === 'list' && (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 flex-shrink-0">
-                        {file.provider === 'dropbox' ? (
-                          <DropboxLogo className="w-4 h-4" />
-                        ) : (
-                          <GoogleDriveLogo className="w-4 h-4" />
-                        )}
-                      </div>
-                      <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
-                        {t('myFiles.copied', 'Copiado')}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDownload(file, e)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
+            </div>
+          ) : viewMode === 'grid' ? (
+            /* ── Grid view ── */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredFiles.map((file: CloudFile) => (
+                <div
+                  key={file.id}
+                  className="bg-white dark:bg-card rounded-xl border border-border hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md transition-all group cursor-pointer"
+                  onClick={() => handleViewDetails(file)}
+                  data-testid={`card-file-${file.id}`}
+                >
+                  <div className="p-4 space-y-3">
+                    {/* Top: icon + menu */}
+                    <div className="flex items-start justify-between">
+                      <FileIcon mimeType={file.mimeType} />
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                        <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                          <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-muted" data-testid={`button-more-${file.id}`}>
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                          </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={(e) => handleViewDetails(file, e as any)}>
-                            <Info className="w-4 h-4 mr-2" />
-                            {t('myFiles.viewDetails', 'Ver detalles')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => handleOpenInCloud(file, e as any)}>
-                            <ExternalLink className="w-4 h-4 mr-2" />
-                            {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(file) })}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => handleDownload(file, e as any)}>
-                            <Download className="w-4 h-4 mr-2" />
-                            {t('myFiles.download', 'Descargar')}
-                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={e => handleViewDetails(file, e as any)}><Info className="w-4 h-4 mr-2" />{t('myFiles.viewDetails', 'Details')}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={e => handleOpenInCloud(file, e as any)}><ExternalLink className="w-4 h-4 mr-2" />{t('myFiles.openIn', 'Open in {{provider}}', { provider: getProviderLabel(file) })}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={e => handleDownload(file, e as any)}><Download className="w-4 h-4 mr-2" />{t('myFiles.download', 'Download')}</DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={(e) => handleCopyLink(file, e as any)}>
-                            <Link2 className="w-4 h-4 mr-2" />
-                            {t('myFiles.copyLink', 'Copiar enlace')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => handleShare(file, e as any)} data-testid={`menu-share-list-${file.id}`}>
-                            <Share2 className="w-4 h-4 mr-2" />
-                            {t('myFiles.share', 'Compartir')}
-                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={e => handleCopyLink(file, e as any)}><Link2 className="w-4 h-4 mr-2" />{t('myFiles.copyLink', 'Copy link')}</DropdownMenuItem>
+                          <DropdownMenuItem onClick={e => handleShare(file, e as any)}><Share2 className="w-4 h-4 mr-2" />{t('myFiles.share', 'Share')}</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+
+                    {/* File name */}
+                    <div>
+                      <p className="font-medium text-sm truncate leading-tight" title={file.fileName}>{file.fileName}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-xs text-muted-foreground">{formatFileSize(file.fileSize)}</span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-xs text-muted-foreground">{formatDate(file.createdAt)}</span>
+                      </div>
+                    </div>
+
+                    {/* Provider footer */}
+                    <div className="flex items-center justify-between pt-1 border-t border-border">
+                      <ProviderBadge provider={file.provider} />
+                      <Badge variant="secondary" className="text-[10px] bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-0">
+                        {t('myFiles.copied', 'Transferred')}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* ── List view ── */
+            <div className="bg-white dark:bg-card rounded-xl border border-border overflow-hidden">
+              {/* Table header */}
+              <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-2.5 border-b border-border bg-muted/50 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <span className="w-10" />
+                <span>{t('common.table.name', 'Name')}</span>
+                <span className="w-24 text-right">{t('myFiles.size', 'Size')}</span>
+                <span className="w-28 text-right">{t('myFiles.copyDate', 'Date')}</span>
+                <span className="w-8" />
+              </div>
+
+              {filteredFiles.map((file: CloudFile, i) => (
+                <div
+                  key={file.id}
+                  className={`grid grid-cols-[auto_1fr_auto_auto_auto] gap-4 px-4 py-3 items-center group hover:bg-muted/40 cursor-pointer transition-colors ${i < filteredFiles.length - 1 ? 'border-b border-border' : ''}`}
+                  onClick={() => handleViewDetails(file)}
+                  data-testid={`row-file-${file.id}`}
+                >
+                  <FileIcon mimeType={file.mimeType} size="sm" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate" title={file.fileName}>{file.fileName}</p>
+                    <ProviderBadge provider={file.provider} />
+                  </div>
+                  <span className="text-xs text-muted-foreground w-24 text-right">{formatFileSize(file.fileSize)}</span>
+                  <span className="text-xs text-muted-foreground w-28 text-right">{formatDate(file.createdAt)}</span>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                      <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-muted w-8" data-testid={`button-more-list-${file.id}`}>
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={e => handleViewDetails(file, e as any)}><Info className="w-4 h-4 mr-2" />{t('myFiles.viewDetails', 'Details')}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={e => handleOpenInCloud(file, e as any)}><ExternalLink className="w-4 h-4 mr-2" />{t('myFiles.openIn', 'Open in {{provider}}', { provider: getProviderLabel(file) })}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={e => handleDownload(file, e as any)}><Download className="w-4 h-4 mr-2" />{t('myFiles.download', 'Download')}</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={e => handleCopyLink(file, e as any)}><Link2 className="w-4 h-4 mr-2" />{t('myFiles.copyLink', 'Copy link')}</DropdownMenuItem>
+                      <DropdownMenuItem onClick={e => handleShare(file, e as any)}><Share2 className="w-4 h-4 mr-2" />{t('myFiles.share', 'Share')}</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ))}
+            </div>
           )}
 
-          {/* Paginación */}
+          {/* ── Pagination ── */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 px-4 py-3 border rounded-lg bg-white">
-              <div className="flex items-center text-sm text-muted-foreground">
-                <span data-testid={`text-showing-${Math.min((currentPage - 1) * itemsPerPage + 1, total)}-to-${Math.min(currentPage * itemsPerPage, total)}-of-${total}`}>
-                  {t('myFiles.showing')} {Math.min((currentPage - 1) * itemsPerPage + 1, total)} {t('myFiles.to')} {Math.min(currentPage * itemsPerPage, total)} {t('myFiles.of')} {total} {t('myFiles.files')}
-                </span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage <= 1}
-                  className="flex items-center space-x-1"
-                  data-testid="button-prev-page"
-                >
+            <div className="flex items-center justify-between bg-white dark:bg-card border border-border rounded-xl px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                {Math.min((currentPage - 1) * itemsPerPage + 1, total)}–{Math.min(currentPage * itemsPerPage, total)} {t('myFiles.of', 'of')} {total}
+              </p>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage <= 1} className="h-8 w-8 p-0" data-testid="button-prev-page">
                   <ChevronLeft className="w-4 h-4" />
-                  <span>{t('myFiles.previous')}</span>
                 </Button>
-                
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={pageNum === currentPage ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setCurrentPage(pageNum)}
-                        className="w-8 h-8 p-0"
-                        data-testid={`button-page-${pageNum}`}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
-                </div>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage >= totalPages}
-                  className="flex items-center space-x-1"
-                  data-testid="button-next-page"
-                >
-                  <span>{t('myFiles.next')}</span>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map(n => (
+                  <Button key={n} variant={n === currentPage ? 'default' : 'outline'} size="sm" onClick={() => setCurrentPage(n)} className="h-8 w-8 p-0" data-testid={`button-page-${n}`}>{n}</Button>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage >= totalPages} className="h-8 w-8 p-0" data-testid="button-next-page">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
@@ -641,93 +447,50 @@ export default function MyFiles() {
         </main>
       </div>
 
-      {/* File Details Dialog */}
+      {/* ── File Details Dialog ── */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
-              {selectedFile && getFileIcon(selectedFile.mimeType || undefined)}
-              <span className="truncate">{selectedFile?.fileName}</span>
+              {selectedFile && <FileIcon mimeType={selectedFile.mimeType} size="sm" />}
+              <span className="truncate text-base">{selectedFile?.fileName}</span>
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedFile && (
             <div className="space-y-4">
-              {/* File Name Full */}
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">{t('myFiles.fullName', 'Nombre completo')}</p>
-                <p className="text-sm font-medium break-all">{selectedFile.fileName}</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { icon: <HardDrive className="w-4 h-4" />, label: t('myFiles.size', 'Size'), value: formatFileSize(selectedFile.fileSize) },
+                  { icon: <FileText className="w-4 h-4" />,  label: t('myFiles.type', 'Type'), value: getFileCategory(selectedFile.mimeType) },
+                  { icon: <Calendar className="w-4 h-4" />,  label: t('myFiles.copyDate', 'Date'), value: formatFullDate(selectedFile.createdAt), col2: true },
+                ].map(row => (
+                  <div key={row.label} className={`flex items-start gap-2 bg-muted/50 rounded-lg p-3 ${row.col2 ? 'col-span-2' : ''}`}>
+                    <span className="text-muted-foreground mt-0.5">{row.icon}</span>
+                    <div>
+                      <p className="text-xs text-muted-foreground">{row.label}</p>
+                      <p className="text-sm font-medium capitalize">{row.value}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* File Info Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t('myFiles.size', 'Tamaño')}</p>
-                    <p className="text-sm font-medium">{formatFileSize(selectedFile.fileSize || undefined)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t('myFiles.type', 'Tipo')}</p>
-                    <p className="text-sm font-medium">{getFileType(selectedFile.mimeType || undefined)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 col-span-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">{t('myFiles.copyDate', 'Fecha de copia')}</p>
-                    <p className="text-sm font-medium">{formatFullDate(selectedFile.createdAt!)}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  {t('myFiles.copiedSuccessfully', 'Copiado exitosamente')}
+              <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-3">
+                <ProviderBadge provider={selectedFile.provider} />
+                <Badge variant="secondary" className="ml-auto text-xs bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 border-0">
+                  {t('myFiles.copiedSuccessfully', 'Transferred')}
                 </Badge>
               </div>
 
-              {/* Provider indicator */}
-              <div className="flex items-center gap-2">
-                {selectedFile.provider === 'dropbox' ? (
-                  <DropboxLogo className="w-5 h-5" />
-                ) : (
-                  <GoogleDriveLogo className="w-5 h-5" />
-                )}
-                <span className="text-sm text-muted-foreground">
-                  {t('myFiles.storedIn', 'Almacenado en {{provider}}', { provider: getProviderName(selectedFile) })}
-                </span>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-2">
-                <Button
-                  onClick={() => handleOpenInCloud(selectedFile)}
-                  className="flex-1"
-                  data-testid="button-dialog-open-cloud"
-                >
+              <div className="flex gap-2 pt-1">
+                <Button onClick={() => handleOpenInCloud(selectedFile)} className="flex-1" data-testid="button-dialog-open-cloud">
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  {t('myFiles.openIn', 'Abrir en {{provider}}', { provider: getProviderName(selectedFile) })}
+                  {t('myFiles.openIn', 'Open in {{provider}}', { provider: getProviderLabel(selectedFile) })}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleDownload(selectedFile)}
-                  data-testid="button-dialog-download"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {t('myFiles.download', 'Descargar')}
+                <Button variant="outline" onClick={() => handleDownload(selectedFile)} data-testid="button-dialog-download">
+                  <Download className="w-4 h-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleCopyLink(selectedFile)}
-                  data-testid="button-dialog-copy-link"
-                >
+                <Button variant="outline" onClick={() => handleCopyLink(selectedFile)} data-testid="button-dialog-copy-link">
                   <Copy className="w-4 h-4" />
                 </Button>
               </div>
@@ -740,12 +503,12 @@ export default function MyFiles() {
         open={shareDialogOpen}
         onOpenChange={setShareDialogOpen}
         file={fileToShare ? {
-          id: fileToShare.copiedFileId || fileToShare.id?.toString() || "",
+          id: fileToShare.copiedFileId || fileToShare.id?.toString() || '',
           name: fileToShare.fileName,
-          type: fileToShare.mimeType?.includes("folder") ? "folder" : "file",
+          type: fileToShare.mimeType?.includes('folder') ? 'folder' : 'file',
           size: fileToShare.fileSize,
           mimeType: fileToShare.mimeType,
-          provider: (fileToShare.provider as "google" | "dropbox") || "google",
+          provider: (fileToShare.provider as 'google' | 'dropbox') || 'google',
           path: null,
         } : null}
       />
