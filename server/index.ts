@@ -46,12 +46,18 @@ app.use(helmet({
 }));
 
 // Rate limiting — stricter on auth endpoints, relaxed on API
+// /api/auth/user is a session check called on every page load — never rate-limit it.
+// OAuth callbacks are external redirects — rate-limiting them causes redirect loops.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 20,
   message: { message: "Demasiados intentos. Volvé a intentarlo en 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    const path = (req as any).originalUrl?.split('?')[0] || '';
+    return path === '/api/auth/user' || path.endsWith('/callback');
+  },
 });
 
 const apiLimiter = rateLimit({
