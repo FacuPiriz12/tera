@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Eye, Plus, Trash2, Pause, Play, Clock, FolderOpen, ArrowRight, Zap, AlertCircle } from "lucide-react";
+import { Eye, Plus, Trash2, Pause, Play, Clock, ArrowRight, Zap, AlertCircle } from "lucide-react";
+import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -121,7 +123,12 @@ export default function WatchFolders() {
   const totalTransferred = folders.reduce((s, f) => s + (f.filesTransferred || 0), 0);
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20">
+      <Header />
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 p-6 lg:p-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Hero header */}
       <div className="rounded-2xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)' }}>
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
@@ -359,6 +366,9 @@ export default function WatchFolders() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+        </main>
+      </div>
     </div>
   );
 }
