@@ -464,3 +464,46 @@ export const fileIndex = pgTable("file_index", {
 
 export type FileIndexEntry = typeof fileIndex.$inferSelect;
 export type InsertFileIndexEntry = typeof fileIndex.$inferInsert;
+
+// Watch Folders — monitor a source folder and auto-transfer new files to destination
+export const watchFolders = pgTable("watch_folders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  sourceProvider: varchar("source_provider").notNull(), // 'google' | 'dropbox' | 'onedrive' | 'box' | 's3'
+  sourceFolderId: text("source_folder_id").notNull(),
+  sourceFolderName: varchar("source_folder_name"),
+  destProvider: varchar("dest_provider").notNull(),
+  destFolderId: text("dest_folder_id").notNull(),
+  destFolderName: varchar("dest_folder_name"),
+  intervalMinutes: integer("interval_minutes").notNull().default(15), // 5 | 15 | 30 | 60
+  isActive: boolean("is_active").notNull().default(true),
+  lastCheckedAt: timestamp("last_checked_at"),
+  filesDetected: integer("files_detected").default(0),
+  filesTransferred: integer("files_transferred").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Snapshot of files already seen by a watch folder (to avoid re-transferring)
+export const watchFolderFiles = pgTable("watch_folder_files", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  watchFolderId: varchar("watch_folder_id").notNull().references(() => watchFolders.id, { onDelete: 'cascade' }),
+  sourceFileId: varchar("source_file_id").notNull(),
+  fileName: text("file_name").notNull(),
+  fileSize: bigint("file_size", { mode: "number" }),
+  detectedAt: timestamp("detected_at").defaultNow(),
+});
+
+export type WatchFolder = typeof watchFolders.$inferSelect;
+export type InsertWatchFolder = typeof watchFolders.$inferInsert;
+export type WatchFolderFile = typeof watchFolderFiles.$inferSelect;
+
+export const insertWatchFolderSchema = createInsertSchema(watchFolders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastCheckedAt: true,
+  filesDetected: true,
+  filesTransferred: true,
+});

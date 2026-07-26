@@ -4689,6 +4689,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ── Watch Folders ────────────���────────────────────────────────────────────
+
+  const WATCH_FOLDER_LIMITS: Record<string, number> = { free: 0, pro: 2, business: Infinity };
+
+  app.get('/api/watch-folders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folders = await storage.getWatchFoldersByUser(userId);
+      res.json(folders);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to fetch watch folders' });
+    }
+  });
+
+  app.post('/api/watch-folders', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      const plan = (user?.membershipPlan || 'free') as string;
+      const limit = user?.role === 'admin' ? Infinity : (WATCH_FOLDER_LIMITS[plan] ?? 0);
+
+      if (limit === 0) {
+        return res.status(403).json({ message: 'Watch folders require a Pro or Business plan' });
+      }
+
+      const count = await storage.countWatchFoldersByUser(userId);
+      if (count >= limit) {
+        return res.status(403).json({ message: `Your plan allows up to ${limit} watch folder(s)` });
+      }
+
+      const { name, sourceProvider, sourceFolderId, sourceFolderName, destProvider, destFolderId, destFolderName, intervalMinutes } = req.body;
+      if (!name || !sourceProvider || !sourceFolderId || !destProvider || !destFolderId) {
+        return res.status(400).json({ message: 'Missing required fields' });
+      }
+
+      const folder = await storage.createWatchFolder({
+        userId,
+        name,
+        sourceProvider,
+        sourceFolderId,
+        sourceFolderName: sourceFolderName || null,
+        destProvider,
+        destFolderId,
+        destFolderName: destFolderName || null,
+        intervalMinutes: intervalMinutes || 15,
+        isActive: true,
+      });
+
+      res.status(201).json(folder);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to create watch folder' });
+    }
+  });
+
+  app.patch('/api/watch-folders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folder = await storage.getWatchFolder(req.params.id);
+      if (!folder) return res.status(404).json({ message: 'Watch folder not found' });
+      if (folder.userId !== userId) return res.status(403).json({ message: 'Not authorized' });
+
+      const allowed = ['name', 'intervalMinutes', 'isActive', 'destFolderId', 'destFolderName'];
+      const patch: Record<string, any> = {};
+      for (const key of allowed) {
+        if (req.body[key] !== undefined) patch[key] = req.body[key];
+      }
+
+      const updated = await storage.updateWatchFolder(req.params.id, patch);
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to update watch folder' });
+    }
+  });
+
+  app.post('/api/watch-folders/:id/toggle', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folder = await storage.getWatchFolder(req.params.id);
+      if (!folder) return res.status(404).json({ message: 'Watch folder not found' });
+      if (folder.userId !== userId) return res.status(403).json({ message: 'Not authorized' });
+
+      const updated = await storage.updateWatchFolder(req.params.id, { isActive: !folder.isActive });
+      res.json(updated);
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to toggle watch folder' });
+    }
+  });
+
+  app.delete('/api/watch-folders/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const folder = await storage.getWatchFolder(req.params.id);
+      if (!folder) return res.status(404).json({ message: 'Watch folder not found' });
+      if (folder.userId !== userId) return res.status(403).json({ message: 'Not authorized' });
+
+      await storage.deleteWatchFolder(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: 'Failed to delete watch folder' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

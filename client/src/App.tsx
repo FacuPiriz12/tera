@@ -27,6 +27,7 @@ import AdminUsers from "@/pages/admin/Users";
 import AdminOperations from "@/pages/admin/Operations";
 import ShareInbox from "@/pages/ShareInbox";
 import Tasks from "@/pages/Tasks";
+import WatchFolders from "@/pages/WatchFolders";
 import FileVersions from "@/pages/FileVersions";
 import CloudHealth from "@/pages/CloudHealth";
 import TermsOfService from "@/pages/TermsOfService";
@@ -117,6 +118,9 @@ function Router() {
       </Route>
       <Route path="/tasks">
         {() => isLoggedIn ? <Tasks /> : <AuthPage />}
+      </Route>
+      <Route path="/watch-folders">
+        {() => isLoggedIn ? <WatchFolders /> : <AuthPage />}
       </Route>
       <Route path="/health">
         {() => isLoggedIn ? <CloudHealth /> : <AuthPage />}

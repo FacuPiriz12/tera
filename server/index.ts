@@ -14,6 +14,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { createServer } from "http";
 import { startQueueWorker } from "./queueWorker";
 import { startSchedulerService } from "./services/schedulerService";
+import { startWatchFolderService } from "./services/watchFolderService";
 import { ensureTablesExist } from "./db";
 import { storage } from "./storage";
 
@@ -286,6 +287,13 @@ app.use((req, res, next) => {
     console.log('📅 Scheduler service started successfully');
   } catch (error) {
     console.error('❌ Failed to start scheduler service:', error);
+  }
+
+  try {
+    await startWatchFolderService();
+    console.log('👁️ Watch folder service started successfully');
+  } catch (error) {
+    console.error('❌ Failed to start watch folder service:', error);
   }
 
   // Keep-alive ping on Render to prevent the free-tier instance from sleeping.

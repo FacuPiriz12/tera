@@ -11,6 +11,8 @@ import {
   fileConflicts,
   fileVersions,
   fileIndex,
+  watchFolders,
+  watchFolderFiles,
   type User,
   type UpsertUser,
   type CloudFile,
@@ -35,6 +37,8 @@ import {
   type InsertFileVersion,
   type FileIndexEntry,
   type InsertFileIndexEntry,
+  type WatchFolder,
+  type InsertWatchFolder,
 } from "@shared/schema";
 import { getDb } from "./db";
 import { eq, desc, sql, and, or, isNull, lte, count, asc, ne, ilike } from "drizzle-orm";
@@ -1295,6 +1299,60 @@ export class DatabaseStorage implements IStorage {
       .where(eq(fileIndex.userId, userId))
       .groupBy(fileIndex.provider);
     return rows.map(r => ({ provider: r.provider, count: Number(r.count), lastIndexed: r.lastIndexed }));
+  }
+
+  // ── Watch Folders ────────────────────────────────────────────────────────────
+
+  async createWatchFolder(data: InsertWatchFolder): Promise<WatchFolder> {
+    const db = getDb();
+    const [folder] = await db.insert(watchFolders).values(data).returning();
+    return folder;
+  }
+
+  async getWatchFoldersByUser(userId: string): Promise<WatchFolder[]> {
+    return getDb().select().from(watchFolders).where(eq(watchFolders.userId, userId)).orderBy(desc(watchFolders.createdAt));
+  }
+
+  async getWatchFolder(id: string): Promise<WatchFolder | undefined> {
+    const [row] = await getDb().select().from(watchFolders).where(eq(watchFolders.id, id));
+    return row;
+  }
+
+  async getActiveWatchFolders(): Promise<WatchFolder[]> {
+    return getDb().select().from(watchFolders).where(eq(watchFolders.isActive, true));
+  }
+
+  async updateWatchFolder(id: string, data: Partial<WatchFolder>): Promise<WatchFolder> {
+    const [updated] = await getDb()
+      .update(watchFolders)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(watchFolders.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteWatchFolder(id: string): Promise<void> {
+    await getDb().delete(watchFolders).where(eq(watchFolders.id, id));
+  }
+
+  async getWatchFolderKnownFileIds(watchFolderId: string): Promise<Set<string>> {
+    const rows = await getDb()
+      .select({ sourceFileId: watchFolderFiles.sourceFileId })
+      .from(watchFolderFiles)
+      .where(eq(watchFolderFiles.watchFolderId, watchFolderId));
+    return new Set(rows.map(r => r.sourceFileId));
+  }
+
+  async addWatchFolderFiles(watchFolderId: string, files: { sourceFileId: string; fileName: string; fileSize?: number | null }[]): Promise<void> {
+    if (files.length === 0) return;
+    await getDb().insert(watchFolderFiles).values(
+      files.map(f => ({ watchFolderId, sourceFileId: f.sourceFileId, fileName: f.fileName, fileSize: f.fileSize ?? null }))
+    );
+  }
+
+  async countWatchFoldersByUser(userId: string): Promise<number> {
+    const [row] = await getDb().select({ count: count() }).from(watchFolders).where(eq(watchFolders.userId, userId));
+    return Number(row?.count ?? 0);
   }
 }
 
