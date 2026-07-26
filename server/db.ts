@@ -338,6 +338,57 @@ async function ensureTablesExist() {
       CREATE UNIQUE INDEX IF NOT EXISTS "IDX_sync_file_registry_unique" ON sync_file_registry (scheduled_task_id, source_file_id)
     `);
 
+    // Watch Folders
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS watch_folders (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id VARCHAR NOT NULL REFERENCES users(id),
+        name VARCHAR NOT NULL,
+        source_provider VARCHAR NOT NULL,
+        source_folder_id TEXT NOT NULL,
+        source_folder_name VARCHAR,
+        dest_provider VARCHAR NOT NULL,
+        dest_folder_id TEXT NOT NULL,
+        dest_folder_name VARCHAR,
+        interval_minutes INTEGER NOT NULL DEFAULT 15,
+        is_active BOOLEAN NOT NULL DEFAULT true,
+        last_checked_at TIMESTAMP,
+        files_detected INTEGER DEFAULT 0,
+        files_transferred INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    await database.execute(sql`
+      CREATE TABLE IF NOT EXISTS watch_folder_files (
+        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        watch_folder_id VARCHAR NOT NULL REFERENCES watch_folders(id) ON DELETE CASCADE,
+        source_file_id VARCHAR NOT NULL,
+        file_name TEXT NOT NULL,
+        file_size BIGINT,
+        detected_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
+    // New columns added after initial launch — safe to re-run
+    try {
+      await database.execute(sql`ALTER TABLE copy_operations ADD COLUMN IF NOT EXISTS operation_type VARCHAR DEFAULT 'copy'`);
+      await database.execute(sql`ALTER TABLE copy_operations ADD COLUMN IF NOT EXISTS duplicate_action VARCHAR DEFAULT 'skip'`);
+      await database.execute(sql`ALTER TABLE copy_operations ADD COLUMN IF NOT EXISTS copied_file_name TEXT`);
+      await database.execute(sql`ALTER TABLE copy_operations ADD COLUMN IF NOT EXISTS source_name VARCHAR`);
+      await database.execute(sql`ALTER TABLE copy_operations ADD COLUMN IF NOT EXISTS language VARCHAR DEFAULT 'es'`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR DEFAULT 'es'`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS dropbox_id VARCHAR`);
+      await database.execute(sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS membership_plan VARCHAR NOT NULL DEFAULT 'free'`);
+      await database.execute(sql`ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS sync_mode VARCHAR DEFAULT 'copy'`);
+      await database.execute(sql`ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS source_folder_id TEXT`);
+      await database.execute(sql`ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS selected_folder_ids TEXT[]`);
+      await database.execute(sql`ALTER TABLE scheduled_tasks ADD COLUMN IF NOT EXISTS excluded_folder_ids TEXT[]`);
+      await database.execute(sql`ALTER TABLE scheduled_task_runs ADD COLUMN IF NOT EXISTS bytes_transferred BIGINT DEFAULT 0`);
+    } catch (_) { /* columns may already exist */ }
+
     tablesInitialized = true;
     console.log('✅ Database tables initialized successfully');
   } catch (error) {

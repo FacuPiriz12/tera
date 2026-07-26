@@ -2395,6 +2395,16 @@ class MemoryStorage implements IStorage {
   async getIndexStatus(_userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]> { return []; }
 }
 
-export const storage: IStorage = process.env.DATABASE_URL
+const hasDatabaseConfig =
+  process.env.DATABASE_URL ||
+  (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE);
+
+if (hasDatabaseConfig) {
+  console.log('✅ Using DatabaseStorage (persistent)');
+} else {
+  console.warn('⚠️  DATABASE_URL not set — falling back to MemoryStorage. Data will NOT persist across restarts.');
+}
+
+export const storage: IStorage = hasDatabaseConfig
   ? new DatabaseStorage()
   : new MemoryStorage();

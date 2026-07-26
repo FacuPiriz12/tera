@@ -101,6 +101,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Diagnose storage mode at startup
+  const hasDatabaseConfig = process.env.DATABASE_URL ||
+    (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE);
+  if (!hasDatabaseConfig) {
+    console.error('🚨 CRITICAL: No DATABASE_URL or PG* env vars found. Running in-memory — ALL DATA WILL BE LOST on restart!');
+  } else {
+    console.log(`🗄️  Database config found (${process.env.DATABASE_URL ? 'DATABASE_URL' : 'PG* vars'})`);
+  }
+
   // Initialize database tables on startup
   try {
     await ensureTablesExist();
