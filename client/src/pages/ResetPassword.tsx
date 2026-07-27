@@ -107,7 +107,7 @@ export default function ResetPasswordPage() {
               {t('common.auth.resetPassword.invalidDesc')}
             </p>
             <Link href="/forgot-password">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-xl font-semibold">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl font-semibold">
                 {t('common.auth.resetPassword.requestNew')}
               </Button>
             </Link>
@@ -132,7 +132,7 @@ export default function ResetPasswordPage() {
               {t('common.auth.resetPassword.successLongDesc')}
             </p>
             <Link href="/login">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 py-6 rounded-xl font-semibold">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-xl font-semibold">
                 {t('landing.auth.signup.signIn', 'Ir al Inicio de Sesión')}
               </Button>
             </Link>

@@ -922,7 +922,7 @@ export default function Tasks() {
                     </Button>
                   </Link>
                 ) : (
-                  <Button className="gap-2 bg-blue-600 hover:bg-blue-700" onClick={() => setIsCreateDialogOpen(true)} data-testid="button-create-first-task">
+                  <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setIsCreateDialogOpen(true)} data-testid="button-create-first-task">
                     <Plus className="w-4 h-4" />
                     {t('pages.tasks.createFirstTask')}
                   </Button>

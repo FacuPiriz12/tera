@@ -8,11 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import type { CopyOperation } from "@shared/schema";
 import Header from "@/components/Header";
+import Sidebar from "@/components/Sidebar";
 import { useLocation } from "wouter";
 import {
   Mail, Calendar, Activity, FileText, Settings, Shield,
   Clock, HardDrive, Network, Crown, Zap, Package,
-  CheckCircle2, XCircle, Loader2
+  CheckCircle2, XCircle, Loader2, Star
 } from "lucide-react";
 import GoogleDriveLogo from "@/components/GoogleDriveLogo";
 import DropboxLogo from "@/components/DropboxLogo";
@@ -21,9 +22,9 @@ import BoxLogo from "@/components/BoxLogo";
 import S3Logo from "@/components/S3Logo";
 
 const PLAN_DETAILS = {
-  free:     { label: "Free",     color: "bg-gray-100 text-gray-700",     icon: Package, border: "border-gray-200" },
-  pro:      { label: "Pro",      color: "bg-blue-100 text-blue-700",     icon: Zap,     border: "border-blue-200" },
-  business: { label: "Business", color: "bg-violet-100 text-violet-700", icon: Crown,   border: "border-violet-200" },
+  free:     { label: "Free",     color: "bg-gray-100 text-gray-700",         icon: Package, gradient: "from-gray-50 to-gray-100" },
+  pro:      { label: "Pro",      color: "bg-blue-100 text-blue-700",         icon: Zap,     gradient: "from-blue-50 to-blue-100" },
+  business: { label: "Business", color: "bg-violet-100 text-violet-700",     icon: Crown,   gradient: "from-violet-50 to-violet-100" },
 } as const;
 
 export default function Profile() {
@@ -48,22 +49,24 @@ export default function Profile() {
     );
   }
 
+  const isAdmin = user.role === "admin";
+
   const allServices = [
     { logoBadge: <GoogleDriveLogo className="w-3.5 h-3.5" />, logoCard: <GoogleDriveLogo className="w-4 h-4" />, name: "Google Drive", connected: user.googleConnected },
-    { logoBadge: <DropboxLogo className="w-3.5 h-3.5" />, logoCard: <DropboxLogo className="w-4 h-4" />, name: "Dropbox", connected: user.dropboxConnected },
-    { logoBadge: <OneDriveLogo className="w-3.5 h-3.5" />, logoCard: <OneDriveLogo className="w-4 h-4" />, name: "OneDrive", connected: user.onedriveConnected },
-    { logoBadge: <BoxLogo className="w-3.5 h-3.5" />, logoCard: <BoxLogo className="w-4 h-4" />, name: "Box", connected: user.boxConnected },
-    { logoBadge: <S3Logo className="w-3.5 h-3.5" />, logoCard: <S3Logo className="w-4 h-4" />, name: "Amazon S3", connected: user.s3Connected },
+    { logoBadge: <DropboxLogo className="w-3.5 h-3.5" />,     logoCard: <DropboxLogo className="w-4 h-4" />,     name: "Dropbox",      connected: user.dropboxConnected },
+    { logoBadge: <OneDriveLogo className="w-3.5 h-3.5" />,    logoCard: <OneDriveLogo className="w-4 h-4" />,    name: "OneDrive",     connected: user.onedriveConnected },
+    { logoBadge: <BoxLogo className="w-3.5 h-3.5" />,         logoCard: <BoxLogo className="w-4 h-4" />,         name: "Box",          connected: user.boxConnected },
+    { logoBadge: <S3Logo className="w-3.5 h-3.5" />,          logoCard: <S3Logo className="w-4 h-4" />,          name: "Amazon S3",    connected: user.s3Connected },
   ];
 
   const plan = (user.membershipPlan as keyof typeof PLAN_DETAILS) || "free";
   const planInfo = PLAN_DETAILS[plan] || PLAN_DETAILS.free;
   const PlanIcon = planInfo.icon;
 
-  const totalOps = operations?.length || 0;
-  const completedOps = operations?.filter((op) => op.status === "completed").length || 0;
-  const failedOps = operations?.filter((op) => op.status === "failed").length || 0;
-  const successRate = totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0;
+  const totalOps      = operations?.length || 0;
+  const completedOps  = operations?.filter((op) => op.status === "completed").length || 0;
+  const failedOps     = operations?.filter((op) => op.status === "failed").length || 0;
+  const successRate   = totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0;
 
   const displayName =
     user.firstName && user.lastName
@@ -74,49 +77,78 @@ export default function Profile() {
     new Date(date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen bg-[#F5F7FA] flex flex-col pl-0 sm:pl-20">
       <Header />
-      <div className="container mx-auto py-8 px-4 max-w-5xl pt-24">
+      <Sidebar />
+
+      <main className="flex-1 px-4 sm:px-8 py-6 max-w-5xl w-full mx-auto">
 
         {/* ── Hero Card ── */}
         <Card className="border-0 shadow-sm overflow-hidden mb-5">
-          <div className="h-24 bg-gradient-to-r from-[#0061D5] to-[#004EB0]" />
-          <CardContent className="pt-0 pb-6 px-6">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 -mt-10">
-              <div className="flex items-end gap-4">
-                <Avatar className="h-20 w-20 ring-4 ring-white shadow-md flex-shrink-0">
-                  <AvatarImage src={user.profileImageUrl || undefined} />
-                  <AvatarFallback className="bg-blue-600 text-white text-2xl font-black">
-                    {user.firstName?.[0] || user.email?.[0] || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="pb-1">
+          {/* Banner */}
+          <div className="relative h-32 bg-gradient-to-r from-[#0061D5] via-[#1a73e8] to-[#004EB0]">
+            {/* Decorative circles */}
+            <div className="absolute top-4 right-12 w-20 h-20 rounded-full bg-white/5" />
+            <div className="absolute -top-4 right-32 w-32 h-32 rounded-full bg-white/5" />
+            {/* Avatar — absolutely positioned on the banner edge */}
+            <div className="absolute -bottom-10 left-6">
+              <Avatar className="h-20 w-20 ring-4 ring-white shadow-lg">
+                <AvatarImage src={user.profileImageUrl || undefined} />
+                <AvatarFallback className="bg-blue-700 text-white text-2xl font-black">
+                  {user.firstName?.[0] || user.email?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          {/* Content — pt-12 to clear the overlapping avatar */}
+          <CardContent className="pt-12 pb-5 px-6">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              {/* Left: identity */}
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl font-black text-gray-900 leading-tight">{displayName}</h1>
-                  <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-0.5">
-                    <Mail className="h-3 w-3" />
-                    <span>{user.email}</span>
-                  </div>
-                  {user.createdAt && (
-                    <div className="flex items-center gap-1.5 text-gray-400 text-xs mt-0.5">
-                      <Calendar className="h-3 w-3" />
-                      <span>{t("profilePage.memberSince")} {formatDate(user.createdAt)}</span>
-                    </div>
+                  {isAdmin && (
+                    <span className="inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                      <Star className="w-2.5 h-2.5" />
+                      Admin
+                    </span>
                   )}
                 </div>
+                <div className="flex items-center gap-1.5 text-gray-500 text-xs mt-1">
+                  <Mail className="h-3 w-3 flex-shrink-0" />
+                  <span>{user.email}</span>
+                </div>
+                {user.createdAt && (
+                  <div className="flex items-center gap-1.5 text-gray-400 text-xs mt-0.5">
+                    <Calendar className="h-3 w-3 flex-shrink-0" />
+                    <span>{t("profilePage.memberSince")} {formatDate(user.createdAt)}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2 pb-1">
-                <Badge className={`${planInfo.color} font-bold px-3 py-1 flex items-center gap-1.5`}>
-                  <PlanIcon className="w-3 h-3" />
-                  {planInfo.label}
-                </Badge>
-                <Button size="sm" onClick={() => setLocation("/settings")}>
+
+              {/* Right: plan + edit */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {isAdmin ? (
+                  <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 font-bold px-3 py-1 flex items-center gap-1.5 shadow-sm">
+                    <Shield className="w-3 h-3" />
+                    Admin
+                  </Badge>
+                ) : (
+                  <Badge className={`${planInfo.color} font-bold px-3 py-1 flex items-center gap-1.5 border-0`}>
+                    <PlanIcon className="w-3 h-3" />
+                    {planInfo.label}
+                  </Badge>
+                )}
+                <Button size="sm" variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50" onClick={() => setLocation("/settings")}>
                   <Settings className="h-3.5 w-3.5 mr-1.5" />
                   {t("profilePage.editProfile")}
                 </Button>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4">
+            {/* Connected services chips */}
+            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
               {allServices.filter(s => s.connected).map(({ logoBadge, name }) => (
                 <div key={name} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-full px-3 py-1 shadow-sm">
                   {logoBadge}
@@ -158,12 +190,12 @@ export default function Profile() {
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
                       {[
-                        { label: t("profilePage.activity.total"), value: totalOps, color: "text-gray-900" },
-                        { label: t("profilePage.activity.completed"), value: completedOps, color: "text-green-600" },
-                        { label: t("profilePage.activity.failed"), value: failedOps, color: "text-red-500" },
-                        { label: t("profilePage.activity.success"), value: `${successRate}%`, color: "text-blue-600" },
-                      ].map(({ label, value, color }) => (
-                        <div key={label} className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-center">
+                        { label: t("profilePage.activity.total"),     value: totalOps,        color: "text-gray-900",  bg: "bg-gray-50"   },
+                        { label: t("profilePage.activity.completed"), value: completedOps,    color: "text-green-600", bg: "bg-green-50"  },
+                        { label: t("profilePage.activity.failed"),    value: failedOps,       color: "text-red-500",   bg: "bg-red-50"    },
+                        { label: t("profilePage.activity.success"),   value: `${successRate}%`, color: "text-blue-600", bg: "bg-blue-50"  },
+                      ].map(({ label, value, color, bg }) => (
+                        <div key={label} className={`${bg} border border-gray-100 rounded-xl p-3 text-center`}>
                           <p className={`text-2xl font-black ${color}`}>{value}</p>
                           <p className="text-[11px] text-gray-400 mt-0.5">{label}</p>
                         </div>
@@ -268,32 +300,40 @@ export default function Profile() {
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base font-black">
-                  <PlanIcon className="h-4 w-4 text-blue-600" />
+                  {isAdmin ? <Star className="h-4 w-4 text-amber-500" /> : <PlanIcon className="h-4 w-4 text-blue-600" />}
                   {t("profilePage.plan.title")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className={`rounded-xl p-3 text-center ${
-                  plan === "business" ? "bg-gradient-to-br from-violet-50 to-violet-100"
-                  : plan === "pro" ? "bg-gradient-to-br from-blue-50 to-blue-100"
-                  : "bg-gray-50"
-                }`}>
-                  <PlanIcon className={`w-7 h-7 mx-auto mb-1 ${
-                    plan === "business" ? "text-violet-600" : plan === "pro" ? "text-blue-600" : "text-gray-400"
-                  }`} />
-                  <p className="font-black text-gray-900">{planInfo.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {plan === "free" ? t("profilePage.plan.freeLabel") : plan === "pro" ? t("profilePage.plan.proPrice") : t("profilePage.plan.businessPrice")}
-                  </p>
-                </div>
-                <Button
-                  variant={plan === "free" ? "default" : "outline"}
-                  className="w-full"
-                  size="sm"
-                  onClick={() => setLocation(plan === "free" ? "/pricing" : "/settings")}
-                >
-                  {plan === "free" ? t("profilePage.plan.upgrade") : t("profilePage.plan.manage")}
-                </Button>
+                {isAdmin ? (
+                  <div className="rounded-xl p-4 text-center bg-gradient-to-br from-amber-50 to-orange-100 border border-amber-200">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-2 shadow-sm">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <p className="font-black text-gray-900">Admin</p>
+                    <p className="text-xs text-amber-700 mt-0.5">Acceso completo a la plataforma</p>
+                  </div>
+                ) : (
+                  <div className={`rounded-xl p-3 text-center bg-gradient-to-br ${planInfo.gradient}`}>
+                    <PlanIcon className={`w-7 h-7 mx-auto mb-1 ${
+                      plan === "business" ? "text-violet-600" : plan === "pro" ? "text-blue-600" : "text-gray-400"
+                    }`} />
+                    <p className="font-black text-gray-900">{planInfo.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {plan === "free" ? t("profilePage.plan.freeLabel") : plan === "pro" ? t("profilePage.plan.proPrice") : t("profilePage.plan.businessPrice")}
+                    </p>
+                  </div>
+                )}
+                {!isAdmin && (
+                  <Button
+                    variant={plan === "free" ? "default" : "outline"}
+                    className="w-full"
+                    size="sm"
+                    onClick={() => setLocation(plan === "free" ? "/pricing" : "/settings")}
+                  >
+                    {plan === "free" ? t("profilePage.plan.upgrade") : t("profilePage.plan.manage")}
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -313,6 +353,10 @@ export default function Profile() {
                     {t("profilePage.account.active")}
                   </Badge>
                 </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Rol</span>
+                  <span className="text-xs font-semibold text-gray-700 capitalize">{user.role || "user"}</span>
+                </div>
                 <div>
                   <span className="text-xs text-gray-500 block mb-1">{t("profilePage.account.userId")}</span>
                   <p className="text-[10px] font-mono text-gray-500 bg-gray-50 border border-gray-100 rounded p-1.5 truncate">{user.id}</p>
@@ -330,12 +374,14 @@ export default function Profile() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {allServices.map(({ logoCard, name, connected }) => (
-                  <div key={name} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100">
+                  <div key={name} className="flex items-center justify-between p-2.5 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center">{logoCard}</div>
+                      <div className="w-7 h-7 bg-white border border-gray-100 rounded-lg flex items-center justify-center shadow-sm">{logoCard}</div>
                       <div>
                         <span className="text-sm font-medium text-gray-700">{name}</span>
-                        <p className="text-xs text-gray-400">{connected ? t("profilePage.services.connected") : t("profilePage.services.notConnected")}</p>
+                        <p className={`text-xs ${connected ? "text-green-500" : "text-gray-400"}`}>
+                          {connected ? t("profilePage.services.connected") : t("profilePage.services.notConnected")}
+                        </p>
                       </div>
                     </div>
                     <div className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-gray-200"}`} />
@@ -355,18 +401,18 @@ export default function Profile() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-black">{t("profilePage.quickActions.title")}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-1.5">
+              <CardContent className="space-y-1">
                 {[
-                  { icon: Activity, label: t("profilePage.quickActions.operations"), path: "/operations" },
-                  { icon: HardDrive, label: t("profilePage.quickActions.files"), path: "/my-files" },
-                  { icon: Settings, label: t("profilePage.quickActions.settings"), path: "/settings" },
+                  { icon: Activity,   label: t("profilePage.quickActions.operations"), path: "/operations" },
+                  { icon: HardDrive,  label: t("profilePage.quickActions.files"),      path: "/my-files"   },
+                  { icon: Settings,   label: t("profilePage.quickActions.settings"),   path: "/settings"   },
                 ].map(({ icon: Icon, label, path }) => (
                   <button
                     key={path}
                     onClick={() => setLocation(path)}
                     className="w-full flex items-center gap-2.5 p-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors font-medium text-left"
                   >
-                    <Icon className="h-4 w-4 text-gray-400" />
+                    <Icon className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     {label}
                   </button>
                 ))}
@@ -374,7 +420,7 @@ export default function Profile() {
             </Card>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

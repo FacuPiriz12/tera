@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { getCachedSession, setCachedSession } from "@/lib/supabaseSession";
 import { useToast } from "@/hooks/use-toast";
 import i18n from "@/lib/i18n";
+import type { User } from "@shared/schema";
 
 export function useAuth() {
   const [isSupabaseLoading, setIsSupabaseLoading] = useState(true);
@@ -118,7 +119,7 @@ export function useAuth() {
     };
   }, [queryClient]);
 
-  const { data: backendUser, isLoading: isBackendLoading, error, isError, isFetching } = useQuery({
+  const { data: backendUser, isLoading: isBackendLoading, error, isError, isFetching } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
