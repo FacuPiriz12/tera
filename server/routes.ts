@@ -956,13 +956,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (provider === 'onedrive') {
         const user = await storage.getUser(userId);
-        if (!user?.onedriveAccessToken) return res.json([]);
-        let token = user.onedriveAccessToken;
-        const isExpired = user.onedriveTokenExpiry && new Date(user.onedriveTokenExpiry) <= new Date();
-        if (isExpired && user.onedriveRefreshToken) {
-          const refreshed = await OneDriveService.refreshAccessToken(user.onedriveRefreshToken);
-          token = refreshed.accessToken;
-        }
+        if (!user?.onedriveAccessToken && !user?.onedriveRefreshToken) return res.json([]);
+        const svc = new OneDriveService(userId);
+        const token = await svc.getAccessToken();
+        if (!token) return res.json([]);
         const url = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(q)}')?$top=20&$select=id,name,file,folder,size,parentReference,webUrl`;
         const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         if (!resp.ok) return res.json([]);
@@ -980,13 +977,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (provider === 'box') {
         const user = await storage.getUser(userId);
-        if (!user?.boxAccessToken) return res.json([]);
-        let token = user.boxAccessToken;
-        const isExpired = user.boxTokenExpiry && new Date(user.boxTokenExpiry) <= new Date();
-        if (isExpired && user.boxRefreshToken) {
-          const refreshed = await BoxService.refreshAccessToken(user.boxRefreshToken);
-          token = refreshed.accessToken;
-        }
+        if (!user?.boxAccessToken && !user?.boxRefreshToken) return res.json([]);
+        const svc = new BoxService(userId);
+        const token = await svc.getAccessToken();
+        if (!token) return res.json([]);
         const url = `https://api.box.com/2.0/search?query=${encodeURIComponent(q)}&limit=20&fields=id,name,type,size,parent,item_collection`;
         const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         if (!resp.ok) return res.json([]);

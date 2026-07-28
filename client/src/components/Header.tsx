@@ -92,7 +92,10 @@ export default function Header() {
           <div className="h-10 w-px bg-gray-100 mx-8 hidden md:block flex-shrink-0" />
 
           {/* Search */}
-          <div className="flex-1 max-w-xl hidden md:block">
+          <div className="flex-1 max-w-xl hidden md:block relative">
+            {globalSearchOpen && (
+              <div className="fixed inset-0 z-[199]" onClick={() => setGlobalSearchOpen(false)} />
+            )}
             <div className="relative group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors duration-200" />
               <button
@@ -105,6 +108,7 @@ export default function Header() {
                 ⌘K
               </span>
             </div>
+            <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
           </div>
         </div>
 
@@ -221,7 +225,6 @@ export default function Header() {
         </div>
       </div>
     </header>
-    <GlobalSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </>
   );
 }
