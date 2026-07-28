@@ -960,25 +960,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const svc = new OneDriveService(userId);
         const token = await svc.getAccessToken();
         if (!token) return res.json([]);
-        const url = `https://graph.microsoft.com/v1.0/me/drive/search(q='${encodeURIComponent(q)}')?$top=20&$select=id,name,file,folder,size,parentReference,webUrl`;
-        const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!resp.ok) {
-          const errBody = await resp.text();
-          console.error(`OneDrive search error ${resp.status}:`, errBody);
-          return res.json([]);
+        const headers = { Authorization: `Bearer ${token}` };
+        const term = q.toLowerCase();
+        const odResults: any[] = [];
+        const listUrl = (id: string) =>
+          `https://graph.microsoft.com/v1.0/me/drive/${id === 'root' ? 'root' : `items/${id}`}/children?$select=id,name,file,folder,size,parentReference&$top=200`;
+        const rootResp = await fetch(listUrl('root'), { headers });
+        if (!rootResp.ok) return res.json([]);
+        const rootItems: any[] = ((await rootResp.json()) as any).value || [];
+        for (const item of rootItems) {
+          if (item.name.toLowerCase().includes(term)) {
+            odResults.push({ id: item.id, name: item.name, path: `/${item.name}`, mimeType: item.folder ? 'folder' : (item.file?.mimeType || 'file'), size: item.size, isFolder: !!item.folder, provider: 'onedrive' });
+          }
+          if (item.folder && odResults.length < 20) {
+            const sub = await fetch(listUrl(item.id), { headers });
+            if (sub.ok) {
+              for (const child of (((await sub.json()) as any).value || [])) {
+                if (child.name.toLowerCase().includes(term)) {
+                  odResults.push({ id: child.id, name: child.name, path: `/${item.name}/${child.name}`, mimeType: child.folder ? 'folder' : (child.file?.mimeType || 'file'), size: child.size, isFolder: !!child.folder, provider: 'onedrive' });
+                }
+                if (odResults.length >= 20) break;
+              }
+            }
+          }
+          if (odResults.length >= 20) break;
         }
-        const data = await resp.json() as any;
-        console.log(`OneDrive search response for "${q}": ${data.value?.length ?? 0} results, keys: ${Object.keys(data).join(',')}`);
-        if (data.value?.length === 0) console.log('OneDrive search returned empty - full response:', JSON.stringify(data).slice(0, 300));
-        return res.json((data.value || []).map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          path: item.parentReference?.path ? `${item.parentReference.path}/${item.name}` : item.name,
-          mimeType: item.folder ? 'folder' : (item.file?.mimeType || 'file'),
-          size: item.size,
-          isFolder: !!item.folder,
-          provider: 'onedrive',
-        })));
+        return res.json(odResults.slice(0, 20));
       }
 
       if (provider === 'box') {
