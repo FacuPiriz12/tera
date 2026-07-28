@@ -960,9 +960,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const svc = new OneDriveService(userId);
         const token = await svc.getAccessToken();
         if (!token) return res.json([]);
-        const url = `https://graph.microsoft.com/v1.0/me/drive/root/search(q='${encodeURIComponent(q)}')?$top=20&$select=id,name,file,folder,size,parentReference,webUrl`;
+        const url = `https://graph.microsoft.com/v1.0/me/drive/search(q='${encodeURIComponent(q)}')?$top=20&$select=id,name,file,folder,size,parentReference,webUrl`;
         const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!resp.ok) return res.json([]);
+        if (!resp.ok) {
+          const errBody = await resp.text();
+          console.error(`OneDrive search error ${resp.status}:`, errBody);
+          return res.json([]);
+        }
         const data = await resp.json() as any;
         return res.json((data.value || []).map((item: any) => ({
           id: item.id,
