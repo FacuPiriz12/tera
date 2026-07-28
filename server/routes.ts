@@ -167,6 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         ...(currency ? { currency } : {}),
+        allow_promotion_codes: true,
         success_url: `${req.protocol}://${req.get('host')}/settings?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/settings`,
         client_reference_id: req.user.claims.sub,
