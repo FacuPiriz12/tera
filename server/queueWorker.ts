@@ -941,8 +941,8 @@ export class QueueWorker extends EventEmitter {
 
   private async cleanupOldOperations(): Promise<number> {
     try {
-      // Clean up operations older than 24 hours
-      const cleanupThreshold = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      // Clean up operations older than 90 days (matches the max history window shown in the UI for Pro users)
+      const cleanupThreshold = 90 * 24 * 60 * 60 * 1000; // 90 days in milliseconds
       const deletedCount = await storage.cleanupOldOperations(cleanupThreshold);
       return deletedCount;
     } catch (error) {
