@@ -968,6 +968,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json([]);
         }
         const data = await resp.json() as any;
+        console.log(`OneDrive search response for "${q}": ${data.value?.length ?? 0} results, keys: ${Object.keys(data).join(',')}`);
+        if (data.value?.length === 0) console.log('OneDrive search returned empty - full response:', JSON.stringify(data).slice(0, 300));
         return res.json((data.value || []).map((item: any) => ({
           id: item.id,
           name: item.name,
