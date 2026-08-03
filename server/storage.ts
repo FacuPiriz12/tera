@@ -204,6 +204,17 @@ export interface IStorage {
   searchFileIndex(userId: string, query: string, providers?: string[]): Promise<FileIndexEntry[]>;
   clearProviderIndex(userId: string, provider: string): Promise<void>;
   getIndexStatus(userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]>;
+
+  // Watch folder operations
+  createWatchFolder(data: InsertWatchFolder): Promise<WatchFolder>;
+  getWatchFoldersByUser(userId: string): Promise<WatchFolder[]>;
+  getWatchFolder(id: string): Promise<WatchFolder | undefined>;
+  getActiveWatchFolders(): Promise<WatchFolder[]>;
+  updateWatchFolder(id: string, data: Partial<WatchFolder>): Promise<WatchFolder>;
+  deleteWatchFolder(id: string): Promise<void>;
+  getWatchFolderKnownFileIds(watchFolderId: string): Promise<Set<string>>;
+  addWatchFolderFiles(watchFolderId: string, files: { sourceFileId: string; fileName: string; fileSize?: number | null }[]): Promise<void>;
+  countWatchFoldersByUser(userId: string): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2393,6 +2404,16 @@ class MemoryStorage implements IStorage {
   async searchFileIndex(_userId: string, _query: string, _providers?: string[]): Promise<FileIndexEntry[]> { return []; }
   async clearProviderIndex(_userId: string, _provider: string): Promise<void> {}
   async getIndexStatus(_userId: string): Promise<{ provider: string; count: number; lastIndexed: Date | null }[]> { return []; }
+
+  async createWatchFolder(_data: InsertWatchFolder): Promise<WatchFolder> { throw new Error('Not supported in MemoryStorage'); }
+  async getWatchFoldersByUser(_userId: string): Promise<WatchFolder[]> { return []; }
+  async getWatchFolder(_id: string): Promise<WatchFolder | undefined> { return undefined; }
+  async getActiveWatchFolders(): Promise<WatchFolder[]> { return []; }
+  async updateWatchFolder(_id: string, _data: Partial<WatchFolder>): Promise<WatchFolder> { throw new Error('Not supported in MemoryStorage'); }
+  async deleteWatchFolder(_id: string): Promise<void> {}
+  async getWatchFolderKnownFileIds(_watchFolderId: string): Promise<Set<string>> { return new Set(); }
+  async addWatchFolderFiles(_watchFolderId: string, _files: { sourceFileId: string; fileName: string; fileSize?: number | null }[]): Promise<void> {}
+  async countWatchFoldersByUser(_userId: string): Promise<number> { return 0; }
 }
 
 const hasDatabaseConfig =
